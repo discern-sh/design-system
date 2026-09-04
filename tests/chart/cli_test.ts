@@ -29,7 +29,6 @@ import {
   terminalThemeColor,
   terminalToneColor,
 } from "../../src/cli/theme.ts";
-import { accentAppearance, fieldAppearance } from "../../src/tokens/tokens.ts";
 import { cliReleaseFixtures } from "../../src/components/editorial/chart/chart.cli.ts";
 import projectBarChartCli from "../../src/chart/kinds/bar/bar.cli.ts";
 import {
@@ -194,11 +193,11 @@ Deno.test("chart Accent moves semantic chrome while series projection stays fixe
     });
     const fieldAppearanceOptions = {
       theme: "dark",
-      appearance: fieldAppearance,
+      appearance: {},
     } as const;
     const accentAppearanceOptions = {
       theme: "dark",
-      appearance: accentAppearance(335),
+      appearance: { accent: 335 },
     } as const;
     const field = render(
       representative,
@@ -268,7 +267,7 @@ Deno.test("chart Accent moves semantic chrome while series projection stays fixe
   assertEquals(
     render(representative, plain, "auto", {
       theme: "dark",
-      appearance: accentAppearance(335),
+      appearance: { accent: 335 },
     }),
     render(representative, plain),
   );

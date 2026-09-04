@@ -24,7 +24,10 @@ import {
   type SemanticInlineNode,
   semanticInlineText,
 } from "../../../cli/semantic-inline.ts";
-import type { Appearance, TerminalThemeVariant } from "../../../cli/theme.ts";
+import type {
+  TerminalAppearance,
+  TerminalThemeVariant,
+} from "../../../cli/theme.ts";
 import {
   markdownChartExampleMarkdown,
   markdownChartExampleResource,
@@ -290,7 +293,7 @@ function cliInline(
 
 interface MarkdownCliPresentation extends CliPresentationOptions {
   readonly theme: TerminalThemeVariant;
-  readonly appearance: Appearance;
+  readonly appearance: TerminalAppearance;
   readonly motif: TerminalMotif;
 }
 

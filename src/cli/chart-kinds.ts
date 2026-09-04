@@ -6,7 +6,7 @@
  */
 
 import type { TerminalCapabilities } from "./capabilities.ts";
-import type { Appearance, TerminalThemeVariant } from "./theme.ts";
+import type { TerminalAppearance, TerminalThemeVariant } from "./theme.ts";
 import type { ChartSpec, ValidatedChart } from "../generated/chart-spec.ts";
 
 /**
@@ -112,7 +112,7 @@ export interface ChartKindCliProjectorContext {
   readonly capabilities: TerminalCapabilities;
   readonly maxWidth: number;
   readonly theme: TerminalThemeVariant;
-  readonly appearance?: Appearance;
+  readonly appearance?: TerminalAppearance;
   readonly description: string;
 }
 

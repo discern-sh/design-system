@@ -5,7 +5,7 @@ import {
   resolveTerminalTheme,
   terminalThemeColor,
 } from "../../../src/cli/theme.ts";
-import { type Appearance, fieldAppearance } from "../../../src/tokens/field.ts";
+import type { TerminalAppearance } from "../../../src/cli/theme.ts";
 
 const capabilities: TerminalCapabilities = {
   ansiControl: true,
@@ -26,16 +26,16 @@ const paletteRoles = [
   "--discern-color-danger",
 ] as const;
 
-export interface FieldPoleTerminalProjection {
+export interface AppearancePoleTerminalProjection {
   readonly theme: "light" | "dark";
   readonly output: string;
   readonly inspectorHtml: string;
 }
 
 /** Project the selected appearance through both honest terminal ground poles. */
-export function fieldPoleTerminalProjections(
-  appearance: Appearance = fieldAppearance,
-): readonly FieldPoleTerminalProjection[] {
+export function appearancePoleTerminalProjections(
+  appearance: TerminalAppearance = {},
+): readonly AppearancePoleTerminalProjection[] {
   return (["light", "dark"] as const).map((variant) => {
     const theme = resolveTerminalTheme({ theme: variant, appearance });
     const output = paletteRoles.map((name) => {
@@ -52,7 +52,7 @@ export function fieldPoleTerminalProjections(
       inspectorHtml: projectTerminalInspectorHtml(output, {
         columns: capabilities.columns,
         rows: paletteRoles.length,
-        title: `${variant === "light" ? "Light" : "Dark"} field pole`,
+        title: `${variant === "light" ? "Light" : "Dark"} ground`,
         theme: variant,
         appearance,
       }),

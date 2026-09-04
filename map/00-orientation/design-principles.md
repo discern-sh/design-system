@@ -26,7 +26,7 @@ Each component folder owns its `*.meta.ts`, CSS, implementation, examples, `mod.
 
 ## 3. The neutral core and CLI surface never resolve React
 
-The root, `./cli`, `./cli/interactive`, `./manifest`, `./runtime`, `./tokens`, and `./theme/blue` module graphs import no React. React lives only behind the optional `./react` Adapter, as an 18.3+ peer contract, and is a build-time renderer: consumers ship static HTML and CSS or terminal strings, never a React bundle or hydration.
+The root, `./cli`, `./cli/interactive`, `./manifest`, `./runtime`, and `./tokens` module graphs import no React. React lives only behind the optional `./react` Adapter, as an 18.3+ peer contract, and is a build-time renderer: consumers ship static HTML and CSS or terminal strings, never a React bundle or hydration.
 
 **Why it matters.** The package's promise is framework-neutrality. One stray React import in the neutral graph forces every non-React consumer to install React just to emit CSS — a contract break that type-checks fine locally and only explodes in a consumer's project.
 
@@ -44,13 +44,13 @@ The runtime emitter writes byte-for-byte identical output for identical inputs, 
 
 ## 5. Themes move tokens, never component CSS
 
-Semantic roles (canvas, ink, accent, success, warning, danger, and the deliberately non-inverting inverse roles) are the theme surface. Light/dark selection and consumer branding happen by overriding public custom properties — the branded blue preset is itself just a token layer — and component stylesheets stay byte-identical across every theme.
+Semantic roles (canvas, ink, accent, success, warning, danger, and the deliberately non-inverting inverse roles) are the theme surface. Light/dark selection, the accent hue, the pigment tints, and consumer branding all happen through public custom properties, and component stylesheets stay byte-identical across every appearance.
 
 **Why it matters.** The moment a theme forks a component stylesheet, every component fix must land per-theme and themes drift apart. Token-only theming is also what keeps role semantics intact — a green-branded consumer must still be able to tell "brand action" from "successful outcome".
 
-**How it shows up.** [`field.ts`](../../src/tokens/field.ts) is the one authority for Field and Accent values of every non-series colour role; [`tokens.ts`](../../src/tokens/tokens.ts) projects the Field fallback poles, [`field-css.ts`](../../src/tokens/field-css.ts) compiles the same expression DAG into live CSS, and [`appearance-css.ts`](../../src/tokens/appearance-css.ts) generates symmetric scoped projections. [`theme/blue.ts`](../../src/theme/blue.ts) is the generated hue-255 compatibility projection rather than a value table. [`cli/theme.ts`](../../src/cli/theme.ts) resolves the same explicit Field-or-Accent input at an honest light or dark terminal pole before the shared ANSI quantisation. Tests fail a theme that forks Component CSS, a role that misses either projection, a browser projection that differs from the evaluator, a terminal colour that escapes Token enrollment, a rendered Component that drops presentation, or an Accent hue that swallows a semantic family.
+**How it shows up.** [`appearance.ts`](../../src/tokens/appearance.ts) is the one authority for the monochrome and Accent values of every non-series colour role; [`tokens.ts`](../../src/tokens/tokens.ts) projects the monochrome fallback poles, [`appearance-live-css.ts`](../../src/tokens/appearance-live-css.ts) compiles the same expression DAG into live CSS, and [`appearance-scope-css.ts`](../../src/tokens/appearance-scope-css.ts) generates the symmetric scoped projections. [`cli/theme.ts`](../../src/cli/theme.ts) resolves the same explicit appearance at an honest light or dark terminal pole before the shared ANSI quantisation. Tests fail a theme that forks Component CSS, a role that misses either projection, a browser projection that differs from the evaluator, a terminal colour that escapes Token enrollment, a rendered Component that drops presentation, or an Accent hue that swallows a semantic family.
 
-[ADR-0040](../_adr/0040-derive-the-theme-from-a-monochrome-field.md) records the Field and its poles. [ADR-0043](../_adr/0043-project-accent-from-the-field.md) records the generic Accent projection and symmetric scope boundary.
+[ADR-0040](../_adr/0040-derive-the-theme-from-a-monochrome-field.md) records the monochrome derivation and its poles, [ADR-0043](../_adr/0043-project-accent-from-the-field.md) the generic Accent projection and symmetric scope boundary, and [ADR-0045](../_adr/0045-name-the-model-appearance-and-tint-the-pigments.md) the Appearance vocabulary, the optional accent, and the pigment tints.
 
 ## 6. Accessibility invariants are tested contract, not garnish
 

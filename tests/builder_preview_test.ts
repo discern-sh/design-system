@@ -14,10 +14,14 @@ import {
   deriveBuilderCallbackProps,
   registryCoreBySlug,
 } from "../catalogue/builder/registry-core.ts";
-import { builderPreviewAccent } from "../catalogue/builder/preview/controls.tsx";
 import {
-  catalogueAppearanceOptions,
-} from "../catalogue/shell/appearance-options.ts";
+  type BuilderPreviewPreferences,
+  builderPreviewViewports,
+  PreviewToolbarControls,
+} from "../catalogue/builder/preview/controls.tsx";
+import { defaultCatalogueAppearanceState } from "../catalogue/shell/appearance-state.ts";
+import { defaultCatalogueAxesSelection } from "../catalogue/shell/axes-state.ts";
+import { appearanceAxes } from "../src/tokens/appearance.ts";
 import {
   builderPreviewMessageFromEvent,
   builderPreviewSnapshot,
@@ -180,9 +184,9 @@ Deno.test("preview messages are same-origin, versioned, and policy-accepted", ()
     appearance: {
       theme: "light",
       resolvedTheme: "dark",
-      appearance: "accent",
-      accentHue: 145.5,
+      accent: 145.5,
       field: {
+        ...defaultCatalogueAxesSelection,
         darkness: 0.6,
         structure: 1.2,
         emphasis: 0.8,
@@ -368,14 +372,73 @@ Deno.test("the shared preview renderer injects optional callback witnesses only 
   assertEquals(inert.props.onValueChange, undefined);
 });
 
-Deno.test("Builder preview Appearance accepts named and arbitrary numeric hues", () => {
-  for (const option of catalogueAppearanceOptions) {
-    assertEquals(builderPreviewAccent(option.id), option.hue);
-    assertEquals(builderPreviewAccent(String(option.hue)), option.hue);
-  }
-  assertEquals(builderPreviewAccent("145.5"), 145.5);
-  assertEquals(builderPreviewAccent("360"), 0);
-  assertEquals(builderPreviewAccent("not-a-preset"), 255);
+Deno.test("Builder Appearance labels stay outside independently themed scopes", () => {
+  const noop = () => undefined;
+  const previewAppearance = {
+    ...defaultCatalogueAppearanceState,
+    theme: "dark" as const,
+    resolvedTheme: "dark" as const,
+    field: {
+      ...defaultCatalogueAppearanceState.field,
+      darkness: appearanceAxes.darkness.maximum,
+    },
+  };
+  const preferences = {
+    viewport: builderPreviewViewports.fluid,
+    zoomId: "fit",
+    mode: "edit",
+    previewAppearance,
+    workspaceAppearance: defaultCatalogueAppearanceState,
+    previewResolvedTheme: "dark",
+    workspaceResolvedTheme: "light",
+    workspaceStyle: {},
+    measurement: {
+      logicalWidth: 860,
+      zoomPercent: 100,
+      devicePixelRatio: 1,
+    },
+    resetViewRevision: 0,
+    interactionRevision: 0,
+    setViewport: noop,
+    setZoom: noop,
+    setMode: noop,
+    setPreviewTheme: noop,
+    setPreviewAccent: noop,
+    setPreviewField: noop,
+    resetPreviewField: noop,
+    setWorkspaceTheme: noop,
+    setWorkspaceAccent: noop,
+    setWorkspaceField: noop,
+    resetWorkspaceField: noop,
+    reportMeasurement: noop,
+    resetView: noop,
+    resetInteractions: noop,
+  } satisfies BuilderPreviewPreferences;
+  const markup = renderToStaticMarkup(
+    PreviewToolbarControls({ preferences }),
+  );
+  const previewStart = markup.indexOf('aria-label="Preview appearance"');
+  assert(previewStart >= 0, "Preview Appearance group must render");
+  const groupOpen = markup.slice(
+    previewStart,
+    markup.indexOf(">", previewStart) + 1,
+  );
+  assert(
+    !groupOpen.includes("data-discern-appearance") &&
+      !groupOpen.includes("style="),
+    "the independently themed Preview scope must not encompass its Workspace label",
+  );
+  const detailsStart = markup.indexOf(
+    '<details class="discern-catalogue-appearance"',
+    previewStart,
+  );
+  assert(detailsStart >= 0, "Preview Appearance control must render");
+  const detailsOpen = markup.slice(
+    detailsStart,
+    markup.indexOf(">", detailsStart) + 1,
+  );
+  assert(!detailsOpen.includes("data-discern-accent"));
+  assertStringIncludes(detailsOpen, "style=");
 });
 
 Deno.test("Catalogue opts into Appearance scopes without bloating the base runtime", async () => {
@@ -395,9 +458,9 @@ Deno.test("Catalogue opts into Appearance scopes without bloating the base runti
       ].map((path) => Deno.readTextFile(new URL(path, import.meta.url))),
     ),
   ]);
-  assert(!runtime.includes("data-discern-appearance"));
-  assertStringIncludes(scopes, 'data-discern-appearance="field"');
-  assertStringIncludes(scopes, 'data-discern-appearance="accent"');
+  assert(!runtime.includes("data-discern-accent"));
+  assertStringIncludes(scopes, '[data-discern-accent="none"]');
+  assertStringIncludes(scopes, "[data-discern-accent]:not(");
   assertEquals(
     (JSON.parse(manifest) as {
       selection: { appearanceScopes: boolean };

@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 import {
   DEFAULT_ACCENT_HUE,
   normalizeAccentHue,
-} from "../../src/tokens/field.ts";
+} from "../../src/tokens/appearance.ts";
 
 /** One human shortcut into the package's complete numeric Accent hue domain. */
 export interface CatalogueAppearanceOption {
@@ -30,7 +30,7 @@ const authoredCatalogueAppearanceOptions = [
 export const catalogueAppearanceOptions: readonly CatalogueAppearanceOption[] =
   Object.freeze(authoredCatalogueAppearanceOptions);
 
-/** Blue is the remembered Accent convenience at the default Field point. */
+/** Blue is the named convenience at the package's default accent hue. */
 export const defaultCatalogueAppearanceOption = catalogueAppearanceOptions.find(
   ({ hue }) => hue === DEFAULT_ACCENT_HUE,
 )!;
@@ -81,3 +81,9 @@ export function catalogueAppearanceStyle(
   const hue = typeof option === "number" ? option : option.hue;
   return { "--discern-accent-hue": normalizeAccentHue(hue) } as CSSProperties;
 }
+
+/** Select value that returns the Catalogue to the monochrome default. */
+export const CATALOGUE_ACCENT_CHOICE_NONE = "none";
+
+/** Select value for a hue that no named convenience describes. */
+export const CATALOGUE_ACCENT_CHOICE_CUSTOM = "custom";

@@ -19,6 +19,7 @@ import {
   derivedGlyphHazards,
   DISCERN_GLYPH_ASCII_FIDELITIES,
   DISCERN_GLYPH_CATEGORIES,
+  DISCERN_GLYPH_PUBLICATION_DISPOSITIONS,
   DISCERN_GLYPH_RECOMMENDATION_STATES,
   type DiscernGlyphAlias,
   expectedCanonicalGlyphSearchTerms,
@@ -87,6 +88,9 @@ const atlasHazards = membership(GLYPH_ATLAS_HAZARDS);
 const aliasCategories = membership(DISCERN_GLYPH_CATEGORIES);
 const recommendationStates = membership(
   DISCERN_GLYPH_RECOMMENDATION_STATES,
+);
+const publicationDispositions = membership(
+  DISCERN_GLYPH_PUBLICATION_DISPOSITIONS,
 );
 const asciiFidelities = membership(DISCERN_GLYPH_ASCII_FIDELITIES);
 
@@ -565,6 +569,11 @@ function validateAlias(
       }`,
     );
   }
+  if (!publicationDispositions.has(alias.publication)) {
+    issues.push(
+      `${path}.publication: unknown value ${JSON.stringify(alias.publication)}`,
+    );
+  }
   addAuthoredTextIssue(
     issues,
     `${path}.recommendation.rationale`,
@@ -700,6 +709,29 @@ function validateAlias(
         `${path}.surfaces.terminal.asciiFallback.widthParityRequired: fallback and Unicode widths differ`,
       );
     }
+  } else if (terminal.posture === "unicode-only") {
+    if (
+      terminal.geometry !== "one-cell" && terminal.geometry !== "width-aware"
+    ) {
+      issues.push(
+        `${path}.surfaces.terminal.geometry: unknown value ${
+          JSON.stringify(terminal.geometry)
+        }`,
+      );
+    }
+    if (
+      canonical !== undefined && terminal.geometry === "one-cell" &&
+      canonical.terminalWidth !== 1
+    ) {
+      issues.push(
+        `${path}.surfaces.terminal.geometry: cannot claim one-cell geometry for measured width ${canonical.terminalWidth}`,
+      );
+    }
+    if ("asciiFallback" in terminal) {
+      issues.push(
+        `${path}.surfaces.terminal.asciiFallback: unicode-only aliases cannot declare an approved fallback`,
+      );
+    }
   } else if (terminal.posture === "reference-only") {
     if (terminal.geometry !== "width-aware") {
       issues.push(
@@ -719,6 +751,11 @@ function validateAlias(
     );
   }
   if (alias.recommendation.state === "reference-only") {
+    if (alias.publication !== "deferred") {
+      issues.push(
+        `${path}.publication: reference-only recommendations must be deferred`,
+      );
+    }
     if (alias.surfaces.browser.posture !== "reference-only") {
       issues.push(
         `${path}.surfaces.browser.posture: reference-only recommendations must remain reference-only on the browser surface`,

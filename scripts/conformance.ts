@@ -21,9 +21,9 @@ import {
   verifyCrossSurfaceAppearanceCatalogue,
 } from "./conformance/catalogue/appearance.ts";
 import {
-  type FieldProjectionEvidence,
-  verifyFieldProjection,
-} from "./conformance/field-projection.ts";
+  type AppearanceProjectionEvidence,
+  verifyAppearanceProjection,
+} from "./conformance/appearance-projection.ts";
 import type {
   CatalogueBrowserCheckId,
 } from "./conformance/catalogue/browser-check-plan.ts";
@@ -60,10 +60,10 @@ const WIDE_VIEWPORT = { width: 1440, height: 1000 } as const;
 
 const emptyComponentEvidence: ComponentContractEvidence = {
   floatingSurfaces: 0,
-  fieldAxisPoints: 0,
-  fieldAxisTargetChecks: 0,
-  fieldAxisTextFloorChecks: 0,
-  fieldAxisFocusRingChecks: 0,
+  axisPoints: 0,
+  axisTargetChecks: 0,
+  axisTextFloorChecks: 0,
+  axisFocusRingChecks: 0,
   statusWitnessChecks: 0,
   accessibilityScans: 0,
   scenarios: 0,
@@ -121,7 +121,7 @@ const emptyShellEvidence: CatalogueShellEvidence = {
   reflowChecks: 0,
   metadataRoleChecks: 0,
 };
-const emptyFieldProjectionEvidence: FieldProjectionEvidence = {
+const emptyAppearanceProjectionEvidence: AppearanceProjectionEvidence = {
   points: 0,
   roleChecks: 0,
   poleChecks: 0,
@@ -157,12 +157,12 @@ export async function runConformance(): Promise<void> {
     const page = await context.newPage();
     addPageFailureListeners(page, failures);
 
-    let fieldProjection = emptyFieldProjectionEvidence;
+    let appearanceProjection = emptyAppearanceProjectionEvidence;
     try {
-      fieldProjection = await verifyFieldProjection(page);
+      appearanceProjection = await verifyAppearanceProjection(page);
     } catch (error) {
       failures.push(
-        `Field projection: ${
+        `Appearance projection: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );
@@ -268,13 +268,13 @@ export async function runConformance(): Promise<void> {
       resilience.fontFallbackAliasesSkipped.join(", ") || "none";
     console.log(
       `Conformance passed: ${expectedComponents.length} components, ` +
-        `${fieldProjection.roleChecks} live field-role checks and ` +
-        `${fieldProjection.poleChecks} pole-parity checks across ` +
-        `${fieldProjection.points} field points at ` +
-        `${fieldProjection.oklabTolerance} OKLab tolerance, with ` +
-        `${fieldProjection.spacingChecks} density-spacing checks; ` +
-        `${fieldProjection.appearanceScopeChecks} appearance-scope role checks and ` +
-        `${fieldProjection.appearanceNestingChecks} nested axis/hue checks; ` +
+        `${appearanceProjection.roleChecks} live role checks and ` +
+        `${appearanceProjection.poleChecks} pole-parity checks across ` +
+        `${appearanceProjection.points} axis points at ` +
+        `${appearanceProjection.oklabTolerance} OKLab tolerance, with ` +
+        `${appearanceProjection.spacingChecks} density-spacing checks; ` +
+        `${appearanceProjection.appearanceScopeChecks} appearance-scope role checks and ` +
+        `${appearanceProjection.appearanceNestingChecks} nested axis/hue checks; ` +
         `${components.accessibilityScans} component accessibility scans, ` +
         `${components.scenarios} interaction scenarios, ` +
         `${components.forcedColorFocusChecks} forced-colour focus checks, and ` +
@@ -282,10 +282,10 @@ export async function runConformance(): Promise<void> {
         `metadata-role checks; ` +
         `${components.screenshots + 1} review screenshots; ` +
         `${components.floatingSurfaces} floating surfaces share the clipping cure. ` +
-        `Field-axis reach passed ${components.fieldAxisTargetChecks} touch-target ` +
-        `and ${components.fieldAxisTextFloorChecks} xs-floor checks plus ` +
-        `${components.fieldAxisFocusRingChecks} focus-ring contrast checks across ` +
-        `${components.fieldAxisPoints} darkness points at density 0.8 and ` +
+        `Field-axis reach passed ${components.axisTargetChecks} touch-target ` +
+        `and ${components.axisTextFloorChecks} xs-floor checks plus ` +
+        `${components.axisFocusRingChecks} focus-ring contrast checks across ` +
+        `${components.axisPoints} darkness points at density 0.8 and ` +
         `structure 0.35; ${components.statusWitnessChecks} rendered status ` +
         `elements retain non-colour witnesses. ` +
         `Catalogue shell passed ${shell.routeShapes} route shapes, ` +

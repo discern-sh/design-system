@@ -3,7 +3,6 @@ import type { CSSProperties } from "react";
 import { createRoot } from "react-dom/client";
 import { Input } from "../../src/components/forms/input/input.tsx";
 import { Select } from "../../src/components/forms/select/select.tsx";
-import type { AppearanceName } from "../../src/tokens/field.ts";
 import { componentGroups } from "../../src/types/component-meta.ts";
 import type { ConformanceStep, ConformanceTarget } from "../conformance.ts";
 import { registry } from "../generated/registry.ts";
@@ -17,13 +16,14 @@ import {
   catalogueAccentHueLabel,
   catalogueAppearanceOptions,
 } from "../shell/appearance-options.ts";
-import type { CatalogueFieldSelection } from "../shell/field-state.ts";
+import { CATALOGUE_ACCENT_NONE } from "../shell/appearance-state.ts";
+import type { CatalogueAxesSelection } from "../shell/axes-state.ts";
 import {
-  catalogueFieldLabel,
-  catalogueFieldPolarity,
-  catalogueFieldStyle,
-  serializeCatalogueFieldSelection,
-} from "../shell/field-state.ts";
+  catalogueAppearanceRootStyle,
+  catalogueAxesLabel,
+  catalogueAxesPolarity,
+  serializeCatalogueAxes,
+} from "../shell/axes-state.ts";
 import { captureRegionForReview, inspectReviewGeometry } from "./geometry.ts";
 import { reviewMotionStyle } from "./motion.ts";
 import {
@@ -191,8 +191,7 @@ function ReviewSpecimen({
   width,
   responsiveAllocation,
   theme,
-  appearance,
-  accentHue,
+  accent,
   field,
   motion,
   speed,
@@ -205,9 +204,8 @@ function ReviewSpecimen({
   readonly width: number;
   readonly responsiveAllocation: "local" | "page";
   readonly theme: "light" | "dark";
-  readonly appearance: AppearanceName;
-  readonly accentHue: number;
-  readonly field: CatalogueFieldSelection;
+  readonly accent: number | undefined;
+  readonly field: CatalogueAxesSelection;
   readonly motion: "ordinary" | "reduced";
   readonly speed: "production" | "slow";
   readonly replay: number;
@@ -325,14 +323,14 @@ function ReviewSpecimen({
           className="discern-review-specimen"
           data-discern-root
           data-discern-theme={appliedTheme}
-          data-discern-appearance={appearance}
+          data-discern-accent={accent === undefined ? undefined : ""}
           data-discern-review-motion={motion}
           data-discern-review-speed={speed}
           data-discern-review-responsive-allocation={responsiveAllocation}
           data-discern-review-identity={identity}
           style={{
             inlineSize: `${width}px`,
-            ...catalogueFieldStyle(field, theme, accentHue),
+            ...catalogueAppearanceRootStyle(field, theme, accent),
             ...reviewMotionStyle(motion, speed),
           } as CSSProperties}
         >
@@ -343,9 +341,9 @@ function ReviewSpecimen({
         <span>{width}px {responsiveAllocation}</span>
         <span>{appliedTheme}</span>
         <span>
-          {appearance === "field"
-            ? "Field"
-            : catalogueAccentHueLabel(accentHue)} · {catalogueFieldLabel(field)}
+          {accent === undefined
+            ? "Monochrome"
+            : catalogueAccentHueLabel(accent)} · {catalogueAxesLabel(field)}
         </span>
         <span>{motion}</span>
         <span>{speed}</span>
@@ -424,37 +422,36 @@ function App() {
   const canonical = componentReviewHref({ ...parsed, group });
   const pointHref = (
     label: string,
-    field: CatalogueFieldSelection,
+    field: CatalogueAxesSelection,
   ) => ({
     label,
     href: componentReviewHref({
       ...parsed,
       group,
-      theme: catalogueFieldPolarity(field),
+      theme: catalogueAxesPolarity(field),
       field,
     }),
   });
   const judgmentLinks = [
-    pointHref("Light pole", { ...parsed.field, darkness: 0 }),
+    pointHref("Light", { ...parsed.field, darkness: 0 }),
     pointHref("0A light", { ...parsed.field, darkness: 0.25 }),
     pointHref("0A midpoint", { ...parsed.field, darkness: 0.5 }),
     pointHref("0A dark", { ...parsed.field, darkness: 0.75 }),
-    pointHref("Dark pole", { ...parsed.field, darkness: 1 }),
+    pointHref("Dark", { ...parsed.field, darkness: 1 }),
     pointHref("Structure low", { ...parsed.field, structure: 0 }),
     pointHref("Structure high", { ...parsed.field, structure: 2 }),
     pointHref("Density low", { ...parsed.field, density: 0.5 }),
     pointHref("Density high", { ...parsed.field, density: 2 }),
     {
-      label: "Field identity",
-      href: componentReviewHref({ ...parsed, group, appearance: "field" }),
+      label: "Monochrome",
+      href: componentReviewHref({ ...parsed, group, accent: undefined }),
     },
     {
       label: "Accent 255",
       href: componentReviewHref({
         ...parsed,
         group,
-        appearance: "accent",
-        accentHue: 255,
+        accent: 255,
       }),
     },
   ];
@@ -464,11 +461,11 @@ function App() {
       className="discern-review-shell"
       data-discern-root
       data-discern-theme={appliedTheme}
-      data-discern-appearance={parsed.appearance}
-      style={catalogueFieldStyle(
+      data-discern-accent={parsed.accent === undefined ? undefined : ""}
+      style={catalogueAppearanceRootStyle(
         parsed.field,
         parsed.theme,
-        parsed.accentHue,
+        parsed.accent,
       ) as CSSProperties}
     >
       <header className="discern-review-header">
@@ -554,26 +551,17 @@ function App() {
             <option>dark</option>
           </Select>
         </label>
-        <label>
-          Appearance<Select
-            name="appearance"
-            defaultValue={parsed.appearance}
-          >
-            <option value="field">Field</option>
-            <option value="accent">Accent</option>
-          </Select>
-        </label>
         <Input
           name="accent"
-          type="number"
-          min="0"
-          max="360"
-          step="any"
-          label="Accent hue"
-          defaultValue={parsed.accentHue}
+          type="text"
+          label="Accent"
+          defaultValue={parsed.accent === undefined
+            ? CATALOGUE_ACCENT_NONE
+            : String(parsed.accent)}
           list="discern-review-accent-hues"
         />
         <datalist id="discern-review-accent-hues">
+          <option value={CATALOGUE_ACCENT_NONE}>monochrome</option>
           {catalogueAppearanceOptions.map(({ id, hue }) => (
             <option key={id} value={hue}>{id}</option>
           ))}
@@ -581,7 +569,7 @@ function App() {
         <input
           type="hidden"
           name="field"
-          value={serializeCatalogueFieldSelection(parsed.field)}
+          value={serializeCatalogueAxes(parsed.field)}
         />
         <label>
           Motion<Select name="motion" defaultValue={parsed.motion}>
@@ -667,10 +655,7 @@ function App() {
                   width={effectiveWidth}
                   responsiveAllocation={responsiveAllocation}
                   theme={requirements?.theme ?? parsed.theme}
-                  appearance={postureHue === undefined
-                    ? parsed.appearance
-                    : "accent"}
-                  accentHue={postureHue ?? parsed.accentHue}
+                  accent={postureHue ?? parsed.accent}
                   field={parsed.field}
                   motion={requirements?.reducedMotion
                     ? "reduced"

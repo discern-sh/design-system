@@ -7,11 +7,9 @@ import {
 } from "@std/assert";
 import { oklchToSrgb } from "../../src/internal/oklch.ts";
 import {
-  accentAppearance,
+  appearanceColorRoleLaws,
   baseTokens,
   evaluateOpaqueAppearance,
-  evaluateOpaqueField,
-  fieldColorRoleLaws,
   themeTokens,
 } from "../../src/tokens/tokens.ts";
 import {
@@ -34,7 +32,9 @@ Deno.test("terminal palettes enroll every authored semantic colour Token", () =>
 });
 
 Deno.test("only categorical series colours bypass the appearance evaluator", () => {
-  const appearanceRoles = new Set(fieldColorRoleLaws.map(({ name }) => name));
+  const appearanceRoles = new Set(
+    appearanceColorRoleLaws.map(({ name }) => name),
+  );
   const independentRoles = themeTokens
     .filter((token) =>
       token.category === "Color" && !appearanceRoles.has(token.name)
@@ -53,7 +53,7 @@ Deno.test("only categorical series colours bypass the appearance evaluator", () 
   for (const variant of ["light", "dark"] as const) {
     const accent = resolveTerminalTheme({
       theme: variant,
-      appearance: accentAppearance(137.5),
+      appearance: { accent: 137.5 },
     });
     for (const name of independentRoles) {
       assertEquals(
@@ -78,10 +78,10 @@ Deno.test("truecolour values carry computed 256- and 16-colour fallbacks", () =>
   }
 });
 
-Deno.test("terminal field colours are opaque pole evaluations without the blue preset", () => {
+Deno.test("terminal monochrome colours are opaque pole evaluations", () => {
   for (const [variant, darkness] of [["light", 0], ["dark", 1]] as const) {
-    const field = evaluateOpaqueField({ darkness });
-    for (const law of fieldColorRoleLaws) {
+    const field = evaluateOpaqueAppearance({ darkness });
+    for (const law of appearanceColorRoleLaws) {
       const value = field[law.name];
       assert(value !== undefined, `${variant} ${law.name} was not evaluated`);
       const match = value.match(
@@ -114,10 +114,10 @@ Deno.test("terminal palette authority projects the complete Accent hue domain", 
   ];
   for (const [variant, darkness] of [["light", 0], ["dark", 1]] as const) {
     for (const hue of hues) {
-      const appearance = accentAppearance(hue);
-      const expected = evaluateOpaqueAppearance(appearance, { darkness });
+      const appearance = { accent: hue };
+      const expected = evaluateOpaqueAppearance({ darkness, ...appearance });
       const actual = resolveTerminalTheme({ theme: variant, appearance });
-      for (const law of fieldColorRoleLaws) {
+      for (const law of appearanceColorRoleLaws) {
         const value = expected[law.name];
         assert(value !== undefined, `${law.name} was not evaluated`);
         const match = value.match(
@@ -157,7 +157,7 @@ Deno.test("Accent semantic roles keep the strongest finite-palette distinction",
   for (const variant of ["light", "dark"] as const) {
     const palette = resolveTerminalTheme({
       theme: variant,
-      appearance: accentAppearance(335),
+      appearance: { accent: 335 },
     });
     for (const tone of ["accent", "success", "warning", "danger"] as const) {
       const color = terminalToneColor(palette, tone);
@@ -196,7 +196,7 @@ Deno.test("finite-palette collisions stay local to matching semantic hue familie
   for (const { hue, variant, depth, tone } of cases) {
     const palette = resolveTerminalTheme({
       theme: variant,
-      appearance: accentAppearance(hue),
+      appearance: { accent: hue },
     });
     assertEquals(
       terminalToneColor(palette, "accent")[depth],
@@ -206,21 +206,21 @@ Deno.test("finite-palette collisions stay local to matching semantic hue familie
   }
 });
 
-Deno.test("terminal appearance defaults to cached Field poles and validates Accent", () => {
+Deno.test("terminal appearance defaults to cached monochrome poles and validates the accent", () => {
   assertStrictEquals(resolveTerminalTheme(), terminalThemes.dark);
   assertStrictEquals(
-    resolveTerminalTheme({ theme: "light", appearance: { name: "field" } }),
+    resolveTerminalTheme({ theme: "light", appearance: {} }),
     terminalThemes.light,
   );
   assertEquals(
-    resolveTerminalTheme({ appearance: accentAppearance(360) }).colors,
-    resolveTerminalTheme({ appearance: accentAppearance(0) }).colors,
+    resolveTerminalTheme({ appearance: { accent: 360 } }).colors,
+    resolveTerminalTheme({ appearance: { accent: 0 } }).colors,
   );
   for (const hue of [-0.01, 360.01, Number.NaN, Number.POSITIVE_INFINITY]) {
     assertThrows(
       () =>
         resolveTerminalTheme({
-          appearance: { name: "accent", hue },
+          appearance: { accent: hue },
         }),
       TypeError,
       "outside the finite [0, 360] domain",
@@ -246,4 +246,36 @@ Deno.test("terminal spacing and type roles derive from base Token metadata", () 
   assertEquals(terminalThemes.dark.typography.display, { bold: true });
   assertEquals(terminalThemes.dark.typography.muted, { dim: true });
   assertEquals(terminalThemes.dark.typography.emphasis, { italic: true });
+});
+
+Deno.test("pigment tints reach the terminal palette and leave the untinted cache alone", () => {
+  assertStrictEquals(
+    resolveTerminalTheme({
+      theme: "dark",
+      appearance: { paperTint: 0, paperTintHue: 120, inkTint: 0 },
+    }),
+    terminalThemes.dark,
+  );
+  const navy = resolveTerminalTheme({
+    theme: "dark",
+    appearance: { inkTint: 1, inkTintHue: 265 },
+  });
+  assertEquals(navy.appearance, { inkTint: 1, inkTintHue: 265 });
+  const expected = evaluateOpaqueAppearance({
+    darkness: 1,
+    inkTint: 1,
+    inkTintHue: 265,
+  })["--discern-color-canvas"];
+  const match = expected?.match(/^oklch\(([\d.]+)%\s+([\d.]+)\s+(-?[\d.]+)\)$/);
+  assert(match !== null && match !== undefined);
+  const canvas = terminalThemeColor(navy, "--discern-color-canvas");
+  assertEquals(
+    { red: canvas.red, green: canvas.green, blue: canvas.blue },
+    oklchToSrgb(Number(match[1]) / 100, Number(match[2]), Number(match[3])),
+  );
+  assert(canvas.blue > canvas.red, "a navy ink tint must lean blue");
+  assertNotEquals(
+    canvas,
+    terminalThemeColor(terminalThemes.dark, "--discern-color-canvas"),
+  );
 });

@@ -8,17 +8,27 @@ import {
 } from "../../src/internal/oklch.ts";
 import { emitDesignSystemRuntime } from "../../src/runtime.ts";
 import {
-  accentAppearance,
-  type AppearanceName,
-  defaultFieldPoint,
+  APPEARANCE_POLARITY_CROSSOVER_DARKNESS,
+  type AppearanceAxes,
+  appearanceAxisNames,
+  appearanceColorRoleLaws,
+  type AppearanceProjection,
+  defaultAppearance,
   evaluateAppearance,
-  evaluateField,
-  FIELD_POLARITY_CROSSOVER_DARKNESS,
-  fieldColorRoleLaws,
-  type FieldPoint,
-} from "../../src/tokens/field.ts";
-import { FIELD_LIVE_CSS_SUPPORTS } from "../../src/tokens/field-css.ts";
+} from "../../src/tokens/appearance.ts";
+import {
+  APPEARANCE_LIVE_CSS_SUPPORTS,
+  appearanceAxisCustomPropertyName,
+} from "../../src/tokens/appearance-live-css.ts";
 import { baseTokens, themeTokens } from "../../src/tokens/tokens.ts";
+
+/** Every axis with its registered custom property, in authored order. */
+const axisProperties: Readonly<Record<string, string>> = Object.fromEntries(
+  appearanceAxisNames.map((axis) => [
+    axis,
+    appearanceAxisCustomPropertyName(axis),
+  ]),
+);
 
 const OKLAB_TOLERANCE = 0.006;
 const ALPHA_TOLERANCE = 1 / 255 + 0.0005;
@@ -30,9 +40,9 @@ export interface ProjectionColor {
   readonly alpha: number;
 }
 
-interface FieldProjectionSample {
+interface AppearanceProjectionSample {
   readonly label: string;
-  readonly point: FieldPoint;
+  readonly point: AppearanceAxes;
   readonly theme: "light" | "dark" | "system" | null;
   readonly media: "light" | "dark";
   readonly scheme: "light" | "dark";
@@ -40,8 +50,8 @@ interface FieldProjectionSample {
   readonly poleMode?: "light" | "dark";
 }
 
-/** Evidence counts returned by the browser field-projection guard. */
-export interface FieldProjectionEvidence {
+/** Evidence counts returned by the browser appearance-projection guard. */
+export interface AppearanceProjectionEvidence {
   readonly points: number;
   readonly roleChecks: number;
   readonly poleChecks: number;
@@ -52,10 +62,10 @@ export interface FieldProjectionEvidence {
 }
 
 const defaultPoint = (
-  overrides: Partial<FieldPoint> = {},
-): FieldPoint => ({ ...defaultFieldPoint, ...overrides });
+  overrides: Partial<AppearanceAxes> = {},
+): AppearanceAxes => ({ ...defaultAppearance, ...overrides });
 
-const samples: readonly FieldProjectionSample[] = [
+const samples: readonly AppearanceProjectionSample[] = [
   {
     label: "explicit light pole",
     point: defaultPoint({ darkness: 0 }),
@@ -81,7 +91,7 @@ const samples: readonly FieldProjectionSample[] = [
   {
     label: "polarity crossover light neighbour",
     point: defaultPoint({
-      darkness: FIELD_POLARITY_CROSSOVER_DARKNESS - 0.0001,
+      darkness: APPEARANCE_POLARITY_CROSSOVER_DARKNESS - 0.0001,
     }),
     theme: null,
     media: "light",
@@ -91,7 +101,7 @@ const samples: readonly FieldProjectionSample[] = [
   {
     label: "polarity crossover dark neighbour",
     point: defaultPoint({
-      darkness: FIELD_POLARITY_CROSSOVER_DARKNESS + 0.0001,
+      darkness: APPEARANCE_POLARITY_CROSSOVER_DARKNESS + 0.0001,
     }),
     theme: null,
     media: "light",
@@ -104,6 +114,21 @@ const samples: readonly FieldProjectionSample[] = [
     theme: null,
     media: "light",
     scheme: "dark",
+    authoredPoint: true,
+  },
+  {
+    label: "tinted stock and navy ink",
+    point: defaultPoint({
+      darkness: 0.3,
+      structure: 1.2,
+      paperTint: 0.6,
+      paperTintHue: 80,
+      inkTint: 0.8,
+      inkTintHue: 265,
+    }),
+    theme: null,
+    media: "light",
+    scheme: "light",
     authoredPoint: true,
   },
   {
@@ -153,7 +178,9 @@ function parseOklch(value: string): ProjectionColor {
     /^oklch\(\s*([+-]?[\d.]+)%\s+([+-]?[\d.]+)\s+([+-]?[\d.]+)(?:\s+\/\s+([+-]?[\d.]+))?\s*\)$/u,
   );
   if (match === null) {
-    throw new TypeError(`Field projection expected OKLCH, received ${value}`);
+    throw new TypeError(
+      `Appearance projection expected OKLCH, received ${value}`,
+    );
   }
   const lightness = Number(match[1]) / 100;
   const chroma = Number(match[2]);
@@ -179,7 +206,7 @@ function alphaChannel(value: string | undefined): number {
 }
 
 /** Parse the CSSOM colour forms emitted by the conformance browser. */
-export function parseComputedFieldColor(value: string): ProjectionColor {
+export function parseComputedAppearanceColor(value: string): ProjectionColor {
   const oklch = value.match(
     /^oklch\(\s*([+-]?[\d.]+%?)\s+([+-]?[\d.]+)\s+([+-]?[\d.]+)(?:deg)?(?:\s+\/\s+([+-]?[\d.]+%?))?\s*\)$/u,
   );
@@ -268,9 +295,9 @@ function requiredPoleValue(
  * the signed-off samples and crossover neighbours. Browser RGBA quantization
  * sets the stated 0.006 OKLab and one-channel alpha tolerances.
  */
-export async function verifyFieldProjection(
+export async function verifyAppearanceProjection(
   page: Page,
-): Promise<FieldProjectionEvidence> {
+): Promise<AppearanceProjectionEvidence> {
   const output = await Deno.makeTempDir();
   try {
     await emitDesignSystemRuntime({
@@ -280,7 +307,7 @@ export async function verifyFieldProjection(
     });
     const css = await Deno.readTextFile(`${output}/discern.css`);
     await page.setContent(
-      '<main id="discern-field-probe" data-discern-root></main>',
+      '<main id="discern-appearance-probe" data-discern-root></main>',
     );
     await page.addStyleTag({ content: css });
 
@@ -292,17 +319,14 @@ export async function verifyFieldProjection(
           return match?.[1] === undefined ? [] : [match[1]];
         })
       ),
-    }), FIELD_LIVE_CSS_SUPPORTS);
+    }), APPEARANCE_LIVE_CSS_SUPPORTS);
     if (!registrationEvidence.supportsLiveProjection) {
       throw new Error(
-        `Conformance browser does not support the live field query ${FIELD_LIVE_CSS_SUPPORTS}`,
+        `Conformance browser does not support the live appearance query ${APPEARANCE_LIVE_CSS_SUPPORTS}`,
       );
     }
     const expectedRegistrations = [
-      "--discern-darkness",
-      "--discern-structure",
-      "--discern-emphasis",
-      "--discern-density",
+      ...Object.values(axisProperties),
       "--discern-accent-hue",
     ];
     if (
@@ -310,13 +334,13 @@ export async function verifyFieldProjection(
         expectedRegistrations.join("\n")
     ) {
       throw new Error(
-        `Field axis registrations differ: expected ${
+        `Appearance axis registrations differ: expected ${
           expectedRegistrations.join(", ")
         }; received ${registrationEvidence.registrations.join(", ")}`,
       );
     }
 
-    const roleNames = fieldColorRoleLaws.map(({ name }) => name);
+    const roleNames = appearanceColorRoleLaws.map(({ name }) => name);
     const spacingTokens = baseTokens.filter(({ name }) =>
       name.startsWith("--discern-space-")
     );
@@ -330,10 +354,10 @@ export async function verifyFieldProjection(
     for (const sample of samples) {
       await page.emulateMedia({ colorScheme: sample.media });
       const observed = await page.evaluate(
-        ({ roleNames, sample, spacingNames }) => {
-          const root = document.getElementById("discern-field-probe");
+        ({ axisProperties, roleNames, sample, spacingNames }) => {
+          const root = document.getElementById("discern-appearance-probe");
           if (!(root instanceof HTMLElement)) {
-            throw new Error("Missing field probe root");
+            throw new Error("Missing appearance probe root");
           }
           root.removeAttribute("data-discern-theme");
           root.removeAttribute("style");
@@ -342,7 +366,11 @@ export async function verifyFieldProjection(
           }
           if (sample.authoredPoint) {
             for (const [axis, value] of Object.entries(sample.point)) {
-              root.style.setProperty(`--discern-${axis}`, String(value));
+              const property = axisProperties[axis];
+              if (property === undefined) {
+                throw new Error(`unknown axis ${axis}`);
+              }
+              root.style.setProperty(property, String(value));
             }
             root.style.colorScheme = sample.scheme;
           }
@@ -375,9 +403,9 @@ export async function verifyFieldProjection(
           const rootStyle = getComputedStyle(root);
           return {
             axes: Object.fromEntries(
-              ["darkness", "structure", "emphasis", "density"].map((axis) => [
+              Object.entries(axisProperties).map(([axis, property]) => [
                 axis,
-                Number(rootStyle.getPropertyValue(`--discern-${axis}`)),
+                Number(rootStyle.getPropertyValue(property)),
               ]),
             ),
             colorScheme: rootStyle.colorScheme,
@@ -386,6 +414,7 @@ export async function verifyFieldProjection(
           };
         },
         {
+          axisProperties,
           roleNames,
           sample,
           spacingNames: spacingTokens.map(({ name }) => name),
@@ -396,7 +425,9 @@ export async function verifyFieldProjection(
         const actual = observed.axes[axis];
         if (actual === undefined || Math.abs(actual - expected) > 0.0000001) {
           failures.push(
-            `${sample.label}: --discern-${axis} expected ${expected}, received ${actual}`,
+            `${sample.label}: ${
+              axisProperties[axis]
+            } expected ${expected}, received ${actual}`,
           );
         }
       }
@@ -406,7 +437,7 @@ export async function verifyFieldProjection(
         );
       }
 
-      const expectedRoles = evaluateField(sample.point);
+      const expectedRoles = evaluateAppearance(sample.point);
       for (const value of observed.roles) {
         const expectedValue = expectedRoles[value.name];
         if (expectedValue === undefined) {
@@ -415,7 +446,7 @@ export async function verifyFieldProjection(
         }
         const mismatch = colorMismatch(
           parseOklch(expectedValue),
-          parseComputedFieldColor(value.computed),
+          parseComputedAppearanceColor(value.computed),
         );
         roleChecks += 1;
         if (mismatch !== undefined) {
@@ -428,7 +459,7 @@ export async function verifyFieldProjection(
         if (sample.poleMode !== undefined) {
           const poleMismatch = colorMismatch(
             parseOklch(requiredPoleValue(value.name, sample.poleMode)),
-            parseComputedFieldColor(value.computed),
+            parseComputedAppearanceColor(value.computed),
           );
           poleChecks += 1;
           if (poleMismatch !== undefined) {
@@ -458,17 +489,17 @@ export async function verifyFieldProjection(
     }
 
     interface ScopeNode {
-      readonly appearance: AppearanceName;
+      readonly appearance: AppearanceProjection;
       readonly hue?: number;
-      readonly axes?: Partial<FieldPoint>;
+      readonly axes?: Partial<AppearanceAxes>;
     }
     const scopeScenarios: readonly {
       readonly label: string;
-      readonly base: FieldPoint;
+      readonly base: AppearanceAxes;
       readonly nodes: readonly ScopeNode[];
     }[] = [
       {
-        label: "Field to Accent 255 to Field",
+        label: "Mono to Accent 255 to Mono",
         base: defaultPoint({
           darkness: 0.25,
           structure: 0.35,
@@ -476,23 +507,25 @@ export async function verifyFieldProjection(
           density: 0.8,
         }),
         nodes: [
-          { appearance: "field" },
+          { appearance: "mono" },
           { appearance: "accent", hue: 255 },
-          { appearance: "field" },
+          { appearance: "mono" },
         ],
       },
       {
-        label: "Accent 120 to Field to Accent 335 with local axes",
+        label: "Accent 120 to Mono to Accent 335 with local axes",
         base: defaultPoint({ darkness: 0.25 }),
         nodes: [
           { appearance: "accent", hue: 120 },
           {
-            appearance: "field",
+            appearance: "mono",
             axes: {
               darkness: 0.75,
               structure: 1.4,
               emphasis: 1.35,
               density: 1.2,
+              inkTint: 0.5,
+              inkTintHue: 265,
             },
           },
           { appearance: "accent", hue: 335 },
@@ -511,23 +544,30 @@ export async function verifyFieldProjection(
 
     for (const scenario of scopeScenarios) {
       const observed = await page.evaluate(
-        ({ roleNames, scenario }) => {
-          const root = document.getElementById("discern-field-probe");
+        ({ axisProperties, roleNames, scenario }) => {
+          const root = document.getElementById("discern-appearance-probe");
           if (!(root instanceof HTMLElement)) {
             throw new Error("Missing appearance-scope probe root");
           }
           root.replaceChildren();
           root.removeAttribute("data-discern-theme");
-          root.removeAttribute("data-discern-appearance");
+          root.removeAttribute("data-discern-accent");
           root.removeAttribute("style");
+          const axisProperty = (axis: string): string => {
+            const property = axisProperties[axis];
+            if (property === undefined) throw new Error(`unknown axis ${axis}`);
+            return property;
+          };
           for (const [axis, value] of Object.entries(scenario.base)) {
-            root.style.setProperty(`--discern-${axis}`, String(value));
+            root.style.setProperty(axisProperty(axis), String(value));
           }
 
           let parent: HTMLElement | undefined;
           const elements = scenario.nodes.map((node, index) => {
             const element = index === 0 ? root : document.createElement("div");
-            element.dataset.discernAppearance = node.appearance;
+            element.dataset.discernAccent = node.appearance === "mono"
+              ? "none"
+              : "";
             if (node.hue !== undefined) {
               element.style.setProperty(
                 "--discern-accent-hue",
@@ -535,7 +575,7 @@ export async function verifyFieldProjection(
               );
             }
             for (const [axis, value] of Object.entries(node.axes ?? {})) {
-              element.style.setProperty(`--discern-${axis}`, String(value));
+              element.style.setProperty(axisProperty(axis), String(value));
             }
             if (parent !== undefined) parent.append(element);
             parent = element;
@@ -557,9 +597,9 @@ export async function verifyFieldProjection(
             const style = getComputedStyle(element);
             return {
               axes: Object.fromEntries(
-                ["darkness", "structure", "emphasis", "density"].map((axis) => [
+                Object.entries(axisProperties).map(([axis, property]) => [
                   axis,
-                  Number(style.getPropertyValue(`--discern-${axis}`)),
+                  Number(style.getPropertyValue(property)),
                 ]),
               ),
               hue: Number(style.getPropertyValue("--discern-accent-hue")),
@@ -567,7 +607,7 @@ export async function verifyFieldProjection(
             };
           });
         },
-        { roleNames, scenario },
+        { axisProperties, roleNames, scenario },
       );
 
       let inheritedPoint = scenario.base;
@@ -585,7 +625,9 @@ export async function verifyFieldProjection(
           const actual = result.axes[axis];
           if (actual === undefined || Math.abs(actual - expected) > 0.0000001) {
             failures.push(
-              `${scenario.label} scope ${index}: inherited --discern-${axis} expected ${expected}, received ${actual}`,
+              `${scenario.label} scope ${index}: inherited ${
+                axisProperties[axis]
+              } expected ${expected}, received ${actual}`,
             );
           }
         }
@@ -595,12 +637,10 @@ export async function verifyFieldProjection(
             `${scenario.label} scope ${index}: inherited hue expected ${inheritedHue}, received ${result.hue}`,
           );
         }
-        const expected = evaluateAppearance(
-          node.appearance === "field"
-            ? { name: "field" }
-            : accentAppearance(inheritedHue),
-          inheritedPoint,
-        );
+        const expected = evaluateAppearance({
+          ...inheritedPoint,
+          ...(node.appearance === "accent" ? { accent: inheritedHue } : {}),
+        });
         for (const role of result.roles) {
           const expectedValue = expected[role.name];
           if (expectedValue === undefined) {
@@ -612,7 +652,7 @@ export async function verifyFieldProjection(
           appearanceScopeChecks += 1;
           const mismatch = colorMismatch(
             parseOklch(expectedValue),
-            parseComputedFieldColor(role.computed),
+            parseComputedAppearanceColor(role.computed),
           );
           if (mismatch !== undefined) {
             failures.push(
@@ -629,7 +669,7 @@ export async function verifyFieldProjection(
       const shown = failures.slice(0, 24);
       const remainder = failures.length - shown.length;
       throw new Error(
-        `Field CSS projection mismatch:\n- ${shown.join("\n- ")}${
+        `Appearance CSS projection mismatch:\n- ${shown.join("\n- ")}${
           remainder > 0 ? `\n- … ${remainder} more` : ""
         }`,
       );

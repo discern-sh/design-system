@@ -2,20 +2,20 @@ import { assert, assertEquals, assertStringIncludes } from "@std/assert";
 import { join, toFileUrl } from "@std/path";
 import { emitDesignSystemRuntime } from "../src/runtime.ts";
 import {
-  APPEARANCE_ATTRIBUTE,
+  ACCENT_ATTRIBUTE,
+  ACCENT_NONE_VALUE,
+  accentScopeAttributeSelector,
   appearancePoleProjection,
   appearanceScopeCss,
-  browserAppearances,
-} from "../src/tokens/appearance-css.ts";
+} from "../src/tokens/appearance-scope-css.ts";
 import {
-  accentAppearance,
+  appearanceColorRoleLaws,
+  appearanceProjections,
+  appearanceShadowRoleLaws,
   DEFAULT_ACCENT_HUE,
   evaluateAppearance,
-  evaluateField,
-  evaluateFieldShadows,
-  fieldColorRoleLaws,
-  fieldShadowRoleLaws,
-} from "../src/tokens/field.ts";
+  evaluateAppearanceShadows,
+} from "../src/tokens/appearance.ts";
 
 function concreteHue(value: string): string {
   return value.replaceAll(
@@ -27,40 +27,50 @@ function concreteHue(value: string): string {
 Deno.test("static appearance poles are projections of the same role graph", () => {
   for (const mode of ["light", "dark"] as const) {
     const darkness = mode === "light" ? 0 : 1;
-    const field = appearancePoleProjection("field", mode);
-    assertEquals(field.roles, evaluateField({ darkness }));
-    assertEquals(field.shadows, evaluateFieldShadows({ darkness }));
+    const mono = appearancePoleProjection("mono", mode);
+    assertEquals(mono.roles, evaluateAppearance({ darkness }));
+    assertEquals(mono.shadows, evaluateAppearanceShadows({ darkness }));
 
     const accent = appearancePoleProjection("accent", mode);
-    const expected = evaluateAppearance(accentAppearance(DEFAULT_ACCENT_HUE), {
+    const expected = evaluateAppearance({
       darkness,
+      accent: DEFAULT_ACCENT_HUE,
     });
-    for (const law of fieldColorRoleLaws) {
+    for (const law of appearanceColorRoleLaws) {
       assertEquals(
         concreteHue(accent.roles[law.name] ?? ""),
         expected[law.name],
       );
     }
-    assertEquals(accent.shadows, field.shadows);
+    assertEquals(accent.shadows, mono.shadows);
   }
 });
 
 Deno.test("appearance scope CSS is symmetric, rooted, and zero-specificity", () => {
-  assertEquals(browserAppearances, ["field", "accent"]);
-  for (const appearance of browserAppearances) {
+  assertEquals(appearanceProjections, ["mono", "accent"]);
+  assertEquals(
+    accentScopeAttributeSelector("accent"),
+    `[${ACCENT_ATTRIBUTE}]:not([${ACCENT_ATTRIBUTE}="${ACCENT_NONE_VALUE}"])`,
+  );
+  assertEquals(
+    accentScopeAttributeSelector("mono"),
+    `[${ACCENT_ATTRIBUTE}="${ACCENT_NONE_VALUE}"]`,
+  );
+  for (const projection of appearanceProjections) {
+    const attribute = accentScopeAttributeSelector(projection);
     assertStringIncludes(
       appearanceScopeCss,
-      `:where([data-discern-root][${APPEARANCE_ATTRIBUTE}="${appearance}"], [data-discern-root] [${APPEARANCE_ATTRIBUTE}="${appearance}"])`,
+      `:where([data-discern-root]${attribute}, [data-discern-root] ${attribute})`,
     );
   }
   for (const line of appearanceScopeCss.split("\n")) {
     const value = line.trim();
-    if (value.includes(APPEARANCE_ATTRIBUTE) && value.endsWith("{")) {
+    if (value.includes(ACCENT_ATTRIBUTE) && value.endsWith("{")) {
       assert(value.startsWith(":where("), value);
       assert(value.includes("[data-discern-root]"), value);
     }
   }
-  for (const law of [...fieldColorRoleLaws, ...fieldShadowRoleLaws]) {
+  for (const law of [...appearanceColorRoleLaws, ...appearanceShadowRoleLaws]) {
     assertStringIncludes(appearanceScopeCss, `${law.name}:`);
   }
 });
@@ -77,7 +87,7 @@ Deno.test("runtime emits appearance scopes only when selected", async () => {
     assertEquals(plainSummary.manifest.selection.appearanceScopes, false);
     assert(
       !(await Deno.readTextFile(join(plain, "discern.css"))).includes(
-        APPEARANCE_ATTRIBUTE,
+        ACCENT_ATTRIBUTE,
       ),
     );
 
@@ -98,7 +108,7 @@ Deno.test("runtime emits appearance scopes only when selected", async () => {
       await Deno.readFile(join(second, "discern.css")),
     );
     const css = await Deno.readTextFile(join(first, "discern.css"));
-    assertStringIncludes(css, APPEARANCE_ATTRIBUTE);
+    assertStringIncludes(css, ACCENT_ATTRIBUTE);
     assertStringIncludes(css, "--discern-accent-hue");
   } finally {
     await Deno.remove(plain, { recursive: true });

@@ -30,7 +30,6 @@ import {
   resolveTerminalTheme,
   terminalToneColor,
 } from "../../src/cli/theme.ts";
-import { accentAppearance } from "../../src/tokens/tokens.ts";
 import {
   markdownBrowserEntries,
   markdownBrowserOptions,
@@ -95,7 +94,7 @@ Deno.test("browser queries reject resumed and pasted format controls", () => {
 });
 
 Deno.test("Markdown browser state carries Accent through nested document rendering", () => {
-  const appearance = accentAppearance(245);
+  const appearance = { accent: 245 };
   let state = createMarkdownBrowserState(
     markdownBrowserOptions,
     { columns: 80, rows: 24 },

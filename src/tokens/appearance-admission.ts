@@ -1,5 +1,5 @@
 /**
- * Numerical admission proof for the shared Field/Accent appearance graph.
+ * Numerical admission proof for the shared appearance graph.
  * The proof consumes public role evaluation rather than carrying colour
  * coefficients of its own.
  *
@@ -11,20 +11,21 @@ import {
   type OklabColor,
   oklabContrast,
   oklabDistance,
+  oklabToLinearRgb,
 } from "../internal/oklch.ts";
 import {
-  accentAppearance,
   ACTION_SHADOW_DISTANCE_FLOOR,
   type Appearance,
-  defaultFieldPoint,
+  APPEARANCE_INK_CONTRAST_FLOORS,
+  APPEARANCE_POLARITY_CROSSOVER_DARKNESS,
+  type AppearanceAxes,
+  appearanceColorRoleLaws,
+  appearancePigmentLaws,
+  defaultAppearance,
   evaluateAppearance,
-  FIELD_INK_CONTRAST_FLOORS,
-  FIELD_POLARITY_CROSSOVER_DARKNESS,
-  fieldAppearance,
-  fieldColorRoleLaws,
-  type FieldPoint,
+  evaluatePigment,
   ownedSurfaceRoleNames,
-} from "./field.ts";
+} from "./appearance.ts";
 
 /** Minimum OKLab distance between Accent and semantic families. */
 export const APPEARANCE_SEMANTIC_DISTANCE_FLOOR = 0.08;
@@ -42,10 +43,10 @@ export interface AppearanceSeriesPair {
   readonly dark: string;
 }
 
-/** One signed field point in the package admission sweep. */
+/** One signed axis point in the package admission sweep. */
 export interface AppearanceAdmissionPoint {
   readonly label: string;
-  readonly point: FieldPoint;
+  readonly point: AppearanceAxes;
 }
 
 /** A failed numerical invariant with enough coordinates to reproduce it. */
@@ -68,10 +69,10 @@ export interface AppearanceAdmissionProof {
 
 const point = (
   label: string,
-  overrides: Partial<FieldPoint>,
+  overrides: Partial<AppearanceAxes>,
 ): AppearanceAdmissionPoint => ({
   label,
-  point: { ...defaultFieldPoint, ...overrides },
+  point: { ...defaultAppearance, ...overrides },
 });
 
 /** Poles, signed 0A postures, crossover neighbours, and axis stress points. */
@@ -85,10 +86,10 @@ export const APPEARANCE_ADMISSION_POINTS: readonly AppearanceAdmissionPoint[] =
       density: 0.8,
     }),
     point("polarity light neighbour", {
-      darkness: FIELD_POLARITY_CROSSOVER_DARKNESS - 0.0001,
+      darkness: APPEARANCE_POLARITY_CROSSOVER_DARKNESS - 0.0001,
     }),
     point("polarity dark neighbour", {
-      darkness: FIELD_POLARITY_CROSSOVER_DARKNESS + 0.0001,
+      darkness: APPEARANCE_POLARITY_CROSSOVER_DARKNESS + 0.0001,
     }),
     point("0A midpoint", { darkness: 0.5 }),
     point("0A dark posture", {
@@ -102,7 +103,61 @@ export const APPEARANCE_ADMISSION_POINTS: readonly AppearanceAdmissionPoint[] =
     point("high emphasis", { darkness: 0.75, emphasis: 1.5 }),
     point("low structure", { darkness: 0.25, structure: 0 }),
     point("high structure", { darkness: 0.75, structure: 2 }),
+    ...Array.from({ length: 12 }, (_, step) => step * 30).flatMap((hue) => [
+      point(`tinted light pole at hue ${hue}`, {
+        darkness: 0,
+        paperTint: 1,
+        paperTintHue: hue,
+        inkTint: 1,
+        inkTintHue: hue,
+      }),
+      point(`tinted dark pole at hue ${hue}`, {
+        darkness: 1,
+        paperTint: 1,
+        paperTintHue: hue,
+        inkTint: 1,
+        inkTintHue: hue,
+      }),
+    ]),
+    point("tinted polarity light neighbour", {
+      darkness: APPEARANCE_POLARITY_CROSSOVER_DARKNESS - 0.0001,
+      paperTint: 1,
+      paperTintHue: 300,
+      inkTint: 1,
+      inkTintHue: 30,
+    }),
+    point("tinted polarity dark neighbour", {
+      darkness: APPEARANCE_POLARITY_CROSSOVER_DARKNESS + 0.0001,
+      paperTint: 1,
+      paperTintHue: 300,
+      inkTint: 1,
+      inkTintHue: 30,
+    }),
+    point("tinted 0A dark posture", {
+      darkness: 0.75,
+      structure: 1.4,
+      emphasis: 1.35,
+      density: 1.2,
+      paperTint: 0.5,
+      paperTintHue: 265,
+      inkTint: 0.5,
+      inkTintHue: 265,
+    }),
   ]);
+
+/** Tint strengths swept against the complete hue circle for gamut safety. */
+export const APPEARANCE_TINT_STRENGTHS: readonly number[] = Object.freeze([
+  0.25,
+  0.5,
+  0.75,
+  1,
+]);
+
+/** Smallest headroom of any linear sRGB channel inside the displayable range. */
+function gamutMargin(color: OklabColor): number {
+  const channels = oklabToLinearRgb(color.lightness, color.a, color.b);
+  return Math.min(...channels.flatMap((channel) => [channel, 1 - channel]));
+}
 
 const boundaryHues = [
   0.0001,
@@ -166,7 +221,7 @@ function requiredPaint(
 const semanticRoles = ["success", "warning", "danger"] as const;
 
 /**
- * Exhaust the public Accent hue circle and all signed field samples. Series
+ * Exhaust the public Accent hue circle and all signed axis samples. Series
  * pairs are injected from their independent authored palette authority.
  */
 export function proveAppearanceAdmission(
@@ -174,9 +229,9 @@ export function proveAppearanceAdmission(
 ): AppearanceAdmissionProof {
   const failures: AppearanceAdmissionFailure[] = [];
   let checks = 0;
-  const appearances: readonly Appearance[] = [
-    fieldAppearance,
-    ...APPEARANCE_ADMISSION_HUES.map(accentAppearance),
+  const appearances: readonly Partial<Appearance>[] = [
+    {},
+    ...APPEARANCE_ADMISSION_HUES.map((accent) => ({ accent })),
   ];
   const record = (
     appearance: string,
@@ -198,12 +253,12 @@ export function proveAppearanceAdmission(
   };
 
   for (const appearance of appearances) {
-    const appearanceLabel = appearance.name === "field"
-      ? "field"
-      : `accent(${appearance.hue})`;
+    const appearanceLabel = appearance.accent === undefined
+      ? "mono"
+      : `accent(${appearance.accent})`;
     for (const sample of APPEARANCE_ADMISSION_POINTS) {
-      const values = evaluateAppearance(appearance, sample.point);
-      if (Object.keys(values).length !== fieldColorRoleLaws.length) {
+      const values = evaluateAppearance({ ...sample.point, ...appearance });
+      if (Object.keys(values).length !== appearanceColorRoleLaws.length) {
         throw new TypeError(`${appearanceLabel} did not enrol every role`);
       }
       const canvasPaint = requiredPaint(values, "--discern-color-canvas");
@@ -220,7 +275,7 @@ export function proveAppearanceAdmission(
         canvasPaint.alpha,
         1,
       );
-      for (const name of ownedSurfaceRoleNames(fieldColorRoleLaws)) {
+      for (const name of ownedSurfaceRoleNames(appearanceColorRoleLaws)) {
         record(
           appearanceLabel,
           sample.label,
@@ -234,7 +289,7 @@ export function proveAppearanceAdmission(
         opaque("--discern-color-action"),
         canvas,
       );
-      for (const [name, authoredFloor] of FIELD_INK_CONTRAST_FLOORS) {
+      for (const [name, authoredFloor] of APPEARANCE_INK_CONTRAST_FLOORS) {
         record(
           appearanceLabel,
           sample.label,
@@ -376,6 +431,36 @@ export function proveAppearanceAdmission(
           );
         }
       }
+    }
+  }
+
+  for (const strength of APPEARANCE_TINT_STRENGTHS) {
+    for (let hue = 0; hue <= 360; hue += 1) {
+      const sample = `tint ${strength} at hue ${hue}`;
+      record(
+        "pigments",
+        sample,
+        "paper pigment in gamut",
+        gamutMargin(
+          evaluatePigment(appearancePigmentLaws.paper, {
+            paperTint: strength,
+            paperTintHue: hue,
+          }),
+        ),
+        0,
+      );
+      record(
+        "pigments",
+        sample,
+        "ink pigment in gamut",
+        gamutMargin(
+          evaluatePigment(appearancePigmentLaws.ink, {
+            inkTint: strength,
+            inkTintHue: hue,
+          }),
+        ),
+        0,
+      );
     }
   }
 

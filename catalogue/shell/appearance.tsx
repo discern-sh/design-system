@@ -6,16 +6,16 @@ import { ThemeSwitcher } from "../../src/components/core/theme-switcher/theme-sw
 import { Input } from "../../src/components/forms/input/input.tsx";
 import { Select } from "../../src/components/forms/select/select.tsx";
 import {
-  type AppearanceName,
-  defaultFieldPoint,
-  fieldAxes,
-  type FieldAxisName,
-} from "../../src/tokens/field.ts";
+  appearanceAxes,
+  DEFAULT_ACCENT_HUE,
+  pigmentTintAxisNames,
+  primaryAppearanceAxisNames,
+} from "../../src/tokens/appearance.ts";
+import { resolveCatalogueTerminalPresentation } from "../terminal-theme.ts";
+import { useCatalogueTerminalTheme } from "../use-terminal-theme.ts";
 import {
-  resolveCatalogueTerminalPresentation,
-  useCatalogueTerminalTheme,
-} from "../terminal-theme.ts";
-import {
+  CATALOGUE_ACCENT_CHOICE_CUSTOM,
+  CATALOGUE_ACCENT_CHOICE_NONE,
   catalogueAccentHue,
   catalogueAccentHueLabel,
   catalogueAppearanceOptions,
@@ -27,19 +27,21 @@ import {
   legacyCatalogueAppearanceStorageKeys,
   parseCatalogueAppearanceParameters,
   serializeCatalogueAppearanceState,
-  setCatalogueAccentHue,
-  setCatalogueAppearanceIdentity,
+  setCatalogueAccent,
   setCatalogueFieldPoint,
   writeCatalogueAppearanceParameters,
 } from "./appearance-state.ts";
-import { FieldAxisControl } from "./field-axis-control.tsx";
-import type { CatalogueFieldSelection } from "./field-state.ts";
+import { AxisControl } from "./axis-control.tsx";
+import type { CatalogueAxesSelection } from "./axes-state.ts";
 import {
-  catalogueFieldControlScheme,
-  catalogueFieldLabel,
-  catalogueFieldStyle,
-  defaultCatalogueFieldSelection,
-} from "./field-state.ts";
+  catalogueAppearanceRootStyle,
+  catalogueAxesAreDefault,
+  catalogueAxesAreTinted,
+  catalogueAxesControlScheme,
+  catalogueAxesLabel,
+  formatCatalogueAxisNumber,
+  resetCatalogueAxes,
+} from "./axes-state.ts";
 import { announceCatalogueLocationChange } from "./location.ts";
 
 let appearanceStorageUsable = true;
@@ -102,13 +104,13 @@ export function useCatalogueAppearance(url: URL) {
     initialCatalogueAppearance(url)
   );
   const [fieldScheme, setFieldScheme] = useState<"light" | "dark">(() =>
-    catalogueFieldControlScheme(initialCatalogueAppearance(url).field)
+    catalogueAxesControlScheme(initialCatalogueAppearance(url).field)
   );
   const systemTheme = useCatalogueTerminalTheme("system");
 
   const commit = (
     next: CatalogueAppearanceState,
-    scheme = catalogueFieldControlScheme(next.field),
+    scheme = catalogueAxesControlScheme(next.field),
   ): void => {
     setState(next);
     setFieldScheme(scheme);
@@ -125,7 +127,7 @@ export function useCatalogueAppearance(url: URL) {
         new URL(globalThis.location.href).searchParams,
       ) ?? storedCatalogueAppearance() ?? defaultCatalogueAppearanceState;
       setState(restored);
-      setFieldScheme(catalogueFieldControlScheme(restored.field));
+      setFieldScheme(catalogueAxesControlScheme(restored.field));
     };
     globalThis.addEventListener("popstate", restoreFromLocation);
     return () =>
@@ -135,8 +137,8 @@ export function useCatalogueAppearance(url: URL) {
   useEffect(() => {
     if (state.theme !== "system") return;
     const darkness = systemTheme === "dark"
-      ? fieldAxes.darkness.maximum
-      : fieldAxes.darkness.minimum;
+      ? appearanceAxes.darkness.maximum
+      : appearanceAxes.darkness.minimum;
     if (state.field.darkness === darkness && fieldScheme === systemTheme) {
       return;
     }
@@ -149,34 +151,35 @@ export function useCatalogueAppearance(url: URL) {
   const changeTheme = (theme: ThemeSwitcherMode): void => {
     const scheme = theme === "system" ? systemTheme : theme;
     const darkness = scheme === "dark"
-      ? fieldAxes.darkness.maximum
-      : fieldAxes.darkness.minimum;
+      ? appearanceAxes.darkness.maximum
+      : appearanceAxes.darkness.minimum;
     commit(
       { ...state, theme, field: { ...state.field, darkness } },
       scheme,
     );
   };
-  const changeAppearance = (appearance: AppearanceName): void => {
-    commit(setCatalogueAppearanceIdentity(state, appearance), fieldScheme);
+  const changeAccent = (value: number | string | undefined): void => {
+    if (value === undefined) {
+      commit(setCatalogueAccent(state, undefined), fieldScheme);
+      return;
+    }
+    const accent = catalogueAccentHue(value);
+    if (accent === undefined) return;
+    commit(setCatalogueAccent(state, accent), fieldScheme);
   };
-  const changeAccentHue = (value: number | string): void => {
-    const accentHue = catalogueAccentHue(value);
-    if (accentHue === undefined) return;
-    commit(setCatalogueAccentHue(state, accentHue), fieldScheme);
-  };
-  const changeField = (field: CatalogueFieldSelection): void => {
-    const scheme = catalogueFieldControlScheme(field, fieldScheme);
+  const changeField = (field: CatalogueAxesSelection): void => {
+    const scheme = catalogueAxesControlScheme(field, fieldScheme);
     const darknessChanged = field.darkness !== state.field.darkness;
     commit({
       ...setCatalogueFieldPoint(state, field),
       ...(darknessChanged ? { theme: scheme } : {}),
     }, scheme);
   };
-  const resetField = (): void => changeField(defaultCatalogueFieldSelection);
+  const resetField = (): void => changeField(resetCatalogueAxes(state.field));
   const terminalPresentation = resolveCatalogueTerminalPresentation(
     fieldScheme,
-    state.appearance,
-    state.accentHue,
+    state.accent,
+    state.field,
   );
 
   return {
@@ -184,14 +187,13 @@ export function useCatalogueAppearance(url: URL) {
     terminalPresentation,
     fieldScheme,
     changeTheme,
-    changeAppearance,
-    changeAccentHue,
+    changeAccent,
     changeField,
     resetField,
-    style: catalogueFieldStyle(
+    style: catalogueAppearanceRootStyle(
       state.field,
       fieldScheme,
-      state.accentHue,
+      state.accent,
     ) as CSSProperties,
   } as const;
 }
@@ -200,20 +202,14 @@ export interface AppearanceControlProps {
   readonly scopeLabel?: string;
   readonly theme: ThemeSwitcherMode;
   readonly resolvedTheme: "light" | "dark";
-  readonly appearance: AppearanceName;
-  readonly accentHue: number;
-  readonly field: CatalogueFieldSelection;
+  /** Accent hue, or `undefined` for monochrome. */
+  readonly accent: number | undefined;
+  readonly field: CatalogueAxesSelection;
   readonly onThemeChange: (theme: ThemeSwitcherMode) => void;
-  readonly onAppearanceChange: (appearance: AppearanceName) => void;
-  readonly onAccentHueChange: (hue: number | string) => void;
-  readonly onFieldChange: (field: CatalogueFieldSelection) => void;
+  /** A hue, a named convenience, or `undefined` to return to monochrome. */
+  readonly onAccentChange: (accent: number | string | undefined) => void;
+  readonly onFieldChange: (field: CatalogueAxesSelection) => void;
   readonly onFieldReset: () => void;
-}
-
-function fieldIsDefault(field: CatalogueFieldSelection): boolean {
-  return (Object.keys(fieldAxes) as FieldAxisName[]).every((axis) =>
-    field[axis] === defaultFieldPoint[axis]
-  );
 }
 
 /** Compact control boundary shared by the shell and Builder state owners. */
@@ -222,12 +218,10 @@ export function AppearanceControl(
     scopeLabel,
     theme,
     resolvedTheme,
-    appearance,
-    accentHue,
+    accent,
     field,
     onThemeChange,
-    onAppearanceChange,
-    onAccentHueChange,
+    onAccentChange,
     onFieldChange,
     onFieldReset,
   }: AppearanceControlProps,
@@ -237,32 +231,69 @@ export function AppearanceControl(
     : `${scopeLabel} appearance`;
   const hueGuidanceId = useId();
   const axesId = useId();
+  const tintId = useId();
+  const tintStrengthId = useId();
+  const tintHueId = useId();
+  const tintGuidanceId = useId();
   const [axesOpen, setAxesOpen] = useState(false);
-  const namedHue = catalogueAppearanceOptions.find(({ hue }) =>
-    hue === accentHue
+  const [tintOpen, setTintOpen] = useState(false);
+  const tintShared = field.paperTint === field.inkTint &&
+    field.paperTintHue === field.inkTintHue;
+  const [tintSplit, setTintSplit] = useState(!tintShared);
+  const tinted = catalogueAxesAreTinted(field);
+  const tintSummary = !tinted
+    ? "none"
+    : tintSplit || !tintShared
+    ? "paper and ink"
+    : `${formatCatalogueAxisNumber(field.paperTint)} at hue ${
+      formatCatalogueAxisNumber(field.paperTintHue)
+    }`;
+  const setSharedTint = (
+    next: Partial<Pick<CatalogueAxesSelection, "paperTint" | "paperTintHue">>,
+  ): void =>
+    onFieldChange({
+      ...field,
+      paperTint: next.paperTint ?? field.paperTint,
+      inkTint: next.paperTint ?? field.paperTint,
+      paperTintHue: next.paperTintHue ?? field.paperTintHue,
+      inkTintHue: next.paperTintHue ?? field.paperTintHue,
+    });
+  const [rememberedHue, setRememberedHue] = useState(
+    accent ?? DEFAULT_ACCENT_HUE,
   );
-  const defaultField = fieldIsDefault(field);
-  const defaultNonDarkness = field.structure === defaultFieldPoint.structure &&
-    field.emphasis === defaultFieldPoint.emphasis &&
-    field.density === defaultFieldPoint.density;
-  const paletteSummary = appearance === "field"
-    ? "Field"
-    : catalogueAccentHueLabel(accentHue);
-  const pointSummary = theme === "system" && defaultNonDarkness
-    ? `${resolvedTheme} pole`
-    : defaultField
-    ? "default"
-    : "custom";
+  useEffect(() => {
+    if (accent !== undefined) setRememberedHue(accent);
+  }, [accent]);
+  const namedHue = accent === undefined
+    ? undefined
+    : catalogueAppearanceOptions.find(({ hue }) => hue === accent);
+  const accentChoice = accent === undefined
+    ? CATALOGUE_ACCENT_CHOICE_NONE
+    : namedHue?.id ?? CATALOGUE_ACCENT_CHOICE_CUSTOM;
+  const defaultAxes = catalogueAxesAreDefault(field);
+  const atPole = resolvedTheme === "light"
+    ? field.darkness === appearanceAxes.darkness.minimum
+    : field.darkness === appearanceAxes.darkness.maximum;
+  const paletteSummary = accent === undefined
+    ? "Monochrome"
+    : catalogueAccentHueLabel(accent);
+  const pointSummary = defaultAxes ? "default" : "custom";
   const schemeSummary = theme === "system"
-    ? `System · ${resolvedTheme} pole`
-    : field.darkness === fieldAxes.darkness.minimum && resolvedTheme === "light"
-    ? "Light pole"
-    : field.darkness === fieldAxes.darkness.maximum && resolvedTheme === "dark"
-    ? "Dark pole"
-    : `Custom ${resolvedTheme} field`;
+    ? `System · ${resolvedTheme}`
+    : atPole
+    ? resolvedTheme === "light" ? "Light" : "Dark"
+    : `Custom · ${resolvedTheme}`;
 
   return (
-    <details className="discern-catalogue-appearance">
+    <details
+      className="discern-catalogue-appearance"
+      data-discern-accent={accent === undefined ? undefined : ""}
+      style={catalogueAppearanceRootStyle(
+        field,
+        resolvedTheme,
+        accent,
+      ) as CSSProperties}
+    >
       <summary aria-label={`Change ${appearanceLabel}`}>
         <span>Appearance</span>
         <small>{paletteSummary} · {pointSummary}</small>
@@ -276,82 +307,188 @@ export function AppearanceControl(
           className="discern-catalogue-appearance__theme"
           mode={theme}
           onModeChange={onThemeChange}
-          label="Theme policy"
+          label="Theme"
           systemLabel="System"
-          lightLabel="Light pole"
-          darkLabel="Dark pole"
+          lightLabel="Light"
+          darkLabel="Dark"
         />
         <output className="discern-catalogue-appearance__scheme">
           {schemeSummary}
         </output>
 
         <Select
-          label="Palette"
-          value={appearance}
-          onChange={(event) =>
-            onAppearanceChange(event.currentTarget.value as AppearanceName)}
+          label="Accent"
+          value={accentChoice}
+          onChange={(event) => {
+            const choice = event.currentTarget.value;
+            if (choice === CATALOGUE_ACCENT_CHOICE_NONE) {
+              onAccentChange(undefined);
+            } else if (choice === CATALOGUE_ACCENT_CHOICE_CUSTOM) {
+              onAccentChange(rememberedHue);
+            } else {
+              const option = catalogueAppearanceOptions.find(({ id }) =>
+                id === choice
+              );
+              if (option !== undefined) onAccentChange(option.hue);
+            }
+          }}
           options={[
-            { value: "field", label: "Field" },
-            { value: "accent", label: "Accent" },
+            { value: CATALOGUE_ACCENT_CHOICE_NONE, label: "Monochrome" },
+            ...catalogueAppearanceOptions.map((option) => ({
+              value: option.id,
+              label: `${option.label} · ${option.hue}`,
+            })),
+            { value: CATALOGUE_ACCENT_CHOICE_CUSTOM, label: "Custom hue" },
           ]}
         />
 
-        <div className="discern-catalogue-accent">
-          <span
-            className="discern-catalogue-accent__swatch"
-            aria-hidden="true"
-          />
-          <strong>Accent hue</strong>
-          <output>{catalogueAccentHueLabel(accentHue)}</output>
-          <Select
-            aria-label={scopeLabel === undefined
-              ? "Named Accent hue"
-              : `${scopeLabel} named Accent hue`}
-            value={namedHue?.id ?? ""}
-            onChange={(event) => {
-              const option = catalogueAppearanceOptions.find(({ id }) =>
-                id === event.currentTarget.value
-              );
-              if (option !== undefined) onAccentHueChange(option.hue);
-            }}
-            options={[
-              { value: "", label: "Custom hue" },
-              ...catalogueAppearanceOptions.map((option) => ({
-                value: option.id,
-                label: `${option.label} · ${option.hue}`,
-              })),
-            ]}
-          />
-          <div className="discern-catalogue-accent__inputs">
-            <Input
-              type="range"
-              min="0"
-              max="360"
-              step="0.1"
-              value={accentHue}
-              aria-label="Accent hue slider"
-              aria-describedby={hueGuidanceId}
-              onInput={(event) =>
-                onAccentHueChange(event.currentTarget.valueAsNumber)}
-            />
-            <Input
-              type="number"
-              min="0"
-              max="360"
-              step="any"
-              value={accentHue}
-              label="Hue"
-              aria-describedby={hueGuidanceId}
-              onChange={(event) =>
-                onAccentHueChange(event.currentTarget.valueAsNumber)}
-            />
-          </div>
-          <small id={hueGuidanceId}>
-            0–360. {appearance === "field"
-              ? "Remembered until Accent is selected."
-              : "Updates the live Accent projection."}
-          </small>
-        </div>
+        {accent === undefined
+          ? null
+          : (
+            <div className="discern-catalogue-accent">
+              <span
+                className="discern-catalogue-accent__swatch"
+                aria-hidden="true"
+              />
+              <strong>Accent hue</strong>
+              <output>{catalogueAccentHueLabel(accent)}</output>
+              <div className="discern-catalogue-accent__inputs">
+                <Input
+                  type="range"
+                  min="0"
+                  max="360"
+                  step="0.1"
+                  value={accent}
+                  aria-label="Accent hue slider"
+                  aria-describedby={hueGuidanceId}
+                  onInput={(event) =>
+                    onAccentChange(event.currentTarget.valueAsNumber)}
+                />
+                <Input
+                  type="number"
+                  min="0"
+                  max="360"
+                  step="any"
+                  value={accent}
+                  label="Hue"
+                  aria-describedby={hueGuidanceId}
+                  onChange={(event) =>
+                    onAccentChange(event.currentTarget.valueAsNumber)}
+                />
+              </div>
+              <small id={hueGuidanceId}>
+                0–360. Updates the live Accent projection.
+              </small>
+            </div>
+          )}
+
+        <section className="discern-catalogue-appearance__axes discern-catalogue-appearance__tint">
+          <button
+            type="button"
+            aria-expanded={tintOpen}
+            aria-controls={tintId}
+            onClick={() => setTintOpen((open) => !open)}
+          >
+            <span>Tint</span>
+            <span className="discern-catalogue-appearance__axes-summary">
+              {tintSummary}
+            </span>
+          </button>
+          {tintOpen
+            ? (
+              <div id={tintId}>
+                {tintSplit
+                  ? (
+                    <>
+                      {pigmentTintAxisNames.map((axis) => (
+                        <AxisControl
+                          key={axis}
+                          axis={axis}
+                          value={field[axis]}
+                          onChange={(value) =>
+                            onFieldChange({ ...field, [axis]: value })}
+                        />
+                      ))}
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => {
+                          setTintSplit(false);
+                          setSharedTint({});
+                        }}
+                      >
+                        Share one tint
+                      </Button>
+                    </>
+                  )
+                  : (
+                    <>
+                      <div
+                        className="discern-catalogue-axis"
+                        data-discern-tint="strength"
+                      >
+                        <div>
+                          <label htmlFor={tintStrengthId}>Tint</label>
+                          <output htmlFor={tintStrengthId}>
+                            {formatCatalogueAxisNumber(field.paperTint)}
+                          </output>
+                        </div>
+                        <Input
+                          id={tintStrengthId}
+                          type="range"
+                          min={appearanceAxes.paperTint.minimum}
+                          max={appearanceAxes.paperTint.maximum}
+                          step="0.01"
+                          value={field.paperTint}
+                          aria-describedby={tintGuidanceId}
+                          onInput={(event) =>
+                            setSharedTint({
+                              paperTint: event.currentTarget.valueAsNumber,
+                            })}
+                        />
+                      </div>
+                      <div
+                        className="discern-catalogue-axis"
+                        data-discern-tint="hue"
+                      >
+                        <div>
+                          <label htmlFor={tintHueId}>Tint hue</label>
+                          <output htmlFor={tintHueId}>
+                            {formatCatalogueAxisNumber(field.paperTintHue)}
+                          </output>
+                        </div>
+                        <Input
+                          id={tintHueId}
+                          type="range"
+                          min={appearanceAxes.paperTintHue.minimum}
+                          max={appearanceAxes.paperTintHue.maximum}
+                          step="1"
+                          value={field.paperTintHue}
+                          aria-describedby={tintGuidanceId}
+                          onInput={(event) =>
+                            setSharedTint({
+                              paperTintHue: event.currentTarget.valueAsNumber,
+                            })}
+                        />
+                      </div>
+                      <small id={tintGuidanceId}>
+                        Tints paper and ink together: a whisper of stock on the
+                        light pigment, a coloured black on the dark one,
+                        whichever role each plays at the current darkness.
+                      </small>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => setTintSplit(true)}
+                      >
+                        Split paper and ink
+                      </Button>
+                    </>
+                  )}
+              </div>
+            )
+            : null}
+        </section>
 
         <section className="discern-catalogue-appearance__axes">
           <button
@@ -360,18 +497,16 @@ export function AppearanceControl(
             aria-controls={axesId}
             onClick={() => setAxesOpen((open) => !open)}
           >
-            <span>Field axes</span>
+            <span>Axes</span>
             <span className="discern-catalogue-appearance__axes-summary">
-              {pointSummary} · {catalogueFieldLabel(field)}
+              {pointSummary} · {catalogueAxesLabel(field)}
             </span>
           </button>
           {axesOpen
             ? (
               <div id={axesId}>
-                {(
-                  ["darkness", "structure", "emphasis", "density"] as const
-                ).map((axis) => (
-                  <FieldAxisControl
+                {primaryAppearanceAxisNames.map((axis) => (
+                  <AxisControl
                     key={axis}
                     axis={axis}
                     value={field[axis]}
@@ -383,9 +518,9 @@ export function AppearanceControl(
                   size="sm"
                   variant="secondary"
                   onClick={onFieldReset}
-                  disabled={defaultField}
+                  disabled={defaultAxes}
                 >
-                  Reset field point
+                  Reset axes
                 </Button>
               </div>
             )
@@ -393,10 +528,10 @@ export function AppearanceControl(
         </section>
 
         <a
-          className="discern-catalogue-appearance__field-link"
-          href="/catalogue/foundations/field/"
+          className="discern-catalogue-appearance__page-link"
+          href="/catalogue/foundations/appearance/"
         >
-          Inspect the Field projection
+          Inspect the Appearance projection
         </a>
       </div>
     </details>

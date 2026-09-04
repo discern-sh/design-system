@@ -6,7 +6,8 @@ import {
 } from "../../../catalogue/routes.ts";
 import { terminalFoundationSheets } from "../../../catalogue/terminal-foundations.ts";
 import { publicTokens } from "../../../src/token-inventory.ts";
-import { serializeCatalogueFieldSelection } from "../../../catalogue/shell/field-state.ts";
+import { serializeCatalogueAxes } from "../../../catalogue/shell/axes-state.ts";
+import { defaultAppearance } from "../../../src/tokens/appearance.ts";
 import { scanBrowserAccessibility } from "../../browser-conformance-support.ts";
 import { withViewport } from "../../viewport.ts";
 import { verifyInlineOverflowCueEdges } from "./overflow-cue.ts";
@@ -38,11 +39,9 @@ async function verifyTokenExplorer(
   page: Page,
   origin: string,
 ): Promise<{ readonly tokenChecks: number; readonly reflowChecks: number }> {
-  const field = serializeCatalogueFieldSelection({
+  const field = serializeCatalogueAxes({
+    ...defaultAppearance,
     darkness: 0.2,
-    structure: 1,
-    emphasis: 1,
-    density: 1,
   });
   const url = new URL(foundationsPaths.tokens, origin);
   url.searchParams.set("theme", "light");

@@ -14,7 +14,6 @@
     "./manifest": "./src/manifest.ts",
     "./react": "./src/react.ts",
     "./runtime": "./src/runtime.ts",
-    "./theme/blue": "./src/theme/blue.ts",
     "./tokens": "./src/tokens/tokens.ts"
   },
   "sideEffects": [

@@ -45,8 +45,8 @@ export async function selectCatalogueTheme(
   const label = theme === "system"
     ? "System"
     : theme === "light"
-    ? "Light pole"
-    : "Dark pole";
+    ? "Light"
+    : "Dark";
   await disclosure.getByRole("radio", { name: label, exact: true }).check();
   await eventually(
     async () =>
@@ -57,7 +57,7 @@ export async function selectCatalogueTheme(
   );
 }
 
-/** Open the shared global Appearance disclosure and its four field axes. */
+/** Open the shared global Appearance disclosure and its primary axes. */
 export async function openCatalogueAppearanceAxes(page: Page): Promise<void> {
   const appearance = page.locator(".discern-catalogue-appearance");
   if (await appearance.getAttribute("open") === null) {
@@ -65,7 +65,7 @@ export async function openCatalogueAppearanceAxes(page: Page): Promise<void> {
       'summary[aria-label^="Change "][aria-label$="appearance"]',
     ).click();
   }
-  const axes = appearance.getByRole("button", { name: /Field axes/ });
+  const axes = appearance.getByRole("button", { name: /Axes/ });
   if (await axes.getAttribute("aria-expanded") !== "true") {
     await axes.click();
   }

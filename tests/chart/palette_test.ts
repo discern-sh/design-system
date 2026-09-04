@@ -7,11 +7,11 @@ import {
 } from "../../src/internal/oklch.ts";
 import { terminalThemes } from "../../src/cli/theme.ts";
 import {
-  evaluateField,
-  FIELD_CONTRAST_SAMPLE_DARKNESSES,
+  APPEARANCE_CONTRAST_SAMPLE_DARKNESSES,
+  evaluateAppearance,
   themeTokens,
 } from "../../src/tokens/tokens.ts";
-import { resolveChartPaletteAtField } from "../../src/chart/palette.ts";
+import { resolveChartPaletteAtDarkness } from "../../src/chart/palette.ts";
 
 /**
  * Minimum adjacent-series distance under the package's severe dichromacy
@@ -69,7 +69,7 @@ function asOklab(value: SeriesOklch): OklabColor {
 }
 
 function fieldCanvas(darkness: number): OklabColor {
-  const value = evaluateField({ darkness })["--discern-color-canvas"];
+  const value = evaluateAppearance({ darkness })["--discern-color-canvas"];
   assert(value !== undefined, `field ${darkness} has no canvas`);
   const match = value.match(/^oklch\(([\d.]+)%\s+0\s+0\)$/);
   assert(match !== null, `field canvas ${value} is not opaque neutral OKLCH`);
@@ -222,15 +222,15 @@ Deno.test("the authored OKLCH values reproduce the selected medium-contrast pale
   }
 });
 
-Deno.test("every authored series colour clears every sampled field canvas", () => {
+Deno.test("every authored series colour clears every sampled canvas", () => {
   assert(
     oklabContrast(fieldCanvas(0.25), fieldCanvas(0.25)) <
       SERIES_CANVAS_CONTRAST_FLOOR,
     "the detector control no longer rejects an indistinguishable future colour",
   );
-  for (const darkness of FIELD_CONTRAST_SAMPLE_DARKNESSES) {
+  for (const darkness of APPEARANCE_CONTRAST_SAMPLE_DARKNESSES) {
     const canvas = fieldCanvas(darkness);
-    const palette = resolveChartPaletteAtField(darkness);
+    const palette = resolveChartPaletteAtDarkness(darkness);
     for (const slot of SERIES_SLOTS) {
       const selected = palette[`series-${slot}`];
       const match = selected.match(TOKEN_OKLCH);
@@ -251,9 +251,9 @@ Deno.test("every authored series colour clears every sampled field canvas", () =
   }
 });
 
-Deno.test("the sequential chart ramp is the field's ordered ink-alpha ladder", () => {
-  for (const darkness of FIELD_CONTRAST_SAMPLE_DARKNESSES) {
-    const palette = resolveChartPaletteAtField(darkness);
+Deno.test("the sequential chart ramp is the ordered ink-alpha ladder", () => {
+  for (const darkness of APPEARANCE_CONTRAST_SAMPLE_DARKNESSES) {
+    const palette = resolveChartPaletteAtDarkness(darkness);
     const alphas = ([1, 2, 3, 4] as const).map((step) => {
       const value = palette[`ramp-${step}`];
       const match = value.match(

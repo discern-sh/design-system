@@ -337,47 +337,47 @@
     gap: 16px;
     padding-block: 4px 14px;
   }
-  .discern-catalogue-field-axis {
+  .discern-catalogue-axis {
     display: grid;
     gap: 7px;
     min-inline-size: 0;
   }
-  .discern-catalogue-field-axis > div {
+  .discern-catalogue-axis > div {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
     gap: 12px;
   }
-  .discern-catalogue-field-axis label,
-  .discern-catalogue-field-axis output {
+  .discern-catalogue-axis label,
+  .discern-catalogue-axis output {
     font: 650 var(--discern-font-size-sm) var(--discern-font-ui);
   }
-  .discern-catalogue-field-axis output {
+  .discern-catalogue-axis output {
     color: var(--discern-color-accent-700);
     font-variant-numeric: tabular-nums;
   }
-  .discern-catalogue-field-axis .discern-control[type="range"] {
+  .discern-catalogue-axis .discern-control[type="range"] {
     min-block-size: 2.625rem;
     padding-inline: 0;
     border-color: transparent;
     background: transparent;
     accent-color: var(--discern-color-accent-600);
   }
-  .discern-catalogue-field-axis small {
+  .discern-catalogue-axis small {
     display: flex;
     justify-content: space-between;
     gap: 8px;
     color: var(--discern-color-ink-faint);
     font: var(--discern-font-size-xs) var(--discern-font-ui);
   }
-  .discern-catalogue-field-axis__description {
+  .discern-catalogue-axis__description {
     position: absolute;
     inline-size: 1px;
     block-size: 1px;
     overflow: hidden;
     clip: rect(0 0 0 0);
   }
-  .discern-catalogue-appearance__field-link {
+  .discern-catalogue-appearance__page-link {
     justify-self: start;
     color: var(--discern-color-accent-700);
     font: var(--discern-font-size-xs) var(--discern-font-ui);
@@ -386,7 +386,7 @@
   @media (pointer: coarse) {
     .discern-catalogue-appearance > summary,
     .discern-catalogue-appearance__axes > button,
-    .discern-catalogue-field-axis .discern-control[type="range"] {
+    .discern-catalogue-axis .discern-control[type="range"] {
       min-block-size: 44px;
     }
   }

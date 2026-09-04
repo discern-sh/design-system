@@ -5,16 +5,14 @@ import {
   oklabDistance,
 } from "../src/internal/oklch.ts";
 import {
-  accentAppearance,
   type Appearance,
-  defaultFieldPoint,
+  APPEARANCE_POLARITY_CROSSOVER_DARKNESS,
+  type AppearanceAxes,
+  appearanceColorRoleLaws,
+  defaultAppearance,
   evaluateAppearance,
-  FIELD_POLARITY_CROSSOVER_DARKNESS,
-  fieldAppearance,
-  fieldColorRoleLaws,
-  type FieldPoint,
   ownedSurfaceRoleNames,
-} from "../src/tokens/field.ts";
+} from "../src/tokens/appearance.ts";
 
 interface Paint {
   readonly color: OklabColor;
@@ -47,16 +45,16 @@ function required(
   return parseOklch(value);
 }
 
-const point = (overrides: Partial<FieldPoint>): FieldPoint => ({
-  ...defaultFieldPoint,
+const point = (overrides: Partial<AppearanceAxes>): AppearanceAxes => ({
+  ...defaultAppearance,
   ...overrides,
 });
 
-const points: readonly FieldPoint[] = [
+const points: readonly AppearanceAxes[] = [
   point({ darkness: 0 }),
   point({ darkness: 0.25 }),
-  point({ darkness: FIELD_POLARITY_CROSSOVER_DARKNESS - 0.0001 }),
-  point({ darkness: FIELD_POLARITY_CROSSOVER_DARKNESS + 0.0001 }),
+  point({ darkness: APPEARANCE_POLARITY_CROSSOVER_DARKNESS - 0.0001 }),
+  point({ darkness: APPEARANCE_POLARITY_CROSSOVER_DARKNESS + 0.0001 }),
   point({ darkness: 0.5 }),
   point({ darkness: 0.75 }),
   point({ darkness: 1 }),
@@ -74,20 +72,20 @@ Deno.test("owned-surface metadata auto-enrols identity bases", () => {
     ["--discern-color-future-identity"],
   );
   assert(
-    fieldColorRoleLaws.filter((law) => law.ownedSurface).every((law) =>
+    appearanceColorRoleLaws.filter((law) => law.ownedSurface).every((law) =>
       owned.includes(law.name)
     ),
   );
 });
 
 Deno.test("identity-fill interiors are opaque over canvas, surface, and siblings", () => {
-  const appearances: readonly Appearance[] = [
-    fieldAppearance,
-    ...[0, 28, 120, 152, 255, 335, 359.9999, 360].map(accentAppearance),
+  const appearances: readonly Pick<Appearance, "accent">[] = [
+    {},
+    ...[0, 28, 120, 152, 255, 335, 359.9999, 360].map((accent) => ({ accent })),
   ];
   for (const appearance of appearances) {
     for (const fieldPoint of points) {
-      const values = evaluateAppearance(appearance, fieldPoint);
+      const values = evaluateAppearance({ ...fieldPoint, ...appearance });
       const backdrops = [
         required(values, "--discern-color-canvas").color,
         required(values, "--discern-color-surface").color,
@@ -100,14 +98,14 @@ Deno.test("identity-fill interiors are opaque over canvas, surface, and siblings
         ] as const
       ) {
         const paint = required(values, name);
-        assertEquals(paint.alpha, 1, `${appearance.name} ${name}`);
+        assertEquals(paint.alpha, 1, `${appearance.accent ?? "mono"} ${name}`);
         for (const backdrop of backdrops) {
           assert(
             oklabDistance(
               compositeOklab(paint.color, paint.alpha, backdrop),
               paint.color,
             ) < 1e-12,
-            `${appearance.name} ${
+            `${appearance.accent ?? "mono"} ${
               JSON.stringify(fieldPoint)
             } ${name} leaked its backdrop`,
           );

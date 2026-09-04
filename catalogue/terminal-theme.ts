@@ -1,16 +1,14 @@
-import { useEffect, useState } from "react";
 import type { ThemeSwitcherMode } from "../src/components/core/theme-switcher/theme-switcher.tsx";
 import type {
-  TerminalThemeOptions,
+  TerminalAppearance,
   TerminalThemeVariant,
 } from "../src/cli/theme.ts";
 import {
-  accentAppearance,
-  type AppearanceName,
-  fieldAppearance,
-} from "../src/tokens/field.ts";
-
-const darkThemeQuery = "(prefers-color-scheme: dark)";
+  activePigmentTints,
+  type AppearanceAxes,
+  normalizeAccentHue,
+  type PigmentTintAxisName,
+} from "../src/tokens/appearance.ts";
 
 /** Resolve the Catalogue control to the concrete terminal palette it implies. */
 export function resolveCatalogueTerminalTheme(
@@ -20,47 +18,34 @@ export function resolveCatalogueTerminalTheme(
   return mode === "system" ? systemPrefersDark ? "dark" : "light" : mode;
 }
 
-/** Keep terminal specimens aligned with the Catalogue's resolved colour theme. */
-export function useCatalogueTerminalTheme(
-  mode: ThemeSwitcherMode,
-): TerminalThemeVariant {
-  const [systemPrefersDark, setSystemPrefersDark] = useState(() =>
-    globalThis.matchMedia(darkThemeQuery).matches
-  );
-
-  useEffect(() => {
-    const query = globalThis.matchMedia(darkThemeQuery);
-    const synchronise = (): void => setSystemPrefersDark(query.matches);
-    synchronise();
-    query.addEventListener("change", synchronise);
-    return () => query.removeEventListener("change", synchronise);
-  }, []);
-
-  return resolveCatalogueTerminalTheme(mode, systemPrefersDark);
-}
-
 /** Fully resolved public terminal input transported through the Catalogue. */
-export type CatalogueTerminalPresentation = Readonly<
-  Required<TerminalThemeOptions>
->;
+export interface CatalogueTerminalPresentation {
+  readonly theme: TerminalThemeVariant;
+  readonly appearance: TerminalAppearance;
+}
 
 /** Catalogue fallback matching the public terminal's monochrome default. */
 export const defaultCatalogueTerminalPresentation:
   CatalogueTerminalPresentation = Object.freeze({
     theme: "dark",
-    appearance: fieldAppearance,
+    appearance: {},
   });
 
-/** Translate orthogonal Catalogue state into the public terminal contract. */
+/**
+ * Translate orthogonal Catalogue state into the public terminal contract. The
+ * ground is the resolved pole; the accent and any non-default tints travel as
+ * the explicit appearance so a monochrome, untinted state stays `{}`.
+ */
 export function resolveCatalogueTerminalPresentation(
   theme: TerminalThemeVariant,
-  appearance: AppearanceName,
-  accentHue: number,
+  accent: number | undefined,
+  axes?: Partial<Pick<AppearanceAxes, PigmentTintAxisName>>,
 ): CatalogueTerminalPresentation {
   return Object.freeze({
     theme,
-    appearance: appearance === "field"
-      ? fieldAppearance
-      : accentAppearance(accentHue),
+    appearance: {
+      ...(accent === undefined ? {} : { accent: normalizeAccentHue(accent) }),
+      ...activePigmentTints(axes ?? {}),
+    },
   });
 }

@@ -13,6 +13,95 @@ import { glyphAtlasData } from "../src/glyphs/atlas.ts";
 import { componentExampleImageManifest } from "../catalogue/generated/example-images-manifest.ts";
 import { componentExampleImageThemes } from "../catalogue/example-images/contract.ts";
 
+interface ModuleGraphDependency {
+  readonly specifier: string;
+  readonly code?: { readonly specifier: string };
+}
+
+interface ModuleGraphModule {
+  readonly specifier: string;
+  readonly dependencies?: readonly ModuleGraphDependency[] | null;
+}
+
+interface ModuleGraph {
+  readonly roots: readonly string[];
+  readonly modules: readonly ModuleGraphModule[];
+}
+
+function runtimeReactEdges(
+  graph: ModuleGraph,
+): readonly string[] {
+  const modules = new Map(graph.modules.map((module) => [
+    module.specifier,
+    module,
+  ]));
+  const pending = [...graph.roots];
+  const visited = new Set<string>();
+  const reactEdges: string[] = [];
+  while (pending.length > 0) {
+    const specifier = pending.pop();
+    if (specifier === undefined || visited.has(specifier)) continue;
+    visited.add(specifier);
+    const module = modules.get(specifier);
+    for (const dependency of module?.dependencies ?? []) {
+      if (dependency.code === undefined) continue;
+      if (/^react(?:\/|$)/u.test(dependency.specifier)) {
+        reactEdges.push(`${specifier} -> ${dependency.specifier}`);
+      }
+      pending.push(dependency.code.specifier);
+    }
+  }
+  return reactEdges.toSorted();
+}
+
+Deno.test("the static serve graph never resolves React at runtime", async () => {
+  const result = await new Deno.Command(Deno.execPath(), {
+    args: [
+      "info",
+      "--json",
+      "--config",
+      "deno.json",
+      "scripts/serve.ts",
+    ],
+    cwd: new URL("../", import.meta.url),
+    stdout: "piped",
+    stderr: "piped",
+  }).output();
+  const output = new TextDecoder().decode(result.stdout);
+  assertEquals(
+    result.code,
+    0,
+    `deno info failed:\n${new TextDecoder().decode(result.stderr)}`,
+  );
+  const graph = JSON.parse(output) as ModuleGraph;
+  assertEquals(runtimeReactEdges(graph), []);
+});
+
+Deno.test("the static serve graph guard catches a future indirect React edge", () => {
+  const fixture: ModuleGraph = {
+    roots: ["file:///scripts/static-server.ts"],
+    modules: [
+      {
+        specifier: "file:///scripts/static-server.ts",
+        dependencies: [{
+          specifier: "../catalogue/future/static-review.ts",
+          code: { specifier: "file:///catalogue/future/static-review.ts" },
+        }],
+      },
+      {
+        specifier: "file:///catalogue/future/static-review.ts",
+        dependencies: [{
+          specifier: "react/jsx-runtime",
+          code: { specifier: "file:///vendor/react/jsx-runtime.js" },
+        }],
+      },
+    ],
+  };
+  assertEquals(runtimeReactEdges(fixture), [
+    "file:///catalogue/future/static-review.ts -> react/jsx-runtime",
+  ]);
+});
+
 Deno.test("the serve task resolves the worktree's deterministic port with a fixed fallback", async () => {
   const config = JSON.parse(
     await Deno.readTextFile(new URL("../deno.json", import.meta.url)),

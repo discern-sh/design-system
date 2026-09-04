@@ -1,19 +1,19 @@
 import { assertEquals } from "@std/assert";
+import { defaultCatalogueAxesSelection } from "../catalogue/shell/axes-state.ts";
 import {
   defaultCatalogueAppearanceState,
   parseCatalogueAppearanceParameters,
   preserveCatalogueAppearanceHref,
   serializeCatalogueAppearanceState,
-  setCatalogueAccentHue,
-  setCatalogueAppearanceIdentity,
+  setCatalogueAccent,
   setCatalogueFieldPoint,
 } from "../catalogue/shell/appearance-state.ts";
 
 const state = {
   theme: "dark",
-  appearance: "accent",
-  accentHue: 145.5,
+  accent: 145.5,
   field: {
+    ...defaultCatalogueAxesSelection,
     darkness: 0.72,
     structure: 1.6,
     emphasis: 0.65,
@@ -22,18 +22,12 @@ const state = {
 } as const;
 
 Deno.test("orthogonal Appearance transitions preserve every unrelated input", () => {
-  assertEquals(setCatalogueAppearanceIdentity(state, "field"), {
+  assertEquals(setCatalogueAccent(state, undefined), {
     ...state,
-    appearance: "field",
+    accent: undefined,
   });
-  assertEquals(setCatalogueAccentHue(state, 335), {
-    ...state,
-    accentHue: 335,
-  });
-  assertEquals(setCatalogueAccentHue(state, 360), {
-    ...state,
-    accentHue: 0,
-  });
+  assertEquals(setCatalogueAccent(state, 335), { ...state, accent: 335 });
+  assertEquals(setCatalogueAccent(state, 360), { ...state, accent: 0 });
   assertEquals(
     setCatalogueFieldPoint(state, { ...state.field, density: 0.8 }),
     { ...state, field: { ...state.field, density: 0.8 } },
@@ -51,23 +45,33 @@ Deno.test("local navigation merges one explicit orthogonal coordinate", () => {
       current,
       "/catalogue/components/button/?field=0.4,0.5,1.5,0.75",
     ),
-    "/catalogue/components/button/?field=0.4%2C0.5%2C1.5%2C0.75&theme=dark&appearance=accent&accent=145.5",
+    "/catalogue/components/button/?field=0.4%2C0.5%2C1.5%2C0.75&theme=dark&accent=145.5",
   );
 });
 
-Deno.test("one canonical state value round-trips identity, numeric hue, axes, and policy", () => {
+Deno.test("one canonical state value round-trips policy, optional accent, and axes", () => {
   const encoded = serializeCatalogueAppearanceState(state);
   assertEquals(
     encoded,
-    "theme=dark&appearance=accent&accent=145.5&field=0.72%2C1.6%2C0.65%2C1.3",
+    "theme=dark&accent=145.5&field=0.72%2C1.6%2C0.65%2C1.3",
   );
   assertEquals(
     parseCatalogueAppearanceParameters(new URLSearchParams(encoded)),
     state,
   );
+  const mono = { ...state, accent: undefined };
+  const monoEncoded = serializeCatalogueAppearanceState(mono);
+  assertEquals(
+    monoEncoded,
+    "theme=dark&accent=none&field=0.72%2C1.6%2C0.65%2C1.3",
+  );
+  assertEquals(
+    parseCatalogueAppearanceParameters(new URLSearchParams(monoEncoded)),
+    mono,
+  );
 });
 
-Deno.test("legacy named Accent and preset-bearing Field links migrate without losing axes", () => {
+Deno.test("legacy identity, named Accent, and preset-bearing links migrate without losing axes", () => {
   assertEquals(
     parseCatalogueAppearanceParameters(
       new URLSearchParams("theme=dark&accent=violet"),
@@ -75,8 +79,7 @@ Deno.test("legacy named Accent and preset-bearing Field links migrate without lo
     {
       ...defaultCatalogueAppearanceState,
       theme: "dark",
-      appearance: "accent",
-      accentHue: 300,
+      accent: 300,
       field: { ...defaultCatalogueAppearanceState.field, darkness: 1 },
     },
   );
@@ -90,13 +93,33 @@ Deno.test("legacy named Accent and preset-bearing Field links migrate without lo
   );
   assertEquals(
     parseCatalogueAppearanceParameters(
+      new URLSearchParams("theme=light&appearance=field&accent=300"),
+    ),
+    {
+      ...defaultCatalogueAppearanceState,
+      theme: "light",
+      accent: undefined,
+    },
+  );
+  assertEquals(
+    parseCatalogueAppearanceParameters(
+      new URLSearchParams("theme=light&appearance=accent"),
+    ),
+    {
+      ...defaultCatalogueAppearanceState,
+      theme: "light",
+      accent: 255,
+    },
+  );
+  assertEquals(
+    parseCatalogueAppearanceParameters(
       new URLSearchParams("field=0.6,1.2,0.8,1.1,blue"),
     ),
     {
       theme: "dark",
-      appearance: "accent",
-      accentHue: 255,
+      accent: 255,
       field: {
+        ...defaultCatalogueAxesSelection,
         darkness: 0.6,
         structure: 1.2,
         emphasis: 0.8,
@@ -110,9 +133,9 @@ Deno.test("legacy named Accent and preset-bearing Field links migrate without lo
     ),
     {
       theme: "light",
-      appearance: "field",
-      accentHue: 255,
+      accent: undefined,
       field: {
+        ...defaultCatalogueAxesSelection,
         darkness: 0.25,
         structure: 0.4,
         emphasis: 1.3,
@@ -120,14 +143,24 @@ Deno.test("legacy named Accent and preset-bearing Field links migrate without lo
       },
     },
   );
+  const migrated = new URLSearchParams("theme=light&appearance=accent");
+  const parsed = parseCatalogueAppearanceParameters(migrated);
+  assertEquals(
+    serializeCatalogueAppearanceState(parsed!),
+    "theme=light&accent=255&field=0%2C1%2C1%2C1",
+  );
 });
 
 Deno.test("partial and invalid inputs fail closed by coordinate", () => {
   assertEquals(
     parseCatalogueAppearanceParameters(
-      new URLSearchParams(
-        "theme=invented&appearance=accent&accent=361&field=0.4,1,1",
-      ),
+      new URLSearchParams("theme=invented&accent=361&field=0.4,1,1"),
+    ),
+    defaultCatalogueAppearanceState,
+  );
+  assertEquals(
+    parseCatalogueAppearanceParameters(
+      new URLSearchParams("theme=light&appearance=blue"),
     ),
     defaultCatalogueAppearanceState,
   );

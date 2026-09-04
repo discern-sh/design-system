@@ -14,6 +14,7 @@ import {
   withTerminalCustomGeometry,
   withTerminalViewportPreset,
 } from "./terminal-lab-state.ts";
+import { appearanceProjection } from "../src/tokens/appearance.ts";
 import type { CatalogueTerminalPresentation } from "./terminal-theme.ts";
 
 /** One pure projection from validated lab state into real output and geometry. */
@@ -111,11 +112,10 @@ export function TerminalLayoutLab(
       className="discern-catalogue-terminal-lab"
       data-discern-cli-composition={recipe.id}
       data-discern-terminal-ground={presentation.theme}
-      data-discern-terminal-appearance={presentation.appearance.name}
-      data-discern-terminal-accent-hue={presentation.appearance.name ===
-          "accent"
-        ? presentation.appearance.hue
-        : undefined}
+      data-discern-terminal-appearance={appearanceProjection(
+        presentation.appearance,
+      )}
+      data-discern-terminal-accent-hue={presentation.appearance.accent}
     >
       <OverflowCue
         axis="both"

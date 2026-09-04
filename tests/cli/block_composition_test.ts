@@ -1,6 +1,5 @@
 import { assertEquals, assertNotEquals, assertThrows } from "@std/assert";
 import { styleHyperlink, styleText } from "../../src/cli/ansi.ts";
-import { accentAppearance, fieldAppearance } from "../../src/tokens/tokens.ts";
 import {
   CLI_BLOCK_MAX_DEPTH,
   type CliBlock,
@@ -163,24 +162,24 @@ Deno.test("CLI blocks inherit appearance and allow local overrides in both direc
   const inherited = createCliBlock(renderTone, { label: "Inherited" });
   const fieldChild = createCliBlock(renderTone, {
     label: "Field",
-    appearance: fieldAppearance,
+    appearance: {},
   });
   const blueChild = createCliBlock(renderTone, {
     label: "Blue",
-    appearance: accentAppearance(255),
+    appearance: { accent: 255 },
   });
   const greenChild = createCliBlock(renderTone, {
     label: "Green",
-    appearance: accentAppearance(120),
+    appearance: { accent: 120 },
   });
   const violetChild = createCliBlock(renderTone, {
     label: "Violet",
-    appearance: accentAppearance(245),
+    appearance: { accent: 245 },
   });
 
   const fieldTree = createCliBlock(renderComposite, {
     children: [inherited, blueChild, greenChild, inherited],
-    appearance: fieldAppearance,
+    appearance: {},
   });
   const fieldOutput = renderCliBlock(fieldTree, capabilities).split("\n\n");
   assertEquals(fieldOutput[0], fieldOutput[3]);
@@ -189,7 +188,7 @@ Deno.test("CLI blocks inherit appearance and allow local overrides in both direc
 
   const accentTree = createCliBlock(renderComposite, {
     children: [inherited, fieldChild, violetChild, inherited],
-    appearance: accentAppearance(335),
+    appearance: { accent: 335 },
   });
   const accentOutput = renderCliBlock(accentTree, capabilities).split("\n\n");
   assertEquals(accentOutput[0], accentOutput[3]);

@@ -27,7 +27,7 @@ import {
 import type { CatalogueTheme } from "./support.ts";
 
 const fieldPresentation = (theme: CatalogueTheme) =>
-  resolveCatalogueTerminalPresentation(theme, "field", 255);
+  resolveCatalogueTerminalPresentation(theme, undefined);
 
 export interface TerminalCatalogueEvidence {
   readonly layouts: number;

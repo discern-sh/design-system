@@ -8,7 +8,6 @@ import {
   resolveTerminalTheme,
   terminalToneColor,
 } from "../../src/cli/theme.ts";
-import { accentAppearance } from "../../src/tokens/tokens.ts";
 import {
   HIDE_TERMINAL_CURSOR,
   SHOW_TERMINAL_CURSOR,
@@ -107,7 +106,7 @@ Deno.test("the activity driver carries Accent through live and collapsed frames"
     rows: 24,
   });
   const scheduler = new ManualScheduler();
-  const appearance = accentAppearance(335);
+  const appearance = { accent: 335 };
   await withActivityLog(
     {
       label: "Build styles",

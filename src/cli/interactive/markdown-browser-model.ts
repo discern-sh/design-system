@@ -15,8 +15,8 @@ import {
   terminalMotifRepertoire,
 } from "../motif.ts";
 import {
-  type Appearance,
   resolveTerminalTheme,
+  type TerminalAppearance,
   type TerminalThemeVariant,
 } from "../theme.ts";
 import {
@@ -261,7 +261,7 @@ export interface MarkdownBrowserState<Action> {
   readonly documentMinimumRows: number;
   readonly documentMeasure: number;
   readonly theme: TerminalThemeVariant;
-  readonly appearance: Appearance;
+  readonly appearance: TerminalAppearance;
   readonly motif: TerminalMotif;
 }
 
@@ -333,7 +333,7 @@ interface MarkdownBrowserConfig {
   readonly documentMinimumRows: number;
   readonly documentMeasure: number;
   readonly theme: TerminalThemeVariant;
-  readonly appearance: Appearance;
+  readonly appearance: TerminalAppearance;
   readonly motif: TerminalMotif;
 }
 

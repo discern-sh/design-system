@@ -82,11 +82,11 @@ The system/light/dark role assignment chosen per Root. A Root without `data-disc
 
 ### Appearance
 
-The colour projection applied at a Root or subtree. `field` is the achromatic default; `accent` projects the same role graph through an inherited finite hue from `0` through `360`. Browser scopes use `data-discern-appearance`, while pure evaluators receive the explicit Field or Accent identity. Appearance changes no Field axis by itself.
+The one object every colour role derives from: the Darkness, Structure, Emphasis, and Density axes, the paper and ink tints, and an optional accent hue. An omitted accent is the monochrome default; any finite hue from `0` through `360` projects the chromatic roles. Browser scopes switch Accent on with `data-discern-accent` and off with `data-discern-accent="none"`, reading the inherited `--discern-accent-hue`; pure evaluators receive the explicit object. A scope changes no axis by itself.
 
 ### Preset
 
-A branded Token layer over the default Field. The optional Blue compatibility Preset lives in [`theme/blue.ts`](../../src/theme/blue.ts) and is the generated Accent projection at hue `255`; it is applied when a consumer selects `theme: "blue"`, while selecting no Preset is `theme: "none"`. A consumer Preset overrides public Tokens in its own cascade layer.
+A branded Token layer over the default monochrome appearance. The package ships none: Blue and the other named hues are Catalogue conveniences over the accent number. A consumer Preset overrides public Tokens in its own cascade layer.
 
 ### Adapter
 

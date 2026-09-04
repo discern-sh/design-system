@@ -109,6 +109,11 @@ function AliasGuidance({ alias }: { readonly alias: DiscernGlyphAlias }) {
           >
             {humanize(alias.recommendation.state)}
           </Badge>
+          <Badge
+            tone={alias.publication === "deferred" ? "warning" : "neutral"}
+          >
+            {humanize(alias.publication)}
+          </Badge>
         </div>
       </header>
       <p>{alias.recommendation.rationale}</p>
@@ -144,6 +149,13 @@ function AliasGuidance({ alias }: { readonly alias: DiscernGlyphAlias }) {
                 <code>{terminal.asciiFallback.text}</code>
                 <span>{humanize(terminal.asciiFallback.fidelity)}</span>
                 <p>{terminal.asciiFallback.guidance}</p>
+              </div>
+            )
+            : terminal.posture === "unicode-only"
+            ? (
+              <div className="discern-catalogue-glyph-alias__fallback">
+                <strong>ASCII fallback</strong>
+                <p>No ASCII fallback is approved for this alias.</p>
               </div>
             )
             : null}

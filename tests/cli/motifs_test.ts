@@ -31,7 +31,6 @@ import {
   terminalThemes,
   terminalToneColor,
 } from "../../src/cli/theme.ts";
-import { accentAppearance, fieldAppearance } from "../../src/tokens/tokens.ts";
 import {
   assertExactFrame,
   assertStyledFrame,
@@ -666,7 +665,7 @@ Deno.test("every motif primitive degrades exactly across the capability matrix",
 });
 
 Deno.test("every motif primitive honours exact local appearance palettes", () => {
-  const appearance = accentAppearance(335);
+  const appearance = { accent: 335 };
 
   for (const theme of ["light", "dark"] as const) {
     const palette = resolveTerminalTheme({ theme, appearance });
@@ -680,7 +679,7 @@ Deno.test("every motif primitive honours exact local appearance palettes", () =>
         const inheritedField = renderCapabilityMatrix(capabilities, { theme });
         const explicitField = renderCapabilityMatrix(capabilities, {
           theme,
-          appearance: fieldAppearance,
+          appearance: {},
         });
         const accented = renderCapabilityMatrix(capabilities, {
           theme,
@@ -711,7 +710,7 @@ Deno.test("every motif primitive honours exact local appearance palettes", () =>
         renderCapabilityMatrix(noColor, { theme, appearance }),
         renderCapabilityMatrix(noColor, {
           theme,
-          appearance: fieldAppearance,
+          appearance: {},
         }),
       );
     }

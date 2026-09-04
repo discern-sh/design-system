@@ -52,8 +52,7 @@ function App() {
   if (currentUrl.searchParams.get("conformance") === "1") {
     return (
       <ConformancePage
-        appearance={appearance.appearance}
-        accentHue={appearance.accentHue}
+        accent={appearance.accent}
         components={conformanceComponents}
         field={appearance.field}
         fieldScheme={appearance.fieldScheme}
@@ -99,8 +98,7 @@ function App() {
             terminalPresentation={appearance.terminalPresentation}
             field={appearance.field}
             fieldScheme={appearance.fieldScheme}
-            appearance={appearance.appearance}
-            accentHue={appearance.accentHue}
+            accent={appearance.accent}
             onFieldChange={appearance.changeField}
           />
         );
@@ -144,12 +142,10 @@ function App() {
       appearance={{
         theme: appearance.theme,
         resolvedTheme: appearance.terminalPresentation.theme,
-        appearance: appearance.appearance,
-        accentHue: appearance.accentHue,
+        accent: appearance.accent,
         field: appearance.field,
         onThemeChange: appearance.changeTheme,
-        onAppearanceChange: appearance.changeAppearance,
-        onAccentHueChange: appearance.changeAccentHue,
+        onAccentChange: appearance.changeAccent,
         onFieldChange: appearance.changeField,
         onFieldReset: appearance.resetField,
       }}

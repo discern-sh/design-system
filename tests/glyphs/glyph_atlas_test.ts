@@ -91,10 +91,8 @@ Deno.test("the starter Atlas and curated collection satisfy their bounded founda
     "the Atlas exposes package-measured two-cell glyphs",
   );
   assert(
-    glyphAtlasData.aliases.some((alias) =>
-      alias.recommendation.state === "reference-only"
-    ),
-    "the curated collection carries a reference-only candidate",
+    glyphAtlasData.aliases.some((alias) => alias.publication === "deferred"),
+    "the curated collection carries a deferred publication decision",
   );
   assert(
     glyphAtlasData.aliases.some((alias) =>
@@ -106,6 +104,80 @@ Deno.test("the starter Atlas and curated collection satisfy their bounded founda
     DISCERN_GLYPH_ACCESSIBILITY_POSTURE,
     "not an accessible name",
   );
+});
+
+Deno.test("owner-approved names, dispositions, and fallback policies stay bound", () => {
+  const byName = new Map(
+    glyphAtlasData.aliases.map((alias) => [alias.name, alias]),
+  );
+  assertEquals(glyphAtlasData.canonical.length, 57);
+  assertEquals(glyphAtlasData.aliases.length, 19);
+  assertEquals(
+    glyphAtlasData.aliases.filter(({ publication }) =>
+      publication === "candidate"
+    ).length,
+    14,
+  );
+  assertEquals(
+    glyphAtlasData.aliases.filter(({ publication }) =>
+      publication === "deferred"
+    ).map(({ name }) => name).sort(),
+    [
+      "arrow-bidirectional",
+      "shape-circle",
+      "shape-diamond",
+      "shape-square",
+      "shape-star",
+    ],
+  );
+
+  for (
+    const removed of [
+      "check",
+      "information",
+      "moon",
+      "outline-small-up",
+      "keycap-one",
+      "technologist",
+      "warning-emoji",
+    ]
+  ) {
+    assertEquals(byName.has(removed), false, removed);
+  }
+
+  const selection = byName.get("selection-selected");
+  assert(selection !== undefined);
+  assertEquals(selection.category, "selection");
+  assertEquals(selection.publication, "candidate");
+  assertEquals(selection.surfaces.terminal.posture, "supported");
+  if (selection.surfaces.terminal.posture === "supported") {
+    assertEquals(selection.surfaces.terminal.asciiFallback, {
+      text: "x",
+      fidelity: "semantic",
+      guidance:
+        "A lowercase x preserves selection only inside an established selection control or beside a selected-state label.",
+    });
+  }
+
+  const info = byName.get("info");
+  assert(info !== undefined);
+  assertEquals(info.discoveryTitle, "Information");
+  assertEquals(info.canonicalId, glyphSequenceId(0x24D8));
+
+  const theme = byName.get("theme-dark");
+  assert(theme !== undefined);
+  assertEquals(theme.category, "appearance");
+  assertEquals(theme.surfaces.terminal.posture, "supported");
+  if (theme.surfaces.terminal.posture === "supported") {
+    assertEquals(theme.surfaces.terminal.asciiFallback.text, "D");
+    assertEquals(theme.surfaces.terminal.asciiFallback.fidelity, "semantic");
+  }
+
+  const brand = byName.get("brand-mark");
+  assert(brand !== undefined);
+  assertEquals(brand.recommendation.state, "brand-reserved");
+  assertEquals(brand.surfaces.terminal.posture, "unicode-only");
+  assertEquals("asciiFallback" in brand.surfaces.terminal, false);
 });
 
 Deno.test("mechanical identity, width, and ASCII measurements derive from their authorities", () => {
@@ -202,6 +274,7 @@ Deno.test("malformed curated judgement rejects stale vocabulary and unsafe degra
     discoveryTitle: "Broken\nTitle",
     searchTerms: [" Not normalized ", "not normalized"],
     category: "stale-category",
+    publication: "stale-publication",
     recommendation: {
       state: "stale-state",
       rationale: "",
@@ -230,6 +303,7 @@ Deno.test("malformed curated judgement rejects stale vocabulary and unsafe degra
       "discoveryTitle",
       "searchTerms[0]",
       "category",
+      "publication",
       "recommendation.state",
       "recommendation.rationale",
       "surfaces.terminal.asciiFallback.text",
@@ -307,6 +381,7 @@ Deno.test("future canonical and curated members enroll without another test case
     canonicalId: futureCanonical.id,
     searchTerms: ["circle", "future fixture"],
     category: "shape",
+    publication: "candidate",
     recommendation: {
       state: "recommended",
       rationale:

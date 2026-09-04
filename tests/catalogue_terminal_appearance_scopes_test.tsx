@@ -41,19 +41,19 @@ Deno.test("terminal scope diagnostic mirrors all three browser directions", () =
     })),
     [
       {
-        id: "field-to-accent-255",
-        parent: { name: "field" },
-        local: { name: "accent", hue: 255 },
+        id: "mono-to-accent-255",
+        parent: {},
+        local: { accent: 255 },
       },
       {
-        id: "accent-120-to-field",
-        parent: { name: "accent", hue: 120 },
-        local: { name: "field" },
+        id: "accent-120-to-mono",
+        parent: { accent: 120 },
+        local: {},
       },
       {
         id: "accent-245-to-accent-335",
-        parent: { name: "accent", hue: 245 },
-        local: { name: "accent", hue: 335 },
+        parent: { accent: 245 },
+        local: { accent: 335 },
       },
     ],
   );
@@ -134,7 +134,7 @@ Deno.test("terminal scope frames use the public palette at every colour depth", 
   }
 });
 
-Deno.test("Field page diagnostic exposes the resolved ground and local boundaries", () => {
+Deno.test("Appearance page diagnostic exposes the resolved ground and local boundaries", () => {
   const markup = renderToStaticMarkup(
     createElement(TerminalAppearanceScopes, { theme: "light" }),
   );

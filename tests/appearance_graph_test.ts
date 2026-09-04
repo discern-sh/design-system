@@ -5,38 +5,40 @@ import {
   assertThrows,
 } from "@std/assert";
 import {
-  compileFieldExpressionToCss,
+  appearanceAxisCustomPropertyName,
+  appearanceAxisDefaultDeclarations,
+  compileAppearanceExpressionToCss,
   densityScaledSpacingCssValue,
-  fieldAxisDefaultDeclarations,
-  fieldLiveCssDeclarations,
-  generateFieldAxisRegistrationCss,
-} from "../src/tokens/field-css.ts";
+  generateAppearanceAxisRegistrationCss,
+  monoLiveCssDeclarations,
+} from "../src/tokens/appearance-live-css.ts";
 import {
-  defaultFieldPoint,
-  evaluateField,
-  evaluateFieldExpression,
-  evaluateFieldShadows,
-  evaluateFieldSpacingUnit,
-  FIELD_CONTRAST_SAMPLE_DARKNESSES,
-  FIELD_POLARITY_CROSSOVER_DARKNESS,
-  FIELD_SPACING_UNIT_PX,
-  fieldAxes,
-  fieldColorRoleLaws,
-  fieldContrastMargin,
-  type FieldExpression,
-  fieldPolarityExpression,
-  fieldShadowRoleLaws,
-} from "../src/tokens/field.ts";
+  APPEARANCE_CONTRAST_SAMPLE_DARKNESSES,
+  APPEARANCE_POLARITY_CROSSOVER_DARKNESS,
+  APPEARANCE_SPACING_UNIT_PX,
+  appearanceAxes,
+  appearanceAxisNames,
+  appearanceColorRoleLaws,
+  appearanceContrastMargin,
+  type AppearanceExpression,
+  appearancePolarityExpression,
+  appearanceShadowRoleLaws,
+  defaultAppearance,
+  evaluateAppearance,
+  evaluateAppearanceExpression,
+  evaluateAppearanceShadows,
+  evaluateAppearanceSpacingUnit,
+} from "../src/tokens/appearance.ts";
 import { themeTokens } from "../src/tokens/tokens.ts";
 
-Deno.test("the field expression vocabulary evaluates every CSS-compatible node", () => {
-  const number = (value: number): FieldExpression => ({
+Deno.test("the appearance expression vocabulary evaluates every CSS-compatible node", () => {
+  const number = (value: number): AppearanceExpression => ({
     kind: "number",
     name: `test-${value}`,
     value,
   });
-  const axis: FieldExpression = { kind: "axis", axis: "darkness" };
-  const expressions: readonly [FieldExpression, number][] = [
+  const axis: AppearanceExpression = { kind: "axis", axis: "darkness" };
+  const expressions: readonly [AppearanceExpression, number][] = [
     [number(3), 3],
     [axis, 0.25],
     [{ kind: "add", left: number(2), right: number(3) }, 5],
@@ -63,20 +65,20 @@ Deno.test("the field expression vocabulary evaluates every CSS-compatible node",
   ];
   for (const [expression, expected] of expressions) {
     assertEquals(
-      evaluateFieldExpression(expression, { darkness: 0.25 }),
+      evaluateAppearanceExpression(expression, { darkness: 0.25 }),
       expected,
     );
   }
 });
 
-Deno.test("the CSS backend compiles the complete field expression vocabulary", () => {
-  const number = (value: number): FieldExpression => ({
+Deno.test("the CSS backend compiles the complete appearance expression vocabulary", () => {
+  const number = (value: number): AppearanceExpression => ({
     kind: "number",
     name: `test-${value}`,
     value,
   });
-  const axis: FieldExpression = { kind: "axis", axis: "darkness" };
-  const cases: readonly [FieldExpression, string][] = [
+  const axis: AppearanceExpression = { kind: "axis", axis: "darkness" };
+  const cases: readonly [AppearanceExpression, string][] = [
     [number(3), "3"],
     [axis, "var(--discern-darkness)"],
     [
@@ -128,49 +130,53 @@ Deno.test("the CSS backend compiles the complete field expression vocabulary", (
     ],
   ];
   for (const [expression, expected] of cases) {
-    assertEquals(compileFieldExpressionToCss(expression), expected);
+    assertEquals(compileAppearanceExpressionToCss(expression), expected);
   }
 });
 
-Deno.test("polarity and every live CSS consumer derive from the field authority", () => {
+Deno.test("polarity and every live CSS consumer derive from the appearance authority", () => {
   assertEquals(
-    evaluateFieldExpression(fieldPolarityExpression, {
-      darkness: FIELD_POLARITY_CROSSOVER_DARKNESS - 0.000001,
+    evaluateAppearanceExpression(appearancePolarityExpression, {
+      darkness: APPEARANCE_POLARITY_CROSSOVER_DARKNESS - 0.000001,
     }),
     0,
   );
   assertEquals(
-    evaluateFieldExpression(fieldPolarityExpression, {
-      darkness: FIELD_POLARITY_CROSSOVER_DARKNESS + 0.000001,
+    evaluateAppearanceExpression(appearancePolarityExpression, {
+      darkness: APPEARANCE_POLARITY_CROSSOVER_DARKNESS + 0.000001,
     }),
     1,
   );
-  const registrations = generateFieldAxisRegistrationCss();
+  const registrations = generateAppearanceAxisRegistrationCss();
+  const expectedAxisProperties = [
+    "--discern-darkness",
+    "--discern-structure",
+    "--discern-emphasis",
+    "--discern-density",
+    "--discern-paper-tint",
+    "--discern-paper-tint-hue",
+    "--discern-ink-tint",
+    "--discern-ink-tint-hue",
+  ];
   assertEquals(
-    [...registrations.matchAll(/@property\s+(--discern-[a-z-]+)/gu)].map(
+    appearanceAxisNames.map(appearanceAxisCustomPropertyName),
+    expectedAxisProperties,
+  );
+  assertEquals(
+    [...registrations.matchAll(/\s+(--discern-[a-z-]+)/gu)].map(
       (match) => match[1],
     ),
-    [
-      "--discern-darkness",
-      "--discern-structure",
-      "--discern-emphasis",
-      "--discern-density",
-    ],
+    expectedAxisProperties,
   );
   assertStringIncludes(registrations, 'syntax: "<number>";');
   assertEquals(
-    fieldAxisDefaultDeclarations().map(({ name }) => name),
-    [
-      "--discern-darkness",
-      "--discern-structure",
-      "--discern-emphasis",
-      "--discern-density",
-    ],
+    appearanceAxisDefaultDeclarations().map(({ name }) => name),
+    expectedAxisProperties,
   );
-  const liveNames = fieldLiveCssDeclarations().map(({ name }) => name);
+  const liveNames = monoLiveCssDeclarations().map(({ name }) => name);
   const roleNames = [
-    ...fieldColorRoleLaws.map(({ name }) => name),
-    ...fieldShadowRoleLaws.map(({ name }) => name),
+    ...appearanceColorRoleLaws.map(({ name }) => name),
+    ...appearanceShadowRoleLaws.map(({ name }) => name),
   ];
   assertEquals(
     liveNames.filter((name) => roleNames.includes(name)),
@@ -178,16 +184,16 @@ Deno.test("polarity and every live CSS consumer derive from the field authority"
   );
   assertEquals(new Set(liveNames).size, liveNames.length);
   assert(liveNames.every((name) => name.startsWith("--discern-")));
-  const projectedBytes = fieldLiveCssDeclarations().reduce(
+  const projectedBytes = monoLiveCssDeclarations().reduce(
     (total, { name, value }) => total + name.length + value.length + 4,
     0,
   );
   assert(
-    projectedBytes < 10_000,
+    projectedBytes < 12_000,
     `Shared field projection expanded to ${projectedBytes} declaration bytes`,
   );
   assert(
-    fieldLiveCssDeclarations().some(({ value }) => value.includes("abs(")),
+    monoLiveCssDeclarations().some(({ value }) => value.includes("abs(")),
   );
   assertEquals(
     densityScaledSpacingCssValue("8px"),
@@ -200,35 +206,41 @@ Deno.test("polarity and every live CSS consumer derive from the field authority"
   );
 });
 
-Deno.test("field axes expose bounded defaults and density only projects spacing", () => {
-  for (const name of Object.keys(fieldAxes) as (keyof typeof fieldAxes)[]) {
-    assertEquals(defaultFieldPoint[name], fieldAxes[name].default);
+Deno.test("appearance axes expose bounded defaults and density only projects spacing", () => {
+  for (
+    const name of Object.keys(appearanceAxes) as (keyof typeof appearanceAxes)[]
+  ) {
+    assertEquals(defaultAppearance[name], appearanceAxes[name].default);
   }
-  assertEquals(evaluateFieldSpacingUnit(), FIELD_SPACING_UNIT_PX);
-  assertEquals(evaluateFieldSpacingUnit({ density: 1.2 }), 4.8);
-  assertThrows(() => evaluateField({ darkness: 1.01 }), TypeError, "outside");
+  assertEquals(evaluateAppearanceSpacingUnit(), APPEARANCE_SPACING_UNIT_PX);
+  assertEquals(evaluateAppearanceSpacingUnit({ density: 1.2 }), 4.8);
+  assertThrows(
+    () => evaluateAppearance({ darkness: 1.01 }),
+    TypeError,
+    "outside",
+  );
 });
 
 Deno.test("one ordered expression tree owns every non-series colour role", () => {
   assertEquals(
-    new Set(fieldColorRoleLaws.map((law) => law.name)).size,
-    fieldColorRoleLaws.length,
+    new Set(appearanceColorRoleLaws.map((law) => law.name)).size,
+    appearanceColorRoleLaws.length,
   );
   assert(
-    fieldColorRoleLaws.every((law) => !law.name.includes("series")),
+    appearanceColorRoleLaws.every((law) => !law.name.includes("series")),
     "series colours must stay outside the field",
   );
-  for (const darkness of FIELD_CONTRAST_SAMPLE_DARKNESSES) {
+  for (const darkness of APPEARANCE_CONTRAST_SAMPLE_DARKNESSES) {
     assertEquals(
-      Object.keys(evaluateField({ darkness })),
-      fieldColorRoleLaws.map((law) => law.name),
+      Object.keys(evaluateAppearance({ darkness })),
+      appearanceColorRoleLaws.map((law) => law.name),
     );
   }
 });
 
-Deno.test("the field preserves alpha only for backdrop-owned roles", () => {
-  for (const darkness of FIELD_CONTRAST_SAMPLE_DARKNESSES) {
-    const values = evaluateField({ darkness });
+Deno.test("monochrome preserves alpha only for backdrop-owned roles", () => {
+  for (const darkness of APPEARANCE_CONTRAST_SAMPLE_DARKNESSES) {
+    const values = evaluateAppearance({ darkness });
     const value = (name: `--discern-${string}`): string => {
       const result = values[name];
       assert(
@@ -245,11 +257,14 @@ Deno.test("the field preserves alpha only for backdrop-owned roles", () => {
   }
 });
 
-Deno.test("sampled field rungs hold every attainable contrast floor", () => {
-  assert(fieldContrastMargin() >= 0, `field margin ${fieldContrastMargin()}`);
+Deno.test("sampled rungs hold every attainable contrast floor", () => {
+  assert(
+    appearanceContrastMargin() >= 0,
+    `field margin ${appearanceContrastMargin()}`,
+  );
 });
 
-Deno.test("theme Token poles pin representative field emission", () => {
+Deno.test("theme Token poles pin representative monochrome emission", () => {
   const pairs = Object.fromEntries(
     themeTokens.map((token) => [token.name, [token.light, token.dark]]),
   );
@@ -282,7 +297,7 @@ Deno.test("theme Token poles pin representative field emission", () => {
     "oklch(100% 0 0)",
   ]);
   assertEquals(
-    evaluateFieldShadows({ darkness: 1 })["--discern-shadow-pop"],
+    evaluateAppearanceShadows({ darkness: 1 })["--discern-shadow-pop"],
     "6px 6px 0 color-mix(in oklab, var(--discern-shadow-color) 28%, transparent)",
   );
 });

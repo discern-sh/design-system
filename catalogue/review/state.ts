@@ -1,4 +1,3 @@
-import type { AppearanceName } from "../../src/tokens/field.ts";
 import { catalogueAccentHue } from "../shell/appearance-options.ts";
 import {
   type CatalogueAppearanceState,
@@ -28,8 +27,8 @@ export interface ComponentReviewState {
   readonly category?: ReviewStateCategory;
   readonly width: ReviewInlineSize;
   readonly theme: "light" | "dark";
-  readonly appearance: AppearanceName;
-  readonly accentHue: number;
+  /** Accent hue, or `undefined` for monochrome. */
+  readonly accent: number | undefined;
   readonly field: CatalogueAppearanceState["field"];
   readonly motion: (typeof reviewMotionModes)[number];
   readonly mode: (typeof reviewSurfaceModes)[number];
@@ -60,7 +59,7 @@ function reviewAppearance(
   ) {
     const hue = catalogueAccentHue(formerAppearance);
     if (hue !== undefined) {
-      migrated.set("appearance", "accent");
+      migrated.delete("appearance");
       migrated.set("accent", String(hue));
     }
   }
@@ -93,8 +92,7 @@ export function parseComponentReviewState(url: URL): ComponentReviewState {
       Object.keys(reviewInlineSizes) as ReviewInlineSize[],
     ) ?? "medium",
     theme: appearance.theme,
-    appearance: appearance.appearance,
-    accentHue: appearance.accentHue,
+    accent: appearance.accent,
     field: appearance.field,
     motion: oneOf(parameters.get("motion"), reviewMotionModes) ?? "ordinary",
     mode: oneOf(parameters.get("mode"), reviewSurfaceModes) ?? "contact",
@@ -119,8 +117,7 @@ export function componentReviewHref(state: ComponentReviewState): string {
   }
   writeCatalogueAppearanceParameters(parameters, {
     theme: state.theme,
-    appearance: state.appearance,
-    accentHue: state.accentHue,
+    accent: state.accent,
     field: state.field,
   });
   for (

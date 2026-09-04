@@ -7,7 +7,7 @@ import {
   resolveTokenLiteral,
   type TokenPaletteVariant,
 } from "../internal/token-literals.ts";
-import { evaluateField, themeTokens } from "../tokens/tokens.ts";
+import { evaluateAppearance, themeTokens } from "../tokens/tokens.ts";
 import type { ChartPaintRole } from "./scene.ts";
 
 /** Explicit package palette used by a standalone SVG asset. */
@@ -60,7 +60,7 @@ function parseOklch(value: string): OklabColor {
   };
 }
 
-function fieldSeriesValue(
+function poleSeriesValue(
   name: ChartPaintTokenName,
   darkness: number,
   canvas: OklabColor,
@@ -75,22 +75,24 @@ function fieldSeriesValue(
 }
 
 /**
- * Resolve the portable chart palette at any field point. Field roles evaluate
+ * Resolve the portable chart palette at any darkness. Appearance roles evaluate
  * directly; each fixed series slot selects its more visible authored pole value.
  */
-export function resolveChartPaletteAtField(
+export function resolveChartPaletteAtDarkness(
   darkness: number,
 ): Readonly<Record<ChartPaintRole, string>> {
-  const field = evaluateField({ darkness });
+  const field = evaluateAppearance({ darkness });
   const canvasValue = field["--discern-color-canvas"];
-  if (canvasValue === undefined) throw new TypeError("Field has no canvas");
+  if (canvasValue === undefined) {
+    throw new TypeError("Appearance has no canvas");
+  }
   const canvas = parseOklch(canvasValue);
   return Object.freeze(Object.fromEntries(
     Object.entries(CHART_PAINT_TOKEN_NAMES).map(([role, tokenName]) => {
       const fieldValue = field[tokenName as keyof typeof field];
       return [
         role,
-        fieldValue ?? fieldSeriesValue(tokenName, darkness, canvas),
+        fieldValue ?? poleSeriesValue(tokenName, darkness, canvas),
       ];
     }),
   ) as Record<ChartPaintRole, string>);
@@ -100,7 +102,7 @@ export function resolveChartPaletteAtField(
 export function resolveChartPalette(
   variant: ChartPaletteVariant,
 ): Readonly<Record<ChartPaintRole, string>> {
-  return resolveChartPaletteAtField(variant === "light" ? 0 : 1);
+  return resolveChartPaletteAtDarkness(variant === "light" ? 0 : 1);
 }
 
 /** Resolve the authored interface or annotation font stack without a web root. */

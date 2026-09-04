@@ -20,7 +20,6 @@ import {
   resolveTerminalTheme,
   terminalToneColor,
 } from "../../src/cli/theme.ts";
-import { accentAppearance } from "../../src/tokens/tokens.ts";
 import { TEST_TERMINAL_MOTIF } from "./motif_fixture.ts";
 
 const ENTER = "\r";
@@ -203,7 +202,7 @@ Deno.test("sequential forms carry Accent through every Component-backed step", a
     colorDepth: "truecolor",
     columns: 32,
   });
-  const appearance = accentAppearance(245);
+  const appearance = { accent: 245 };
   await createSequentialForm({
     label: "Setup",
     io,

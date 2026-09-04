@@ -34,8 +34,8 @@ import {
   terminalMotifRepertoire,
 } from "./motif.ts";
 import {
-  type Appearance,
   resolveTerminalTheme,
+  type TerminalAppearance,
   type TerminalThemeVariant,
 } from "./theme.ts";
 import {
@@ -68,8 +68,8 @@ export interface CliPresenter {
   readonly capabilities: TerminalCapabilities;
   /** The bound theme variant injected wherever props leave it unset. */
   readonly theme: TerminalThemeVariant;
-  /** The bound Field-or-Accent input injected wherever props leave it unset. */
-  readonly appearance: Appearance;
+  /** The bound appearance injected wherever props leave it unset. */
+  readonly appearance: TerminalAppearance;
   /** The bound motif injected wherever props leave it unset. */
   readonly motif: TerminalMotif;
   /** The bound motif register injected wherever props leave it unset. */

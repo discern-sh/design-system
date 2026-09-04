@@ -8,22 +8,21 @@ deno add jsr:@discern-sh/design-system
 
 ## Public imports
 
-| Import                                              | Contract                                                                                                                            |
-| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Import                                              | Contract                                                                                  |
+| --------------------------------------------------- | ----------------------------------------------------------------------------------------- |
 | `@discern-sh/design-system`                         | Token metadata, Component Metadata with its generated author guide, group metadata types, the package manifest, and `semanticClass` |
-| `@discern-sh/design-system/chart`                   | Typed chart specs, descriptions, kind Metadata, and portable standalone SVG                                                         |
-| `@discern-sh/design-system/cli`                     | Pure React-free terminal renderers, capabilities, themes, and semantic motif primitives                                             |
-| `@discern-sh/design-system/cli/interactive`         | Optional Deno terminal driver and typed interaction state machines                                                                  |
-| `@discern-sh/design-system/cli/interactive/testing` | Deterministic fake terminal, semantic key/resize scripts, and frame assertions                                                      |
-| `@discern-sh/design-system/cli/projection`          | Package-output decoding, browser projection, and explicit layout inspection                                                         |
-| `@discern-sh/design-system/diagram`                 | Typed diagram specs, descriptions, kind Metadata, and portable standalone SVG                                                       |
-| `@discern-sh/design-system/manifest`                | Framework-neutral manifest schema and the complete package ownership manifest                                                       |
-| `@discern-sh/design-system/runtime`                 | Deterministic selected-runtime emitter                                                                                              |
-| `@discern-sh/design-system/tokens`                  | Field/Accent evaluation, admission, scopes, and primitive/semantic pole metadata                                                    |
-| `@discern-sh/design-system/theme/blue`              | Generated hue-255 Accent compatibility preset                                                                                       |
-| `@discern-sh/design-system/react`                   | Optional React components and their public prop types                                                                               |
+| `@discern-sh/design-system/chart`                   | Typed chart specs, descriptions, kind Metadata, and portable standalone SVG               |
+| `@discern-sh/design-system/cli`                     | Pure React-free terminal renderers, capabilities, themes, and semantic motif primitives   |
+| `@discern-sh/design-system/cli/interactive`         | Optional Deno terminal driver and typed interaction state machines                        |
+| `@discern-sh/design-system/cli/interactive/testing` | Deterministic fake terminal, semantic key/resize scripts, and frame assertions            |
+| `@discern-sh/design-system/cli/projection`          | Package-output decoding, browser projection, and explicit layout inspection               |
+| `@discern-sh/design-system/diagram`                 | Typed diagram specs, descriptions, kind Metadata, and portable standalone SVG             |
+| `@discern-sh/design-system/manifest`                | Framework-neutral manifest schema and the complete package ownership manifest             |
+| `@discern-sh/design-system/runtime`                 | Deterministic selected-runtime emitter                                                    |
+| `@discern-sh/design-system/tokens`                  | Appearance evaluation, admission, scopes, and primitive/semantic pole metadata            |
+| `@discern-sh/design-system/react`                   | Optional React components and their public prop types                                     |
 
-Only `./react` resolves React. The package keeps React and React DOM as catalogue development dependencies and peer dependencies, while its root, manifest, runtime, token, and theme graphs do not import them.
+Only `./react` resolves React. The package keeps React and React DOM as catalogue development dependencies and peer dependencies, while its root, manifest, runtime, and token graphs do not import them.
 
 ## Root, theme, and semantic HTML
 
@@ -60,7 +59,7 @@ console.log(result.manifest.selection.resolvedComponents);
 
 `outputRoot` must end in `/` and must be dedicated to the runtime because each emission replaces it. Every selection writes:
 
-- `discern.css`, containing tokens, the selected theme, root-scoped foundations, utilities, and dependency-ordered component CSS;
+- `discern.css`, containing tokens, the appearance scopes when selected, root-scoped foundations, utilities, and dependency-ordered component CSS;
 - `manifest.json`, containing schema version, requested and resolved selections, canonical groups, component dependencies and browser behaviors, owned classes, public token names, output paths, media types, byte sizes, and SHA-256 integrity;
 - `discern.js` when a resolved component declares browser behavior; and
 - only the optional assets requested by the consumer.
@@ -91,25 +90,37 @@ No asset is copied by default. Asset selections are independent:
 
 Component CSS has no hidden texture dependency. The core `.discern-grain-wash` utility remains useful as a gradient without the optional texture; `grain.css` adds the texture only when a consumer chooses it. Consumers should read emitted asset paths from the manifest rather than infer a cache or registry location.
 
-## Appearances and consumer themes
+## Appearance and consumer themes
 
-Semantic roles derive from the achromatic Field by default. Select `theme: "blue"` for the generated hue-255 Accent compatibility projection; omission and `theme: "none"` keep Field. Accent accepts every finite hue from `0` through `360` (`360` aliases `0`) and keeps success, warning, and danger in recognisable, numerically distinct semantic families even when the chosen hue coincides with one of them.
+Every non-series colour role derives from one appearance: the Darkness, Structure, Emphasis, and Density axes, two optional pigment tints, and an optional accent hue. Omitting the accent is the monochrome default. Any finite hue from `0` through `360` (`360` aliases `0`) projects the chromatic roles, and success, warning, and danger keep recognisable, numerically distinct families even when the chosen hue coincides with one of them.
 
-Select `appearanceScopes: true` when emitting a Runtime that needs local appearance composition. Then use the zero-specificity, Root-contained scope attribute with the inherited hue primitive:
+Select `appearanceScopes: true` when emitting a Runtime that colours a Root or a subtree. `data-discern-accent` switches the Accent projection on for an element and its descendants, the inherited `--discern-accent-hue` primitive supplies the hue, and `data-discern-accent="none"` restores monochrome inside an Accent region:
 
 ```html
-<main data-discern-root data-discern-appearance="field">
-  <section
-    data-discern-appearance="accent"
-    style="--discern-accent-hue: 145"
-  >
-    <button class="discern-button">Continue</button>
-    <aside data-discern-appearance="field">Achromatic details</aside>
+<main data-discern-root data-discern-accent style="--discern-accent-hue: 145">
+  <button class="discern-button">Continue</button>
+  <aside data-discern-accent="none">Monochrome details</aside>
+  <section data-discern-accent style="--discern-accent-hue: 335">
+    A locally different hue
   </section>
 </main>
 ```
 
-Field can nest inside Accent, Accent can nest inside Field, and a nested Accent can inherit or replace the surrounding hue. Darkness, Structure, Emphasis, and Density inherit unchanged unless the local scope explicitly sets an axis. Consumers may still override public roles in their own cascade layer without forking Component CSS. Automated package tests exhaust the hue circle and cover text contrast, focus, semantic distinction, owned surfaces, fixed series, nested scopes, reduced motion, forced-colour focus outlines, and unchanged Component CSS. Manual browser review still checks visible focus shape and status recognition in the consumer's actual type, layout, zoom, and operating-system colour settings.
+Monochrome can nest inside Accent, Accent inside monochrome, and a nested Accent can inherit or replace the surrounding hue. Darkness, Structure, Emphasis, and Density inherit unchanged unless the local scope explicitly sets an axis.
+
+The pigments themselves can carry a tint. `--discern-paper-tint` and `--discern-paper-tint-hue` move white towards a coloured stock; `--discern-ink-tint` and `--discern-ink-tint-hue` lift black towards a coloured black. Strength runs from `0` (pure) to `1` (the deepest value every hue can show inside sRGB), and because every role is a pigment at an alpha, the whole surface follows:
+
+```html
+<main
+  data-discern-root
+  data-discern-theme="dark"
+  style="--discern-ink-tint: 0.4; --discern-ink-tint-hue: 265"
+>
+  <!-- Monochrome on a faintly navy ground -->
+</main>
+```
+
+Consumers may still override public roles in their own cascade layer without forking Component CSS. Automated package tests exhaust the hue circle and the tint circle and cover text contrast, focus, semantic distinction, owned surfaces, fixed series, nested scopes, reduced motion, forced-colour focus outlines, and unchanged Component CSS. Manual browser review still checks visible focus shape and status recognition in the consumer's actual type, layout, zoom, and operating-system colour settings.
 
 Inverse surface and ink roles remain dark-on-light in purpose across both site themes; they do not invert with the ordinary canvas and ink roles.
 
