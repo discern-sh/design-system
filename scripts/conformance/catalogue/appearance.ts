@@ -31,6 +31,14 @@ import {
 
 const semanticIds = ["default", "success", "warning", "danger"] as const;
 const semanticNeighbourCentres = [28, 74, 82, 152] as const;
+const generatedCliPreviewSelector =
+  "[data-discern-component] .discern-catalogue-cli-preview";
+
+/**
+ * A whole generated population can need substantially longer than one control
+ * interaction to commit on a loaded CI runner.
+ */
+export const GENERATED_CLI_POPULATION_SETTLE_TIMEOUT_MS = 30_000;
 
 interface CrossSurfaceHueCase {
   readonly id: string;
@@ -170,6 +178,53 @@ async function cliIdentitySnapshot(page: Page): Promise<
   );
 }
 
+/** Wait in Chromium for every generated CLI preview to commit one ground. */
+export async function waitForGeneratedCliGround(
+  page: Page,
+  expectedExamples: number,
+  ground: "light" | "dark",
+): Promise<void> {
+  const failure = `System ${ground} preference did not ${
+    ground === "light" ? "reach" : "re-render"
+  } the generated CLI population`;
+  try {
+    await page.waitForFunction(
+      ({ expectedExamples, ground, selector }) => {
+        const previews = document.querySelectorAll(selector);
+        return previews.length === expectedExamples &&
+          [...previews].every((preview) =>
+            preview.getAttribute("data-discern-terminal-ground") === ground
+          );
+      },
+      {
+        expectedExamples,
+        ground,
+        selector: generatedCliPreviewSelector,
+      },
+      {
+        polling: "raf",
+        timeout: GENERATED_CLI_POPULATION_SETTLE_TIMEOUT_MS,
+      },
+    );
+  } catch (error) {
+    const observed = await page.locator(generatedCliPreviewSelector)
+      .evaluateAll((nodes) => {
+        const grounds: Record<string, number> = {};
+        for (const node of nodes) {
+          const value = node.getAttribute("data-discern-terminal-ground") ??
+            "missing";
+          grounds[value] = (grounds[value] ?? 0) + 1;
+        }
+        return { count: nodes.length, grounds };
+      });
+    throw new Error(
+      `${failure}; expected ${expectedExamples}, observed ${observed.count} ` +
+        `(${JSON.stringify(observed.grounds)})`,
+      { cause: error },
+    );
+  }
+}
+
 async function verifyCliProjectionStyles(page: Page): Promise<void> {
   const style = await page.locator(".discern-catalogue-cli-output").first()
     .evaluate((node) => {
@@ -248,15 +303,14 @@ async function verifyGeneratedCliPopulation(
       expectedIdentities,
       posture.id + " generated CLI identities",
     );
-    const attributes = await page.locator(
-      "[data-discern-component] .discern-catalogue-cli-preview",
-    ).evaluateAll((nodes) =>
-      nodes.map((node) => ({
-        appearance: node.getAttribute("data-discern-terminal-appearance"),
-        ground: node.getAttribute("data-discern-terminal-ground"),
-        hue: node.getAttribute("data-discern-terminal-accent-hue"),
-      }))
-    );
+    const attributes = await page.locator(generatedCliPreviewSelector)
+      .evaluateAll((nodes) =>
+        nodes.map((node) => ({
+          appearance: node.getAttribute("data-discern-terminal-appearance"),
+          ground: node.getAttribute("data-discern-terminal-ground"),
+          hue: node.getAttribute("data-discern-terminal-accent-hue"),
+        }))
+      );
     invariant(
       attributes.length === expectedIdentities.length &&
         attributes.every(({ appearance, ground, hue }) =>
@@ -289,24 +343,9 @@ async function verifyGeneratedCliPopulation(
     surface: "cli",
   });
   await loadConformanceSurface(page, systemUrl);
-  const allGroundsAre = async (ground: "light" | "dark") => {
-    const values = await page.locator(
-      "[data-discern-component] .discern-catalogue-cli-preview",
-    ).evaluateAll((nodes) =>
-      nodes.map((node) => node.getAttribute("data-discern-terminal-ground"))
-    );
-    return values.length === expectedIdentities.length &&
-      values.every((value) => value === ground);
-  };
-  await eventually(
-    async () => await allGroundsAre("light"),
-    "System light preference did not reach the generated CLI population",
-  );
+  await waitForGeneratedCliGround(page, expectedIdentities.length, "light");
   await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
-  await eventually(
-    async () => await allGroundsAre("dark"),
-    "System dark preference did not re-render the generated CLI population",
-  );
+  await waitForGeneratedCliGround(page, expectedIdentities.length, "dark");
 
   return {
     components: rendered.length,

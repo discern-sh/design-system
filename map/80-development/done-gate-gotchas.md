@@ -114,6 +114,14 @@ refresh` immediately rewrites them back) — the two sides loop forever.
 
 **Fix.** Compare the resulting outer offset with `clampedScrollPosition(previous, newMaximum)` rather than with the raw previous offset, then keep wheel-driven pointer geometry behind `waitForStableWindowScroll`. Both authorities live in [`scripts/browser-conformance-support.ts`](../../scripts/browser-conformance-support.ts). Tracked-TypeScript architecture tests reject future wheel witnesses that omit post-layout clamping or sample synthetic-click geometry before the inner scroll settles.
 
+### Cross-surface appearance times out while switching the generated CLI population
+
+**Symptom.** Publish CI reaches browser conformance, then reports `System dark preference did not re-render the generated CLI population`; the same commit can pass locally. Re-running on a loaded runner fails at the same assertion.
+
+**Cause.** A system-theme change asks React to re-render every generated CLI preview — currently hundreds of examples. Polling that population from the Deno process every 25 ms spends much of a two-second interaction budget crossing the browser boundary, and loaded Linux runners can still be committing valid previews when the deadline expires.
+
+**Fix.** Keep the whole-population witness in `waitForGeneratedCliGround` in [`scripts/conformance/catalogue/appearance.ts`](../../scripts/conformance/catalogue/appearance.ts). It polls inside Chromium on animation frames and gives the population a bounded 30-second CI budget; on a real timeout it reports the observed population and ground distribution. The focused conformance test pins the browser-resident predicate, exact population requirement, and extended budget. Do not route this population back through the shared short `eventually` helper.
+
 ### The `css_density` standard measures a stale `dist/discern.css`
 
 **Symptom.** The `css_density` number does not move when you expected it to (or a standalone `discern standards` run reports a size that ignores your change).
