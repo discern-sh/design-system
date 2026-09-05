@@ -27,6 +27,10 @@ The owner completed A1–A5 on main, with baseline commit `a1bd80f3886e`: shared
 ## Read the authorities
 
 - `catalogue/pages/components/detail-page.tsx`
+- `catalogue/pages/components/detail-state.ts`
+- `catalogue/styles/component-detail.css`
+- `tests/catalogue_component_detail_test.ts`
+- `scripts/conformance/catalogue/component-detail.ts`
 - `catalogue/pages/components/component-preview.tsx`
 - `catalogue/conformance.ts`
 - `catalogue/builder/controls.ts`

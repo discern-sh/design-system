@@ -11,7 +11,7 @@ import {
 } from "../../example-images.ts";
 import { registry } from "../../generated/registry.ts";
 import { catalogueNavigation } from "../../routes.ts";
-import { componentExplorerHref } from "../components/state.ts";
+import { componentExplorerHref } from "../components/explorer-state.ts";
 import { CatalogueIndexCard } from "../shared.tsx";
 
 export const overviewCatalogueDestinations = catalogueNavigation.slice(1);

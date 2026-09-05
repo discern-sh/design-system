@@ -1,4 +1,4 @@
-import { assertThrows } from "@std/assert";
+import { assertEquals, assertThrows } from "@std/assert";
 import { catalogueNavigation } from "../catalogue/routes.ts";
 import {
   assertCatalogueBrowserCheckRunners,
@@ -26,14 +26,32 @@ Deno.test("a future route family cannot land without a browser-check owner", () 
 });
 
 Deno.test("a declared family check cannot be orphaned by the orchestrator", () => {
-  assertThrows(
-    () =>
-      assertCatalogueBrowserCheckRunners(
-        catalogueBrowserCheckPlan
-          .filter(({ id }) => id !== "compositions")
-          .map(({ id }) => id),
-      ),
-    Error,
-    "compositions",
+  for (const check of catalogueBrowserCheckPlan) {
+    assertThrows(
+      () =>
+        assertCatalogueBrowserCheckRunners(
+          catalogueBrowserCheckPlan
+            .filter(({ id }) => id !== check.id)
+            .map(({ id }) => id),
+        ),
+      Error,
+      check.id,
+    );
+  }
+});
+
+Deno.test("Catalogue route checks stay separate from the public Component population", () => {
+  assertEquals(
+    catalogueBrowserCheckPlan.find(({ id }) => id === "component-contracts")
+      ?.familyIds,
+    [],
+  );
+  assertEquals(
+    catalogueBrowserCheckPlan.find(({ id }) => id === "components")?.familyIds,
+    ["components"],
+  );
+  assertEquals(
+    catalogueBrowserCheckPlan.find(({ id }) => id === "compare")?.familyIds,
+    ["compare"],
   );
 });

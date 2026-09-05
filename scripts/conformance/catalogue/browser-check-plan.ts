@@ -3,9 +3,19 @@ import type { CatalogueRouteDescriptor } from "../../../catalogue/routes.ts";
 export const catalogueBrowserCheckPlan = Object.freeze(
   [
     Object.freeze({
-      id: "components",
-      familyIds: Object.freeze(["components", "compare"]),
+      id: "component-contracts",
+      familyIds: Object.freeze([]),
       failureLabel: "Component contracts",
+    }),
+    Object.freeze({
+      id: "components",
+      familyIds: Object.freeze(["components"]),
+      failureLabel: "Components Catalogue",
+    }),
+    Object.freeze({
+      id: "compare",
+      familyIds: Object.freeze(["compare"]),
+      failureLabel: "Compare Catalogue",
     }),
     Object.freeze({
       id: "glyphs",

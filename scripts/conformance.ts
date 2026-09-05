@@ -5,6 +5,11 @@ import { addPageFailureListeners } from "./browser-conformance-support.ts";
 import { launchBrowser } from "./browser.ts";
 import { runBuilderConformance } from "./builder-conformance.ts";
 import { buildDesignSystem } from "./build.ts";
+import { verifyComponentsCatalogue } from "./conformance/catalogue/component-pages.ts";
+import {
+  verifyCompareJourneys,
+  verifyCompareMetadata,
+} from "./conformance/catalogue/compare.ts";
 import {
   runComponentContractConformance,
 } from "./conformance/catalogue/components.ts";
@@ -69,7 +74,6 @@ const emptyComponentEvidence: ComponentContractEvidence = {
   scenarios: 0,
   screenshots: 0,
   forcedColorFocusChecks: 0,
-  metadataRoleChecks: 0,
 };
 const emptyTerminalEvidence: TerminalCatalogueEvidence = {
   layouts: 0,
@@ -170,6 +174,8 @@ export async function runConformance(): Promise<void> {
     }
 
     let components = emptyComponentEvidence;
+    let componentPages = { roles: 0, scans: 0 };
+    let compare = { roles: 0, scans: 0 };
     let foundations = emptyFoundationsEvidence;
     let glyphs = emptyGlyphsEvidence;
     let compositions = emptyCompositionsEvidence;
@@ -180,7 +186,7 @@ export async function runConformance(): Promise<void> {
     const catalogueCheckRunners: Readonly<
       Record<CatalogueBrowserCheckId, () => Promise<void>>
     > = {
-      components: async () => {
+      "component-contracts": async () => {
         components = await runComponentContractConformance(
           activeBrowser,
           page,
@@ -188,6 +194,18 @@ export async function runConformance(): Promise<void> {
           expectedComponents,
           failures,
         );
+      },
+      components: async () => {
+        componentPages = await verifyComponentsCatalogue(
+          page,
+          origin,
+          expectedComponents,
+          failures,
+        );
+      },
+      compare: async () => {
+        await verifyCompareJourneys(page, origin, expectedComponents);
+        compare = await verifyCompareMetadata(page, origin);
       },
       foundations: async () => {
         foundations = await verifyFoundationsCatalogue(page, origin);
@@ -276,10 +294,12 @@ export async function runConformance(): Promise<void> {
         `${appearanceProjection.spacingChecks} density-spacing checks; ` +
         `${appearanceProjection.appearanceScopeChecks} appearance-scope role checks and ` +
         `${appearanceProjection.appearanceNestingChecks} nested axis/hue checks; ` +
-        `${components.accessibilityScans} component accessibility scans, ` +
+        `${
+          components.accessibilityScans + componentPages.scans + compare.scans
+        } component accessibility scans, ` +
         `${components.scenarios} interaction scenarios, ` +
         `${components.forcedColorFocusChecks} forced-colour focus checks, and ` +
-        `${components.metadataRoleChecks + shell.metadataRoleChecks} ` +
+        `${componentPages.roles + compare.roles + shell.metadataRoleChecks} ` +
         `metadata-role checks; ` +
         `${components.screenshots + 1} review screenshots; ` +
         `${components.floatingSurfaces} floating surfaces share the clipping cure. ` +

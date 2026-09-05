@@ -26,6 +26,9 @@ The owner completed A1–A5 on main, with baseline commit `a1bd80f3886e`: shared
 ## Read the authorities
 
 - `catalogue/cli-preview.tsx`
+- `catalogue/styles/cli-preview.css`
+- `scripts/conformance/catalogue/cli-preview.ts`
+- `scripts/conformance/catalogue/terminal.ts`
 - `catalogue/pages/terminal/page.tsx`
 - `catalogue/cli-compositions.ts`
 - `catalogue/terminal-lab-state.ts`

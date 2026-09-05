@@ -28,10 +28,14 @@ The owner completed A1–A5 on main, with baseline commit `a1bd80f3886e`: shared
 - `catalogue/pages/components/index-page.tsx`
 - `catalogue/pages/components/directory-card.tsx`
 - `catalogue/pages/components/collections.ts`
-- `catalogue/pages/components/state.ts`
+- `catalogue/pages/components/explorer-state.ts`
+- `catalogue/pages/components/detail-navigation.tsx`
+- `catalogue/pages/components/navigation.tsx`
+- `catalogue/styles/component-discovery.css`
 - `catalogue/routes/components.ts`
 - `catalogue/example-images.ts`
-- `tests/catalogue_components_test.ts`
+- `tests/catalogue_component_discovery_test.ts`
+- `scripts/conformance/catalogue/component-discovery.ts`
 
 ## Deliverables
 

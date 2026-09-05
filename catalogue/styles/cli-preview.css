@@ -1,0 +1,53 @@
+@layer catalogue {
+  .discern-catalogue-cli-preview {
+    padding: clamp(22px, 4vw, 42px);
+    background: var(--discern-color-canvas);
+  }
+  .discern-catalogue-cli-output {
+    max-inline-size: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: auto;
+    background: transparent;
+    color: var(--discern-color-ink);
+    font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    font-size: var(--discern-font-size-xs);
+    font-feature-settings: "liga" 0, "calt" 0;
+    font-variant-ligatures: none;
+    line-height: 1.7;
+    tab-size: 2;
+    white-space: pre;
+  }
+  .discern-catalogue-cli-output code {
+    color: inherit;
+    font: inherit;
+  }
+  .discern-catalogue-cli-exemption {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 14px;
+    padding: clamp(22px, 4vw, 42px);
+    background: var(--discern-color-canvas);
+  }
+  .discern-catalogue-cli-exemption > span {
+    display: grid;
+    place-items: center;
+    inline-size: 34px;
+    block-size: 34px;
+    border: 1px solid var(--discern-color-border-strong);
+    border-radius: var(--discern-radius-sm);
+    background: var(--discern-color-surface-sunken);
+    color: var(--discern-color-ink-faint);
+  }
+  .discern-catalogue-cli-exemption strong {
+    color: var(--discern-color-ink);
+    font: 650 var(--discern-font-size-sm) var(--discern-font-ui);
+  }
+  .discern-catalogue-cli-exemption p {
+    max-width: 72ch;
+    margin: 5px 0 0;
+    color: var(--discern-color-ink-muted);
+    font-size: var(--discern-font-size-sm);
+    line-height: 1.55;
+  }
+}

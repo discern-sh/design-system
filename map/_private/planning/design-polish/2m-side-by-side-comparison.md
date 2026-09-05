@@ -29,7 +29,7 @@ The owner completed A1–A5 on main, with baseline commit `a1bd80f3886e`: shared
 - `catalogue/styles/compare.css`
 - `catalogue/pages/components/component-preview.tsx`
 - `tests/catalogue_compare_test.ts`
-- `scripts/conformance/catalogue/components.ts`
+- `scripts/conformance/catalogue/compare.ts`
 
 ## Deliverables
 

@@ -13,7 +13,7 @@ import {
   overviewCatalogueDestinations,
   OverviewPage,
 } from "../catalogue/pages/overview/page.tsx";
-import { componentExplorerHref } from "../catalogue/pages/components/state.ts";
+import { componentExplorerHref } from "../catalogue/pages/components/explorer-state.ts";
 import { catalogueNavigation } from "../catalogue/routes.ts";
 import { cliComponentRegistry } from "../src/generated/cli-registry.ts";
 import { packageManifest } from "../src/manifest.ts";

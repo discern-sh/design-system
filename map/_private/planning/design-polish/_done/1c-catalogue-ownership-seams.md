@@ -24,7 +24,9 @@ The owner completed A1–A5 on main, with baseline commit `a1bd80f3886e`: shared
 
 ## Read the authorities
 
-- `catalogue/pages/components/state.ts`
+- `catalogue/pages/components/explorer-state.ts`
+- `catalogue/pages/components/detail-state.ts`
+- `catalogue/pages/components/detail-navigation.tsx`
 - `catalogue/pages/components/detail-page.tsx`
 - `catalogue/pages/components/component-preview.tsx`
 - `catalogue/pages/shared.tsx`
@@ -82,3 +84,11 @@ Authored feature files stay with their owner. Shared derived files and the narro
 - **Landing rule chosen by the owner:** use discern grants. After green `discern_done`, call `discern_accept` without inventing confirmation. A recorded desk grant may land this worktree; without a grant the verb refuses, so report the exact Proof, branch, worktree, preview, and any owner decision, then stop. Never push or publish. A grant does not waive standards or an unmet checkpoint variance.
 - Return the branch/worktree identity for an adversarial review against this brief. The planning agent will inspect the diff and reproduce the important journeys; gate success alone is not a visual review.
 - In the final implementation commit, before the final prepare → commit → done sequence, move `map/_private/planning/design-polish/1c-catalogue-ownership-seams.md` to `map/_private/planning/design-polish/_done/1c-catalogue-ownership-seams.md`, repair any moved relative links, and update **only this stream's row** in the programme README to the `_done/` path and completed state, preserving every sibling row.
+
+## Implementation evidence
+
+The private state and navigation split preserves the original selection and href algorithms. Discovery, detail, Compare, and the CLI host own their styles and browser assertion bodies; generic cards/chrome and the canonical example-layout harness remain shared at their existing boundaries. The programme ownership record names every resulting runner and the serialized companion files. No selected proposal is claimed here.
+
+Before/after Chromium capture covered Components collections and results, Command detail and CLI overflow, table/command Compare, Glyphs, and Terminal at 1440 and 390 CSS pixels in Light and Dark: all 28 PNGs were byte-identical, with identical recorded DOM geometry and computed styles. The extracted route journeys passed discovery search/filter/history, default single specimens, surface/example identity, explicit all-example review, unavailable CLI states, legacy-fragment restoration, Compare scope/override/removal, keyboard focus and overflow cues, plus 320px metadata reflow (104 metadata witnesses and two axe scans). The image command recaptured all 686 canonical Light/Dark Web images: every PNG remained unchanged; only generated source fingerprints changed. Permanent focused tests cover the navigation call boundary, canonical URL defaults, and every browser-runner enrollment. The complete gate remains the final machine verification; these snapshots cover representative route states rather than every possible interactive frame.
+
+Preview: `http://localhost:18106/catalogue/components/`, `/catalogue/components/command/`, `/catalogue/review/?components=table,command`, `/catalogue/glyphs/`, and `/catalogue/terminal/`. Review identity: `refine-1c-707dc6`, branch `agent/refine-1c-707dc6`, worktree `/Users/jack/Sites/discern-design-system.worktrees/refine-1c-707dc6`.

@@ -6,7 +6,10 @@ import type {
 import { catalogueNavigationLabel } from "../navigation-types.ts";
 import { componentGroupHref } from "../shared.tsx";
 import { componentDirectory } from "./collections.ts";
-import { componentDetailHref, parseComponentDetailState } from "./state.ts";
+import {
+  componentDetailHref,
+  parseComponentDetailState,
+} from "./detail-state.ts";
 
 /** Source-backed Component destinations projected into the shared DocsNav. */
 export function componentsNavigationSections(

@@ -2566,7 +2566,7 @@ Deno.test("monospace is reserved for brand names and code-bearing surfaces", asy
     "src/components/workflow/path-reference/path-reference.css::.discern-path-reference__path",
     "src/components/workflow/raw-output/raw-output.css::.discern-raw-output__content",
     "src/styles/utilities.css::.discern-mono",
-    "catalogue/styles/components.css::.discern-catalogue-api code",
+    "catalogue/styles/component-detail.css::.discern-catalogue-api code",
     "catalogue/styles/foundations.css::.discern-catalogue-appearance-page__export pre",
     "catalogue/styles/foundations.css::.discern-catalogue-appearance-page__role-grid code, .discern-catalogue-appearance-page__role-grid small, .discern-catalogue-appearance-page__pair code",
     "catalogue/styles/foundations.css::.discern-catalogue-token code",

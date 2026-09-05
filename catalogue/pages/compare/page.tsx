@@ -13,7 +13,7 @@ import {
   ComponentSurfaceControl,
 } from "../components/component-preview.tsx";
 import { componentDirectory } from "../components/collections.ts";
-import { componentDetailHref } from "../components/state.ts";
+import { componentDetailHref } from "../components/detail-state.ts";
 import { CataloguePageHeader } from "../shared.tsx";
 import type { CatalogueSurface } from "../shared.tsx";
 import {

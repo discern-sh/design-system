@@ -24,7 +24,7 @@ import {
   componentExplorerHref,
   type ComponentExplorerState,
   parseComponentExplorerState,
-} from "./state.ts";
+} from "./explorer-state.ts";
 
 interface ComponentMatch {
   readonly entry: RegistryEntry;

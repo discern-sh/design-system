@@ -1,12 +1,13 @@
+import {
+  ComponentDetailBreadcrumb,
+  ComponentDetailNavigation,
+} from "./detail-navigation.tsx";
 import { useEffect, useState } from "react";
-import { registry } from "../../generated/registry.ts";
 import type { RegistryEntry } from "../../generated/registry.ts";
 import { catalogueDecisionCopyProps } from "../../metadata-copy.ts";
 import type { CatalogueTerminalPresentation } from "../../terminal-theme.ts";
-import { catalogueRoutePaths } from "../../routes.ts";
 import { announceCatalogueLocationChange } from "../../shell/location.ts";
 import { preserveCatalogueAppearanceHref } from "../../shell/appearance-state.ts";
-import { catalogueHref, componentGroupHref } from "../shared.tsx";
 import type { CatalogueSurface } from "../shared.tsx";
 import {
   ComponentEvidence,
@@ -19,7 +20,7 @@ import {
   componentDetailHref,
   type ComponentDetailState,
   parseComponentDetailState,
-} from "./state.ts";
+} from "./detail-state.ts";
 
 export function ComponentDetailPage(
   { entry, surface, terminalPresentation, onSurfaceChange }: {
@@ -58,37 +59,10 @@ export function ComponentDetailPage(
     setState(next);
     announceCatalogueLocationChange();
   };
-  const grouped = registry.filter(({ meta }) => meta.group === entry.meta.group)
-    .toSorted((left, right) => left.meta.order - right.meta.order);
-  const index = grouped.findIndex(({ meta }) => meta.slug === entry.meta.slug);
-  const previous = index > 0 ? grouped[index - 1] : undefined;
-  const next = index >= 0 && index < grouped.length - 1
-    ? grouped[index + 1]
-    : undefined;
-  const neighbourHref = (candidate: RegistryEntry) =>
-    componentDetailHref(candidate, {
-      ...state,
-      exampleId: candidate.canonicalExamples.some(({ id }) =>
-          id === state.exampleId
-        )
-        ? state.exampleId
-        : candidate.canonicalExamples[0]?.id ?? "default",
-    });
-  const compareHref = catalogueHref(catalogueRoutePaths.compare, {
-    components: entry.meta.slug,
-    surface: state.surface === "cli" ? "cli" : undefined,
-    examples: `${entry.meta.slug}:${state.exampleId}`,
-  });
 
   return (
     <div className="discern-catalogue-page discern-catalogue-detail">
-      <nav className="discern-catalogue-breadcrumb" aria-label="Breadcrumb">
-        <a href={catalogueRoutePaths.components}>Components</a>
-        <span aria-hidden="true">/</span>
-        <a href={componentGroupHref(entry.meta.group)}>{entry.meta.group}</a>
-        <span aria-hidden="true">/</span>
-        <span aria-current="page">{entry.meta.name}</span>
-      </nav>
+      <ComponentDetailBreadcrumb entry={entry} />
       <article
         className="discern-catalogue-component discern-catalogue-component--detail"
         id={`component-${entry.meta.slug}`}
@@ -141,26 +115,7 @@ export function ComponentDetailPage(
         />
         <ComponentEvidence entry={entry} />
       </article>
-      <nav
-        className="discern-catalogue-detail__continuation"
-        aria-label="Component continuation"
-      >
-        <span>
-          {previous === undefined
-            ? null
-            : (
-              <a rel="prev" href={neighbourHref(previous)}>
-                ← {previous.meta.name}
-              </a>
-            )}
-        </span>
-        <a href={compareHref}>Compare {entry.meta.name}</a>
-        <span>
-          {next === undefined
-            ? null
-            : <a rel="next" href={neighbourHref(next)}>{next.meta.name} →</a>}
-        </span>
-      </nav>
+      <ComponentDetailNavigation entry={entry} state={state} />
     </div>
   );
 }

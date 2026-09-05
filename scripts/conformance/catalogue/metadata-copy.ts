@@ -1,3 +1,4 @@
+import { scanBrowserAccessibility } from "../../browser-conformance-support.ts";
 import type { Locator, Page } from "playwright-core";
 import {
   catalogueCopyRoleAttribute,
@@ -117,3 +118,36 @@ export const CATALOGUE_400_PERCENT_REFLOW_VIEWPORT = {
   width: 320,
   height: 720,
 } as const;
+
+/** Apply the shared copy, document containment, and optional axe checks per route. */
+export function createDecisionCopyPageVerifier(page: Page) {
+  const evidence = { roles: 0, scans: 0 };
+  const verifyPage = async (
+    label: string,
+    { scan = false }: { readonly scan?: boolean } = {},
+  ): Promise<void> => {
+    evidence.roles += await verifyDecisionCopyLegibility(page, label);
+    const overflow = await page.evaluate(() =>
+      document.documentElement.scrollWidth -
+      document.documentElement.clientWidth
+    );
+    invariant(
+      overflow <= 0,
+      `${label} moves the document ${overflow}px horizontally`,
+    );
+    if (!scan) return;
+    const accessibility = await scanBrowserAccessibility(
+      page,
+      ".discern-catalogue-shell",
+    );
+    invariant(
+      accessibility.violations.length === 0,
+      `${label} failed accessibility: ${
+        accessibility.violations.map(({ id }) => id).join(", ")
+      }`,
+    );
+    evidence.scans += 1;
+  };
+
+  return { verifyPage, evidence };
+}

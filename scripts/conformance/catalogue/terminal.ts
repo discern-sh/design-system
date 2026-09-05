@@ -12,6 +12,7 @@ import { projectTerminalLayoutRecipe } from "../../../catalogue/terminal-layout-
 import { resolveCatalogueTerminalPresentation } from "../../../catalogue/terminal-theme.ts";
 import { inspectTerminalLayout } from "../../../src/cli/projection.ts";
 import { withViewport } from "../../viewport.ts";
+import { verifyCliPreview } from "./cli-preview.ts";
 import {
   verifyInlineOverflowCueEdges,
   verifyOverflowCueCatalogue,
@@ -38,6 +39,7 @@ export async function verifyTerminalCatalogue(
   page: Page,
   origin: string,
 ): Promise<TerminalCatalogueEvidence> {
+  await verifyCliPreview(page, origin);
   return await withViewport(page, CATALOGUE_TERMINAL_VIEWPORT, async () => {
     const terminalUrl = new URL(catalogueRoutePaths.terminal, origin);
     terminalUrl.searchParams.set("theme", "light");

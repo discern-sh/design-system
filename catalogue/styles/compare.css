@@ -1,4 +1,16 @@
 @layer catalogue {
+  .discern-catalogue-review-controls label,
+  .discern-catalogue-review-controls > div {
+    display: grid;
+    gap: 6px;
+    color: var(--discern-color-ink-muted);
+    font: var(--discern-font-size-xs) var(--discern-font-ui);
+  }
+  .discern-catalogue-component-group {
+    margin-block-end: 58px;
+  }
+}
+@layer catalogue {
   .discern-catalogue-compare-landing__picker {
     display: flex;
     align-items: end;

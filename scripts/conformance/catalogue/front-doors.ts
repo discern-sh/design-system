@@ -5,7 +5,7 @@ import {
   catalogueRoutePaths,
 } from "../../../catalogue/routes.ts";
 import type { CatalogueRouteFamilyId } from "../../../catalogue/routes.ts";
-import { componentExplorerHref } from "../../../catalogue/pages/components/state.ts";
+import { componentExplorerHref } from "../../../catalogue/pages/components/explorer-state.ts";
 import { scanBrowserAccessibility } from "../../browser-conformance-support.ts";
 import { withViewport } from "../../viewport.ts";
 import { verifyInlineOverflowCueEdges } from "./overflow-cue.ts";

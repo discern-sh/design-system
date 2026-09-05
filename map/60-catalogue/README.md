@@ -95,6 +95,8 @@ The machine-only `?conformance=1` route remains exhaustive. Ordinary indexes sta
 
 ## Where to start
 
+For independent page, style, and test work, use the [Catalogue ownership seams](ownership-seams.md) before editing shared consumers.
+
 | Concern                                                       | Authority                                                                                                                                                                                                                                     |
 | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Route vocabulary, matching, local navigation, legacy upgrades | [`catalogue/routes/`](../../catalogue/routes/) and [`routes.ts`](../../catalogue/routes.ts)                                                                                                                                                   |

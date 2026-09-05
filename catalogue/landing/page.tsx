@@ -57,7 +57,7 @@ import { projectTerminalInlineHtml } from "../../src/cli/projection.ts";
 import type { FlowDiagramSpec } from "../../src/diagram/kinds/flow/flow.spec.ts";
 import type { RuntimeAssetSelection } from "../../src/runtime-assets.ts";
 import { catalogueNavigation, catalogueRoutePaths } from "../routes.ts";
-import { componentExplorerHref } from "../pages/components/state.ts";
+import { componentExplorerHref } from "../pages/components/explorer-state.ts";
 import type { LandingSystemFacts } from "./facts.ts";
 
 /** Canonical package identity shared by every landing surface. */

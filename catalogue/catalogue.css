@@ -1,7 +1,10 @@
 @import url("/catalogue/styles/foundation.css");
 @import url("/catalogue/styles/shell.css");
 @import url("/catalogue/styles/shared.css");
+@import url("/catalogue/styles/cli-preview.css");
 @import url("/catalogue/styles/overview.css");
+@import url("/catalogue/styles/component-discovery.css");
+@import url("/catalogue/styles/component-detail.css");
 @import url("/catalogue/styles/components.css");
 @import url("/catalogue/styles/glyphs.css");
 @import url("/catalogue/styles/foundations.css");

@@ -6,6 +6,8 @@ Each release is cut from a green run of the full release gate — formatting, li
 
 ## Unreleased
 
+- Separate private Catalogue discovery, detail, comparison, and terminal-preview ownership across state, navigation, styles, and browser checks. Existing routes, specimen call shapes, visual output, and public package contracts are unchanged.
+
 - Center text glyphs within compact icon slots independently of inherited line height. Button icons, Icon button, Icon, Banner, Toast, and Raw output retain vertical alignment with enlarged text while preserving injected SVG dimensions.
 
 - Refine shared visual foundations: quieter card/window elevation, flat secondary actions, and nested Cards without repeated borders or shadows. Raised and sunken surface curves retain their lightness order at intermediate darkness; muted text strengthens and hairline borders recede. Appearance remains the single browser/terminal colour authority.

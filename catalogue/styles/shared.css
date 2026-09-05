@@ -191,29 +191,6 @@
   :where([data-discern-theme="dark"]) .discern-catalogue-index-card__theme-image[data-discern-image-theme="dark"] {
     display: block;
   }
-  .discern-catalogue-explorer-controls label,
-  .discern-catalogue-review-controls label,
-  .discern-catalogue-review-controls > div {
-    display: grid;
-    gap: 6px;
-    color: var(--discern-color-ink-muted);
-    font: var(--discern-font-size-xs) var(--discern-font-ui);
-  }
-  .discern-catalogue-explorer-controls input {
-    box-sizing: border-box;
-    width: 100%;
-    min-height: var(--discern-control-size-md);
-    padding-inline: 11px;
-    border: 1px solid var(--discern-color-border-strong);
-    border-radius: var(--discern-radius-sm);
-    background: var(--discern-color-surface);
-    color: var(--discern-color-ink);
-    font: inherit;
-  }
-  .discern-catalogue-explorer-controls input:focus-visible {
-    outline: 2px solid var(--discern-color-accent-500);
-    outline-offset: 2px;
-  }
   .discern-catalogue-results-header {
     display: flex;
     align-items: end;
@@ -231,60 +208,6 @@
     margin: 0;
     color: var(--discern-color-ink-faint);
     font: var(--discern-font-size-xs) var(--discern-font-ui);
-  }
-  .discern-catalogue-collections {
-    margin-block-start: 68px;
-  }
-  .discern-catalogue-cli-preview {
-    padding: clamp(22px, 4vw, 42px);
-    background: var(--discern-color-canvas);
-  }
-  .discern-catalogue-cli-output {
-    max-inline-size: 100%;
-    margin: 0;
-    padding: 0;
-    overflow: auto;
-    background: transparent;
-    color: var(--discern-color-ink);
-    font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
-    font-size: var(--discern-font-size-xs);
-    font-feature-settings: "liga" 0, "calt" 0;
-    font-variant-ligatures: none;
-    line-height: 1.7;
-    tab-size: 2;
-    white-space: pre;
-  }
-  .discern-catalogue-cli-output code {
-    color: inherit;
-    font: inherit;
-  }
-  .discern-catalogue-cli-exemption {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 14px;
-    padding: clamp(22px, 4vw, 42px);
-    background: var(--discern-color-canvas);
-  }
-  .discern-catalogue-cli-exemption > span {
-    display: grid;
-    place-items: center;
-    inline-size: 34px;
-    block-size: 34px;
-    border: 1px solid var(--discern-color-border-strong);
-    border-radius: var(--discern-radius-sm);
-    background: var(--discern-color-surface-sunken);
-    color: var(--discern-color-ink-faint);
-  }
-  .discern-catalogue-cli-exemption strong {
-    color: var(--discern-color-ink);
-    font: 650 var(--discern-font-size-sm) var(--discern-font-ui);
-  }
-  .discern-catalogue-cli-exemption p {
-    max-width: 72ch;
-    margin: 5px 0 0;
-    color: var(--discern-color-ink-muted);
-    font-size: var(--discern-font-size-sm);
-    line-height: 1.55;
   }
   .discern-catalogue-copyable {
     display: grid;
@@ -314,8 +237,7 @@
     min-height: 32px;
     padding-inline: 10px;
   }
-  .discern-catalogue-subsection,
-  .discern-catalogue-component-group {
+  .discern-catalogue-subsection {
     margin-block-end: 58px;
   }
   .discern-catalogue-subsection__heading {
@@ -368,5 +290,41 @@
       border-block-end: 1px solid var(--discern-color-border);
       border-inline-end: 0;
     }
+  }
+}
+
+@layer catalogue {
+  .discern-catalogue-empty {
+    padding: 36px;
+    border: 1px dashed var(--discern-color-border-strong);
+    border-radius: var(--discern-radius-lg);
+    color: var(--discern-color-ink-muted);
+    text-align: center;
+  }
+  .discern-catalogue-empty h3 {
+    margin-block: 0 8px;
+  }
+  .discern-catalogue-empty p {
+    margin: 0;
+  }
+  .discern-catalogue-breadcrumb {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-block-end: 18px;
+    color: var(--discern-color-ink-faint);
+    font: var(--discern-font-size-xs) var(--discern-font-ui);
+  }
+  .discern-catalogue-breadcrumb a {
+    color: var(--discern-color-ink-muted);
+    text-decoration: none;
+  }
+  .discern-catalogue-breadcrumb a:hover {
+    color: var(--discern-color-accent-700);
+  }
+  .discern-catalogue-empty {
+    padding: 80px 20px;
+    text-align: center;
   }
 }

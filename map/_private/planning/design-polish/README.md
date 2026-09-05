@@ -20,7 +20,7 @@ Relative sizes are planning judgments, not elapsed-time promises: S is a bounded
 | --- | ----------------------------------------------------------------------------------------- | ---------------------- | --------------- | ---- | -------- |
 | 1A  | [Publish Segmented control and Progress](1a-segmented-control-and-progress.md)            | R1, R3                 | None            | M    | Prepared |
 | 1B  | [Make published copy actions work in static output](1b-static-copy-contract.md)           | Q1                     | None            | M    | Prepared |
-| 1C  | [Separate the Catalogue ownership seams](1c-catalogue-ownership-seams.md)                 | Enabling work only     | None            | M    | Prepared |
+| 1C  | [Separate the Catalogue ownership seams](_done/1c-catalogue-ownership-seams.md)           | Enabling work only     | None            | M    | Complete |
 | 2A  | [Polish buttons and action states](2a-buttons-and-action-states.md)                       | B1, B2, B3, B4, B5     | None            | M    | Prepared |
 | 2B  | [Polish form alignment and validation](2b-form-alignment-and-validation.md)               | C1, C2, C4             | None            | M    | Prepared |
 | 2C  | [Clarify feedback and state transitions](2c-feedback-and-state-transitions.md)            | D3, D4, D5             | 1A              | M    | Prepared |
@@ -94,12 +94,19 @@ The split follows the real tree:
 | Terminal                | 2P            | CLI preview/lab, typed sequential steps, guided playground                         |
 | Composition viewer      | 2Q            | Viewer allocation only; recipe content stays with 2H                               |
 
-1C establishes the few missing authored seams before affected Catalogue streams start:
+The resulting 1C seams give each 2K–2Q stream separate authored feature files; shared imports, guards, and index entries remain serialized companions:
 
 - `components/explorer-state.ts` and `detail-navigation.tsx` → 2K; `detail-state.ts` and specimen/detail modules → 2L.
 - `styles/component-discovery.css` → 2K; `component-detail.css` → 2L; `cli-preview.css` → 2P.
 - Route-specific responsive rules move beside their owner. Shared page-scale rules and generic CatalogueIndexCard remain with 2N; route owners use scoped local modifiers.
-- Discovery/detail tests and compare checks split without losing public Component population assertions or route auto-enrollment. 1C records the exact resulting runner paths here before its final commit.
+- **2K:** `tests/catalogue_component_discovery_test.ts` and `scripts/conformance/catalogue/component-discovery.ts`; also owns `components/navigation.tsx` and the continuation styles in `component-discovery.css`.
+- **2L:** `tests/catalogue_component_detail_test.ts` and `scripts/conformance/catalogue/component-detail.ts`, including specimen overflow, metadata, and legacy fragment checks.
+- **2M:** `tests/catalogue_compare_test.ts` and `scripts/conformance/catalogue/compare.ts`; comparison control labels and group spacing live in `styles/compare.css`.
+- **2N:** existing shell/search/Appearance unit suites and `scripts/conformance/catalogue/shell.ts`, `appearance.ts`, and `front-doors.ts`; generic cards, breadcrumbs, empty states, result headers, and page-scale responsive rules stay shared.
+- **2O:** `tests/catalogue_glyphs_test.tsx` and `scripts/conformance/catalogue/glyphs.ts`, alongside its existing glyph page/style tree.
+- **2P:** existing CLI preview/terminal unit suites plus `scripts/conformance/catalogue/terminal.ts` and `cli-preview.ts`; the terminal runner calls the shared CLI-host overflow check.
+- **2Q:** `tests/catalogue_compositions_test.ts` and `scripts/conformance/catalogue/compositions.ts`, alongside its existing viewer page/style tree.
+- `scripts/conformance/catalogue/components.ts` and `tests/catalogue_components_test.ts` retain public Component population/example assertions. The browser plan enrolls this as `component-contracts`, independently of page families. `component-pages.ts` composes discovery/detail runners without owning their assertion bodies. `component-conformance-page.ts`, `metadata-copy.ts`, and `support.ts` are shared check helpers; `browser-check-plan.ts`, `scripts/conformance.ts`, and `catalogue/catalogue.css` are serialized enrollment/import companions.
 - Shared specimen and CLI call shapes stay compatible, so Compare and component detail do not need a forced order.
 
 This is a targeted extraction to avoid collisions. It does not author a second prop schema, new generator architecture, redesigned tokens, or a generic plugin framework.
