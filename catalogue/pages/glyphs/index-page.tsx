@@ -51,6 +51,7 @@ function GlyphCard({ entry, currentUrl, reason, referenceMatch }: {
         description={available.length > 0
           ? available.map(({ name }) => name).join(" · ")
           : canonical.id}
+        descriptionClassName="discern-catalogue-index-card__description discern-mono"
         action={available.length > 0 ? "Use glyph" : "Explore glyph"}
         primaryAriaLabel={`Inspect ${title}, ${canonical.id}`}
         eyebrow={available[0] === undefined

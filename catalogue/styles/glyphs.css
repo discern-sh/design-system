@@ -26,7 +26,7 @@
     line-height: 1.6;
   }
   .discern-catalogue-glyph-hero__counts {
-    font: var(--discern-font-size-xs) var(--discern-font-mono);
+    font: var(--discern-font-size-xs) var(--discern-font-ui);
   }
   .discern-catalogue-glyph-hero__counts span {
     margin-inline: 8px;
@@ -107,7 +107,8 @@
   }
   .discern-catalogue-glyph-tile .discern-catalogue-index-card__body > p {
     overflow-wrap: anywhere;
-    font: var(--discern-font-size-xs)/1.5 var(--discern-font-mono);
+    font-size: var(--discern-font-size-xs);
+    line-height: 1.5;
   }
   .discern-catalogue-glyph-tile .discern-catalogue-index-card__metadata {
     gap: 8px;
@@ -485,7 +486,7 @@
   }
   .discern-catalogue-glyph-section-heading > span {
     color: var(--discern-color-ink-muted);
-    font: var(--discern-font-size-xs) var(--discern-font-mono);
+    font: var(--discern-font-size-xs) var(--discern-font-ui);
   }
   .discern-catalogue-glyph-workbench__controls {
     display: grid;
@@ -533,10 +534,12 @@
     background: var(--discern-color-surface-sunken);
   }
   .discern-catalogue-glyph-workbench__terminal pre {
-    overflow: auto;
     margin-block: 36px;
-    padding-block: 4px;
-    font: var(--discern-font-size-xs)/1.6 var(--discern-font-mono);
+    padding: 4px 0;
+    border: 0;
+    background: transparent;
+    font-size: var(--discern-font-size-xs);
+    line-height: 1.6;
   }
   .discern-catalogue-glyph-workbench__terminal pre:focus-visible,
   .discern-catalogue-glyph-reference > summary:focus-visible,

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import type { CSSProperties } from "react";
 import { renderBox } from "../../../src/cli/box.ts";
-import { projectTerminalInlineHtml } from "../../../src/cli/projection.ts";
 import { Button } from "../../../src/components/core/button/button.tsx";
 import { Icon } from "../../../src/components/core/icon/icon.tsx";
 import { CodeBlock } from "../../../src/components/editorial/code-block/code-block.tsx";
@@ -198,12 +197,9 @@ export function GlyphWorkbench({ entry, currentUrl }: {
           <p className="discern-catalogue-glyph-workbench__caption">
             Terminal · 40 columns · {repertoire}
           </p>
-          <pre
-            tabIndex={0}
+          <CodeBlock
+            code={terminal}
             aria-label="Terminal glyph specimen"
-            dangerouslySetInnerHTML={{
-              __html: projectTerminalInlineHtml(terminal),
-            }}
           />
           <p
             className="discern-catalogue-glyph-workbench__caption"
