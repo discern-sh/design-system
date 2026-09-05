@@ -26,7 +26,7 @@
     font-family: var(--discern-font-ui);
     font-size: var(--discern-font-size-sm);
     font-weight: 600;
-    line-height: var(--discern-leading-control);
+    line-height: var(--discern-leading-snug);
     text-decoration: none;
     transition-property: background, box-shadow, transform;
     transition-duration: var(--discern-duration-fast);

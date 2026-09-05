@@ -10,7 +10,7 @@
     color: var(--discern-color-ink);
     font-family: var(--discern-font-ui);
     font-size: var(--discern-font-size-sm);
-    line-height: var(--discern-leading-control);
+    line-height: var(--discern-leading-snug);
     transition-property: background, border-color, box-shadow;
     transition-duration: var(--discern-duration-fast);
   }

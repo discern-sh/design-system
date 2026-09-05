@@ -8,7 +8,7 @@
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     background: var(--discern-color-canvas);
-    font-size: var(--discern-font-size-meta);
+    font-size: var(--discern-font-size-xs);
   }
   .discern-catalogue-foundation-study__tones > span {
     padding: var(--discern-space-4);
@@ -28,7 +28,7 @@
   }
   .discern-catalogue-foundation-study__meta {
     margin: var(--discern-rhythm-related) 0 0;
-    font-size: var(--discern-font-size-meta);
+    font-size: var(--discern-font-size-xs);
     color: var(--discern-color-ink-muted);
   }
   .discern-catalogue-foundation-study__sizes {

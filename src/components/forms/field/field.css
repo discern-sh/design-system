@@ -7,7 +7,7 @@
   .discern-field__label {
     color: var(--discern-color-ink);
     font-family: var(--discern-font-ui);
-    font-size: var(--discern-font-size-label);
+    font-size: var(--discern-font-size-sm);
     font-weight: var(--discern-font-weight-strong);
     line-height: var(--discern-leading-snug);
   }
@@ -16,7 +16,7 @@
   }
   .discern-field__message {
     color: var(--discern-color-ink-muted);
-    font-size: var(--discern-font-size-meta);
+    font-size: var(--discern-font-size-xs);
     line-height: 1.45;
   }
   .discern-field__message--error {

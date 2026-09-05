@@ -16,7 +16,7 @@
   }
   .discern-catalogue-page__header h1 {
     margin: var(--discern-rhythm-related) 0;
-    font-size: var(--discern-font-size-page-title);
+    font-size: var(--discern-font-size-display-lg);
   }
   .discern-catalogue-page__header > p {
     max-width: 66ch;
