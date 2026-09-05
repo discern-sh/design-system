@@ -202,7 +202,7 @@
   .discern-catalogue-explorer-controls input {
     box-sizing: border-box;
     width: 100%;
-    min-height: 42px;
+    min-height: var(--discern-control-size-md);
     padding-inline: 11px;
     border: 1px solid var(--discern-color-border-strong);
     border-radius: var(--discern-radius-sm);

@@ -51,7 +51,7 @@
   }
   .discern-review-filters button,
   .discern-review-replay {
-    min-block-size: 42px;
+    min-block-size: var(--discern-control-size-md);
     padding: 7px 9px;
     border: 1px solid var(--discern-color-border-strong);
     border-radius: var(--discern-radius-sm);

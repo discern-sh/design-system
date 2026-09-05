@@ -823,7 +823,7 @@
   .discern-catalogue-terminal-foundation__output-heading,
   .discern-catalogue-terminal-foundation__label {
     display: flex;
-    min-height: 42px;
+    min-height: var(--discern-control-size-md);
     align-items: center;
     justify-content: space-between;
     gap: 10px;

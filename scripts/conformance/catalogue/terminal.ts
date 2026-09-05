@@ -201,24 +201,46 @@ export async function verifyTerminalCatalogue(
           "33",
       "Custom URL geometry did not populate the lab controls",
     );
-    const compactControls = await page.locator(
-      ".discern-catalogue-terminal-lab__fields :is(input, select)",
-    ).evaluateAll((nodes) =>
-      nodes.map((node) => ({
-        height: node.getBoundingClientRect().height,
-        publicSelect: node.tagName !== "SELECT" ||
-          (node.classList.contains("discern-control") &&
-            node.parentElement?.classList.contains("discern-select") === true),
-      }))
-    );
-    invariant(
-      compactControls.length >= 4 &&
-        compactControls.every((control) =>
-          Math.abs(control.height - 42) <= 0.5 && control.publicSelect
-        ),
-      `Terminal lab controls diverged from the 42px public control row: ${
-        JSON.stringify(compactControls)
-      }`,
+    const fields = page.locator(".discern-catalogue-terminal-lab__fields");
+    for (const override of ["", "53px"]) {
+      await fields.evaluate((node, value) => {
+        node.style.setProperty("--discern-control-size-md", value);
+      }, override);
+      await eventually(
+        async () => {
+          const measured = await fields.evaluate((node) => {
+            const probe = document.createElement("span");
+            probe.style.cssText =
+              "display: block; block-size: var(--discern-control-size-md)";
+            node.append(probe);
+            const expected = probe.getBoundingClientRect().height;
+            probe.remove();
+            const controls = [...node.querySelectorAll("input, select")].map((
+              control,
+            ) => ({
+              height: control.getBoundingClientRect().height,
+              publicSelect: control.tagName !== "SELECT" ||
+                (control.classList.contains("discern-control") &&
+                  control.parentElement?.classList.contains(
+                      "discern-select",
+                    ) ===
+                    true),
+            }));
+            return { expected, controls };
+          });
+          return measured.controls.length >= 4 &&
+            measured.controls.every((control) =>
+              Math.abs(control.height - measured.expected) <= 0.5 &&
+              control.publicSelect
+            );
+        },
+        `Terminal lab controls diverged from the shared control size (${
+          override || "default"
+        })`,
+      );
+    }
+    await fields.evaluate((node) =>
+      node.style.removeProperty("--discern-control-size-md")
     );
 
     await page.getByRole("button", { name: "Copy raw terminal output" })
