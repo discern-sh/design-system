@@ -86,3 +86,7 @@ Focused browser checks cover keyboard wrap and disabled-option skipping, label a
 The Catalogue runs at http://127.0.0.1:18461/. Detail routes are `/catalogue/components/segmented-control/` and `/catalogue/components/progress/`; append `?surface=cli#component-<slug>` for CLI. Review routes are `/catalogue/reviews/components/?group=Forms&component=segmented-control&mode=contact` and `/catalogue/reviews/components/?group=Feedback&component=progress&mode=contact`. The Progress waiting example also has production-speed and reduced-motion Reel postures.
 
 Consumer boundaries: radio names must identify distinct logical groups within a form; task updates and announcement frequency belong to the consumer. The CLI additions are pure supplied-state frames and add no interactive request kind.
+
+Owner-approved scope exception: the manual Tabs specimen keeps focus changes in an explicit review posture. A cold fragment link retains page focus; the manual keyboard scenario distinguishes moving focus from activating a panel. The Tabs adapter retains its existing contract.
+
+The source guard covers imperative focus access in every tracked or newly authored `.examples.tsx` module. It uses Deno's syntax tree, rejects unrelated future examples with direct, computed, or aliased focus access, and leaves declarative `autoFocus` props and explicit review/conformance action data outside this guard. The runtime cold-fragment check remains in the full browser gate.
