@@ -6,6 +6,8 @@ Each release is cut from a green run of the full release gate — formatting, li
 
 ## Unreleased
 
+- Make static CopyButton output functional through its selection-scoped browser behaviour, inherited by composed users. Preserve exact authored text, consumer cancellation, labels/icons, and focus; announce only successful writes and expose failure guidance through the new `failedLabel` prop. Buttons stay inert and visibly unavailable without the script; live React hosts now use that same script as the sole clipboard owner.
+
 - Center text glyphs within compact icon slots independently of inherited line height. Button icons, Icon button, Icon, Banner, Toast, and Raw output retain vertical alignment with enlarged text while preserving injected SVG dimensions.
 
 - Refine shared visual foundations: quieter card/window elevation, flat secondary actions, and nested Cards without repeated borders or shadows. Raised and sunken surface curves retain their lightness order at intermediate darkness; muted text strengthens and hairline borders recede. Appearance remains the single browser/terminal colour authority.

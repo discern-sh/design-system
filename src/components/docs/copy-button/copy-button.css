@@ -25,13 +25,14 @@
     background: var(--discern-color-accent-100);
     transform: translateY(0.0625rem);
   }
-  .discern-copy-button:disabled {
+  .discern-copy-button:disabled,
+  .discern-copy-button[inert] {
     border-color: var(--discern-color-border);
     background: var(--discern-color-surface-sunken);
     color: var(--discern-color-ink-faint);
     cursor: not-allowed;
   }
-  .discern-copy-button__icon {
+  .discern-copy-button__icon:not([hidden]) {
     display: inline-flex;
     align-items: center;
   }
