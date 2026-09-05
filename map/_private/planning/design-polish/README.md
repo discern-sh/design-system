@@ -19,7 +19,7 @@ Relative sizes are planning judgments, not elapsed-time promises: S is a bounded
 | Key | Brief                                                                                     | Proposal IDs           | Must land first | Size | State    |
 | --- | ----------------------------------------------------------------------------------------- | ---------------------- | --------------- | ---- | -------- |
 | 1A  | [Publish Segmented control and Progress](_done/1a-segmented-control-and-progress.md)      | R1, R3                 | None            | M    | Complete |
-| 1B  | [Make published copy actions work in static output](1b-static-copy-contract.md)           | Q1                     | None            | M    | Prepared |
+| 1B  | [Make published copy actions work in static output](_done/1b-static-copy-contract.md)     | Q1                     | None            | M    | Complete |
 | 1C  | [Separate the Catalogue ownership seams](1c-catalogue-ownership-seams.md)                 | Enabling work only     | None            | M    | Prepared |
 | 2A  | [Polish buttons and action states](2a-buttons-and-action-states.md)                       | B1, B2, B3, B4, B5     | None            | M    | Prepared |
 | 2B  | [Polish form alignment and validation](2b-form-alignment-and-validation.md)               | C1, C2, C4             | None            | M    | Prepared |

@@ -82,6 +82,35 @@ Most components remain static HTML and CSS. When a Selection resolves a componen
 
 `HoverCard` and `Tooltip` use this shared behavior to promote their panels into the browser's top layer, position them against their trigger, keep them inside the viewport, and preserve hover, focus, outside-press, nested-scroll, resize, and Escape behavior. The enhancer observes later DOM additions, so client-rendered instances use the same contract. Without the script or the Popover API, their static CSS fallback remains keyboard and pointer reachable, but an ancestor that clips overflow can still clip the panel.
 
+### Copy actions in static HTML
+
+`CopyButton` and Components that compose it use the selected script in both static and live React hosts. Build the page and its dedicated runtime together:
+
+```tsx
+import { renderToStaticMarkup } from "react-dom/server";
+import { Command } from "@discern-sh/design-system/react";
+import { emitDesignSystemRuntime } from "@discern-sh/design-system/runtime";
+
+const runtime = await emitDesignSystemRuntime({
+  outputRoot: new URL("./public/design-system/", import.meta.url),
+  components: ["command"],
+});
+const body = renderToStaticMarkup(
+  <main data-discern-root="">
+    <Command command={"tool check\n"} />
+  </main>,
+);
+const scripts = runtime.manifest.outputs.scripts.map((path) =>
+  `<script type="module" src="/design-system/${path}"></script>`
+).join("");
+await Deno.writeTextFile(
+  new URL("./public/index.html", import.meta.url),
+  `<!doctype html><html lang="en"><meta charset="utf-8"><title>Check</title><link rel="stylesheet" href="/design-system/discern.css"><body>${body}${scripts}</body></html>`,
+);
+```
+
+Serve `public/` over HTTPS or localhost. The browser receives no React bundle or hydration code. Copy uses the exact authored string, including whitespace and newlines. Success appears only after the clipboard write succeeds; unavailable or denied access shows manual-copy guidance. Without the script, the button stays inert and visibly unavailable: keep the source selectable. Consumer `preventDefault()` and disabled state cancel activation. A live React host must load the same runtime; CopyButton no longer owns a React clipboard handler. See [the copy contract](map/40-runtime-emitter/static-copy.md) for markup ownership and teardown.
+
 ## Optional assets
 
 No asset is copied by default. Asset selections are independent:
