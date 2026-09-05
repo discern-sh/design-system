@@ -1,4 +1,3 @@
-import { useEffect, useRef } from "react";
 import {
   type ConformanceScenario,
   defineCatalogueExamples,
@@ -32,6 +31,23 @@ export const conformance = [{
     },
     { expect: "visible", target: { role: "tabpanel", name: "Details" } },
   ],
+}, {
+  example: "manual",
+  name: "manual focus waits for explicit activation",
+  steps: [
+    focusOverview,
+    selectDetailsByKeyboard,
+    { expect: "focused", target: { role: "tab", name: "Details" } },
+    {
+      expect: "attribute",
+      target: { role: "tab", name: "Details" },
+      attribute: "aria-selected",
+      value: "false",
+    },
+    { expect: "visible", target: { role: "tabpanel", name: "Overview" } },
+    { action: "press", key: "Enter", target: { role: "tab", name: "Details" } },
+    { expect: "visible", target: { role: "tabpanel", name: "Details" } },
+  ],
 }] satisfies readonly ConformanceScenario[];
 
 const items = [{
@@ -58,14 +74,8 @@ function DetailsExample() {
 }
 
 function ManualActivationExample() {
-  const rootRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    rootRef.current?.querySelectorAll<HTMLButtonElement>('[role="tab"]')[1]
-      ?.focus();
-  }, []);
   return (
     <Tabs
-      ref={rootRef}
       label="Example sections"
       items={items}
       activationMode="manual"
@@ -96,6 +106,21 @@ export const reviewPostures = defineComponentReviewPostures(
   meta,
   componentExampleVocabulary,
   [
+    {
+      id: "manual-focus",
+      label: "Manual focus before activation",
+      example: "manual",
+      category: "interaction",
+      sequence: [
+        { action: "focus", target: { role: "tab", name: "Details" } },
+        {
+          checkpoint: {
+            id: "tabs-manual-focused",
+            label: "Details focused; Overview selected",
+          },
+        },
+      ],
+    },
     {
       id: "pointer-selection",
       label: "Pointer selection",

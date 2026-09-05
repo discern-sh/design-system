@@ -12,10 +12,13 @@ const meta = {
       "Clipboard mutation and transient confirmation require an interactive driver, not a pure terminal renderer.",
   },
   description:
-    "Clipboard copy button with a transient copied state, an optional icon slot, and a polite announcement.",
+    "Exact clipboard copy through the selected runtime, with custom labels/icons and truthful success or failure feedback.",
+  behaviors: ["copy-button"],
   purposes: ["building-documentation"],
   accessibility: [
-    "The label swap between copy and copied is announced through a polite live region.",
+    "Load the emitted discern.js beside discern.css, inside a data-discern-root. Static and live React hosts share this behavior; no hydration is required.",
+    "Without the selected script the button stays inert and visibly unavailable. Keep source text selectable for manual copy. Clipboard access requires a secure context and browser permission.",
+    "A polite live region announces success only after the write succeeds, or failure with manual-copy guidance. Consumer preventDefault and disabled state cancel activation.",
     "The copied state is carried by a data attribute, so colour is reinforced by the announced text rather than colour alone.",
   ],
 } satisfies ComponentMeta;

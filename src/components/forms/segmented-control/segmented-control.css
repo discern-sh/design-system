@@ -1,0 +1,96 @@
+@layer discern.components {
+  .discern-segmented-control {
+    container: discern-segmented-control / inline-size;
+    min-inline-size: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-family: var(--discern-font-ui);
+    font-size: var(--discern-font-size-sm);
+  }
+  .discern-segmented-control__legend {
+    padding: 0;
+    margin-block-end: var(--discern-space-2);
+    color: var(--discern-color-ink);
+    font-weight: var(--discern-font-weight-strong);
+    overflow-wrap: anywhere;
+  }
+  .discern-segmented-control__items {
+    display: flex;
+    gap: var(--discern-space-1);
+    padding: var(--discern-space-1);
+    border-radius: var(--discern-radius-md);
+    background: var(--discern-color-surface-sunken);
+  }
+  .discern-segmented-control__option {
+    position: relative;
+    flex: 1;
+    min-inline-size: 0;
+  }
+  .discern-segmented-control__input {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .discern-segmented-control__surface {
+    --discern-focus-proxy: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--discern-space-2);
+    min-block-size: var(--discern-control-size-md);
+    block-size: 100%;
+    padding: var(--discern-space-2) var(--discern-space-3);
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-sm);
+    background: var(--discern-color-surface);
+    color: var(--discern-color-ink);
+    line-height: var(--discern-leading-snug);
+    overflow-wrap: anywhere;
+    text-align: center;
+  }
+  .discern-segmented-control__input:checked + .discern-segmented-control__surface {
+    background: var(--discern-color-action);
+    border-color: var(--discern-color-action-edge);
+    color: var(--discern-color-on-action);
+    text-decoration: underline;
+    text-underline-offset: var(--discern-space-1);
+  }
+  .discern-segmented-control__input:focus-visible + .discern-segmented-control__surface {
+    outline: 0.125rem solid var(--discern-color-accent-500);
+    outline-offset: var(--discern-space-1);
+  }
+  .discern-segmented-control__input:disabled {
+    cursor: not-allowed;
+  }
+  .discern-segmented-control__input:disabled + .discern-segmented-control__surface {
+    opacity: 0.48;
+  }
+  @container discern-segmented-control (max-width: 20rem) {
+    .discern-segmented-control__items {
+      flex-direction: column;
+    }
+  }
+  @media (hover: hover) {
+    .discern-segmented-control__input:hover:not(:disabled):not(:checked) + .discern-segmented-control__surface {
+      background: var(--discern-color-surface-sunken);
+    }
+  }
+  @media (forced-colors: active) {
+    .discern-segmented-control__input:checked + .discern-segmented-control__surface {
+      outline: 0.125rem solid var(--discern-color-accent-500);
+      outline-offset: calc(-1 * var(--discern-space-1));
+    }
+    .discern-segmented-control__input:focus-visible + .discern-segmented-control__surface {
+      outline: 0.125rem solid var(--discern-color-accent-500);
+      outline-offset: var(--discern-space-1);
+    }
+    .discern-segmented-control__input:disabled + .discern-segmented-control__surface {
+      color: var(--discern-color-ink-muted);
+    }
+  }
+}

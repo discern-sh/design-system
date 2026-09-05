@@ -8,6 +8,10 @@ const meta = {
   order: 50,
   description:
     "Labelled fraction-of-a-range meter with an optional textual reading beside the bar.",
+  useWhen: ["Show a bounded measurement, such as storage usage or capacity."],
+  notWhen: [
+    "Use Progress for task completion or an indeterminate waiting state.",
+  ],
   cli: { stance: "rendered" },
   accessibility: [
     "The bar carries role=meter with now/min/max values and an accessible name, so the reading is programmatic, not visual-only.",

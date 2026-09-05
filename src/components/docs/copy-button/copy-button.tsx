@@ -1,20 +1,23 @@
-import { forwardRef, useEffect, useRef, useState } from "react";
-import type { ButtonHTMLAttributes, MouseEvent, ReactNode } from "react";
+import { forwardRef } from "react";
+import type { ButtonHTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
 /** Props for the {@linkcode CopyButton} component. */
 export interface CopyButtonProps
   extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children" | "value"> {
+  /** Exact clipboard text, independent of the visible label or source formatting. */
   readonly value: string;
   readonly label?: ReactNode;
   readonly copiedLabel?: ReactNode;
+  /** Failure guidance shown until the next attempt. */
+  readonly failedLabel?: ReactNode;
   readonly icon?: ReactNode;
   readonly copiedIcon?: ReactNode;
   readonly copiedForMs?: number;
 }
 
-/** Clipboard copy button with a transient confirmation state announced politely. */
+/** Static clipboard markup activated by the selected runtime in an opted-in root. */
 export const CopyButton: DiscernComponent<
   HTMLButtonElement,
   CopyButtonProps
@@ -23,50 +26,66 @@ export const CopyButton: DiscernComponent<
     value,
     label = "Copy",
     copiedLabel = "Copied",
+    failedLabel = "Copy failed — select text manually",
     icon,
     copiedIcon,
     copiedForMs = 2000,
     className,
-    onClick,
+    disabled = false,
     ...props
   },
   ref,
 ) {
-  const [copied, setCopied] = useState(false);
-  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-
-  useEffect(() => {
-    return () => {
-      if (timer.current !== undefined) clearTimeout(timer.current);
-    };
-  }, []);
-
-  const handleClick = (event: MouseEvent<HTMLButtonElement>): void => {
-    onClick?.(event);
-    if (event.defaultPrevented) return;
-    void navigator.clipboard?.writeText(value).then(() => {
-      setCopied(true);
-      if (timer.current !== undefined) clearTimeout(timer.current);
-      timer.current = setTimeout(() => setCopied(false), copiedForMs);
-    }).catch(() => undefined);
-  };
-
-  const shownIcon = copied ? copiedIcon ?? icon : icon;
+  const alternateIcon = copiedIcon !== undefined && copiedIcon !== icon;
   return (
     <button
-      ref={ref}
       type="button"
-      className={classNames("discern-copy-button", className)}
-      data-discern-copied={copied ? "" : undefined}
-      onClick={handleClick}
       {...props}
+      ref={ref}
+      className={classNames("discern-copy-button", className)}
+      disabled={disabled}
+      {...{ inert: "" }}
+      data-discern-copy-value={JSON.stringify(value)}
+      data-discern-copy-duration={Number.isFinite(copiedForMs)
+        ? Math.max(0, copiedForMs)
+        : 2000}
     >
-      {shownIcon !== undefined && (
-        <span className="discern-copy-button__icon" aria-hidden="true">
-          {shownIcon}
+      {icon !== undefined && (
+        <span
+          className="discern-copy-button__icon"
+          aria-hidden="true"
+          data-discern-copy-feedback={alternateIcon
+            ? "idle failed"
+            : "idle copied failed"}
+        >
+          {icon}
         </span>
       )}
-      <span aria-live="polite">{copied ? copiedLabel : label}</span>
+      {alternateIcon && (
+        <span
+          className="discern-copy-button__icon"
+          aria-hidden="true"
+          data-discern-copy-feedback="copied"
+          hidden
+        >
+          {copiedIcon}
+        </span>
+      )}
+      <span aria-live="polite" aria-atomic="true">
+        {([
+          ["idle", label],
+          ["copied", copiedLabel],
+          ["failed", failedLabel],
+        ] as const).map(([state, text]) => (
+          <span
+            key={state}
+            data-discern-copy-feedback={state}
+            hidden={state !== "idle"}
+          >
+            {text}
+          </span>
+        ))}
+      </span>
     </button>
   );
 });

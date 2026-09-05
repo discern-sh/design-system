@@ -61,7 +61,7 @@ The standards in `discern.toml` hold these unminified emitted costs at their mea
 | Minimal docs CSS | Docs header, Docs nav, Anchor heading, Prose, Code listing, and Pager; `discern.css` after dependency resolution |  25,804 bytes |
 | Workflow CSS     | `groups: ["Workflow"]`; resolved `discern.css`                                                                   |  67,377 bytes |
 | Marketing CSS    | `groups: ["Marketing"]`; resolved `discern.css`                                                                  |  66,287 bytes |
-| Browser behavior | every declared behavior-bearing Component; `discern.js`                                                          |   6,844 bytes |
+| Browser behavior | every declared behavior-bearing Component; `discern.js`                                                          |   8,582 bytes |
 | Fonts            | `fonts.css` and 4 WOFF2 files                                                                                    | 183,726 bytes |
 | Grain            | `grain.css` and `textures/grain.png`                                                                             |  99,442 bytes |
 
