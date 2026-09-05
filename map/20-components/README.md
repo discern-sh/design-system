@@ -8,6 +8,8 @@ Embedded browser layout follows the Component's allocated inline size. A Compone
 
 Compact icon slots accept both graphics and text glyphs. Center the grid row as well as its item: inherited text leading can exceed the allocated icon box. Keep graphic dimensions tied to that box; glyph-specific translations would bake one font’s metrics into the component. The [centered-grid browser guard](../../scripts/conformance/centered-grid-text.ts) inspects rendered single-text grids without component-name enrollment, while [icon alignment tests](../../tests/icon_alignment_test.ts) exercise text and SVG slots, enlarged text, and an independently named adversarial grid. Optical asymmetry inside a consumer-supplied glyph or graphic remains the asset’s responsibility.
 
+See [Selection and task progress](selection-and-progress.md) for the native form boundary, controlled adapter usage, and task completion versus measurement.
+
 ## Browser interaction and review
 
 Every canonical Web example automatically joins settled local review. A Component adds authored postures beside its example only for meaningful interaction, motion, Appearance, or local-width states; those postures reuse the same bounded action and capture vocabularies as browser conformance. Every rendered CLI example joins the generated cross-surface Appearance and capability population through the same canonical identity. [Browser visual review](../60-catalogue/visual-review.md) is the posture and production-speed authority, and the population guards prove that current and synthetic future examples enrol without a central registry edit.

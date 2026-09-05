@@ -6,6 +6,8 @@ Each release is cut from a green run of the full release gate — formatting, li
 
 ## Unreleased
 
+- Add SegmentedControl and Progress to the public React and pure CLI surfaces. SegmentedControl uses native labelled radios, stable form values, disabled states, and local narrow reflow without hydration. Progress shares truthful value normalization across browser and terminal, retains an explicit indeterminate waiting state under reduced motion and forced colours, and distinguishes task completion from Meter measurements. Both Components include canonical examples, exact images, and interaction review postures.
+
 - Center text glyphs within compact icon slots independently of inherited line height. Button icons, Icon button, Icon, Banner, Toast, and Raw output retain vertical alignment with enlarged text while preserving injected SVG dimensions.
 
 - Refine shared visual foundations: quieter card/window elevation, flat secondary actions, and nested Cards without repeated borders or shadows. Raised and sunken surface curves retain their lightness order at intermediate darkness; muted text strengthens and hairline borders recede. Appearance remains the single browser/terminal colour authority.

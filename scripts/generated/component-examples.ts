@@ -1183,6 +1183,40 @@ export const componentExampleRegistry = {
       ],
     },
   ],
+  "segmented-control": [
+    {
+      "id": "default",
+      "label": "Peer selection",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
+    {
+      "id": "long-labels",
+      "label": "Long labels",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
+    {
+      "id": "icons",
+      "label": "Icons with labels",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
+    {
+      "id": "disabled",
+      "label": "Disabled group",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
+  ],
   "switch": [
     {
       "id": "default",
@@ -1428,6 +1462,40 @@ export const componentExampleRegistry = {
     {
       "id": "danger",
       "label": "Danger",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
+  ],
+  "progress": [
+    {
+      "id": "default",
+      "label": "Task started",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
+    {
+      "id": "intermediate",
+      "label": "Measured progress",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
+    {
+      "id": "complete",
+      "label": "Task complete",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
+    {
+      "id": "waiting",
+      "label": "Waiting for work",
       "surfaces": [
         "web",
         "cli",

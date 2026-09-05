@@ -59,6 +59,8 @@ export { default as renderCheckboxCli, cliExamples as checkboxCliExamples } from
 export type { CheckboxCliProps } from "../components/forms/checkbox/checkbox.cli.ts";
 export { default as renderRadioCli, cliExamples as radioCliExamples } from "../components/forms/radio/radio.cli.ts";
 export type { RadioCliProps } from "../components/forms/radio/radio.cli.ts";
+export { default as renderSegmentedControlCli, cliExamples as segmentedControlCliExamples } from "../components/forms/segmented-control/segmented-control.cli.ts";
+export type { SegmentedControlCliProps } from "../components/forms/segmented-control/segmented-control.cli.ts";
 export { default as renderSwitchCli, cliExamples as switchCliExamples } from "../components/forms/switch/switch.cli.ts";
 export type { SwitchCliProps } from "../components/forms/switch/switch.cli.ts";
 export { default as renderBannerCli, cliExamples as bannerCliExamples } from "../components/feedback/banner/banner.cli.ts";
@@ -69,6 +71,8 @@ export { default as renderDialogCli, cliExamples as dialogCliExamples } from "..
 export type { DialogCliProps } from "../components/feedback/dialog/dialog.cli.ts";
 export { default as renderMeterCli, cliExamples as meterCliExamples } from "../components/feedback/meter/meter.cli.ts";
 export type { MeterCliProps } from "../components/feedback/meter/meter.cli.ts";
+export { default as renderProgressCli, cliExamples as progressCliExamples } from "../components/feedback/progress/progress.cli.ts";
+export type { ProgressCliProps } from "../components/feedback/progress/progress.cli.ts";
 export { default as renderEmptyStateCli, cliExamples as emptyStateCliExamples } from "../components/feedback/empty-state/empty-state.cli.ts";
 export type { EmptyStateCliProps } from "../components/feedback/empty-state/empty-state.cli.ts";
 export { default as renderTabsCli, cliExamples as tabsCliExamples } from "../components/navigation/tabs/tabs.cli.ts";
