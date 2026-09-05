@@ -29,6 +29,7 @@ import {
 import { announceCatalogueLocationChange } from "../../shell/location.ts";
 import type { CatalogueAxesSelection } from "../../shell/axes-state.ts";
 import { CatalogueIndexCard, CataloguePageHeader } from "../shared.tsx";
+import { SharedFoundationsPreview } from "./shared-foundations.tsx";
 import { AppearancePage } from "./appearance-page.tsx";
 
 function isThemed(token: FoundationToken): token is FoundationToken & {
@@ -507,6 +508,7 @@ function FoundationsIndex(
           }
         />
       </div>
+      <SharedFoundationsPreview />
     </div>
   );
 }

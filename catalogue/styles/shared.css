@@ -12,11 +12,11 @@
   }
   .discern-catalogue-page__header {
     max-width: 760px;
-    margin-block-end: 48px;
+    margin-block-end: var(--discern-rhythm-section);
   }
   .discern-catalogue-page__header h1 {
-    margin: 12px 0 14px;
-    font-size: var(--discern-font-size-display-lg);
+    margin: var(--discern-rhythm-related) 0;
+    font-size: var(--discern-font-size-page-title);
   }
   .discern-catalogue-page__header > p {
     max-width: 66ch;

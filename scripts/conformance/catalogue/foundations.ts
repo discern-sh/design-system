@@ -1,3 +1,4 @@
+import { verifySharedFoundations } from "./shared-foundations.ts";
 import type { Page } from "playwright-core";
 import { catalogueCliCapabilities } from "../../../catalogue/cli-preview.tsx";
 import {
@@ -386,6 +387,7 @@ export async function verifyFoundationsCatalogue(
       ).count() === boundedChoices.length,
       "Foundations choices bypassed the shared visual-card authority",
     );
+    await verifySharedFoundations(page);
     const tokens = await verifyTokenExplorer(page, origin);
     const terminal = await verifyTerminalFoundations(page, origin);
     await page.emulateMedia({ colorScheme: null, reducedMotion: "reduce" });

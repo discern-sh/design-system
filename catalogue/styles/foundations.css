@@ -1,4 +1,41 @@
 @layer catalogue {
+  .discern-catalogue-foundation-study {
+    display: grid;
+    gap: var(--discern-rhythm-group);
+    margin-block-start: var(--discern-rhythm-section);
+  }
+  .discern-catalogue-foundation-study__tones {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    background: var(--discern-color-canvas);
+    font-size: var(--discern-font-size-meta);
+  }
+  .discern-catalogue-foundation-study__tones > span {
+    padding: var(--discern-space-4);
+    text-align: center;
+  }
+  .discern-catalogue-foundation-study__actions,
+  .discern-catalogue-foundation-study__controls,
+  .discern-catalogue-foundation-study__sizes,
+  .discern-catalogue-foundation-study__sizes > div {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: var(--discern-rhythm-related);
+  }
+  .discern-catalogue-foundation-study__controls > .discern-field {
+    flex: 1 1 11rem;
+  }
+  .discern-catalogue-foundation-study__meta {
+    margin: var(--discern-rhythm-related) 0 0;
+    font-size: var(--discern-font-size-meta);
+    color: var(--discern-color-ink-muted);
+  }
+  .discern-catalogue-foundation-study__sizes {
+    align-items: center;
+    gap: var(--discern-rhythm-group);
+  }
+
   .discern-catalogue-foundations__back {
     display: inline-flex;
     margin-block-end: 24px;
