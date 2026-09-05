@@ -85,8 +85,6 @@ function TypographyPreview({ token }: { readonly token: FoundationToken }) {
     ? { fontWeight: value }
     : token.name.startsWith("--discern-leading-")
     ? { lineHeight: value }
-    : token.name === "--discern-font-features-ui"
-    ? { fontFeatureSettings: value }
     : { fontFamily: value };
   return (
     <div className="discern-catalogue-token-preview discern-catalogue-token-preview--type">

@@ -394,6 +394,14 @@ interface ParsedCssRules {
   readonly rules: readonly ParsedCssRule[];
 }
 
+/** One qualified CSS rule and its declaration block. */
+export interface CssQualifiedRuleBlock {
+  readonly block: string;
+  readonly depth: number;
+  readonly parent: CssRuleParent;
+  readonly selector: string;
+}
+
 function cssAtRulePrelude(
   prelude: string,
 ): { readonly name: string; readonly remainder: string } | undefined {
@@ -478,6 +486,27 @@ export function cssQualifiedRuleSelectors(
   return cssRulePreludes(source).flatMap(({ kind, value }) =>
     kind === "qualified-rule" ? [value] : []
   );
+}
+
+/** Qualified CSS rules, including rules nested inside grouping at-rules. */
+export function cssQualifiedRuleBlocks(source: string): {
+  readonly failures: readonly string[];
+  readonly rules: readonly CssQualifiedRuleBlock[];
+} {
+  const parsed = parsedCssRules(source);
+  return {
+    failures: parsed.failures,
+    rules: parsed.rules.flatMap((rule) =>
+      rule.kind === "qualified-rule"
+        ? [{
+          block: rule.block,
+          depth: rule.depth,
+          parent: rule.parent,
+          selector: rule.prelude,
+        }]
+        : []
+    ),
+  };
 }
 
 /** Decoded class-selector identifiers from one selector prelude. */

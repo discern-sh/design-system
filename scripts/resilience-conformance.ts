@@ -1327,6 +1327,7 @@ async function verifyThemeSystem(
           "sans-serif",
         ],
         "--discern-font-ui": [
+          '"Discern Inter UI"',
           '"Inter"',
           '"Discern Inter Fallback Helvetica"',
           '"Discern Inter Fallback Arial"',

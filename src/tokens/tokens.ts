@@ -133,12 +133,6 @@ export const baseTokens: readonly DesignToken[] = [
     "System interface stack; optional font assets may override it.",
   ),
   token(
-    "--discern-font-features-ui",
-    "'liga' 1, 'calt' 1, 'dlig' 1, 'tnum' 1, 'zero' 1, 'ss03' 1, 'salt' 1",
-    "Typography",
-    "OpenType features for interface chrome.",
-  ),
-  token(
     "--discern-font-size-xs",
     "0.85rem",
     "Typography",

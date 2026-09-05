@@ -17,7 +17,6 @@
   .discern-site-header__brand--ui,
   .discern-site-header__nav a {
     font-family: var(--discern-font-ui);
-    font-feature-settings: var(--discern-font-features-ui);
   }
 
   .discern-site-header__notice {

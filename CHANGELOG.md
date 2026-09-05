@@ -4,6 +4,10 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
+## Unreleased
+
+- **Breaking before 1.0:** remove the public `--discern-font-features-ui` Token and bind its Inter-specific OpenType settings to a dedicated bundled `Discern Inter UI` face instead. Feature tags no longer inherit into descendants that switch to display, body, monospace, or consumer typography, preventing Iowan Old Style's `salt` feature from replacing ordinary lowercase `s` with the historical long-s glyph. System-font fallbacks now retain their own feature defaults.
+
 ## 0.30.1
 
 - Stabilize cross-surface Appearance release verification on loaded CI runners. System-theme changes for the generated CLI population now wait inside Chromium for every preview to commit, using a bounded 30-second population budget and ground-distribution diagnostics instead of crossing the process boundary within the shared two-second interaction window. Published package behaviour and bytes are unchanged.

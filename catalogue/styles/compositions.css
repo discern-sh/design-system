@@ -3,7 +3,6 @@
     margin: 0;
     color: var(--discern-color-accent-700);
     font: 650 var(--discern-font-size-xs) var(--discern-font-ui);
-    font-feature-settings: var(--discern-font-features-ui);
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
@@ -22,7 +21,6 @@
     margin-block-end: 30px;
     color: var(--discern-color-ink-muted);
     font: var(--discern-font-size-xs) var(--discern-font-ui);
-    font-feature-settings: var(--discern-font-features-ui);
     text-decoration: none;
   }
   .discern-catalogue-pattern__header > a:hover {
@@ -52,7 +50,6 @@
     border-radius: var(--discern-radius-md);
     background: var(--discern-color-surface-sunken);
     font-family: var(--discern-font-ui);
-    font-feature-settings: var(--discern-font-features-ui);
   }
   .discern-catalogue-pattern__widths legend {
     margin-inline-end: 6px;
@@ -139,7 +136,6 @@
     margin: 0;
     color: var(--discern-color-ink-faint);
     font: 600 var(--discern-font-size-xs) var(--discern-font-ui);
-    font-feature-settings: var(--discern-font-features-ui);
   }
   .discern-catalogue-pattern__components ul {
     display: flex;
@@ -156,7 +152,6 @@
     border-radius: var(--discern-radius-pill);
     color: var(--discern-color-ink-muted);
     font: var(--discern-font-size-xs) var(--discern-font-ui);
-    font-feature-settings: var(--discern-font-features-ui);
     text-decoration: none;
   }
   .discern-catalogue-pattern__components a:hover {
@@ -176,7 +171,6 @@
     color: var(--discern-color-ink-muted);
     cursor: pointer;
     font: 600 var(--discern-font-size-xs) var(--discern-font-ui);
-    font-feature-settings: var(--discern-font-features-ui);
   }
   .discern-catalogue-pattern__source > summary:hover {
     color: var(--discern-color-ink);
@@ -202,7 +196,6 @@
     margin-block-end: 8px;
     color: var(--discern-color-ink-faint);
     font: var(--discern-font-size-xs) var(--discern-font-ui);
-    font-feature-settings: var(--discern-font-features-ui);
   }
   .discern-catalogue-pattern__source-heading .discern-copy-button {
     min-height: 32px;
@@ -239,7 +232,6 @@
   .discern-catalogue-pattern__pagination a {
     color: var(--discern-color-ink-muted);
     font: 600 var(--discern-font-size-xs) var(--discern-font-ui);
-    font-feature-settings: var(--discern-font-features-ui);
     text-decoration: none;
   }
   .discern-catalogue-pattern__previous {

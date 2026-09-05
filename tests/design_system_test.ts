@@ -975,7 +975,8 @@ Deno.test("font and grain assets are independent, licensed, and integrity-mapped
         "ui-serif, serif;",
         '--discern-font-body: "Inter", "Discern Inter Fallback Helvetica",',
         '"Discern Inter Fallback Arial", "Helvetica Neue", Arial, system-ui,',
-        '--discern-font-ui: "Inter", "Discern Inter Fallback Helvetica",',
+        '--discern-font-ui: "Discern Inter UI", "Inter",',
+        '"Discern Inter Fallback Helvetica",',
         '--discern-font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo,',
       ]
     ) {

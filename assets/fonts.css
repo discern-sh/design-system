@@ -23,6 +23,21 @@
   src: url("./fonts/inter.woff2") format("woff2");
 }
 
+/*
+ * Bind Inter's interface alternates to the face itself. Applying this bundle
+ * through the inherited font-feature-settings property lets its feature tags
+ * acquire unrelated meanings when descendants switch to another font.
+ */
+@font-face {
+  font-family: "Discern Inter UI";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  font-feature-settings:
+    "liga" 1, "calt" 1, "dlig" 1, "tnum" 1, "zero" 1, "ss03" 1, "salt" 1;
+  src: url("./fonts/inter.woff2") format("woff2");
+}
+
 @font-face {
   font-family: "JetBrains Mono";
   font-style: normal;
@@ -132,9 +147,9 @@
   --discern-font-body: "Inter", "Discern Inter Fallback Helvetica",
     "Discern Inter Fallback Arial", "Helvetica Neue", Arial, system-ui,
     sans-serif;
-  --discern-font-ui: "Inter", "Discern Inter Fallback Helvetica",
-    "Discern Inter Fallback Arial", "Helvetica Neue", Arial, system-ui,
-    sans-serif;
+  --discern-font-ui: "Discern Inter UI", "Inter",
+    "Discern Inter Fallback Helvetica", "Discern Inter Fallback Arial",
+    "Helvetica Neue", Arial, system-ui, sans-serif;
   --discern-font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo,
     monospace;
 }

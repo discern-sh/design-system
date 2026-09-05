@@ -43,6 +43,8 @@ Structure, emphasis, and the tints can be set on the same Root within their docu
 
 The display face carries editorial headings. The body and interface faces carry prose, labels, indices, dates, measurements, status metadata, annotations, captions, and identities. The monospace face is reserved for an explicitly monospaced brand name and code, including source, commands, file paths, and terminal output. A component does not use monospace to create a technical mood.
 
+The optional font asset binds the interface OpenType bundle to its dedicated `Discern Inter UI` face through the `@font-face` descriptor. Font-specific feature tags never travel through the inherited `font-feature-settings` property or a public Token: the same tag can select unrelated glyphs in another family, as Iowan Old Style's `salt` long-s demonstrates. The system-font UI fallback therefore uses that face's defaults rather than pretending Inter's alternates are portable.
+
 Components that accept arbitrary content keep the text face by default. Consumers mark code through the component's code-bearing prop or semantic markup. The `Brand`, `SiteHeader`, and `SiteFooter` `mono` variants and the `.discern-mono` utility remain explicit opt-ins; discern's public surfaces use that brand variant for the name `discern`.
 
 Theme roles can carry non-colour presentation values when a Component needs one semantic behavior to switch with the active Theme. `--discern-brand-artwork-opacity` keeps supplied multicolour artwork visible in light Theme and removes it in dark Theme when the Component provides a separate monochrome treatment; it does not affect ordinary artwork by itself.

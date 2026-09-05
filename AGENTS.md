@@ -8,7 +8,7 @@ This project uses **discern**, a stack-neutral agent-development system. Everyth
 
 - **Orient first.** Call **`discern_status`** at session start for a fast read-only account of what's true and next.
 - **Keep one worktree for the whole effort.** The worktree carries the effort's branch, identity, and any recorded authority, so review feedback and resumed sessions continue there; a second worktree would split the effort's history and its evidence. If this effort already has a worktree, continue there using its recorded path and pass `path` to every discern tool. If that path is unavailable, ask which worktree belongs to this effort instead of creating another. Do not call `discern_start` again. For a new effort, run **`discern_start`** from the main checkout and work only at the returned path. Read-only work needs none.
-- **`discern_done` is the bar for "done".** Call work finished only after its full gate passes. Iterate with **`discern_prepare`** or a diagnostic's reproduce command; each diagnostic names its location and exact command. With a positive `[gate].concurrent_test_runs`, run direct tests through **`discern queue -- <command>`**. `discern_test` runs the complete test stage on demand. `discern_done` already includes the same test stage, so a final Gate run needs no standalone test preflight.
+- **`discern_done` is the bar for "done".** Call work finished only after its full gate passes. Iterate with **`discern_prepare`** or a diagnostic's reproduce command; each diagnostic names its location and exact command. With a positive `[gate].concurrent_test_runs`, run direct tests through **`discern queue -- <command>`**. `discern_test` runs the complete test stage on demand. `discern_done` already includes the same test stage, so a final gate run needs no standalone test preflight.
 - **Follow discern's printed next action.** A discern refusal or failure names its own next step in the result, and `hints` are matched to the state you are in. Prefer the stated remedy over improvising around it with raw git or shell — discern gives you instructions which are optimized, deterministic, and fleet-aware.
 - **`discern_docs`** explains how discern works; **`discern_doctor`** diagnoses a misconfigured install.
 
@@ -29,15 +29,15 @@ The `discern_status` fleet isn't a pool. Never adopt another effort's worktree b
 - **`discern_start`** — only for an effort without a worktree. From the main checkout, create one (branch prefix `agent/`, forked from `main`) and re-root into the returned path using your native worktree-entering tool when available; otherwise cd in, or start a session there. Continue in the worktree throughout the entire effort. Already there? Stay there. If you can't change your working root, prefix every shell command with `cd <path> &&` and pass `path` to every discern tool. Starting re-aims the discern tools at the new worktree, but your own file operations move only when you move them — edits made from the old root land on the trunk while the gate runs in the worktree, and the two quietly diverge.
 - **`discern_update`** brings `main` into your branch when behind and reports upstream overlap — re-read any of your files it names, since a merge that applies cleanly can still conflict in meaning. Idempotent — call it directly instead of pre-checking with git or hand-merging; it performs its own preconditions and gives the exact next step if it refuses. To build on unlanded work instead, `start` and `update` both take `from` (any ref) — work composes below the trunk; only `accept` lands on it.
 - **`discern_await`** watches a sibling or the trunk in one longest-safe call. Do not surface progress updates until it returns. If `data.met: false`, continue with `data.resume` without surfacing an update. Repeat without a fixed limit until the condition holds, or until stopped or unnecessary. An `ok: false` refusal has no continuation. Do not resume it. Follow its recovery hint. Report only when the condition holds, the watch is unnecessary, or a refusal/error needs action. Always respond to new user input. On success, follow its `start`/`update` hint.
-- **`discern_accept`** lands only with explicit consent from this conversation or machine-verified authority from a recorded grant. A green gate is evidence your work is ready, but the owner decides what to do with it. After a green `discern done`, follow its authority-aware hint: either report the one-line proof and stop, or land under the verified grant. Landing fast-forwards `main` and removes the worktree and branch.
+- **`discern_accept`** lands only with explicit consent from this conversation or machine-verified authority from a recorded grant. A green gate is evidence your work is ready, but the owner decides what to do with it. After a green `discern done`, follow its authority-aware hint: either report the one-line Proof and stop, or land under the verified grant. Landing fast-forwards `main` and removes the worktree and branch.
 
 Use `discern_test` when the complete test stage is the intended standalone result. While iterating, use `discern_prepare`, a diagnostic's reproduce command, or a targeted project command, and commit each logical step. Acceptance lands your branch history as-is.
 
 **Finishing an effort.** Proof binds to one exact commit, so the order matters:
 
 1. Run `discern_prepare` and commit everything, so the final tree is committed and the fixers have nothing left to rewrite.
-2. Then run `discern_done` once on the clean HEAD — acceptance reuses that proof. A later edit invalidates it, and `done` runs again on the new tree.
-3. Report completion in your own words — what changed and why, plus anything the gate did not cover (a deferred standard, a decision the owner still holds) — and end with the proof line verbatim. Never paste the full proof page; the owner retrieves it with `discern status --verbose`.
+2. Then run `discern_done` once on the clean HEAD — acceptance reuses that Proof. A later edit invalidates it, and `done` runs again on the new tree.
+3. Report completion in your own words — what changed and why, plus anything the gate did not cover (a deferred standard, a decision the owner still holds) — and end with the Proof line verbatim. Never paste the full Proof page; the owner retrieves it with `discern status --verbose`.
 
 ## Quality standards
 
@@ -45,13 +45,13 @@ Standards are **numbers that can never get worse**: metrics held at a `limit` th
 
 **Never loosen one to pass.** A loosened or deleted limit fails the gate. Each limit records ground some past change earned. Cut waste your change added; when the work itself grew the number, report it: moving a limit is an owner decision.
 
-After owner agreement, create a proposed limit only from the committed final tree: call **`discern_standards_propose`** once. It measures the named Standard. For an unchanged descendant, repeat it to renew evidence without another commit; never cycle proposal and restoration commits while work is moving.
+After owner agreement, create a proposed limit only from the committed final tree: call **`discern_standards_propose`** once. It measures the named standard. For an unchanged descendant, repeat it to renew evidence without another commit; never cycle proposal and restoration commits while work is moving.
 
 When your change _improves_ a measure, the result hints you to offer to lock in the gain. `discern_standards` with `pin` tightens the limit to the measured value and commits that change on its own, so today's gain becomes the baseline every later branch inherits.
 
 ## Checkpoints
 
-Configured checkpoints serve a question which requires your judgment when a matching change completes. `discern_status` and `discern_prepare` name detected checkpoints early. Use `met` only when the served question is satisfied; otherwise use `unmet` with a short, owner-relevant, secret-free tradeoff. A variance follows only the owner's explicit acceptance for the exact declared-unmet set; grants never cover one.
+Configured checkpoints serve a question which requires your judgment when a matching change completes. `discern_status` and `discern_prepare` name detected checkpoints early. On `discern_done`, use `met` only for a satisfied served question; otherwise use `unmet` with a short, owner-relevant, secret-free tradeoff. A variance requires the owner to explicitly accept the exact declared-unmet set; grants never cover one.
 
 ## Skills
 
@@ -61,7 +61,7 @@ When a session yields a durable lesson — a correction, a hard-won procedure, a
 
 ## The Map & decisions
 
-`map/` is the agent-maintained **map**, browsable with **`discern_map`**. Agents use the map to learn and navigate the project; humans use the map to audit agent understanding. Update the map when the reader's mental model, a durable boundary, a supported workflow, or a product behaviour changes.
+`map/` is the agent-maintained **map**, browsable with **`discern_map`**. Agents use the map to learn and navigate the project; humans use the map to audit agent understanding. Update the map when the reader's mental model, a durable boundary, a supported workflow, or a product behavior changes.
 
 Staleness is a defect, so keep the map current — a page is current when nothing in it is false. A map page must **reduce** the total amount of repository reading required to make a correct decision, so it should never restate what code, tests, or config already express — link the authority instead. Do not use the map to maintain independently mechanically derivable facts.
 
@@ -100,7 +100,7 @@ The interface system behind [discern.sh](https://discern.sh): a framework-neutra
 
 - **Component anatomy is fixed.** Every component lives in its own folder under `src/components/<group>/<slug>/` owning `<slug>.css`, `<slug>.tsx`, `<slug>.meta.ts`, `<slug>.examples.tsx`, and `mod.ts`. Metadata must declare its CLI stance at birth: `rendered` adds `<slug>.cli.ts`, while `exempt` records a non-empty terminal-specific reason. Vocabulary shared with React lives in a framework-neutral sibling module. The metadata and group order generate the runtime registry, React and CLI export surfaces, CLI stance registry, catalogue, and dependency graph — a new component needs no manual registration anywhere.
 - **Never hand-edit generated surfaces.** `src/generated/`, `scripts/generated/`, and the skill eval set under `skills/use-discern-design-system/evals/` are committed outputs wholly owned by `deno task codegen`; discern regenerates and checks that group. `catalogue/generated/` is ignored build output from `deno task build`. After changing component metadata, component CSS, component imports, or package assets, regenerate rather than patch.
-- **Tokens change in `src/tokens/tokens.ts` only** — never in emitted CSS. Preserve `--discern-font-size-xs` as the authored interface-text floor and keep the UI font role paired with its central OpenType feature set.
+- **Tokens change in `src/tokens/tokens.ts` only** — never in emitted CSS. Preserve `--discern-font-size-xs` as the authored interface-text floor.
 - **Every public name wears the `discern` namespace** (classes, custom properties, data attributes, keyframes, layers) and every foundation rule stays scoped beneath `:where([data-discern-root])`. No unprefixed globals, ever.
 - **The neutral core and CLI surface never import React.** React enters only through the `./react` adapter (18.3+ peer contract, build-time rendering). The release tests fail a stray React import in the root, CLI, manifest, runtime, tokens, or theme graphs.
 - **CLI Components are pure renderers, not miniature applications.** A rendered `<slug>.cli.ts` derives deterministic text only from its props and `TerminalCapabilities`, exports typed props plus `cliExamples`, and composes the shared Token, ANSI, text, layout, rhythm, and triangle authorities instead of copying them. It performs no I/O, environment read, clock read, or interaction. Effects live behind `./cli/interactive` and paint the same Component frame states; exact frames must preserve meaning across widths, colour depths, Unicode, and ASCII.

@@ -16,7 +16,6 @@
     background: var(--discern-color-surface-sunken);
     color: var(--discern-color-ink-muted);
     font: var(--discern-font-size-xs) var(--discern-font-ui);
-    font-feature-settings: var(--discern-font-features-ui);
     text-decoration: none;
   }
   .discern-catalogue-terminal-detail__components a:focus-visible,
@@ -79,7 +78,6 @@
     border-radius: 999px;
     color: var(--discern-color-accent-800);
     font: 650 var(--discern-font-size-xs) var(--discern-font-ui);
-    font-feature-settings: var(--discern-font-features-ui);
   }
   .discern-catalogue-terminal-lab__notice {
     padding: var(--discern-space-3) var(--discern-space-4);
@@ -102,7 +100,6 @@
     margin-block-end: var(--discern-space-2);
     color: var(--discern-color-ink-muted);
     font: 650 var(--discern-font-size-xs) var(--discern-font-ui);
-    font-feature-settings: var(--discern-font-features-ui);
   }
   .discern-catalogue-terminal-lab__presets > div {
     display: grid;
@@ -120,7 +117,6 @@
     color: var(--discern-color-ink-muted);
     cursor: pointer;
     font: 650 var(--discern-font-size-xs) var(--discern-font-ui);
-    font-feature-settings: var(--discern-font-features-ui);
   }
   .discern-catalogue-terminal-lab__presets button[aria-pressed="true"] {
     border-color: var(--discern-color-accent-600);
@@ -151,7 +147,6 @@
     background: var(--discern-color-surface);
     color: var(--discern-color-ink);
     font: var(--discern-font-size-sm) var(--discern-font-ui);
-    font-feature-settings: var(--discern-font-features-ui);
   }
   .discern-catalogue-terminal-lab__options,
   .discern-catalogue-terminal-lab__actions {
@@ -182,7 +177,6 @@
     color: var(--discern-color-ink);
     cursor: pointer;
     font: 650 var(--discern-font-size-xs) var(--discern-font-ui);
-    font-feature-settings: var(--discern-font-features-ui);
   }
   .discern-catalogue-terminal-lab__presets button:focus-visible,
   .discern-catalogue-terminal-lab__fields input:focus-visible,
@@ -204,7 +198,6 @@
     padding: var(--discern-space-3) var(--discern-space-4);
     cursor: pointer;
     font: 650 var(--discern-font-size-sm) var(--discern-font-ui);
-    font-feature-settings: var(--discern-font-features-ui);
   }
   .discern-catalogue-terminal-lab__source > div {
     display: grid;

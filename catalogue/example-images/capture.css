@@ -14,7 +14,7 @@
   .discern-example-image-capture {
     --discern-font-display: "Crimson Pro", serif;
     --discern-font-body: "Inter", sans-serif;
-    --discern-font-ui: "Inter", sans-serif;
+    --discern-font-ui: "Discern Inter UI", "Inter", sans-serif;
     --discern-font-mono: "JetBrains Mono", monospace;
     box-sizing: border-box;
     background: transparent;

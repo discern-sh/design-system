@@ -24,7 +24,6 @@
   .discern-data-figure > header ul,
   .discern-data-figure figcaption small {
     font-family: var(--discern-font-ui);
-    font-feature-settings: var(--discern-font-features-ui);
   }
 
   .discern-data-figure > header span,
