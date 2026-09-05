@@ -87,7 +87,7 @@ export const conformance: readonly ConformanceScenario[] = [{
   example: "icons",
   name: "Controlled adapter updates the supplied selection",
   steps: [
-    { action: "click", target: { role: "radio", name: "List" } },
+    { action: "click", target: { selector: 'input[value="list"]' } },
     {
       expect: "visible",
       target: {
