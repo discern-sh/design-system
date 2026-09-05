@@ -1,5 +1,6 @@
 import type { Page } from "playwright-core";
 import { baseTokens } from "../../../src/tokens/tokens.ts";
+import { misalignedGridText } from "../centered-grid-text.ts";
 import { invariant } from "./support.ts";
 
 /** Measure composed controls and spacing after the real browser cascade. */
@@ -15,6 +16,8 @@ export async function verifySharedFoundations(page: Page): Promise<void> {
         document.querySelector<HTMLElement>(".discern-catalogue-shell")!.style
           .setProperty("--discern-density", String(point.density));
       }, { density, fontSize });
+      const gridTextFailures = await misalignedGridText(page);
+      invariant(gridTextFailures.length === 0, gridTextFailures.join("\n"));
       const geometry = await study.evaluate((node) => {
         const controls = [
           ...node.querySelectorAll("form :is(input, select, button)"),

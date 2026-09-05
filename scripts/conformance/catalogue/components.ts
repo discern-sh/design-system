@@ -21,6 +21,7 @@ import {
   verifyDecisionCopyEnrollment,
   verifyDecisionCopyLegibility,
 } from "./metadata-copy.ts";
+import { misalignedGridText } from "../centered-grid-text.ts";
 import { verifyInlineOverflowCueEdges } from "./overflow-cue.ts";
 
 const OUTPUT_ROOT = new URL("../../../dist/conformance/", import.meta.url);
@@ -1883,6 +1884,8 @@ export async function runComponentContractConformance(
 ): Promise<ComponentContractEvidence> {
   await loadConformancePage(page, conformanceUrl(origin, "light"));
   await assertAutoEnrollment(page, expectedComponents);
+  const gridTextFailures = await misalignedGridText(page);
+  invariant(gridTextFailures.length === 0, gridTextFailures.join("\n"));
   await verifyDecisionCopyEnrollment(
     page,
     ".discern-catalogue-component > header .discern-catalogue-component__identity > p",

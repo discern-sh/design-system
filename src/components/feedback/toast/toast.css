@@ -40,6 +40,7 @@
     display: grid;
     flex: none;
     place-items: center;
+    align-content: center;
     inline-size: 1.0625rem;
     block-size: 1.0625rem;
     color: var(--discern-color-toast-accent);

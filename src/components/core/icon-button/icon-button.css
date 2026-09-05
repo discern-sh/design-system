@@ -42,6 +42,7 @@
   .discern-icon-button > span {
     display: grid;
     place-items: center;
+    align-content: center;
     inline-size: 1.125rem;
     block-size: 1.125rem;
   }

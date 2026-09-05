@@ -91,6 +91,7 @@
   .discern-button__icon {
     display: inline-grid;
     place-items: center;
+    align-content: center;
     inline-size: 1em;
     block-size: 1em;
   }

@@ -3,6 +3,7 @@
     display: inline-grid;
     flex: none;
     place-items: center;
+    align-content: center;
     inline-size: 1em;
     block-size: 1em;
     color: inherit;
