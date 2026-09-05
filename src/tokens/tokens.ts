@@ -152,6 +152,37 @@ export const baseTokens: readonly DesignToken[] = [
     "Typography",
     "Primary title within a card surface.",
   ),
+  ...([
+    [
+      "page-title",
+      "display-lg",
+      "Page title; the strongest heading in an interface.",
+    ],
+    ["section-title", "display-md", "Section heading within a page."],
+    [
+      "label",
+      "sm",
+      "Field label; stronger and larger than supporting metadata.",
+    ],
+    [
+      "meta",
+      "xs",
+      "Supporting metadata; never below the interface-text floor.",
+    ],
+  ] as const).map(([name, size, description]) =>
+    token(
+      `--discern-font-size-${name}`,
+      `var(--discern-font-size-${size})`,
+      "Typography",
+      description,
+    )
+  ),
+  token(
+    "--discern-leading-control",
+    "1.3",
+    "Typography",
+    "Shared single-line control leading; permits labels to wrap and grow.",
+  ),
   token(
     "--discern-font-size-display-sm",
     "1.5rem",
@@ -217,6 +248,31 @@ export const baseTokens: readonly DesignToken[] = [
         : `${
           step * APPEARANCE_SPACING_UNIT_PX
         }px authored spacing step; browser emission multiplies it by density.`,
+    )
+  ),
+  ...([
+    ["related", 2, "Label-to-control and closely related content."],
+    ["content", 4, "Ordinary content flow."],
+    ["group", 6, "A distinct group within a section."],
+    ["section", 10, "A change of subject within an interface page."],
+  ] as const).map(([name, step, description]) =>
+    token(
+      `--discern-rhythm-${name}`,
+      `var(--discern-space-${step})`,
+      "Spacing",
+      description,
+    )
+  ),
+  ...([
+    ["sm", "2rem", 8],
+    ["md", "2.5rem", 10],
+    ["lg", "3rem", 12],
+  ] as const).map(([size, floor, step]) =>
+    token(
+      `--discern-control-size-${size}`,
+      `max(${floor}, var(--discern-space-${step}))`,
+      "Layout",
+      `Shared ${size} control block size. Density can enlarge it; the ${floor} target floor never shrinks.`,
     )
   ),
   token("--discern-radius-xs", "4px", "Shape", "Fine control radius."),

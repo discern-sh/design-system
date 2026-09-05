@@ -24,7 +24,7 @@
   }
 
   :where([data-discern-root]) :where(h1, h2, h3, h4, h5, h6) {
-    margin-block: 0 var(--discern-space-4);
+    margin-block: 0 var(--discern-rhythm-related);
     color: var(--discern-color-ink);
     font-family: var(--discern-font-display);
     font-weight: var(--discern-font-weight-display);
@@ -34,19 +34,23 @@
   }
 
   :where([data-discern-root]) h1 {
-    font-size: var(--discern-font-size-display-xl);
+    font-size: var(--discern-font-size-page-title);
   }
   :where([data-discern-root]) h2 {
-    font-size: var(--discern-font-size-display-lg);
+    font-size: var(--discern-font-size-section-title);
   }
   :where([data-discern-root]) h3 {
-    font-size: var(--discern-font-size-display-md);
-  }
-  :where([data-discern-root]) h4 {
     font-size: var(--discern-font-size-display-sm);
   }
+  :where([data-discern-root]) :where(h4, h5, h6) {
+    font-size: var(--discern-font-size-card-title);
+    line-height: var(--discern-leading-snug);
+  }
+  :where([data-discern-root]) :where(p, ul, ol, dl, pre, figure) + :where(h2, h3, h4, h5, h6) {
+    margin-block-start: var(--discern-rhythm-section);
+  }
   :where([data-discern-root]) p {
-    margin-block: 0 var(--discern-space-4);
+    margin-block: 0 var(--discern-rhythm-content);
   }
   :where([data-discern-root]) a {
     color: var(--discern-color-accent-600);

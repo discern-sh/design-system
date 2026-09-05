@@ -1,16 +1,16 @@
 @layer discern.components {
   .discern-control {
     inline-size: 100%;
-    min-block-size: 2.625rem;
+    min-block-size: var(--discern-control-size-md);
     padding: var(--discern-space-2) var(--discern-space-3);
     border: 1px solid var(--discern-color-border-strong);
     border-radius: var(--discern-radius-sm);
     outline: none;
     background: var(--discern-color-surface);
     color: var(--discern-color-ink);
-    font-family: var(--discern-font-body);
+    font-family: var(--discern-font-ui);
     font-size: var(--discern-font-size-sm);
-    line-height: 1.4;
+    line-height: var(--discern-leading-control);
     transition-property: background, border-color, box-shadow;
     transition-duration: var(--discern-duration-fast);
   }

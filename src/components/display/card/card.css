@@ -8,12 +8,16 @@
   .discern-card :where(h1, h2, h3, h4, h5, h6) {
     font-family: var(--discern-font-ui);
     font-size: var(--discern-font-size-card-title);
-    font-weight: 600;
+    font-weight: var(--discern-font-weight-strong);
     letter-spacing: normal;
-    line-height: 1.3;
+    line-height: var(--discern-leading-snug);
   }
   .discern-card--raised {
     box-shadow: var(--discern-shadow-card);
+  }
+  .discern-card :where(.discern-card) {
+    border: 0;
+    box-shadow: none;
   }
   .discern-card--dots {
     background: var(--discern-color-surface-sunken);
@@ -29,7 +33,7 @@
     padding: var(--discern-space-4);
   }
   .discern-card--pad-md {
-    padding: var(--discern-space-6);
+    padding: var(--discern-rhythm-group);
   }
   .discern-card--pad-lg {
     padding: var(--discern-space-8);

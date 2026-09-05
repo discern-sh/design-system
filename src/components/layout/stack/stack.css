@@ -2,7 +2,10 @@
   .discern-stack {
     display: flex;
     flex-direction: column;
-    gap: var(--discern-stack-gap, var(--discern-space-4));
+    gap: var(--discern-stack-gap, var(--discern-rhythm-content));
+  }
+  .discern-stack > * {
+    margin-block: 0;
   }
   .discern-stack--start {
     align-items: flex-start;

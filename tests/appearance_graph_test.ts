@@ -28,6 +28,7 @@ import {
   evaluateAppearanceExpression,
   evaluateAppearanceShadows,
   evaluateAppearanceSpacingUnit,
+  evaluateOpaqueAppearance,
 } from "../src/tokens/appearance.ts";
 import { themeTokens } from "../src/tokens/tokens.ts";
 
@@ -273,8 +274,8 @@ Deno.test("theme Token poles pin representative monochrome emission", () => {
     "oklch(0% 0 0)",
   ]);
   assertEquals(pairs["--discern-color-ink-muted"], [
-    "oklch(0% 0 0 / 0.66)",
-    "oklch(100% 0 0 / 0.72)",
+    "oklch(0% 0 0 / 0.68)",
+    "oklch(100% 0 0 / 0.74)",
   ]);
   assertEquals(pairs["--discern-color-ink-faint"], [
     "oklch(0% 0 0 / 0.55)",
@@ -289,7 +290,7 @@ Deno.test("theme Token poles pin representative monochrome emission", () => {
     "oklch(100% 0 0)",
   ]);
   assertEquals(pairs["--discern-color-surface"], [
-    "oklch(100% 0 0)",
+    "oklch(98.8609% 0 0)",
     "oklch(18.1521% 0 0)",
   ]);
   assertEquals(pairs["--discern-color-action"], [
@@ -340,7 +341,7 @@ Deno.test("derived component-intent roles preserve every current pole pair", () 
     pair("--discern-shadow-color")[1],
   ]);
   assertEquals(pair("--discern-color-avatar-highlight"), [
-    pair("--discern-color-surface")[0],
+    pair("--discern-color-inverse-ink")[0],
     pair("--discern-color-accent-300")[1],
   ]);
   assertEquals(pair("--discern-color-avatar-fill-start"), [
@@ -351,4 +352,32 @@ Deno.test("derived component-intent roles preserve every current pole pair", () 
     "oklch(94.2866% 0 0)",
     "oklch(26.0774% 0 0)",
   ]);
+});
+
+Deno.test("surface hierarchy stays ordered across darkness and structure", () => {
+  for (const darkness of APPEARANCE_CONTRAST_SAMPLE_DARKNESSES) {
+    for (const structure of [0, 1, 2]) {
+      const colors = evaluateOpaqueAppearance({ darkness, structure });
+      const lightness = (name: `--discern-${string}`): number => {
+        const match = colors[name]?.match(/^oklch\(([\d.]+)%/u);
+        assert(match?.[1] !== undefined, `missing opaque role ${name}`);
+        return Number(match[1]);
+      };
+      assert(
+        lightness("--discern-color-surface") >
+          lightness("--discern-color-surface-sunken"),
+        `raised must be lighter than sunken at darkness ${darkness}, structure ${structure}`,
+      );
+      const strengths = appearanceShadowRoleLaws.map(({ expression }) =>
+        evaluateAppearanceExpression(expression, { darkness, structure })
+      );
+      assert(
+        strengths.every((strength, index) =>
+          index === 0 ||
+          (structure === 0 ? strength === 0 : strength > strengths[index - 1]!)
+        ),
+        `card < window < pop at darkness ${darkness}`,
+      );
+    }
+  }
 });

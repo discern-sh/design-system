@@ -746,7 +746,7 @@ const inkExpression: AppearanceExpression = {
     polarCurve(0.87, 1, 1, 0.92),
   ],
 };
-const inkMutedExpression = polarCurve(0.66, 1, 1, 0.72);
+const inkMutedExpression = polarCurve(0.68, 1, 1, 0.74);
 const inkFaintExpression = polarCurve(0.55, 0.72, 0.72, 0.55);
 const accent100Expression = rounded(clamp(binary(
   "multiply",
@@ -905,14 +905,14 @@ export const appearanceColorRoleLaws: readonly AppearanceColorRoleLaw[] = Object
         "--discern-color-surface",
         "Opaque raised surface, composited once over canvas.",
         "raised-surface",
-        curve([0, 0.04, 0.07, 0.07, 0.07]),
+        polarCurve(0.015, 0, 0, 0.07),
         undefined,
       ),
       role(
         "--discern-color-surface-sunken",
         "Translucent inset wash used only over an owned opaque canvas.",
         "active-ink",
-        curve([0.04, 0.06, 0.08, 0.05, 0.03]),
+        polarCurve(0.045, 0, 0, 0.025),
         undefined,
       ),
       role(
@@ -1003,7 +1003,7 @@ export const appearanceColorRoleLaws: readonly AppearanceColorRoleLaw[] = Object
         "--discern-color-border",
         "Structural hairline ink.",
         "active-ink",
-        scaledCurve([0.14, 0.18, 0.24, 0.19, 0.16], "structure"),
+        scaledCurve([0.12, 0.16, 0.2, 0.16, 0.14], "structure"),
         undefined,
       ),
       role(
@@ -1189,15 +1189,16 @@ export const appearanceShadowRoleLaws: readonly AppearanceShadowRoleLaw[] =
     [
       {
         name: "--discern-shadow-card",
-        description: "Quiet hard-offset card shadow.",
-        offset: "4px 4px 0",
-        expression: scaledCurve([0.06, 0.08, 0.12, 0.15, 0.16], "structure"),
+        description:
+          "Quiet elevation for a standalone card; nested cards do not repeat it.",
+        offset: "2px 2px 0",
+        expression: scaledCurve([0.04, 0.06, 0.08, 0.1, 0.1], "structure"),
       },
       {
         name: "--discern-shadow-window",
         description: "Hard-offset presentation window shadow.",
-        offset: "8px 10px 0",
-        expression: scaledCurve([0.06, 0.1, 0.16, 0.2, 0.2], "structure"),
+        offset: "4px 5px 0",
+        expression: scaledCurve([0.06, 0.09, 0.12, 0.16, 0.16], "structure"),
       },
       {
         name: "--discern-shadow-pop",

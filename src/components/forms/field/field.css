@@ -1,22 +1,22 @@
 @layer discern.components {
   .discern-field {
     display: grid;
-    gap: var(--discern-space-2);
+    gap: var(--discern-rhythm-related);
     min-inline-size: 0;
   }
   .discern-field__label {
-    color: var(--discern-color-ink-muted);
+    color: var(--discern-color-ink);
     font-family: var(--discern-font-ui);
-    font-size: var(--discern-font-size-xs);
-    font-weight: 600;
-    line-height: 1.2;
+    font-size: var(--discern-font-size-label);
+    font-weight: var(--discern-font-weight-strong);
+    line-height: var(--discern-leading-snug);
   }
   .discern-field__required {
     color: var(--discern-color-danger);
   }
   .discern-field__message {
     color: var(--discern-color-ink-muted);
-    font-size: var(--discern-font-size-xs);
+    font-size: var(--discern-font-size-meta);
     line-height: 1.45;
   }
   .discern-field__message--error {

@@ -17,11 +17,11 @@ export const Stack: DiscernComponent<HTMLDivElement, StackProps> = forwardRef<
   HTMLDivElement,
   StackProps
 >(function Stack(
-  { gap = 4, align = "stretch", className, style, children, ...props },
+  { gap, align = "stretch", className, style, children, ...props },
   ref,
 ) {
   const stackStyle: StackStyle = {
-    "--discern-stack-gap": spaceValue(gap),
+    ...(gap === undefined ? {} : { "--discern-stack-gap": spaceValue(gap) }),
     ...style,
   };
   return (

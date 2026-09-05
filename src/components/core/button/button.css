@@ -15,7 +15,7 @@
     align-items: center;
     justify-content: center;
     gap: var(--discern-space-2);
-    min-block-size: 2.5rem;
+    min-block-size: var(--discern-control-size-md);
     padding: 0 var(--discern-space-5);
     border: 0.125rem solid var(--discern-color-button-edge);
     border-radius: var(--discern-radius-md);
@@ -26,7 +26,7 @@
     font-family: var(--discern-font-ui);
     font-size: var(--discern-font-size-sm);
     font-weight: 600;
-    line-height: 1;
+    line-height: var(--discern-leading-control);
     text-decoration: none;
     transition-property: background, box-shadow, transform;
     transition-duration: var(--discern-duration-fast);
@@ -56,12 +56,8 @@
     --discern-button-fill-hover: color-mix(in oklab, var(--discern-color-accent-100) 55%, var(--discern-color-surface));
     --discern-color-button-edge: var(--discern-color-neutral-edge);
     --discern-button-text: var(--discern-color-ink);
-    --discern-shadow-button: calc(var(--discern-space-1) / 2)
-      calc(var(--discern-space-1) / 2) 0
-      var(--discern-color-neutral-shadow);
-    --discern-shadow-button-pressed: calc(var(--discern-space-1) / 4)
-      calc(var(--discern-space-1) / 4) 0
-      var(--discern-color-neutral-shadow);
+    --discern-shadow-button: none;
+    --discern-shadow-button-pressed: none;
   }
   .discern-button--ghost {
     --discern-button-fill: transparent;
@@ -83,12 +79,12 @@
     --discern-button-text: var(--discern-color-danger);
   }
   .discern-button--sm {
-    min-block-size: 2rem;
+    min-block-size: var(--discern-control-size-sm);
     padding-inline: var(--discern-space-3);
     font-size: var(--discern-font-size-xs);
   }
   .discern-button--lg {
-    min-block-size: 3rem;
+    min-block-size: var(--discern-control-size-lg);
     padding-inline: var(--discern-space-6);
     font-size: 1.0625rem;
   }

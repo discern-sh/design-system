@@ -9,7 +9,7 @@ Browser polish uses one source-backed review vocabulary rather than a screenshot
 - `--discern-duration-reveal` is opt-in for an authored entrance or story. Controls, lists, and route changes do not inherit it by default.
 - Looping motion means ongoing work or explicitly ambient Artwork. The still frame contains the complete meaning, and reduced motion removes movement without removing state.
 - `:focus-visible`, hover, active/pressed, and selected are independent facts. Disabled and busy states retain a non-opacity witness. Passive cards do not acquire a clickable lift.
-- Card, Window, and pop shadows remain the elevation hierarchy. A Component-specific optical shadow describes its visual object; it does not create another elevation tier.
+- Card, Window, and pop shadows remain the elevation hierarchy, ordered from a quiet standalone card to the strongest overlay separation. Nested Cards suppress repeated borders and shadows; secondary actions stay flat. A Component-specific optical shadow describes its visual object; it does not create another elevation tier.
 - Embedded Components respond to allocated inline size. The browser viewport governs only page composition. Builder continues to own truthful iframe viewport widths; this Catalogue tool deliberately measures a local container and reports the outer viewport separately.
 - `--discern-font-size-xs` remains the interface-text floor. Terse tertiary metadata can use faint ink; explanatory sentences use readable semantic ink rather than inheriting tertiary styling.
 

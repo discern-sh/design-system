@@ -39,6 +39,18 @@ An author places a Root at a mid-darkness point by setting the axis and declarin
 
 Structure, emphasis, and the tints can be set on the same Root within their documented bounds. Density multiplies authored pixel spacing facts only; it never changes font size. Component-owned interface-text and touch-target floors remain unscaled.
 
+## Shared hierarchy and rhythm
+
+[`tokens.ts`](../../src/tokens/tokens.ts) owns interface type sizes, named rhythm, and control measurements. Page and section titles use the display family; component titles use the UI family; field labels use primary ink and strong UI weight; metadata uses the interface floor and muted ink. The display primitives remain available for deliberately larger editorial and marketing treatments. Foundation headings use the interface roles; components can select a different role explicitly.
+
+Rhythm names the relationship: `related` binds a label or title to its content, `content` is ordinary flow, `group` separates groups, and `section` signals a change of subject. These roles reference the numeric spacing scale, so Density reaches them once. Stack owns direct-child block margins: its gap is the complete inter-child spacing, and an explicit `gap` prop still chooses a numeric step. Browser rhythm aliases do not enter the CLI's numeric spacing-cell vocabulary.
+
+Button and Icon button use the shared small/default/large control block sizes; Input and Select use default. Each size is the maximum of a rem target floor and a density-scaled spacing step. Labels may grow a control when their content requires it. Consumer overrides of the size Tokens change the aligned row together. Multiline Textarea keeps its own allocation and uses the same control typography.
+
+Card, Window, and pop remain the three elevation tiers. Standalone cards carry the quietest optional offset; windows have modest separation; overlays retain the strongest separation. Nested Cards suppress repeated borders and shadows, and secondary actions use flat surfaces. Surface tones are independent of Structure: raised stays lighter than sunken at either pole and intermediate review points, tapering both washes near the polarity crossover to preserve available text contrast.
+
+Review these relationships together at `/catalogue/foundations/#shared-foundations`. The specimen and its browser guard consume real Components; the token explorer enrolls the public inventory automatically.
+
 ## Typography roles
 
 The display face carries editorial headings. The body and interface faces carry prose, labels, indices, dates, measurements, status metadata, annotations, captions, and identities. The monospace face is reserved for an explicitly monospaced brand name and code, including source, commands, file paths, and terminal output. A component does not use monospace to create a technical mood.
