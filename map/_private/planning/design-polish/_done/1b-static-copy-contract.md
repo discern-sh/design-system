@@ -81,7 +81,7 @@ Authored feature files stay with their owner. Shared derived files and the narro
 - Return the branch/worktree identity for an adversarial review against this brief. The planning agent will inspect the diff and reproduce the important journeys; gate success alone is not a visual review.
 - In the final implementation commit, before the final prepare → commit → done sequence, move `map/_private/planning/design-polish/1b-static-copy-contract.md` to `map/_private/planning/design-polish/_done/1b-static-copy-contract.md`, repair any moved relative links, and update **only this stream's row** in the programme README to the `_done/` path and completed state, preserving every sibling row.
 
-## Review candidate — awaiting the behaviour budget decision
+## Implementation and review evidence
 
 Effort: `refine-1b-dd1910`, branch `agent/refine-1b-dd1910`, worktree `/Users/jack/Sites/discern-design-system.worktrees/refine-1b-dd1910`.
 
@@ -89,4 +89,4 @@ The selected runtime now owns static and live copy actions. JSON-encoded authore
 
 Reviewed at 390px and 1280px with success/failure states, plus forced-colour focus and reduced motion. The existing canonical image command owns refreshed imagery. Previews use the worktree's port 19108: [static consumer](http://localhost:19108/dist/static-copy/) and [Copy button](http://localhost:19108/catalogue/components/copy-button/). For manual clipboard verification, activate the first static Copy control and paste into a plain-text editor; compare leading/trailing spaces, CRLF/newlines, the tab, Unicode, and punctuation with the authored `exactValues[0]` in `tests/fixtures/static-copy-consumer.tsx`. The automated check additionally reads the real clipboard back and compares the exact string, including the empty-value case.
 
-The final functional behaviour measures 8,582 emitted bytes against the unchanged 6,844-byte ceiling (1,738 over). The copy addition is 1,821 bytes against the 6,761-byte starting population. Raising that ceiling is an owner decision. This brief stays outside `_done/` until that decision and a green final Proof; its completed-state move belongs to the final implementation commit.
+The final functional behaviour measures 8,582 emitted bytes. The owner explicitly approved increasing the 6,844-byte ceiling to that measured value and landing this effort. The copy addition is 1,821 bytes against the 6,761-byte starting population; the approved ceiling increase is 1,738 bytes. The standard proposal records this decision against the committed implementation, and landing requires a green final Proof.
