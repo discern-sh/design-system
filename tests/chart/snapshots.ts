@@ -12,7 +12,7 @@ export const minimumBarLightSvg =
   .discern-chart--standalone.discern-chart--theme-light .discern-chart__canvas { fill: oklch(100% 0 0); }
   .discern-chart--standalone.discern-chart--theme-light .discern-chart__mark--series-1 { fill: oklch(66.76% 0.0939 249.4); stroke: oklch(100% 0 0); }
   .discern-chart--standalone.discern-chart--theme-light .discern-chart__axis { stroke: oklch(0% 0 0 / 0.55); }
-  .discern-chart--standalone.discern-chart--theme-light .discern-chart__label--axis-label { fill: oklch(0% 0 0 / 0.66); }
+  .discern-chart--standalone.discern-chart--theme-light .discern-chart__label--axis-label { fill: oklch(0% 0 0 / 0.68); }
   @media (forced-colors: active) {
     .discern-chart--standalone.discern-chart--theme-light { forced-color-adjust: none; }
     .discern-chart--standalone.discern-chart--theme-light .discern-chart__canvas { fill: Canvas; }

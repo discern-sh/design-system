@@ -21,6 +21,7 @@ import {
 } from "../catalogue/pages/components/directory-card.tsx";
 import { componentDirectory } from "../catalogue/pages/components/collections.ts";
 import { CompositionsPage } from "../catalogue/pages/compositions/page.tsx";
+import { SharedFoundationsPreview } from "../catalogue/pages/foundations/shared-foundations.tsx";
 import { FoundationsPage } from "../catalogue/pages/foundations/page.tsx";
 import { GlyphIndexPage } from "../catalogue/pages/glyphs/index-page.tsx";
 import {
@@ -56,6 +57,7 @@ function assertSharedCards(
   markup: string,
   expected: number,
   variant: "visual" | "compact",
+  specimenCards = 0,
 ): void {
   assertEquals(
     (markup.match(
@@ -72,7 +74,7 @@ function assertSharedCards(
   );
   assertEquals(
     classTokenCount(markup, "discern-card"),
-    expected,
+    expected + specimenCards,
     "a route-index Card bypassed CatalogueIndexCard",
   );
 }
@@ -156,7 +158,22 @@ Deno.test("every source-backed Catalogue index population uses the shared card a
     terminalPresentation: fieldLight,
     url: new URL(foundationsPaths.index, "https://catalogue.example"),
   }));
-  assertSharedCards(foundations, 3, "visual");
+  const specimenCards = classTokenCount(
+    renderToStaticMarkup(createElement(SharedFoundationsPreview)),
+    "discern-card",
+  );
+  assertSharedCards(foundations, 3, "visual", specimenCards);
+  assertThrows(
+    () =>
+      assertSharedCards(
+        `${foundations}<div class="discern-card">future route</div>`,
+        3,
+        "visual",
+        specimenCards,
+      ),
+    Error,
+    "bypassed CatalogueIndexCard",
+  );
 
   const glyphs = renderToStaticMarkup(createElement(GlyphIndexPage, {
     data: glyphAtlasData,
