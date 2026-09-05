@@ -5,8 +5,8 @@
  * Canonical facts derive from the pinned Unicode 17.0.0 sources declared in
  * this module. Selection reasons, hazards, aliases, recommendations, and
  * degradation guidance are authored Discern judgement, kept visibly separate
- * from Unicode identity. The data is intentionally absent from every package
- * export while its shape is under review.
+ * from Unicode identity. Only the approved curated projection reaches the public ./glyphs entrypoint;
+ * the canonical research model stays private.
  *
  * Unicode terms: https://www.unicode.org/terms_of_use.html
  *
@@ -589,6 +589,9 @@ export const GLYPH_ATLAS_CURATION_RUBRIC = Object.freeze([
 export const GLYPH_ATLAS_RENDERING_POSTURE =
   "Unicode standardizes identity and properties, not identical glyph artwork or font availability; inspect the target font and surface before relying on visual detail." as const;
 
+const INTERFACE_TOOL_REASON =
+  "A compact mark for common editing, appearance, selection, or navigation tasks; contextual aliases describe its interface role separately from its Unicode name.";
+
 const ICON_INVENTORY_REASON =
   "A compact generic interface mark already useful to the package's terminal icon vocabulary; Atlas membership separates its Unicode identity from any contextual alias.";
 const MOTIF_INVENTORY_REASON =
@@ -721,530 +724,673 @@ const personalComputer = scalar(
 );
 
 /** Complete private canonical population for the starter Glyph Atlas. */
-export const glyphAtlasCanonicalRecords: readonly CanonicalGlyphRecord[] =
-  Object.freeze([
-    scalarRecord(
-      scalar(0x2726, "BLACK FOUR POINTED STAR", "So", "Dingbats", "1.1", "N"),
-      ICON_INVENTORY_REASON,
+const canonicalRecords: readonly CanonicalGlyphRecord[] = Object.freeze([
+  scalarRecord(
+    scalar(
+      0x2600,
+      "BLACK SUN WITH RAYS",
+      "So",
+      "Miscellaneous Symbols",
+      "1.1",
+      "N",
+      ["Emoji", "Extended_Pictographic"],
+      ["text", "emoji"],
     ),
-    scalarRecord(
-      scalar(0x2192, "RIGHTWARDS ARROW", "Sm", "Arrows", "1.1", "A"),
-      ICON_INVENTORY_REASON,
-      ["semantic-overload"],
+    INTERFACE_TOOL_REASON,
+    ["semantic-overload"],
+  ),
+  scalarRecord(
+    scalar(0x2606, "WHITE STAR", "So", "Miscellaneous Symbols", "1.1", "A"),
+    INTERFACE_TOOL_REASON,
+    ["semantic-overload"],
+  ),
+  scalarRecord(
+    scalar(0x2B, "PLUS SIGN", "Sm", "Basic Latin", "1.1", "Na"),
+    INTERFACE_TOOL_REASON,
+    ["semantic-overload"],
+  ),
+  scalarRecord(
+    scalar(0x2212, "MINUS SIGN", "Sm", "Mathematical Operators", "1.1", "N"),
+    INTERFACE_TOOL_REASON,
+    ["semantic-overload"],
+  ),
+  scalarRecord(
+    scalar(
+      0x22EF,
+      "MIDLINE HORIZONTAL ELLIPSIS",
+      "Sm",
+      "Mathematical Operators",
+      "1.1",
+      "N",
     ),
-    scalarRecord(
-      scalar(0x2713, "CHECK MARK", "So", "Dingbats", "1.1", "N"),
-      ICON_INVENTORY_REASON,
-      ["semantic-overload"],
+    INTERFACE_TOOL_REASON,
+    ["semantic-overload"],
+  ),
+  scalarRecord(
+    scalar(0x2261, "IDENTICAL TO", "Sm", "Mathematical Operators", "1.1", "A"),
+    INTERFACE_TOOL_REASON,
+    ["semantic-overload"],
+  ),
+  scalarRecord(
+    scalar(
+      0x21B6,
+      "ANTICLOCKWISE TOP SEMICIRCLE ARROW",
+      "So",
+      "Arrows",
+      "1.1",
+      "N",
     ),
-    scalarRecord(
-      scalar(
-        0x24D8,
-        "CIRCLED LATIN SMALL LETTER I",
-        "So",
-        "Enclosed Alphanumerics",
-        "1.1",
-        "A",
-      ),
-      ICON_INVENTORY_REASON,
-      ["semantic-overload"],
+    INTERFACE_TOOL_REASON,
+    ["semantic-overload"],
+  ),
+  scalarRecord(
+    scalar(
+      0x21B7,
+      "CLOCKWISE TOP SEMICIRCLE ARROW",
+      "So",
+      "Arrows",
+      "1.1",
+      "N",
     ),
-    scalarRecord(
-      scalar(
-        0x263E,
-        "LAST QUARTER MOON",
-        "So",
-        "Miscellaneous Symbols",
-        "1.1",
-        "N",
-      ),
-      ICON_INVENTORY_REASON,
-      ["semantic-overload"],
+    INTERFACE_TOOL_REASON,
+    ["semantic-overload"],
+  ),
+  scalarRecord(
+    scalar(
+      0x21B5,
+      "DOWNWARDS ARROW WITH CORNER LEFTWARDS",
+      "So",
+      "Arrows",
+      "1.1",
+      "N",
     ),
-    scalarRecord(
-      scalar(
-        0x00D7,
-        "MULTIPLICATION SIGN",
-        "Sm",
-        "Latin-1 Supplement",
-        "1.1",
-        "A",
-      ),
-      ICON_INVENTORY_REASON,
-      ["semantic-overload"],
+    INTERFACE_TOOL_REASON,
+    ["semantic-overload"],
+  ),
+  scalarRecord(
+    scalar(0x2610, "BALLOT BOX", "So", "Miscellaneous Symbols", "1.1", "N"),
+    INTERFACE_TOOL_REASON,
+    ["semantic-overload"],
+  ),
+  scalarRecord(
+    scalar(
+      0x29C9,
+      "TWO JOINED SQUARES",
+      "Sm",
+      "Miscellaneous Mathematical Symbols-B",
+      "3.2",
+      "N",
     ),
-    scalarRecord(
-      scalar(
-        0x25D0,
-        "CIRCLE WITH LEFT HALF BLACK",
-        "So",
-        "Geometric Shapes",
-        "1.1",
-        "A",
-      ),
-      MOTIF_INVENTORY_REASON,
+    INTERFACE_TOOL_REASON,
+    ["semantic-overload"],
+  ),
+  scalarRecord(
+    scalar(0x21BB, "CLOCKWISE OPEN CIRCLE ARROW", "So", "Arrows", "1.1", "N"),
+    INTERFACE_TOOL_REASON,
+    ["semantic-overload"],
+  ),
+  scalarRecord(
+    scalar(0x3F, "QUESTION MARK", "Po", "Basic Latin", "1.1", "Na"),
+    INTERFACE_TOOL_REASON,
+    ["semantic-overload"],
+  ),
+  scalarRecord(
+    scalar(0x2726, "BLACK FOUR POINTED STAR", "So", "Dingbats", "1.1", "N"),
+    ICON_INVENTORY_REASON,
+  ),
+  scalarRecord(
+    scalar(0x2192, "RIGHTWARDS ARROW", "Sm", "Arrows", "1.1", "A"),
+    ICON_INVENTORY_REASON,
+    ["semantic-overload"],
+  ),
+  scalarRecord(
+    scalar(0x2713, "CHECK MARK", "So", "Dingbats", "1.1", "N"),
+    ICON_INVENTORY_REASON,
+    ["semantic-overload"],
+  ),
+  scalarRecord(
+    scalar(
+      0x24D8,
+      "CIRCLED LATIN SMALL LETTER I",
+      "So",
+      "Enclosed Alphanumerics",
+      "1.1",
+      "A",
     ),
-    scalarRecord(
-      scalar(
-        0x25D3,
-        "CIRCLE WITH UPPER HALF BLACK",
-        "So",
-        "Geometric Shapes",
-        "1.1",
-        "N",
-      ),
-      MOTIF_INVENTORY_REASON,
+    ICON_INVENTORY_REASON,
+    ["semantic-overload"],
+  ),
+  scalarRecord(
+    scalar(
+      0x263E,
+      "LAST QUARTER MOON",
+      "So",
+      "Miscellaneous Symbols",
+      "1.1",
+      "N",
     ),
-    scalarRecord(
-      scalar(
-        0x25D1,
-        "CIRCLE WITH RIGHT HALF BLACK",
-        "So",
-        "Geometric Shapes",
-        "1.1",
-        "A",
-      ),
-      MOTIF_INVENTORY_REASON,
+    ICON_INVENTORY_REASON,
+    ["semantic-overload"],
+  ),
+  scalarRecord(
+    scalar(
+      0x00D7,
+      "MULTIPLICATION SIGN",
+      "Sm",
+      "Latin-1 Supplement",
+      "1.1",
+      "A",
     ),
-    scalarRecord(
-      scalar(
-        0x25D2,
-        "CIRCLE WITH LOWER HALF BLACK",
-        "So",
-        "Geometric Shapes",
-        "1.1",
-        "N",
-      ),
-      MOTIF_INVENTORY_REASON,
+    ICON_INVENTORY_REASON,
+    ["semantic-overload"],
+  ),
+  scalarRecord(
+    scalar(
+      0x25D0,
+      "CIRCLE WITH LEFT HALF BLACK",
+      "So",
+      "Geometric Shapes",
+      "1.1",
+      "A",
     ),
-    scalarRecord(
-      scalar(
-        0x25EE,
-        "UP-POINTING TRIANGLE WITH RIGHT HALF BLACK",
-        "So",
-        "Geometric Shapes",
-        "1.1",
-        "N",
-      ),
-      MOTIF_INVENTORY_REASON,
-      ["brand-reserved"],
+    MOTIF_INVENTORY_REASON,
+  ),
+  scalarRecord(
+    scalar(
+      0x25D3,
+      "CIRCLE WITH UPPER HALF BLACK",
+      "So",
+      "Geometric Shapes",
+      "1.1",
+      "N",
     ),
-    scalarRecord(
-      scalar(
-        0x29E9,
-        "DOWN-POINTING TRIANGLE WITH RIGHT HALF BLACK",
-        "Sm",
-        "Miscellaneous Mathematical Symbols-B",
-        "3.2",
-        "N",
-      ),
-      MOTIF_INVENTORY_REASON,
-      ["brand-reserved", "mixed-block-family"],
+    MOTIF_INVENTORY_REASON,
+  ),
+  scalarRecord(
+    scalar(
+      0x25D1,
+      "CIRCLE WITH RIGHT HALF BLACK",
+      "So",
+      "Geometric Shapes",
+      "1.1",
+      "A",
     ),
-    scalarRecord(
-      scalar(
-        0x25ED,
-        "UP-POINTING TRIANGLE WITH LEFT HALF BLACK",
-        "So",
-        "Geometric Shapes",
-        "1.1",
-        "N",
-      ),
-      MOTIF_INVENTORY_REASON,
-      ["brand-reserved"],
+    MOTIF_INVENTORY_REASON,
+  ),
+  scalarRecord(
+    scalar(
+      0x25D2,
+      "CIRCLE WITH LOWER HALF BLACK",
+      "So",
+      "Geometric Shapes",
+      "1.1",
+      "N",
     ),
-    scalarRecord(
-      scalar(
-        0x29E8,
-        "DOWN-POINTING TRIANGLE WITH LEFT HALF BLACK",
-        "Sm",
-        "Miscellaneous Mathematical Symbols-B",
-        "3.2",
-        "N",
-      ),
-      MOTIF_INVENTORY_REASON,
-      ["brand-reserved", "mixed-block-family"],
+    MOTIF_INVENTORY_REASON,
+  ),
+  scalarRecord(
+    scalar(
+      0x25EE,
+      "UP-POINTING TRIANGLE WITH RIGHT HALF BLACK",
+      "So",
+      "Geometric Shapes",
+      "1.1",
+      "N",
     ),
-    scalarRecord(
-      scalar(
-        0x25B2,
-        "BLACK UP-POINTING TRIANGLE",
-        "So",
-        "Geometric Shapes",
-        "1.1",
-        "A",
-      ),
-      TRIANGLE_INVENTORY_REASON,
+    MOTIF_INVENTORY_REASON,
+    ["brand-reserved"],
+  ),
+  scalarRecord(
+    scalar(
+      0x29E9,
+      "DOWN-POINTING TRIANGLE WITH RIGHT HALF BLACK",
+      "Sm",
+      "Miscellaneous Mathematical Symbols-B",
+      "3.2",
+      "N",
     ),
-    scalarRecord(
-      scalar(
-        0x25B6,
-        "BLACK RIGHT-POINTING TRIANGLE",
-        "So",
-        "Geometric Shapes",
-        "1.1",
-        "A",
-        ["Emoji", "Extended_Pictographic"],
-        ["text", "emoji"],
-      ),
-      TRIANGLE_INVENTORY_REASON,
-      ["variation-sensitive"],
+    MOTIF_INVENTORY_REASON,
+    ["brand-reserved", "mixed-block-family"],
+  ),
+  scalarRecord(
+    scalar(
+      0x25ED,
+      "UP-POINTING TRIANGLE WITH LEFT HALF BLACK",
+      "So",
+      "Geometric Shapes",
+      "1.1",
+      "N",
     ),
-    scalarRecord(
-      scalar(
-        0x25BC,
-        "BLACK DOWN-POINTING TRIANGLE",
-        "So",
-        "Geometric Shapes",
-        "1.1",
-        "A",
-      ),
-      TRIANGLE_INVENTORY_REASON,
+    MOTIF_INVENTORY_REASON,
+    ["brand-reserved"],
+  ),
+  scalarRecord(
+    scalar(
+      0x29E8,
+      "DOWN-POINTING TRIANGLE WITH LEFT HALF BLACK",
+      "Sm",
+      "Miscellaneous Mathematical Symbols-B",
+      "3.2",
+      "N",
     ),
-    scalarRecord(
-      scalar(
-        0x25C0,
-        "BLACK LEFT-POINTING TRIANGLE",
-        "So",
-        "Geometric Shapes",
-        "1.1",
-        "A",
-        ["Emoji", "Extended_Pictographic"],
-        ["text", "emoji"],
-      ),
-      TRIANGLE_INVENTORY_REASON,
-      ["variation-sensitive"],
+    MOTIF_INVENTORY_REASON,
+    ["brand-reserved", "mixed-block-family"],
+  ),
+  scalarRecord(
+    scalar(
+      0x25B2,
+      "BLACK UP-POINTING TRIANGLE",
+      "So",
+      "Geometric Shapes",
+      "1.1",
+      "A",
     ),
-    scalarRecord(
-      scalar(
-        0x25B3,
-        "WHITE UP-POINTING TRIANGLE",
-        "So",
-        "Geometric Shapes",
-        "1.1",
-        "A",
-      ),
-      TRIANGLE_INVENTORY_REASON,
+    TRIANGLE_INVENTORY_REASON,
+  ),
+  scalarRecord(
+    scalar(
+      0x25B6,
+      "BLACK RIGHT-POINTING TRIANGLE",
+      "So",
+      "Geometric Shapes",
+      "1.1",
+      "A",
+      ["Emoji", "Extended_Pictographic"],
+      ["text", "emoji"],
     ),
-    scalarRecord(
-      scalar(
-        0x25B7,
-        "WHITE RIGHT-POINTING TRIANGLE",
-        "Sm",
-        "Geometric Shapes",
-        "1.1",
-        "A",
-      ),
-      TRIANGLE_INVENTORY_REASON,
+    TRIANGLE_INVENTORY_REASON,
+    ["variation-sensitive"],
+  ),
+  scalarRecord(
+    scalar(
+      0x25BC,
+      "BLACK DOWN-POINTING TRIANGLE",
+      "So",
+      "Geometric Shapes",
+      "1.1",
+      "A",
     ),
-    scalarRecord(
-      scalar(
-        0x25BD,
-        "WHITE DOWN-POINTING TRIANGLE",
-        "So",
-        "Geometric Shapes",
-        "1.1",
-        "A",
-      ),
-      TRIANGLE_INVENTORY_REASON,
+    TRIANGLE_INVENTORY_REASON,
+  ),
+  scalarRecord(
+    scalar(
+      0x25C0,
+      "BLACK LEFT-POINTING TRIANGLE",
+      "So",
+      "Geometric Shapes",
+      "1.1",
+      "A",
+      ["Emoji", "Extended_Pictographic"],
+      ["text", "emoji"],
     ),
-    scalarRecord(
-      scalar(
-        0x25C1,
-        "WHITE LEFT-POINTING TRIANGLE",
-        "Sm",
-        "Geometric Shapes",
-        "1.1",
-        "A",
-      ),
-      TRIANGLE_INVENTORY_REASON,
+    TRIANGLE_INVENTORY_REASON,
+    ["variation-sensitive"],
+  ),
+  scalarRecord(
+    scalar(
+      0x25B3,
+      "WHITE UP-POINTING TRIANGLE",
+      "So",
+      "Geometric Shapes",
+      "1.1",
+      "A",
     ),
-    scalarRecord(
-      scalar(
-        0x25B4,
-        "BLACK UP-POINTING SMALL TRIANGLE",
-        "So",
-        "Geometric Shapes",
-        "1.1",
-        "N",
-      ),
-      TRIANGLE_INVENTORY_REASON,
+    TRIANGLE_INVENTORY_REASON,
+  ),
+  scalarRecord(
+    scalar(
+      0x25B7,
+      "WHITE RIGHT-POINTING TRIANGLE",
+      "Sm",
+      "Geometric Shapes",
+      "1.1",
+      "A",
     ),
-    scalarRecord(
-      scalar(
-        0x25B8,
-        "BLACK RIGHT-POINTING SMALL TRIANGLE",
-        "So",
-        "Geometric Shapes",
-        "1.1",
-        "N",
-      ),
-      TRIANGLE_INVENTORY_REASON,
+    TRIANGLE_INVENTORY_REASON,
+  ),
+  scalarRecord(
+    scalar(
+      0x25BD,
+      "WHITE DOWN-POINTING TRIANGLE",
+      "So",
+      "Geometric Shapes",
+      "1.1",
+      "A",
     ),
-    scalarRecord(
-      scalar(
-        0x25BE,
-        "BLACK DOWN-POINTING SMALL TRIANGLE",
-        "So",
-        "Geometric Shapes",
-        "1.1",
-        "N",
-      ),
-      TRIANGLE_INVENTORY_REASON,
+    TRIANGLE_INVENTORY_REASON,
+  ),
+  scalarRecord(
+    scalar(
+      0x25C1,
+      "WHITE LEFT-POINTING TRIANGLE",
+      "Sm",
+      "Geometric Shapes",
+      "1.1",
+      "A",
     ),
-    scalarRecord(
-      scalar(
-        0x25C2,
-        "BLACK LEFT-POINTING SMALL TRIANGLE",
-        "So",
-        "Geometric Shapes",
-        "1.1",
-        "N",
-      ),
-      TRIANGLE_INVENTORY_REASON,
+    TRIANGLE_INVENTORY_REASON,
+  ),
+  scalarRecord(
+    scalar(
+      0x25B4,
+      "BLACK UP-POINTING SMALL TRIANGLE",
+      "So",
+      "Geometric Shapes",
+      "1.1",
+      "N",
     ),
-    scalarRecord(
-      scalar(
-        0x25B5,
-        "WHITE UP-POINTING SMALL TRIANGLE",
-        "So",
-        "Geometric Shapes",
-        "1.1",
-        "N",
-      ),
-      TRIANGLE_INVENTORY_REASON,
-      ["font-fallback-risk"],
+    TRIANGLE_INVENTORY_REASON,
+  ),
+  scalarRecord(
+    scalar(
+      0x25B8,
+      "BLACK RIGHT-POINTING SMALL TRIANGLE",
+      "So",
+      "Geometric Shapes",
+      "1.1",
+      "N",
     ),
-    scalarRecord(
-      scalar(
-        0x25B9,
-        "WHITE RIGHT-POINTING SMALL TRIANGLE",
-        "So",
-        "Geometric Shapes",
-        "1.1",
-        "N",
-      ),
-      TRIANGLE_INVENTORY_REASON,
-      ["font-fallback-risk"],
+    TRIANGLE_INVENTORY_REASON,
+  ),
+  scalarRecord(
+    scalar(
+      0x25BE,
+      "BLACK DOWN-POINTING SMALL TRIANGLE",
+      "So",
+      "Geometric Shapes",
+      "1.1",
+      "N",
     ),
-    scalarRecord(
-      scalar(
-        0x25BF,
-        "WHITE DOWN-POINTING SMALL TRIANGLE",
-        "So",
-        "Geometric Shapes",
-        "1.1",
-        "N",
-      ),
-      TRIANGLE_INVENTORY_REASON,
-      ["font-fallback-risk"],
+    TRIANGLE_INVENTORY_REASON,
+  ),
+  scalarRecord(
+    scalar(
+      0x25C2,
+      "BLACK LEFT-POINTING SMALL TRIANGLE",
+      "So",
+      "Geometric Shapes",
+      "1.1",
+      "N",
     ),
-    scalarRecord(
-      scalar(
-        0x25C3,
-        "WHITE LEFT-POINTING SMALL TRIANGLE",
-        "So",
-        "Geometric Shapes",
-        "1.1",
-        "N",
-      ),
-      TRIANGLE_INVENTORY_REASON,
-      ["font-fallback-risk"],
+    TRIANGLE_INVENTORY_REASON,
+  ),
+  scalarRecord(
+    scalar(
+      0x25B5,
+      "WHITE UP-POINTING SMALL TRIANGLE",
+      "So",
+      "Geometric Shapes",
+      "1.1",
+      "N",
     ),
-    scalarRecord(
-      scalar(0x25CF, "BLACK CIRCLE", "So", "Geometric Shapes", "1.1", "A"),
-      SERIES_INVENTORY_REASON,
+    TRIANGLE_INVENTORY_REASON,
+    ["font-fallback-risk"],
+  ),
+  scalarRecord(
+    scalar(
+      0x25B9,
+      "WHITE RIGHT-POINTING SMALL TRIANGLE",
+      "So",
+      "Geometric Shapes",
+      "1.1",
+      "N",
     ),
-    scalarRecord(
-      scalar(0x25A0, "BLACK SQUARE", "So", "Geometric Shapes", "1.1", "A"),
-      SERIES_INVENTORY_REASON,
+    TRIANGLE_INVENTORY_REASON,
+    ["font-fallback-risk"],
+  ),
+  scalarRecord(
+    scalar(
+      0x25BF,
+      "WHITE DOWN-POINTING SMALL TRIANGLE",
+      "So",
+      "Geometric Shapes",
+      "1.1",
+      "N",
     ),
-    scalarRecord(
-      scalar(0x25C6, "BLACK DIAMOND", "So", "Geometric Shapes", "1.1", "A"),
-      SERIES_INVENTORY_REASON,
+    TRIANGLE_INVENTORY_REASON,
+    ["font-fallback-risk"],
+  ),
+  scalarRecord(
+    scalar(
+      0x25C3,
+      "WHITE LEFT-POINTING SMALL TRIANGLE",
+      "So",
+      "Geometric Shapes",
+      "1.1",
+      "N",
     ),
-    scalarRecord(
-      scalar(
-        0x2605,
-        "BLACK STAR",
-        "So",
-        "Miscellaneous Symbols",
-        "1.1",
-        "A",
-      ),
-      SERIES_INVENTORY_REASON,
+    TRIANGLE_INVENTORY_REASON,
+    ["font-fallback-risk"],
+  ),
+  scalarRecord(
+    scalar(0x25CF, "BLACK CIRCLE", "So", "Geometric Shapes", "1.1", "A"),
+    SERIES_INVENTORY_REASON,
+  ),
+  scalarRecord(
+    scalar(0x25A0, "BLACK SQUARE", "So", "Geometric Shapes", "1.1", "A"),
+    SERIES_INVENTORY_REASON,
+  ),
+  scalarRecord(
+    scalar(0x25C6, "BLACK DIAMOND", "So", "Geometric Shapes", "1.1", "A"),
+    SERIES_INVENTORY_REASON,
+  ),
+  scalarRecord(
+    scalar(
+      0x2605,
+      "BLACK STAR",
+      "So",
+      "Miscellaneous Symbols",
+      "1.1",
+      "A",
     ),
-    scalarRecord(
-      scalar(0x2588, "FULL BLOCK", "So", "Block Elements", "1.1", "A"),
-      SERIES_INVENTORY_REASON,
+    SERIES_INVENTORY_REASON,
+  ),
+  scalarRecord(
+    scalar(0x2588, "FULL BLOCK", "So", "Block Elements", "1.1", "A"),
+    SERIES_INVENTORY_REASON,
+  ),
+  scalarRecord(
+    scalar(0x2593, "DARK SHADE", "So", "Block Elements", "1.1", "A"),
+    SERIES_INVENTORY_REASON,
+  ),
+  scalarRecord(
+    scalar(0x2592, "MEDIUM SHADE", "So", "Block Elements", "1.1", "A"),
+    SERIES_INVENTORY_REASON,
+  ),
+  scalarRecord(
+    scalar(0x2591, "LIGHT SHADE", "So", "Block Elements", "1.1", "N"),
+    SERIES_INVENTORY_REASON,
+  ),
+  scalarRecord(
+    scalar(0x00B7, "MIDDLE DOT", "Po", "Latin-1 Supplement", "1.1", "A"),
+    STATUS_INVENTORY_REASON,
+    ["semantic-overload"],
+  ),
+  scalarRecord(
+    scalar(0x2715, "MULTIPLICATION X", "So", "Dingbats", "1.1", "N"),
+    STATUS_INVENTORY_REASON,
+    ["semantic-overload"],
+  ),
+  scalarRecord(
+    scalar(0x25C7, "WHITE DIAMOND", "So", "Geometric Shapes", "1.1", "A"),
+    STATUS_INVENTORY_REASON,
+    ["semantic-overload"],
+  ),
+  scalarRecord(
+    warningSign,
+    STATUS_INVENTORY_REASON,
+    ["variation-sensitive", "semantic-overload"],
+  ),
+  defineCanonicalGlyph({
+    kind: "variation-sequence",
+    scalars: [warningSign, variationSelector15],
+    officialLabel: "WARNING SIGN",
+    selectedVariation: "text",
+    atlas: selection(STATUS_INVENTORY_REASON, ["semantic-overload"]),
+  }),
+  defineCanonicalGlyph({
+    kind: "variation-sequence",
+    scalars: [warningSign, variationSelector16],
+    officialLabel: "WARNING SIGN",
+    selectedVariation: "emoji",
+    atlas: selection(STATUS_INVENTORY_REASON, ["semantic-overload"]),
+  }),
+  scalarRecord(
+    scalar(
+      0x2705,
+      "WHITE HEAVY CHECK MARK",
+      "So",
+      "Dingbats",
+      "6.0",
+      "W",
+      ["Emoji", "Emoji_Presentation", "Extended_Pictographic"],
+      ["text", "emoji"],
     ),
-    scalarRecord(
-      scalar(0x2593, "DARK SHADE", "So", "Block Elements", "1.1", "A"),
-      SERIES_INVENTORY_REASON,
+    STATUS_INVENTORY_REASON,
+    ["variation-sensitive", "semantic-overload"],
+  ),
+  scalarRecord(
+    scalar(0x2190, "LEFTWARDS ARROW", "Sm", "Arrows", "1.1", "A"),
+    DIRECTION_ADJACENCY_REASON,
+    ["semantic-overload"],
+  ),
+  scalarRecord(
+    scalar(0x2191, "UPWARDS ARROW", "Sm", "Arrows", "1.1", "A"),
+    DIRECTION_ADJACENCY_REASON,
+    ["semantic-overload"],
+  ),
+  scalarRecord(
+    scalar(0x2193, "DOWNWARDS ARROW", "Sm", "Arrows", "1.1", "A"),
+    DIRECTION_ADJACENCY_REASON,
+    ["semantic-overload"],
+  ),
+  scalarRecord(
+    scalar(
+      0x2194,
+      "LEFT RIGHT ARROW",
+      "Sm",
+      "Arrows",
+      "1.1",
+      "A",
+      ["Emoji", "Extended_Pictographic"],
+      ["text", "emoji"],
     ),
-    scalarRecord(
-      scalar(0x2592, "MEDIUM SHADE", "So", "Block Elements", "1.1", "A"),
-      SERIES_INVENTORY_REASON,
+    DIRECTION_ADJACENCY_REASON,
+    ["variation-sensitive", "semantic-overload"],
+  ),
+  scalarRecord(
+    scalar(
+      0x2195,
+      "UP DOWN ARROW",
+      "So",
+      "Arrows",
+      "1.1",
+      "A",
+      ["Emoji", "Extended_Pictographic"],
+      ["text", "emoji"],
     ),
-    scalarRecord(
-      scalar(0x2591, "LIGHT SHADE", "So", "Block Elements", "1.1", "N"),
-      SERIES_INVENTORY_REASON,
+    DIRECTION_ADJACENCY_REASON,
+    ["variation-sensitive", "semantic-overload"],
+  ),
+  scalarRecord(
+    scalar(
+      0x2197,
+      "NORTH EAST ARROW",
+      "So",
+      "Arrows",
+      "1.1",
+      "A",
+      ["Emoji", "Extended_Pictographic"],
+      ["text", "emoji"],
     ),
-    scalarRecord(
-      scalar(0x00B7, "MIDDLE DOT", "Po", "Latin-1 Supplement", "1.1", "A"),
-      STATUS_INVENTORY_REASON,
-      ["semantic-overload"],
+    DIRECTION_ADJACENCY_REASON,
+    ["variation-sensitive", "semantic-overload"],
+  ),
+  scalarRecord(
+    scalar(
+      0x2198,
+      "SOUTH EAST ARROW",
+      "So",
+      "Arrows",
+      "1.1",
+      "A",
+      ["Emoji", "Extended_Pictographic"],
+      ["text", "emoji"],
     ),
-    scalarRecord(
-      scalar(0x2715, "MULTIPLICATION X", "So", "Dingbats", "1.1", "N"),
-      STATUS_INVENTORY_REASON,
-      ["semantic-overload"],
+    DIRECTION_ADJACENCY_REASON,
+    ["variation-sensitive", "semantic-overload"],
+  ),
+  defineCanonicalGlyph({
+    kind: "emoji-sequence",
+    scalars: [digitOne, variationSelector16, combiningKeycap],
+    officialLabel: "keycap: 1",
+    sequenceType: "Emoji_Keycap_Sequence",
+    emojiVersion: "E0.6",
+    atlas: selection(SEQUENCE_REASON, ["semantic-overload"]),
+  }),
+  defineCanonicalGlyph({
+    kind: "emoji-zwj-sequence",
+    scalars: [woman, zeroWidthJoiner, personalComputer],
+    officialLabel: "woman technologist",
+    sequenceType: "RGI_Emoji_ZWJ_Sequence",
+    emojiVersion: "E4.0",
+    atlas: selection(SEQUENCE_REASON, ["semantic-overload"]),
+  }),
+  scalarRecord(
+    informationSource,
+    STATUS_INVENTORY_REASON,
+    ["variation-sensitive", "semantic-overload"],
+  ),
+  defineCanonicalGlyph({
+    kind: "variation-sequence",
+    scalars: [informationSource, variationSelector15],
+    officialLabel: "INFORMATION SOURCE",
+    selectedVariation: "text",
+    atlas: selection(STATUS_INVENTORY_REASON, ["semantic-overload"]),
+  }),
+  defineCanonicalGlyph({
+    kind: "variation-sequence",
+    scalars: [informationSource, variationSelector16],
+    officialLabel: "INFORMATION SOURCE",
+    selectedVariation: "emoji",
+    atlas: selection(STATUS_INVENTORY_REASON, ["semantic-overload"]),
+  }),
+]);
+
+/** Complete every selected scalar's standardized presentation pair, preserving supplied records. */
+export function completeGlyphPresentations(
+  records: readonly CanonicalGlyphRecord[],
+): readonly CanonicalGlyphRecord[] {
+  return Object.freeze([
+    ...records,
+    ...records.flatMap((record) =>
+      record.kind === "scalar"
+        ? record.presentation.standardizedVariations.flatMap((style) => {
+          const selector = style === "text"
+            ? variationSelector15
+            : variationSelector16;
+          const base = record.scalars[0]!;
+          if (
+            records.some(({ id }) =>
+              id === glyphSequenceId(base.codePoint, selector.codePoint)
+            )
+          ) return [];
+          return [defineCanonicalGlyph({
+            kind: "variation-sequence",
+            scalars: [base, selector],
+            officialLabel: record.officialLabel,
+            selectedVariation: style,
+            atlas: record.atlas,
+          })];
+        })
+        : []
     ),
-    scalarRecord(
-      scalar(0x25C7, "WHITE DIAMOND", "So", "Geometric Shapes", "1.1", "A"),
-      STATUS_INVENTORY_REASON,
-      ["semantic-overload"],
-    ),
-    scalarRecord(
-      warningSign,
-      STATUS_INVENTORY_REASON,
-      ["variation-sensitive", "semantic-overload"],
-    ),
-    defineCanonicalGlyph({
-      kind: "variation-sequence",
-      scalars: [warningSign, variationSelector15],
-      officialLabel: "WARNING SIGN",
-      selectedVariation: "text",
-      atlas: selection(STATUS_INVENTORY_REASON, ["semantic-overload"]),
-    }),
-    defineCanonicalGlyph({
-      kind: "variation-sequence",
-      scalars: [warningSign, variationSelector16],
-      officialLabel: "WARNING SIGN",
-      selectedVariation: "emoji",
-      atlas: selection(STATUS_INVENTORY_REASON, ["semantic-overload"]),
-    }),
-    scalarRecord(
-      scalar(
-        0x2705,
-        "WHITE HEAVY CHECK MARK",
-        "So",
-        "Dingbats",
-        "6.0",
-        "W",
-        ["Emoji", "Emoji_Presentation", "Extended_Pictographic"],
-        ["text", "emoji"],
-      ),
-      STATUS_INVENTORY_REASON,
-      ["variation-sensitive", "semantic-overload"],
-    ),
-    scalarRecord(
-      scalar(0x2190, "LEFTWARDS ARROW", "Sm", "Arrows", "1.1", "A"),
-      DIRECTION_ADJACENCY_REASON,
-      ["semantic-overload"],
-    ),
-    scalarRecord(
-      scalar(0x2191, "UPWARDS ARROW", "Sm", "Arrows", "1.1", "A"),
-      DIRECTION_ADJACENCY_REASON,
-      ["semantic-overload"],
-    ),
-    scalarRecord(
-      scalar(0x2193, "DOWNWARDS ARROW", "Sm", "Arrows", "1.1", "A"),
-      DIRECTION_ADJACENCY_REASON,
-      ["semantic-overload"],
-    ),
-    scalarRecord(
-      scalar(
-        0x2194,
-        "LEFT RIGHT ARROW",
-        "Sm",
-        "Arrows",
-        "1.1",
-        "A",
-        ["Emoji", "Extended_Pictographic"],
-        ["text", "emoji"],
-      ),
-      DIRECTION_ADJACENCY_REASON,
-      ["variation-sensitive", "semantic-overload"],
-    ),
-    scalarRecord(
-      scalar(
-        0x2195,
-        "UP DOWN ARROW",
-        "So",
-        "Arrows",
-        "1.1",
-        "A",
-        ["Emoji", "Extended_Pictographic"],
-        ["text", "emoji"],
-      ),
-      DIRECTION_ADJACENCY_REASON,
-      ["variation-sensitive", "semantic-overload"],
-    ),
-    scalarRecord(
-      scalar(
-        0x2197,
-        "NORTH EAST ARROW",
-        "So",
-        "Arrows",
-        "1.1",
-        "A",
-        ["Emoji", "Extended_Pictographic"],
-        ["text", "emoji"],
-      ),
-      DIRECTION_ADJACENCY_REASON,
-      ["variation-sensitive", "semantic-overload"],
-    ),
-    scalarRecord(
-      scalar(
-        0x2198,
-        "SOUTH EAST ARROW",
-        "So",
-        "Arrows",
-        "1.1",
-        "A",
-        ["Emoji", "Extended_Pictographic"],
-        ["text", "emoji"],
-      ),
-      DIRECTION_ADJACENCY_REASON,
-      ["variation-sensitive", "semantic-overload"],
-    ),
-    defineCanonicalGlyph({
-      kind: "emoji-sequence",
-      scalars: [digitOne, variationSelector16, combiningKeycap],
-      officialLabel: "keycap: 1",
-      sequenceType: "Emoji_Keycap_Sequence",
-      emojiVersion: "E0.6",
-      atlas: selection(SEQUENCE_REASON, ["semantic-overload"]),
-    }),
-    defineCanonicalGlyph({
-      kind: "emoji-zwj-sequence",
-      scalars: [woman, zeroWidthJoiner, personalComputer],
-      officialLabel: "woman technologist",
-      sequenceType: "RGI_Emoji_ZWJ_Sequence",
-      emojiVersion: "E4.0",
-      atlas: selection(SEQUENCE_REASON, ["semantic-overload"]),
-    }),
-    scalarRecord(
-      informationSource,
-      STATUS_INVENTORY_REASON,
-      ["variation-sensitive", "semantic-overload"],
-    ),
-    defineCanonicalGlyph({
-      kind: "variation-sequence",
-      scalars: [informationSource, variationSelector15],
-      officialLabel: "INFORMATION SOURCE",
-      selectedVariation: "text",
-      atlas: selection(STATUS_INVENTORY_REASON, ["semantic-overload"]),
-    }),
-    defineCanonicalGlyph({
-      kind: "variation-sequence",
-      scalars: [informationSource, variationSelector16],
-      officialLabel: "INFORMATION SOURCE",
-      selectedVariation: "emoji",
-      atlas: selection(STATUS_INVENTORY_REASON, ["semantic-overload"]),
-    }),
   ]);
+}
+
+/** Complete canonical population with exact standardized presentation identities. */
+export const glyphAtlasCanonicalRecords: readonly CanonicalGlyphRecord[] =
+  completeGlyphPresentations(canonicalRecords);
 
 /** Generic category vocabulary for curated Discern aliases. */
 export const DISCERN_GLYPH_CATEGORIES = Object.freeze(
@@ -1413,6 +1559,744 @@ function terminal(
 
 /** Complete private curated Discern glyph collection. */
 export const discernGlyphAliases: readonly DiscernGlyphAlias[] = Object.freeze([
+  defineDiscernGlyphAlias({
+    "name": "theme-light",
+    "discoveryTitle": "Light appearance",
+    "canonicalId": glyphSequenceId(0x2600, 0xFE0E),
+    "searchTerms": [
+      "sun",
+      "light",
+      "day",
+      "theme",
+    ],
+    "category": "appearance",
+    "publication": "candidate",
+    "recommendation": {
+      "state": "recommended",
+      "rationale": "Switch to a light appearance.",
+    },
+    "recommendedUses": [
+      "Switch to a light appearance",
+    ],
+    "discouragedUses": [
+      "Weather or brightness level without a label",
+    ],
+    "surfaces": {
+      "browser": {
+        "posture": "supported",
+        "guidance": "Pair this mark with a localized action or state label.",
+      },
+      "terminal": {
+        "posture": "supported",
+        "geometry": "one-cell",
+        "guidance":
+          "Use with a visible label under narrow-A measurement; measure the chosen repertoire before layout.",
+        "asciiFallback": {
+          "text": "L",
+          "fidelity": "semantic",
+          "guidance":
+            "The L names the light destination when paired with the control label.",
+        },
+      },
+    },
+  }),
+  defineDiscernGlyphAlias({
+    "name": "favorite-selected",
+    "discoveryTitle": "Favourite selected",
+    "canonicalId": glyphSequenceId(0x2605),
+    "searchTerms": [
+      "favorite",
+      "favourite",
+      "star",
+      "saved",
+      "bookmark",
+    ],
+    "category": "selection",
+    "publication": "candidate",
+    "recommendation": {
+      "state": "recommended",
+      "rationale": "An item marked as a favourite.",
+    },
+    "recommendedUses": [
+      "An item marked as a favourite",
+    ],
+    "discouragedUses": [
+      "Rating values or completed workflow status",
+    ],
+    "surfaces": {
+      "browser": {
+        "posture": "supported",
+        "guidance": "Pair this mark with a localized action or state label.",
+      },
+      "terminal": {
+        "posture": "supported",
+        "geometry": "one-cell",
+        "guidance":
+          "Use with a visible label under narrow-A measurement; measure the chosen repertoire before layout.",
+        "asciiFallback": {
+          "text": "*",
+          "fidelity": "semantic",
+          "guidance":
+            "The star marks a favourite only beside wording or a native pressed state.",
+        },
+      },
+    },
+  }),
+  defineDiscernGlyphAlias({
+    "name": "favorite-unselected",
+    "discoveryTitle": "Favourite unselected",
+    "canonicalId": glyphSequenceId(0x2606),
+    "searchTerms": [
+      "favorite",
+      "favourite",
+      "star",
+      "unsaved",
+      "bookmark",
+    ],
+    "category": "selection",
+    "publication": "candidate",
+    "recommendation": {
+      "state": "recommended",
+      "rationale": "An item that can be added to favourites.",
+    },
+    "recommendedUses": [
+      "An item that can be added to favourites",
+    ],
+    "discouragedUses": [
+      "Rating values or selected state",
+    ],
+    "surfaces": {
+      "browser": {
+        "posture": "supported",
+        "guidance": "Pair this mark with a localized action or state label.",
+      },
+      "terminal": {
+        "posture": "supported",
+        "geometry": "one-cell",
+        "guidance":
+          "Use with a visible label under narrow-A measurement; measure the chosen repertoire before layout.",
+        "asciiFallback": {
+          "text": "-",
+          "fidelity": "approximation",
+          "guidance":
+            "The dash represents an unmarked favourite only within a labelled binary pair.",
+        },
+      },
+    },
+  }),
+  defineDiscernGlyphAlias({
+    "name": "status-error",
+    "discoveryTitle": "Error",
+    "canonicalId": glyphSequenceId(0x2715),
+    "searchTerms": [
+      "error",
+      "failed",
+      "failure",
+      "invalid",
+    ],
+    "category": "status",
+    "publication": "candidate",
+    "recommendation": {
+      "state": "recommended",
+      "rationale": "A failed operation with an explanatory message.",
+    },
+    "recommendedUses": [
+      "A failed operation with an explanatory message",
+    ],
+    "discouragedUses": [
+      "Dismiss actions or unselected options",
+    ],
+    "surfaces": {
+      "browser": {
+        "posture": "supported",
+        "guidance": "Pair this mark with a localized action or state label.",
+      },
+      "terminal": {
+        "posture": "supported",
+        "geometry": "one-cell",
+        "guidance":
+          "Use with a visible label under narrow-A measurement; measure the chosen repertoire before layout.",
+        "asciiFallback": {
+          "text": "x",
+          "fidelity": "semantic",
+          "guidance":
+            "A cross preserves failure when an adjacent status word carries the meaning.",
+        },
+      },
+    },
+  }),
+  defineDiscernGlyphAlias({
+    "name": "status-pending",
+    "discoveryTitle": "Pending",
+    "canonicalId": glyphSequenceId(0xB7),
+    "searchTerms": [
+      "pending",
+      "waiting",
+      "queued",
+      "idle",
+    ],
+    "category": "status",
+    "publication": "candidate",
+    "recommendation": {
+      "state": "recommended",
+      "rationale": "A queued step with visible pending wording.",
+    },
+    "recommendedUses": [
+      "A queued step with visible pending wording",
+    ],
+    "discouragedUses": [
+      "Progress amount or animated working state",
+    ],
+    "surfaces": {
+      "browser": {
+        "posture": "supported",
+        "guidance": "Pair this mark with a localized action or state label.",
+      },
+      "terminal": {
+        "posture": "supported",
+        "geometry": "one-cell",
+        "guidance":
+          "Use with a visible label under narrow-A measurement; measure the chosen repertoire before layout.",
+        "asciiFallback": {
+          "text": ".",
+          "fidelity": "approximation",
+          "guidance":
+            "A dot is a quiet placeholder; the pending label carries the state.",
+        },
+      },
+    },
+  }),
+  defineDiscernGlyphAlias({
+    "name": "add",
+    "discoveryTitle": "Add",
+    "canonicalId": glyphSequenceId(0x2B),
+    "searchTerms": [
+      "add",
+      "new",
+      "create",
+      "plus",
+      "insert",
+    ],
+    "category": "action",
+    "publication": "candidate",
+    "recommendation": {
+      "state": "recommended",
+      "rationale": "Create an item or add an entry.",
+    },
+    "recommendedUses": [
+      "Create an item or add an entry",
+    ],
+    "discouragedUses": [
+      "Positive results without context",
+    ],
+    "surfaces": {
+      "browser": {
+        "posture": "supported",
+        "guidance": "Pair this mark with a localized action or state label.",
+      },
+      "terminal": {
+        "posture": "supported",
+        "geometry": "one-cell",
+        "guidance":
+          "Use with a visible label under narrow-A measurement; measure the chosen repertoire before layout.",
+        "asciiFallback": {
+          "text": "+",
+          "fidelity": "semantic",
+          "guidance": "The plus sign is unchanged in ASCII.",
+        },
+      },
+    },
+  }),
+  defineDiscernGlyphAlias({
+    "name": "remove",
+    "discoveryTitle": "Remove",
+    "canonicalId": glyphSequenceId(0x2212),
+    "searchTerms": [
+      "remove",
+      "minus",
+      "subtract",
+      "delete",
+    ],
+    "category": "action",
+    "publication": "candidate",
+    "recommendation": {
+      "state": "recommended",
+      "rationale": "Remove an entry from a collection.",
+    },
+    "recommendedUses": [
+      "Remove an entry from a collection",
+    ],
+    "discouragedUses": [
+      "Destructive deletion without a clear action label",
+    ],
+    "surfaces": {
+      "browser": {
+        "posture": "supported",
+        "guidance": "Pair this mark with a localized action or state label.",
+      },
+      "terminal": {
+        "posture": "supported",
+        "geometry": "one-cell",
+        "guidance":
+          "Use with a visible label under narrow-A measurement; measure the chosen repertoire before layout.",
+        "asciiFallback": {
+          "text": "-",
+          "fidelity": "semantic",
+          "guidance":
+            "The hyphen preserves subtraction in a labelled remove control.",
+        },
+      },
+    },
+  }),
+  defineDiscernGlyphAlias({
+    "name": "selection-unselected",
+    "discoveryTitle": "Unselected",
+    "canonicalId": glyphSequenceId(0x2610),
+    "searchTerms": [
+      "checkbox",
+      "unselected",
+      "unchecked",
+      "empty",
+    ],
+    "category": "selection",
+    "publication": "candidate",
+    "recommendation": {
+      "state": "recommended",
+      "rationale": "An unselected option with an explicit state label.",
+    },
+    "recommendedUses": [
+      "An unselected option with an explicit state label",
+    ],
+    "discouragedUses": [
+      "Replacing native checkbox semantics in a browser",
+    ],
+    "surfaces": {
+      "browser": {
+        "posture": "supported",
+        "guidance": "Pair this mark with a localized action or state label.",
+      },
+      "terminal": {
+        "posture": "supported",
+        "geometry": "width-aware",
+        "guidance":
+          "Use with a visible label under narrow-A measurement; measure the chosen repertoire before layout.",
+        "asciiFallback": {
+          "text": "[ ]",
+          "fidelity": "semantic",
+          "guidance":
+            "The empty brackets preserve an unchecked box at three terminal cells.",
+        },
+      },
+    },
+  }),
+  defineDiscernGlyphAlias({
+    "name": "selection-mixed",
+    "discoveryTitle": "Mixed selection",
+    "canonicalId": glyphSequenceId(0x2212),
+    "searchTerms": [
+      "mixed",
+      "indeterminate",
+      "partial",
+      "checkbox",
+    ],
+    "category": "selection",
+    "publication": "candidate",
+    "recommendation": {
+      "state": "recommended",
+      "rationale": "A group with a mixture of selected and unselected items.",
+    },
+    "recommendedUses": [
+      "A group with a mixture of selected and unselected items",
+    ],
+    "discouragedUses": [
+      "A fully unselected group",
+    ],
+    "surfaces": {
+      "browser": {
+        "posture": "supported",
+        "guidance": "Pair this mark with a localized action or state label.",
+      },
+      "terminal": {
+        "posture": "supported",
+        "geometry": "one-cell",
+        "guidance":
+          "Use with a visible label under narrow-A measurement; measure the chosen repertoire before layout.",
+        "asciiFallback": {
+          "text": "-",
+          "fidelity": "semantic",
+          "guidance":
+            "The dash represents mixed selection only inside a labelled selection control.",
+        },
+      },
+    },
+  }),
+  defineDiscernGlyphAlias({
+    "name": "more",
+    "discoveryTitle": "More actions",
+    "canonicalId": glyphSequenceId(0x22EF),
+    "searchTerms": [
+      "more",
+      "ellipsis",
+      "overflow",
+      "options",
+    ],
+    "category": "action",
+    "publication": "candidate",
+    "recommendation": {
+      "state": "recommended",
+      "rationale": "Open additional actions for a named item.",
+    },
+    "recommendedUses": [
+      "Open additional actions for a named item",
+    ],
+    "discouragedUses": [
+      "Text truncation or busy status",
+    ],
+    "surfaces": {
+      "browser": {
+        "posture": "supported",
+        "guidance": "Pair this mark with a localized action or state label.",
+      },
+      "terminal": {
+        "posture": "supported",
+        "geometry": "width-aware",
+        "guidance":
+          "Use with a visible label under narrow-A measurement; measure the chosen repertoire before layout.",
+        "asciiFallback": {
+          "text": "...",
+          "fidelity": "semantic",
+          "guidance":
+            "Three periods preserve an ellipsis while occupying three cells.",
+        },
+      },
+    },
+  }),
+  defineDiscernGlyphAlias({
+    "name": "menu",
+    "discoveryTitle": "Menu",
+    "canonicalId": glyphSequenceId(0x2261),
+    "searchTerms": [
+      "menu",
+      "navigation",
+      "hamburger",
+      "sections",
+    ],
+    "category": "action",
+    "publication": "candidate",
+    "recommendation": {
+      "state": "recommended",
+      "rationale": "Open a labelled navigation menu.",
+    },
+    "recommendedUses": [
+      "Open a labelled navigation menu",
+    ],
+    "discouragedUses": [
+      "Mathematical equivalence in technical prose",
+    ],
+    "surfaces": {
+      "browser": {
+        "posture": "caution",
+        "guidance":
+          "Inspect the selected font at interface size; pair this mark with a localized action or state label.",
+      },
+      "terminal": {
+        "posture": "supported",
+        "geometry": "one-cell",
+        "guidance":
+          "Use with a visible label under narrow-A measurement; measure the chosen repertoire before layout.",
+        "asciiFallback": {
+          "text": "=",
+          "fidelity": "approximation",
+          "guidance":
+            "An equals sign suggests stacked lines; keep the menu label visible.",
+        },
+      },
+    },
+  }),
+  defineDiscernGlyphAlias({
+    "name": "undo",
+    "discoveryTitle": "Undo",
+    "canonicalId": glyphSequenceId(0x21B6),
+    "searchTerms": [
+      "undo",
+      "revert",
+      "back",
+      "history",
+    ],
+    "category": "action",
+    "publication": "candidate",
+    "recommendation": {
+      "state": "recommended",
+      "rationale": "Undo the previous edit.",
+    },
+    "recommendedUses": [
+      "Undo the previous edit",
+    ],
+    "discouragedUses": [
+      "Back navigation or counterclockwise rotation without context",
+    ],
+    "surfaces": {
+      "browser": {
+        "posture": "supported",
+        "guidance": "Pair this mark with a localized action or state label.",
+      },
+      "terminal": {
+        "posture": "supported",
+        "geometry": "width-aware",
+        "guidance":
+          "Use with a visible label under narrow-A measurement; measure the chosen repertoire before layout.",
+        "asciiFallback": {
+          "text": "undo",
+          "fidelity": "semantic",
+          "guidance": "The word preserves the action at four terminal cells.",
+        },
+      },
+    },
+  }),
+  defineDiscernGlyphAlias({
+    "name": "redo",
+    "discoveryTitle": "Redo",
+    "canonicalId": glyphSequenceId(0x21B7),
+    "searchTerms": [
+      "redo",
+      "repeat",
+      "forward",
+      "history",
+    ],
+    "category": "action",
+    "publication": "candidate",
+    "recommendation": {
+      "state": "recommended",
+      "rationale": "Redo an undone edit.",
+    },
+    "recommendedUses": [
+      "Redo an undone edit",
+    ],
+    "discouragedUses": [
+      "Forward navigation or clockwise rotation without context",
+    ],
+    "surfaces": {
+      "browser": {
+        "posture": "supported",
+        "guidance": "Pair this mark with a localized action or state label.",
+      },
+      "terminal": {
+        "posture": "supported",
+        "geometry": "width-aware",
+        "guidance":
+          "Use with a visible label under narrow-A measurement; measure the chosen repertoire before layout.",
+        "asciiFallback": {
+          "text": "redo",
+          "fidelity": "semantic",
+          "guidance": "The word preserves the action at four terminal cells.",
+        },
+      },
+    },
+  }),
+  defineDiscernGlyphAlias({
+    "name": "return",
+    "discoveryTitle": "Return",
+    "canonicalId": glyphSequenceId(0x21B5),
+    "searchTerms": [
+      "return",
+      "enter",
+      "submit",
+      "newline",
+    ],
+    "category": "direction",
+    "publication": "candidate",
+    "recommendation": {
+      "state": "recommended",
+      "rationale": "A labelled Return-key hint or explicit line return.",
+    },
+    "recommendedUses": [
+      "A labelled Return-key hint or explicit line return",
+    ],
+    "discouragedUses": [
+      "Automatic submit semantics without a labelled control",
+    ],
+    "surfaces": {
+      "browser": {
+        "posture": "supported",
+        "guidance": "Pair this mark with a localized action or state label.",
+      },
+      "terminal": {
+        "posture": "supported",
+        "geometry": "width-aware",
+        "guidance":
+          "Use with a visible label under narrow-A measurement; measure the chosen repertoire before layout.",
+        "asciiFallback": {
+          "text": "enter",
+          "fidelity": "semantic",
+          "guidance":
+            "The word names the key or action and requires five terminal cells.",
+        },
+      },
+    },
+  }),
+  defineDiscernGlyphAlias({
+    "name": "external-link",
+    "discoveryTitle": "External link",
+    "canonicalId": glyphSequenceId(0x2197, 0xFE0E),
+    "searchTerms": [
+      "external",
+      "outbound",
+      "link",
+      "open",
+      "new window",
+    ],
+    "category": "direction",
+    "publication": "candidate",
+    "recommendation": {
+      "state": "recommended",
+      "rationale": "A link with an explicitly described external destination.",
+    },
+    "recommendedUses": [
+      "A link with an explicitly described external destination",
+    ],
+    "discouragedUses": [
+      "Automatically promising a new tab or window",
+    ],
+    "surfaces": {
+      "browser": {
+        "posture": "supported",
+        "guidance": "Pair this mark with a localized action or state label.",
+      },
+      "terminal": {
+        "posture": "supported",
+        "geometry": "width-aware",
+        "guidance":
+          "Use with a visible label under narrow-A measurement; measure the chosen repertoire before layout.",
+        "asciiFallback": {
+          "text": "->",
+          "fidelity": "approximation",
+          "guidance":
+            "The arrow suggests an outgoing destination; the link wording describes its behaviour.",
+        },
+      },
+    },
+  }),
+  defineDiscernGlyphAlias({
+    "name": "copy",
+    "discoveryTitle": "Copy",
+    "canonicalId": glyphSequenceId(0x29C9),
+    "searchTerms": [
+      "copy",
+      "clipboard",
+      "duplicate",
+    ],
+    "category": "action",
+    "publication": "candidate",
+    "recommendation": {
+      "state": "recommended",
+      "rationale": "Copy a labelled value to the clipboard.",
+    },
+    "recommendedUses": [
+      "Copy a labelled value to the clipboard",
+    ],
+    "discouragedUses": [
+      "Indicating successful copying before the effect completes",
+    ],
+    "surfaces": {
+      "browser": {
+        "posture": "caution",
+        "guidance":
+          "Inspect the selected font at interface size; pair this mark with a localized action or state label.",
+      },
+      "terminal": {
+        "posture": "supported",
+        "geometry": "width-aware",
+        "guidance":
+          "Use with a visible label under narrow-A measurement; measure the chosen repertoire before layout.",
+        "asciiFallback": {
+          "text": "copy",
+          "fidelity": "semantic",
+          "guidance": "The word preserves the action at four terminal cells.",
+        },
+      },
+    },
+  }),
+  defineDiscernGlyphAlias({
+    "name": "refresh",
+    "discoveryTitle": "Refresh",
+    "canonicalId": glyphSequenceId(0x21BB),
+    "searchTerms": [
+      "refresh",
+      "reload",
+      "retry",
+      "update",
+    ],
+    "category": "action",
+    "publication": "candidate",
+    "recommendation": {
+      "state": "recommended",
+      "rationale": "Reload a view or retry a labelled operation.",
+    },
+    "recommendedUses": [
+      "Reload a view or retry a labelled operation",
+    ],
+    "discouragedUses": [
+      "An animated spinner or guaranteed synchronization",
+    ],
+    "surfaces": {
+      "browser": {
+        "posture": "supported",
+        "guidance": "Pair this mark with a localized action or state label.",
+      },
+      "terminal": {
+        "posture": "supported",
+        "geometry": "width-aware",
+        "guidance":
+          "Use with a visible label under narrow-A measurement; measure the chosen repertoire before layout.",
+        "asciiFallback": {
+          "text": "reload",
+          "fidelity": "semantic",
+          "guidance":
+            "The word names the requested action at six terminal cells.",
+        },
+      },
+    },
+  }),
+  defineDiscernGlyphAlias({
+    "name": "help",
+    "discoveryTitle": "Help",
+    "canonicalId": glyphSequenceId(0x3F),
+    "searchTerms": [
+      "help",
+      "question",
+      "explain",
+      "support",
+    ],
+    "category": "information",
+    "publication": "candidate",
+    "recommendation": {
+      "state": "recommended",
+      "rationale": "Open help about a named control or topic.",
+    },
+    "recommendedUses": [
+      "Open help about a named control or topic",
+    ],
+    "discouragedUses": [
+      "Error status or uncertainty about recorded data",
+    ],
+    "surfaces": {
+      "browser": {
+        "posture": "supported",
+        "guidance": "Pair this mark with a localized action or state label.",
+      },
+      "terminal": {
+        "posture": "supported",
+        "geometry": "one-cell",
+        "guidance":
+          "Use with a visible label under narrow-A measurement; measure the chosen repertoire before layout.",
+        "asciiFallback": {
+          "text": "?",
+          "fidelity": "semantic",
+          "guidance": "The question mark is unchanged in ASCII.",
+        },
+      },
+    },
+  }),
   defineDiscernGlyphAlias({
     name: "spark",
     discoveryTitle: "Spark",

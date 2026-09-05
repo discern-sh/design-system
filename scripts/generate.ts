@@ -1,3 +1,4 @@
+import { generateGlyphs } from "./glyphs.ts";
 import type { EmbeddedRuntimeAsset } from "../src/runtime-assets.ts";
 import {
   DIAGRAM_RELEASE_POSTURES,
@@ -72,6 +73,7 @@ export interface ComponentSource {
 }
 
 export interface GeneratedSources {
+  readonly glyphs: string;
   readonly registry: string;
   readonly componentMetadata: string;
   readonly componentAuthorEvals: string;
@@ -874,6 +876,7 @@ export async function generateSources(): Promise<GeneratedSources> {
   const diagrams = await generateDiagramKindSources();
   const charts = await generateChartKindSources();
   return {
+    glyphs: generateGlyphs(),
     registry: await generateComponentRegistry(),
     componentMetadata: await generateComponentMetadata(),
     componentAuthorEvals: await generateComponentAuthorEvals(),
@@ -908,6 +911,7 @@ export async function generateOutputPlan(): Promise<
   const diagramFamily = diagramKindFamily(DIAGRAM_KIND_ROOT);
   const diagramFiles = diagramFamily.generatedFiles;
   const outputs: GeneratedOutput[] = [
+    { target: new URL("glyphs.ts", GENERATED_ROOT), source: generated.glyphs },
     {
       target: new URL("component-registry.ts", GENERATED_ROOT),
       source: generated.registry,

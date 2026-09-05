@@ -6,6 +6,7 @@ import {
 } from "@std/assert";
 import { measureText } from "../../src/cli/text.ts";
 import {
+  completeGlyphPresentations,
   defineCanonicalGlyph,
   defineDiscernGlyphAlias,
   defineUnicodeScalarFacts,
@@ -15,12 +16,33 @@ import {
   glyphAtlasData,
   glyphSequenceId,
 } from "../../src/glyphs/atlas.ts";
+
 import {
   GlyphAtlasValidationError,
   type GlyphAtlasValidationInput,
   validateGlyphAtlas,
 } from "../../src/glyphs/validation.ts";
 
+Deno.test("standardized presentation pairs enroll from scalar facts and completion is idempotent", () => {
+  for (
+    const record of glyphAtlasData.canonical.filter(({ kind }) =>
+      kind === "scalar"
+    )
+  ) {
+    const completed = completeGlyphPresentations([record]);
+    assertEquals(
+      completed.length,
+      1 + record.presentation.standardizedVariations.length,
+    );
+    assertEquals(completeGlyphPresentations(completed), completed);
+    for (const variant of completed) {
+      assert(
+        glyphAtlasData.canonical.some(({ id }) => id === variant.id),
+        variant.id,
+      );
+    }
+  }
+});
 function captureValidationError(
   data: GlyphAtlasValidationInput,
 ): GlyphAtlasValidationError {
@@ -33,17 +55,8 @@ function captureValidationError(
   throw new Error("expected Glyph Atlas validation to fail");
 }
 
-Deno.test("the starter Atlas and curated collection satisfy their bounded foundation", () => {
+Deno.test("the complete Atlas and curated collection satisfy their foundation", () => {
   validateGlyphAtlas(glyphAtlasData);
-  assert(
-    glyphAtlasData.canonical.length >= 40 &&
-      glyphAtlasData.canonical.length <= 60,
-  );
-  assert(
-    glyphAtlasData.aliases.length >= 15 &&
-      glyphAtlasData.aliases.length <= 25,
-  );
-
   assert(
     glyphAtlasData.canonical.some((record) =>
       record.kind === "scalar" &&
@@ -106,17 +119,9 @@ Deno.test("the starter Atlas and curated collection satisfy their bounded founda
   );
 });
 
-Deno.test("owner-approved names, dispositions, and fallback policies stay bound", () => {
+Deno.test("contextual aliases preserve their distinct meanings and fallback policies", () => {
   const byName = new Map(
     glyphAtlasData.aliases.map((alias) => [alias.name, alias]),
-  );
-  assertEquals(glyphAtlasData.canonical.length, 57);
-  assertEquals(glyphAtlasData.aliases.length, 19);
-  assertEquals(
-    glyphAtlasData.aliases.filter(({ publication }) =>
-      publication === "candidate"
-    ).length,
-    14,
   );
   assertEquals(
     glyphAtlasData.aliases.filter(({ publication }) =>
@@ -446,11 +451,11 @@ Deno.test("future canonical and curated members enroll without another test case
   );
 });
 
-Deno.test("the stage remains private and does not absorb existing glyph authorities", async () => {
+Deno.test("the Atlas remains independently owned behind the curated package entrypoint", async () => {
   const manifest = JSON.parse(
     await Deno.readTextFile(new URL("../../deno.json", import.meta.url)),
   ) as { exports: Record<string, string> };
-  assertEquals(manifest.exports["./glyphs"], undefined);
+  assertEquals(manifest.exports["./glyphs"], "./src/glyphs/mod.ts");
 
   const atlasSource = await Deno.readTextFile(
     new URL("../../src/glyphs/atlas.ts", import.meta.url),

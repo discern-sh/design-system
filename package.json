@@ -15,7 +15,8 @@
     "./manifest": "./src/manifest.ts",
     "./react": "./src/react.ts",
     "./runtime": "./src/runtime.ts",
-    "./tokens": "./src/tokens/tokens.ts"
+    "./tokens": "./src/tokens/tokens.ts",
+    "./glyphs": "./src/glyphs/mod.ts"
   },
   "sideEffects": [
     "*.css"
