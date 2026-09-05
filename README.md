@@ -17,6 +17,7 @@ deno add jsr:@discern-sh/design-system
 | `@discern-sh/design-system/cli/interactive`         | Optional Deno terminal driver and typed interaction state machines                        |
 | `@discern-sh/design-system/cli/interactive/testing` | Deterministic fake terminal, semantic key/resize scripts, and frame assertions            |
 | `@discern-sh/design-system/cli/projection`          | Package-output decoding, browser projection, and explicit layout inspection               |
+| `@discern-sh/design-system/glyphs`                  | Typed Unicode glyphs, discovery metadata, and explicit ASCII resolution                   |
 | `@discern-sh/design-system/diagram`                 | Typed diagram specs, descriptions, kind Metadata, and portable standalone SVG             |
 | `@discern-sh/design-system/manifest`                | Framework-neutral manifest schema and the complete package ownership manifest             |
 | `@discern-sh/design-system/runtime`                 | Deterministic selected-runtime emitter                                                    |
@@ -147,6 +148,29 @@ export const componentAuthoringReference = componentAuthorGuide;
 The guide exists so a coding agent selects and authors Components from the package it is building against rather than from memory. [`skills/use-discern-design-system/`](skills/use-discern-design-system/) is the matching review copy in this repository: its script prints the installed package's guide whole or filtered by purpose, Group, or slug, and the playbook walks selection, the pinned-imagery check, public-contract authoring, and verification. Its eventual distribution is intentionally undecided and the skill is not part of the published package.
 
 The skill's exhaustive `evals/evals.json` and curated `evals/smoke.json` are generated from the same Metadata. Each Component's first use-when statement becomes a selection prompt, its first refusal becomes a refusal prompt, and selection cases attach the pinned Catalogue image of their first Web example. The smoke set keeps the routine behavioural review small while covering semantic selection, refusal, CLI exemption, browser behaviour, and image-informed judgment.
+
+## Unicode glyphs
+
+The React-free `./glyphs` entrypoint supplies a curated vocabulary for interface actions and states. Browse `glyphs`, narrow external input with `isGlyphName()`, retrieve a record with `getGlyph()`, or choose terminal text with `resolveGlyph()`. Exact sequences and contextual ASCII fallbacks come from one authored authority; the research Atlas remains Catalogue-visible behind its own private schema.
+
+```ts
+import {
+  getGlyph,
+  glyphs,
+  resolveGlyph,
+} from "@discern-sh/design-system/glyphs";
+
+const mark = getGlyph("warning").unicode; // Explicit text presentation: ⚠︎
+const actions = glyphs.filter((glyph) => glyph.category === "action");
+const terminal = resolveGlyph("copy", "ascii");
+if (terminal.available) {
+  console.log(terminal.text, terminal.columns); // copy, 4
+}
+```
+
+`GlyphName` follows the generated vocabulary. `glyphs` and its records are immutable. Unknown names raise a `TypeError`; names are not silently normalized. Resolution reports `available: false` when a requested substitute is unsupported—for example, `brand-mark` has no approved ASCII fallback. A fallback's width can differ from its Unicode form, so lay out the resolved text. Cell counts follow Discern's narrow-A terminal policy; they do not promise browser font advances or alternate wide-A terminal settings.
+
+Use the exact Unicode text inside an existing `Icon` or a decorative span beside a visible label. Supply accessible names from the action or content, rather than the discovery title. The Catalogue's `/catalogue/glyphs/` explorer includes copyable cards, interface/reference collections, capability filters, presentation variants, live font and size specimens, and JavaScript, React, and terminal examples. Vocabulary can evolve through documented `0.x` releases.
 
 ## Semantic diagrams
 

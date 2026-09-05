@@ -10,48 +10,16 @@ import {
   GLYPH_ATLAS_UNICODE_SOURCES,
   GLYPH_ATLAS_UNICODE_TERMS_URL,
 } from "../../../src/glyphs/atlas.ts";
-import { publicTokens } from "../../../src/token-inventory.ts";
-import type { DesignToken, ThemeToken } from "../../../src/tokens/tokens.ts";
 import { catalogueGlyphPath, type GlyphCatalogueEntry } from "../../routes.ts";
 import { preserveCatalogueAppearanceHref } from "../../shell/appearance-state.ts";
 import { CataloguePageHeader, CopyableCode } from "../shared.tsx";
 
-function humanize(value: string): string {
-  return value.replaceAll("-", " ").replaceAll("_", " ").replace(
-    /^./,
-    (letter) => letter.toUpperCase(),
-  );
-}
-
-export function glyphJavaScriptEscape(
-  record: Pick<CanonicalGlyphRecord, "codePoints">,
-): string {
-  return record.codePoints.map((codePoint) =>
-    `\\u{${codePoint.toString(16).toUpperCase()}}`
-  ).join("");
-}
-
-export interface GlyphBrowserFontRole {
-  readonly token: string;
-  readonly label: string;
-}
-
-/** Derive browser font-stack roles from the public Token inventory. */
-export function glyphBrowserFontRoles(
-  tokens: readonly (DesignToken | ThemeToken)[] = publicTokens,
-): readonly GlyphBrowserFontRole[] {
-  return tokens.flatMap((token) => {
-    if (
-      !("value" in token) || token.category !== "Typography" ||
-      !token.name.startsWith("--discern-font-") ||
-      !/\b(?:serif|sans-serif|monospace)\b/u.test(token.value)
-    ) return [];
-    return [{
-      token: token.name,
-      label: humanize(token.name.slice("--discern-font-".length)),
-    }];
-  });
-}
+import {
+  glyphBrowserFontRoles,
+  glyphHumanize as humanize,
+  glyphJavaScriptEscape,
+} from "./presentation.ts";
+import { GlyphWorkbench } from "./workbench.tsx";
 
 export function glyphCatalogueNeighbours(
   entries: readonly GlyphCatalogueEntry[],
@@ -86,6 +54,68 @@ function emojiProperties(record: CanonicalGlyphRecord): string {
   return [...new Set(values)].join(" · ") || "None in the represented facts";
 }
 
+/** Link exact presentation variants without collapsing their Unicode identity. */
+export function glyphPresentationFamily(
+  entry: GlyphCatalogueEntry,
+  entries: readonly GlyphCatalogueEntry[],
+): readonly GlyphCatalogueEntry[] {
+  const base = (record: CanonicalGlyphRecord) =>
+    record.codePoints.filter((point) => point !== 0xFE0E && point !== 0xFE0F)
+      .join("-");
+  return entries.filter((candidate) =>
+    base(candidate.canonical) === base(entry.canonical)
+  );
+}
+
+function GlyphPresentationFamily({ entry, entries, currentUrl }: {
+  readonly entry: GlyphCatalogueEntry;
+  readonly entries: readonly GlyphCatalogueEntry[];
+  readonly currentUrl: URL;
+}) {
+  const relatives = glyphPresentationFamily(entry, entries);
+  if (relatives.length < 2) return null;
+  return (
+    <section
+      className="discern-catalogue-glyph-section"
+      aria-labelledby="glyph-variants-title"
+    >
+      <h2 id="glyph-variants-title">One symbol, different presentations.</h2>
+      <p>
+        A variation selector is part of the character sequence. These links
+        preserve the exact form; fonts and platforms decide how to draw it.
+      </p>
+      <div className="discern-catalogue-glyph-variants">
+        {relatives.map(({ canonical }) => (
+          <a
+            key={canonical.id}
+            href={preserveCatalogueAppearanceHref(
+              currentUrl,
+              catalogueGlyphPath(canonical),
+            )}
+            aria-current={canonical.id === entry.canonical.id
+              ? "page"
+              : undefined}
+          >
+            <span aria-hidden="true">{canonical.text}</span>
+            <strong>
+              {canonical.presentation.selectedVariation === undefined
+                ? "Default"
+                : canonical.presentation.selectedVariation === "text"
+                ? "Text presentation"
+                : "Emoji presentation"}
+            </strong>
+            <code>{canonical.id}</code>
+            <small>
+              {canonical.terminalWidth}{" "}
+              terminal cell{canonical.terminalWidth === 1 ? "" : "s"}
+            </small>
+          </a>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function AliasGuidance({ alias }: { readonly alias: DiscernGlyphAlias }) {
   const terminal = alias.surfaces.terminal;
   return (
@@ -112,7 +142,9 @@ function AliasGuidance({ alias }: { readonly alias: DiscernGlyphAlias }) {
           <Badge
             tone={alias.publication === "deferred" ? "warning" : "neutral"}
           >
-            {humanize(alias.publication)}
+            {alias.publication === "candidate"
+              ? "Available in ./glyphs"
+              : "Atlas only"}
           </Badge>
         </div>
       </header>
@@ -204,11 +236,10 @@ export function GlyphDetailPage(
       </a>
       <CataloguePageHeader
         index="03"
-        eyebrow="Canonical Unicode identity"
-        title={canonical.officialLabel}
-        description={`${canonical.id} is an exact ${
-          humanize(canonical.kind).toLowerCase()
-        } identity. Interface meaning remains contextual.`}
+        eyebrow="Discern Glyphs / Unicode Atlas"
+        title={aliases.find(({ publication }) => publication === "candidate")
+          ?.discoveryTitle ?? humanize(canonical.officialLabel)}
+        description={`${canonical.officialLabel} · ${canonical.id}`}
       />
 
       <section
@@ -232,180 +263,211 @@ export function GlyphDetailPage(
         </div>
       </section>
 
+      <GlyphWorkbench
+        key={canonical.id}
+        entry={entry}
+        currentUrl={currentUrl}
+      />
+      <GlyphPresentationFamily
+        entry={entry}
+        entries={entries}
+        currentUrl={currentUrl}
+      />
       <section
         className="discern-catalogue-glyph-section"
-        aria-labelledby="glyph-facts-title"
+        aria-labelledby="discern-glyph-guidance-title"
       >
-        <h2 id="glyph-facts-title">Atlas reference facts</h2>
-        <dl className="discern-catalogue-glyph-facts">
-          <div>
-            <dt>Kind</dt>
-            <dd>{humanize(canonical.kind)}</dd>
-          </div>
-          <div>
-            <dt>Official label</dt>
-            <dd>{canonical.officialLabel}</dd>
-          </div>
-          <div>
-            <dt>Unicode version</dt>
-            <dd>{canonical.provenance.unicodeVersion}</dd>
-          </div>
-          <div>
-            <dt>Unicode age</dt>
-            <dd>{scalarValueList(canonical, ({ age }) => age)}</dd>
-          </div>
-          <div>
-            <dt>General categories</dt>
-            <dd>
-              {scalarValueList(
-                canonical,
-                ({ generalCategory }) => generalCategory,
-              )}
-            </dd>
-          </div>
-          <div>
-            <dt>Blocks</dt>
-            <dd>{scalarValueList(canonical, ({ block }) => block)}</dd>
-          </div>
-          <div>
-            <dt>East Asian Width</dt>
-            <dd>
-              {scalarValueList(
-                canonical,
-                ({ eastAsianWidth }) => eastAsianWidth,
-              )}
-            </dd>
-          </div>
-          <div>
-            <dt>Emoji properties</dt>
-            <dd>{emojiProperties(canonical)}</dd>
-          </div>
-          <div>
-            <dt>Default presentation</dt>
-            <dd>{humanize(canonical.presentation.defaultPresentation)}</dd>
-          </div>
-          <div>
-            <dt>Effective presentation</dt>
-            <dd>{humanize(canonical.presentation.effectivePresentation)}</dd>
-          </div>
-          <div>
-            <dt>Selected variation</dt>
-            <dd>
-              {canonical.presentation.selectedVariation === undefined
-                ? "None"
-                : humanize(canonical.presentation.selectedVariation)}
-            </dd>
-          </div>
-          <div>
-            <dt>Sequence type</dt>
-            <dd>
-              {canonical.presentation.sequenceType === undefined
-                ? "Not applicable"
-                : humanize(canonical.presentation.sequenceType)}
-            </dd>
-          </div>
-          <div>
-            <dt>Grapheme count</dt>
-            <dd>{canonical.graphemeCount}</dd>
-          </div>
-          <div>
-            <dt>Discern terminal width</dt>
-            <dd>
-              {canonical.terminalWidth}{" "}
-              cell{canonical.terminalWidth === 1 ? "" : "s"}
-            </dd>
-          </div>
-        </dl>
+        <h2 id="discern-glyph-guidance-title">Discern Glyphs guidance</h2>
+        <p>{DISCERN_GLYPH_ACCESSIBILITY_POSTURE}</p>
+        {aliases.length === 0
+          ? <p>No curated Discern alias currently refers to this identity.</p>
+          : aliases.map((alias) => (
+            <AliasGuidance alias={alias} key={alias.name} />
+          ))}
+      </section>
 
-        <div className="discern-catalogue-glyph-code-points">
-          <h3>Ordered code points</h3>
-          <div
-            className="discern-catalogue-glyph-table-scroll"
-            tabIndex={0}
-            role="region"
-            aria-label="Ordered code-point table"
-          >
-            <table>
-              <thead>
-                <tr>
-                  <th scope="col">Position</th>
-                  <th scope="col">Code point</th>
-                  <th scope="col">Unicode name</th>
-                  <th scope="col">Category</th>
-                  <th scope="col">Block</th>
-                  <th scope="col">Age</th>
-                  <th scope="col">East Asian Width</th>
-                </tr>
-              </thead>
-              <tbody>
-                {canonical.scalars.map((scalar, index) => (
-                  <tr key={`${scalar.codePoint}:${index}`}>
-                    <td>{index + 1}</td>
-                    <td>
-                      <code>
-                        U+{scalar.codePoint.toString(16).toUpperCase().padStart(
-                          4,
-                          "0",
-                        )}
-                      </code>
-                    </td>
-                    <td>{scalar.name}</td>
-                    <td>{scalar.generalCategory}</td>
-                    <td>{scalar.block}</td>
-                    <td>{scalar.age}</td>
-                    <td>{scalar.eastAsianWidth}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {objectiveHazards.length === 0 && authoredCautions.length === 0
-          ? null
-          : (
-            <div className="discern-catalogue-glyph-hazards">
-              {objectiveHazards.length === 0 ? null : (
-                <div>
-                  <h3>Measured or presentation hazards</h3>
-                  <p>{objectiveHazards.map(humanize).join(" · ")}</p>
-                </div>
-              )}
-              {authoredCautions.length === 0 ? null : (
-                <div>
-                  <h3>Atlas cautions</h3>
-                  <p>{authoredCautions.map(humanize).join(" · ")}</p>
-                </div>
-              )}
+      <details className="discern-catalogue-glyph-reference">
+        <summary>
+          Unicode reference{" "}
+          <span>Properties, ordered code points, and sources</span>
+        </summary>
+        <section
+          className="discern-catalogue-glyph-section"
+          aria-labelledby="glyph-facts-title"
+        >
+          <h2 id="glyph-facts-title">Atlas reference facts</h2>
+          <dl className="discern-catalogue-glyph-facts">
+            <div>
+              <dt>Kind</dt>
+              <dd>{humanize(canonical.kind)}</dd>
             </div>
-          )}
-        <p>{canonical.atlas.rationale}</p>
-      </section>
+            <div>
+              <dt>Official label</dt>
+              <dd>{canonical.officialLabel}</dd>
+            </div>
+            <div>
+              <dt>Unicode version</dt>
+              <dd>{canonical.provenance.unicodeVersion}</dd>
+            </div>
+            <div>
+              <dt>Unicode age</dt>
+              <dd>{scalarValueList(canonical, ({ age }) => age)}</dd>
+            </div>
+            <div>
+              <dt>General categories</dt>
+              <dd>
+                {scalarValueList(
+                  canonical,
+                  ({ generalCategory }) => generalCategory,
+                )}
+              </dd>
+            </div>
+            <div>
+              <dt>Blocks</dt>
+              <dd>{scalarValueList(canonical, ({ block }) => block)}</dd>
+            </div>
+            <div>
+              <dt>East Asian Width</dt>
+              <dd>
+                {scalarValueList(
+                  canonical,
+                  ({ eastAsianWidth }) => eastAsianWidth,
+                )}
+              </dd>
+            </div>
+            <div>
+              <dt>Emoji properties</dt>
+              <dd>{emojiProperties(canonical)}</dd>
+            </div>
+            <div>
+              <dt>Default presentation</dt>
+              <dd>{humanize(canonical.presentation.defaultPresentation)}</dd>
+            </div>
+            <div>
+              <dt>Effective presentation</dt>
+              <dd>{humanize(canonical.presentation.effectivePresentation)}</dd>
+            </div>
+            <div>
+              <dt>Selected variation</dt>
+              <dd>
+                {canonical.presentation.selectedVariation === undefined
+                  ? "None"
+                  : humanize(canonical.presentation.selectedVariation)}
+              </dd>
+            </div>
+            <div>
+              <dt>Sequence type</dt>
+              <dd>
+                {canonical.presentation.sequenceType === undefined
+                  ? "Not applicable"
+                  : humanize(canonical.presentation.sequenceType)}
+              </dd>
+            </div>
+            <div>
+              <dt>Grapheme count</dt>
+              <dd>{canonical.graphemeCount}</dd>
+            </div>
+            <div>
+              <dt>Discern terminal width</dt>
+              <dd>
+                {canonical.terminalWidth}{" "}
+                cell{canonical.terminalWidth === 1 ? "" : "s"}
+              </dd>
+            </div>
+          </dl>
 
-      <section
-        className="discern-catalogue-glyph-section"
-        aria-labelledby="glyph-provenance-title"
-      >
-        <h2 id="glyph-provenance-title">Unicode provenance</h2>
-        <p>
-          These are source-cited, authored, bounded records; the Catalogue does
-          not claim a mechanically replayed copy of every upstream property.
-        </p>
-        <ul className="discern-catalogue-glyph-sources">
-          {canonical.provenance.sources.map((sourceId) => {
-            const source = GLYPH_ATLAS_UNICODE_SOURCES[sourceId];
-            return (
-              <li key={sourceId}>
-                <a href={source.url}>{source.title}</a>{" "}
-                <span>{source.version}</span>
-              </li>
-            );
-          })}
-          <li>
-            <a href={GLYPH_ATLAS_UNICODE_TERMS_URL}>Unicode terms of use</a>
-          </li>
-        </ul>
-      </section>
+          <div className="discern-catalogue-glyph-code-points">
+            <h3>Ordered code points</h3>
+            <div
+              className="discern-catalogue-glyph-table-scroll"
+              tabIndex={0}
+              role="region"
+              aria-label="Ordered code-point table"
+            >
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">Position</th>
+                    <th scope="col">Code point</th>
+                    <th scope="col">Unicode name</th>
+                    <th scope="col">Category</th>
+                    <th scope="col">Block</th>
+                    <th scope="col">Age</th>
+                    <th scope="col">East Asian Width</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {canonical.scalars.map((scalar, index) => (
+                    <tr key={`${scalar.codePoint}:${index}`}>
+                      <td>{index + 1}</td>
+                      <td>
+                        <code>
+                          U+{scalar.codePoint.toString(16).toUpperCase()
+                            .padStart(
+                              4,
+                              "0",
+                            )}
+                        </code>
+                      </td>
+                      <td>{scalar.name}</td>
+                      <td>{scalar.generalCategory}</td>
+                      <td>{scalar.block}</td>
+                      <td>{scalar.age}</td>
+                      <td>{scalar.eastAsianWidth}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {objectiveHazards.length === 0 && authoredCautions.length === 0
+            ? null
+            : (
+              <div className="discern-catalogue-glyph-hazards">
+                {objectiveHazards.length === 0 ? null : (
+                  <div>
+                    <h3>Measured or presentation hazards</h3>
+                    <p>{objectiveHazards.map(humanize).join(" · ")}</p>
+                  </div>
+                )}
+                {authoredCautions.length === 0 ? null : (
+                  <div>
+                    <h3>Atlas cautions</h3>
+                    <p>{authoredCautions.map(humanize).join(" · ")}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          <p>{canonical.atlas.rationale}</p>
+        </section>
+
+        <section
+          className="discern-catalogue-glyph-section"
+          aria-labelledby="glyph-provenance-title"
+        >
+          <h2 id="glyph-provenance-title">Unicode provenance</h2>
+          <p>
+            These are source-cited, authored, bounded records; the Catalogue
+            does not claim a mechanically replayed copy of every upstream
+            property.
+          </p>
+          <ul className="discern-catalogue-glyph-sources">
+            {canonical.provenance.sources.map((sourceId) => {
+              const source = GLYPH_ATLAS_UNICODE_SOURCES[sourceId];
+              return (
+                <li key={sourceId}>
+                  <a href={source.url}>{source.title}</a>{" "}
+                  <span>{source.version}</span>
+                </li>
+              );
+            })}
+            <li>
+              <a href={GLYPH_ATLAS_UNICODE_TERMS_URL}>Unicode terms of use</a>
+            </li>
+          </ul>
+        </section>
+      </details>
 
       <section
         className="discern-catalogue-glyph-section"
@@ -432,19 +494,6 @@ export function GlyphDetailPage(
           This is a live view of this browser and its available fonts, not a
           promise of cross-platform coverage, artwork, weight, or baseline.
         </p>
-      </section>
-
-      <section
-        className="discern-catalogue-glyph-section"
-        aria-labelledby="discern-glyph-guidance-title"
-      >
-        <h2 id="discern-glyph-guidance-title">Discern Glyphs guidance</h2>
-        <p>{DISCERN_GLYPH_ACCESSIBILITY_POSTURE}</p>
-        {aliases.length === 0
-          ? <p>No curated Discern alias currently refers to this identity.</p>
-          : aliases.map((alias) => (
-            <AliasGuidance alias={alias} key={alias.name} />
-          ))}
       </section>
 
       <nav

@@ -1,5 +1,6 @@
 import type { Page } from "playwright-core";
 import { glyphAtlasData, glyphSequenceId } from "../../../src/glyphs/atlas.ts";
+import { glyphs, resolveGlyph } from "../../../src/glyphs/mod.ts";
 import {
   catalogueGlyphPath,
   glyphCatalogueEntries,
@@ -27,6 +28,138 @@ export interface GlyphsCatalogueEvidence {
   readonly accessibilityScans: number;
   readonly reflowChecks: number;
   readonly forcedColorChecks: number;
+  readonly workbenchChecks: number;
+}
+
+async function verifyWorkbench(page: Page, origin: string): Promise<number> {
+  await loadCataloguePage(
+    page,
+    `${origin}/catalogue/glyphs/?collection=interface`,
+  );
+  const expected = new Set(glyphs.map(({ unicode }) => unicode)).size;
+  invariant(
+    await page.locator("[data-discern-glyph-card]").count() === expected,
+    "Ready-to-use collection differs from the published vocabulary",
+  );
+  await page.getByLabel("Terminal support", { exact: true }).selectOption(
+    "unicode-only",
+  );
+  await eventually(
+    async () => await page.locator("[data-discern-glyph-card]").count() === 1,
+    "Unicode-only collection did not isolate the brand mark",
+  );
+  await loadCataloguePage(
+    page,
+    `${origin}/catalogue/glyphs/u-2713/?use=status-complete&theme=light`,
+  );
+  const use = page.getByLabel("Use as", { exact: true });
+  invariant(
+    await use.inputValue() === "status-complete",
+    "A contextual alias deep link did not select its role",
+  );
+  const repertoire = page.getByLabel("Character repertoire", { exact: true });
+  await repertoire.selectOption("ascii");
+  const terminal = page.getByLabel("Terminal glyph specimen", { exact: true });
+  for (const name of ["status-complete", "selection-selected"] as const) {
+    await use.selectOption(name);
+    const resolved = resolveGlyph(name, "ascii");
+    invariant(resolved.available, `${name} needs a fallback for this check`);
+    await eventually(
+      async () =>
+        (await terminal.textContent())?.includes(resolved.text) === true,
+      `${name} specimen did not follow public resolution`,
+    );
+  }
+  const label = page.getByLabel("Example label", { exact: true });
+  await label.fill('A long labelled choice <&> "quoted"');
+  await page.getByRole("button", { name: "Terminal", exact: true }).click();
+  await page.getByRole("button", { name: "Copy usage example", exact: true })
+    .click();
+  await eventually(
+    async () => {
+      const text = await page.evaluate(() => navigator.clipboard.readText());
+      return text.includes("unicode: false") &&
+        text.includes("selection-selected") && text.includes('\\"quoted\\"');
+    },
+    "Copied terminal code lost the selected repertoire, alias, or escaped label",
+  );
+  await repertoire.selectOption("unicode");
+  await page.getByLabel("Specimen font", { exact: true }).selectOption(
+    "--discern-font-mono",
+  );
+  await page.getByLabel("Specimen size", { exact: true }).selectOption("16");
+  await eventually(
+    async () =>
+      await page.locator(".discern-catalogue-glyph-workbench__line").evaluate((
+        node,
+      ) => getComputedStyle(node).fontSize) === "16px",
+    "Specimen size control did not reach the live text",
+  );
+  const scan = await scanBrowserAccessibility(
+    page,
+    ".discern-catalogue-glyph-workbench",
+  );
+  invariant(
+    scan.violations.length === 0,
+    `Glyph workbench accessibility failed: ${
+      scan.violations.map(({ id }) => id).join(", ")
+    }`,
+  );
+  await withViewport(page, CATALOGUE_400_PERCENT_VIEWPORT, async () => {
+    await page.getByLabel("Specimen size", { exact: true }).selectOption("64");
+    await label.fill("A".repeat(100));
+    await eventually(
+      async () =>
+        await page.locator(".discern-catalogue-glyph-workbench__line").evaluate(
+          (node) =>
+            getComputedStyle(node).fontSize === "64px" &&
+            node.textContent?.includes("A".repeat(100)) === true,
+        ),
+      "Long-label reflow fixture did not reach the live specimen",
+    );
+    await documentDoesNotOverflow(
+      page,
+      "Glyph workbench with a long label at 400% reflow",
+    );
+    const usage = page.getByRole("group", {
+      name: "Usage example",
+      exact: true,
+    });
+    await usage.focus();
+    await page.keyboard.press("ArrowRight");
+    await eventually(
+      async () => await usage.evaluate((node) => node.scrollLeft > 0),
+      "Overflowing usage examples cannot be scrolled with the keyboard",
+    );
+  });
+  await loadCataloguePage(
+    page,
+    `${origin}/catalogue/glyphs/u-25ee/?theme=dark`,
+  );
+  await page.getByLabel("Character repertoire", { exact: true }).selectOption(
+    "ascii",
+  );
+  await eventually(
+    async () =>
+      (await page.locator(".discern-catalogue-glyph-workbench__terminal")
+        .textContent())?.includes("No approved ASCII fallback") === true,
+    "Brand specimen invented an ASCII fallback",
+  );
+  await loadCataloguePage(page, `${origin}/catalogue/glyphs/u-26a0-fe0e/`);
+  invariant(
+    await page.locator(".discern-catalogue-glyph-variants a").count() === 3,
+    "Presentation comparison lost a warning sequence",
+  );
+  await page.locator(
+    '.discern-catalogue-glyph-variants a[href*="u-26a0-fe0f/"]',
+  ).click();
+  await eventually(
+    async () =>
+      await page.locator('[data-discern-glyph-detail="U+26A0 U+FE0F"]')
+        .count() === 1,
+    "Presentation navigation changed the selected sequence",
+  );
+  return 12;
 }
 
 async function documentDoesNotOverflow(
@@ -88,6 +221,7 @@ async function verifyExplorer(page: Page, origin: string): Promise<{
     "Keyboard category filtering did not reach the URL",
   );
   const recommendation = page.getByLabel("Recommendation");
+  await page.locator(".discern-catalogue-glyphs__extra > summary").click();
   await recommendation.selectOption("recommended");
   await eventually(
     () =>
@@ -157,6 +291,8 @@ export async function verifyGlyphsCatalogue(
     let themeChecks = 0;
     let reflowChecks = 0;
     let forcedColorChecks = 0;
+    const workbenchChecks = await verifyWorkbench(page, origin);
+    await loadCataloguePage(page, `${origin}/catalogue/glyphs/`);
 
     const explorerAccessibility = await scanBrowserAccessibility(
       page,
@@ -198,6 +334,8 @@ export async function verifyGlyphsCatalogue(
     copyChecks += 1;
 
     await page.emulateMedia({ forcedColors: "active" });
+    await page.locator(".discern-catalogue-glyph-reference > summary").focus();
+    await page.keyboard.press("Enter");
     const codePointRegion = page.getByRole("region", {
       name: "Ordered code-point table",
     });
@@ -306,6 +444,7 @@ export async function verifyGlyphsCatalogue(
       accessibilityScans,
       reflowChecks,
       forcedColorChecks,
+      workbenchChecks,
     };
   });
 }

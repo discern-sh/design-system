@@ -6,6 +6,9 @@ Each release is cut from a green run of the full release gate — formatting, li
 
 ## Unreleased
 
+- Add the React-free `./glyphs` entrypoint: an immutable generated vocabulary, `GlyphName`, `getGlyph`, `isGlyphName`, and `resolveGlyph`, with exact Unicode sequences, contextual ASCII fallbacks, measured cell widths, and explicit unavailable results. Extend the curated collection with editing actions, light appearance, favourites, selection, and status roles. The public graph contains only the curated projection and its resolver; canonical research data and existing Icon, motif, triangle, and chart grammars remain independently owned.
+- Rebuild Glyph discovery around compact copyable cards, useful interface names, interface/reference collections, terminal and presentation filters, adjustable specimen size, and source-backed search explanations. Detail pages add a browser/terminal workbench with editable labels, font and repertoire controls, copyable executable examples, exact text/emoji presentation links, and an expandable Unicode reference. Standardized presentation pairs derive from the selected scalar facts.
+
 - **Breaking before 1.0:** remove the public `--discern-font-features-ui` Token and bind its Inter-specific OpenType settings to a dedicated bundled `Discern Inter UI` face instead. Feature tags no longer inherit into descendants that switch to display, body, monospace, or consumer typography, preventing Iowan Old Style's `salt` feature from replacing ordinary lowercase `s` with the historical long-s glyph. System-font fallbacks now retain their own feature defaults.
 
 ## 0.30.1

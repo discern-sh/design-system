@@ -93,6 +93,7 @@ const emptyFoundationsEvidence: FoundationsCatalogueEvidence = {
   reflowChecks: 0,
 };
 const emptyGlyphsEvidence: GlyphsCatalogueEvidence = {
+  workbenchChecks: 0,
   records: 0,
   details: 0,
   searchChecks: 0,

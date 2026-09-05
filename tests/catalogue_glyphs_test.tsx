@@ -1,15 +1,20 @@
+import {
+  glyphBrowserFontRoles,
+  glyphJavaScriptEscape,
+} from "../catalogue/pages/glyphs/presentation.ts";
 import { assert, assertEquals, assertStringIncludes } from "@std/assert";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
-  glyphBrowserFontRoles,
   GlyphDetailPage,
-  glyphJavaScriptEscape,
+  glyphPresentationFamily,
 } from "../catalogue/pages/glyphs/detail-page.tsx";
 import { GlyphIndexPage } from "../catalogue/pages/glyphs/index-page.tsx";
 import { GlyphsPage } from "../catalogue/pages/glyphs/page.tsx";
 import { OverviewPage } from "../catalogue/pages/overview/page.tsx";
 import {
+  glyphExplorerResults,
+  type GlyphExplorerState,
   glyphExplorerUrl,
   matchingGlyphCatalogueEntries,
   parseGlyphExplorerState,
@@ -123,6 +128,63 @@ Deno.test("every canonical Glyph owns one collision-free reversible detail route
       ),
     ),
     { family: "not-found", page: "not-found" },
+  );
+});
+
+Deno.test("glyph capability filters compose on one alias and keep reference matches explained", () => {
+  const entries = glyphCatalogueEntries(glyphAtlasData);
+  const states: readonly GlyphExplorerState[] = [
+    {
+      query: "",
+      collection: "interface",
+      terminal: "ascii",
+      presentation: "text",
+    },
+    { query: "", collection: "reference", presentation: "emoji" },
+    { query: "", terminal: "unicode-only" },
+  ];
+  for (const state of states) {
+    const url = glyphExplorerUrl(
+      new URL("https://catalogue.example/catalogue/glyphs/?theme=dark"),
+      state,
+    );
+    assertEquals(parseGlyphExplorerState(url), state);
+    const matches = matchingGlyphCatalogueEntries(entries, state);
+    assert(matches.length > 0);
+    for (const entry of matches) {
+      if (state.collection === "interface") {
+        assert(
+          entry.aliases.some((alias) =>
+            alias.publication === "candidate" &&
+            alias.surfaces.terminal.posture === "supported"
+          ),
+        );
+      }
+      if (state.collection === "reference") {
+        assert(
+          entry.aliases.every((alias) => alias.publication === "deferred"),
+        );
+      }
+      if (state.terminal === "unicode-only") {
+        assert(
+          entry.aliases.some((alias) =>
+            alias.surfaces.terminal.posture === "unicode-only"
+          ),
+        );
+      }
+    }
+  }
+  const copy = glyphExplorerResults(entries, { query: "copy" });
+  assertEquals(copy[0]?.entry.canonical.text, "⧉");
+  assertEquals(copy[0]?.referenceMatch, false);
+  assert(copy[0]?.reason?.includes("copy"));
+  const warning = entries.find(({ canonical }) => canonical.text === "⚠︎");
+  assert(warning !== undefined);
+  assertEquals(
+    glyphPresentationFamily(warning, entries).map(({ canonical }) =>
+      canonical.text
+    ),
+    ["⚠", "⚠︎", "⚠️"],
   );
 });
 
@@ -319,7 +381,7 @@ Deno.test("future canonical and alias members auto-enrol every Catalogue project
   }));
   assertStringIncludes(detail, 'data-discern-glyph-alias="future-circle"');
   assertStringIncludes(detail, "Future enrollment fixture");
-  assertStringIncludes(detail, "Candidate");
+  assertStringIncludes(detail, "Available in ./glyphs");
 });
 
 Deno.test("unknown canonical Glyph slugs render Not Found and exact sequences remain copyable", () => {
