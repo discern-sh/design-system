@@ -1,3 +1,4 @@
+import { withViewport } from "../scripts/viewport.ts";
 import { catalogueExamples } from "../src/components/forms/segmented-control/segmented-control.examples.tsx";
 import { assert, assertEquals, assertThrows } from "@std/assert";
 import { toFileUrl } from "@std/path";
@@ -177,41 +178,45 @@ Deno.test("SegmentedControl preserves local containment, target floors, and forc
       />,
     );
     for (const viewport of [1280, 360]) {
-      await page.setViewportSize({ width: viewport, height: 800 });
-      for (const width of [260, 520, 900].filter((width) => width < viewport)) {
-        await page.setContent(
-          `<html data-discern-root style="--discern-density:0.8;--discern-structure:0.35"><head><style>${css}</style></head><body><main style="width:${width}px">${html}</main></body></html>`,
-        );
-        const facts = await page.locator("fieldset").evaluate((root) => ({
-          width: root.getBoundingClientRect().width,
-          scroll: root.scrollWidth,
-          controls: [...root.querySelectorAll("input")].map((input) => ({
-            width: input.getBoundingClientRect().width,
-            height: input.getBoundingClientRect().height,
-          })),
-          direction: getComputedStyle(
-            root.querySelector(".discern-segmented-control__items")!,
-          ).flexDirection,
-        }));
-        assert(
-          facts.scroll <= width + 1 && facts.width <= width + 1,
-          JSON.stringify(facts),
-        );
-        assertEquals(facts.direction, width <= 320 ? "column" : "row");
-        for (const control of facts.controls) {
-          assert(control.width >= 24 && control.height >= 24);
+      await withViewport(page, { width: viewport, height: 800 }, async () => {
+        for (
+          const width of [260, 520, 900].filter((width) => width < viewport)
+        ) {
+          await page.setContent(
+            `<html data-discern-root style="--discern-density:0.8;--discern-structure:0.35"><head><style>${css}</style></head><body><main style="width:${width}px">${html}</main></body></html>`,
+          );
+          const facts = await page.locator("fieldset").evaluate((root) => ({
+            width: root.getBoundingClientRect().width,
+            scroll: root.scrollWidth,
+            controls: [...root.querySelectorAll("input")].map((input) => ({
+              width: input.getBoundingClientRect().width,
+              height: input.getBoundingClientRect().height,
+            })),
+            direction: getComputedStyle(
+              root.querySelector(".discern-segmented-control__items")!,
+            ).flexDirection,
+          }));
+          assert(
+            facts.scroll <= width + 1 && facts.width <= width + 1,
+            JSON.stringify(facts),
+          );
+          assertEquals(facts.direction, width <= 320 ? "column" : "row");
+          for (const control of facts.controls) {
+            assert(control.width >= 24 && control.height >= 24);
+          }
+          await page.emulateMedia({ forcedColors: "active" });
+          await page.keyboard.press("Tab");
+          const ring = await page.locator("input:focus-visible + span")
+            .evaluate((
+              node,
+            ) => ({
+              width: getComputedStyle(node).outlineWidth,
+              style: getComputedStyle(node).outlineStyle,
+            }));
+          assertEquals(ring, { width: "2px", style: "solid" });
+          await page.emulateMedia({ forcedColors: "none" });
         }
-        await page.emulateMedia({ forcedColors: "active" });
-        await page.keyboard.press("Tab");
-        const ring = await page.locator("input:focus-visible + span").evaluate((
-          node,
-        ) => ({
-          width: getComputedStyle(node).outlineWidth,
-          style: getComputedStyle(node).outlineStyle,
-        }));
-        assertEquals(ring, { width: "2px", style: "solid" });
-        await page.emulateMedia({ forcedColors: "none" });
-      }
+      });
     }
   } finally {
     await browser.close();

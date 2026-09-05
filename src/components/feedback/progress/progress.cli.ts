@@ -62,6 +62,7 @@ defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
 /** Canonical terminal completion and waiting examples. */
 export const cliExamples: readonly CliExample<ProgressCliProps>[] =
   cliExampleImplementations;
+/** Render bounded completed work or an explicit waiting frame without effects. */
 const renderProgressCli: CliRenderer<ProgressCliProps> = (
   props,
   capabilities,

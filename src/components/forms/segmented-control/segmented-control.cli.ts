@@ -56,6 +56,7 @@ defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
 /** Canonical terminal peer-selection examples. */
 export const cliExamples: readonly CliExample<SegmentedControlCliProps>[] =
   cliExampleImplementations;
+/** Render the supplied peer selection through the shared native-choice frame. */
 const renderSegmentedControlCli: CliRenderer<SegmentedControlCliProps> = (
   props,
   capabilities,
