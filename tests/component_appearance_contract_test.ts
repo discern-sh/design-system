@@ -4,12 +4,12 @@ import {
   componentCssHits,
   type CssDeclaration,
   cssDeclarations,
-} from "../discern/scripts/component-css-metrics.ts";
-import { missingWitnessHits } from "../discern/scripts/measure-missing-witnesses.ts";
-import { rawSpacingHits } from "../discern/scripts/measure-raw-spacing.ts";
+} from "../scripts/component-css-metrics.ts";
+import { missingWitnessHits } from "../scripts/measure-missing-witnesses.ts";
+import { rawSpacingHits } from "../scripts/measure-raw-spacing.ts";
 import {
   untokenisedStructureHits,
-} from "../discern/scripts/measure-untokenised-structure.ts";
+} from "../scripts/measure-untokenised-structure.ts";
 
 const PACKAGE_ROOT = fromFileUrl(new URL("..", import.meta.url));
 const COMPONENT_ROOT = join(PACKAGE_ROOT, "src", "components");

@@ -32,9 +32,9 @@ Three falling ceilings keep the monochrome field's legacy population from growin
 List every current hit from the repository root:
 
 ```sh
-deno run --config deno.json --allow-read discern/scripts/measure-raw-spacing.ts --verbose
-deno run --config deno.json --allow-read discern/scripts/measure-untokenised-structure.ts --verbose
-NODE_ENV=production deno run --config deno.json --allow-read --allow-env=NODE_ENV discern/scripts/measure-missing-witnesses.ts --verbose
+deno run --config deno.json --allow-read scripts/measure-raw-spacing.ts --verbose
+deno run --config deno.json --allow-read scripts/measure-untokenised-structure.ts --verbose
+NODE_ENV=production deno run --config deno.json --allow-read --allow-env=NODE_ENV scripts/measure-missing-witnesses.ts --verbose
 ```
 
 The monochrome-field Component sweep in wave 3 drives all three counts to zero. At zero, each detector becomes a permanent first-instance gate rule and its transitional Standard table is retired.

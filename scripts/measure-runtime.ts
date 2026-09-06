@@ -1,9 +1,9 @@
-import { packageManifest } from "../../src/manifest.ts";
+import { packageManifest } from "../src/manifest.ts";
 import {
   emitDesignSystemRuntime,
   type RuntimeOptions,
-} from "../../src/runtime.ts";
-import type { RuntimeManifest } from "../../src/manifest.ts";
+} from "../src/runtime.ts";
+import type { RuntimeManifest } from "../src/manifest.ts";
 
 const textEncoder = new TextEncoder();
 

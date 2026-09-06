@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert";
-import { cssDeclarations } from "../discern/scripts/component-css-metrics.ts";
+import { cssDeclarations } from "../scripts/component-css-metrics.ts";
 
 function legacyControlHeights(css: string, file: string) {
   return cssDeclarations(css, file).filter(({ property, value }) =>

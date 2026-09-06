@@ -1,9 +1,9 @@
 import { fromFileUrl } from "@std/path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { registry } from "../../catalogue/generated/registry.ts";
+import { registry } from "../catalogue/generated/registry.ts";
 
-const packageRoot = fromFileUrl(new URL("../../", import.meta.url));
+const packageRoot = fromFileUrl(new URL("../", import.meta.url));
 const stateAttributes = ["data-discern-tone", "data-discern-status"] as const;
 const voidElements = new Set([
   "area",

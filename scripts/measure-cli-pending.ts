@@ -1,6 +1,6 @@
-import type { CliComponentRegistryEntry } from "../../src/cli/contracts.ts";
-import { cliComponentRegistry } from "../../src/generated/cli-registry.ts";
-import { componentRegistry } from "../../src/generated/component-registry.ts";
+import type { CliComponentRegistryEntry } from "../src/cli/contracts.ts";
+import { cliComponentRegistry } from "../src/generated/cli-registry.ts";
+import { componentRegistry } from "../src/generated/component-registry.ts";
 
 const cliRegistry = cliComponentRegistry as Readonly<
   Record<string, CliComponentRegistryEntry | undefined>

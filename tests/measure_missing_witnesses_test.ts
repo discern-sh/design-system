@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert";
-import { missingWitnessesInHtml } from "../discern/scripts/measure-missing-witnesses.ts";
+import { missingWitnessesInHtml } from "../scripts/measure-missing-witnesses.ts";
 
 Deno.test("missing witnesses count a planted colour-only state and accept named witnesses", () => {
   const hits = missingWitnessesInHtml(`

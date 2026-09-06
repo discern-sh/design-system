@@ -14,7 +14,7 @@ Only after re-rooting, read:
 
 - `AGENTS.md`, `map/00-orientation/design-principles.md`, `map/_adr/0040-derive-the-theme-from-a-monochrome-field.md`, the programme README beside this brief, and `map/80-development/`;
 - `discern.toml` in full, especially the existing `[standards.*]` tables, their `run`, `per`, `inputs`, and `margin` keys, and the `behavior_script` and CSS standards;
-- `discern/scripts/measure-runtime.ts` and `scripts/measure.ts` as the house pattern for a metric script;
+- `scripts/measure-runtime.ts` and `scripts/measure.ts` as the house pattern for a metric script;
 - the CSS of a dozen components across groups, and `src/tokens/tokens.ts` spacing, radius, and shadow tokens;
 - `src/types/component-meta.ts`, the `data-discern-tone` and `data-discern-status` attributes in component sources, and how examples render to static HTML through the React adapter;
 - `tests/design_system_test.ts` for the existing structural guards over component CSS.

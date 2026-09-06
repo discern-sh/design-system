@@ -1,8 +1,8 @@
 import { fromFileUrl, relative } from "@std/path";
 
-const packageRoot = fromFileUrl(new URL("../../", import.meta.url));
+const packageRoot = fromFileUrl(new URL("../", import.meta.url));
 const componentRoot = fromFileUrl(
-  new URL("../../src/components/", import.meta.url),
+  new URL("../src/components/", import.meta.url),
 );
 
 /** One authored CSS declaration, with its stable repository location. */

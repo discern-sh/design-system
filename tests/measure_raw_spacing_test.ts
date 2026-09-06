@@ -1,6 +1,6 @@
 import { assertEquals } from "@std/assert";
-import { cssDeclarations } from "../discern/scripts/component-css-metrics.ts";
-import { rawSpacingHits } from "../discern/scripts/measure-raw-spacing.ts";
+import { cssDeclarations } from "../scripts/component-css-metrics.ts";
+import { rawSpacingHits } from "../scripts/measure-raw-spacing.ts";
 
 Deno.test("raw spacing counts planted literals and ignores tokens, zero, and hairlines", () => {
   const hits = rawSpacingHits(cssDeclarations(

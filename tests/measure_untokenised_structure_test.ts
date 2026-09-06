@@ -1,6 +1,6 @@
 import { assertEquals } from "@std/assert";
-import { cssDeclarations } from "../discern/scripts/component-css-metrics.ts";
-import { untokenisedStructureHits } from "../discern/scripts/measure-untokenised-structure.ts";
+import { cssDeclarations } from "../scripts/component-css-metrics.ts";
+import { untokenisedStructureHits } from "../scripts/measure-untokenised-structure.ts";
 
 Deno.test("untokenised structure counts planted ink and ignores role-driven edges", () => {
   const hits = untokenisedStructureHits(cssDeclarations(
