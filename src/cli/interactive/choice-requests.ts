@@ -174,9 +174,8 @@ class SelectionInteractionMachine<T>
     lifecycle: InteractiveFrameLifecycle,
     viewport: InteractionFrameViewport,
   ): SelectFrameState {
-    const visibleCount = Math.min(
-      this.#visibleCount,
-      viewport.maximumControlRows,
+    const visibleCount = viewport.controlRows(
+      Math.max(1, Math.min(this.#visibleCount, this.options.choices.length)),
     );
     this.#pageSize = visibleCount;
     const highlighted = this.options.choices[this.#highlighted];
@@ -203,7 +202,7 @@ class SelectionInteractionMachine<T>
         ? {}
         : { presentation: this.#presentation }),
       ...(this.#presentation === "menu"
-        ? { menuDetailLineLimit: Math.min(3, viewport.maximumControlRows) }
+        ? { menuDetailLineLimit: viewport.controlRows(3) }
         : {}),
       ...(selected === undefined || this.#presentation === "menu"
         ? {}
@@ -309,9 +308,8 @@ class SelectionsInteractionMachine<T>
     lifecycle: InteractiveFrameLifecycle,
     viewport: InteractionFrameViewport,
   ): MultiselectFrameState {
-    const visibleCount = Math.min(
-      this.#visibleCount,
-      viewport.maximumControlRows,
+    const visibleCount = viewport.controlRows(
+      Math.max(1, Math.min(this.#visibleCount, this.options.choices.length)),
     );
     this.#pageSize = visibleCount;
     const options = frameChoices(this.options.choices);
