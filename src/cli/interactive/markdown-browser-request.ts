@@ -3,7 +3,7 @@
 import type { TerminalCapabilities } from "../capabilities.ts";
 import { validateSemanticInlineDestination } from "../semantic-inline.ts";
 import { InteractionCancelled } from "./errors.ts";
-import { DenoTerminalIO, type TerminalIO, type TerminalSize } from "./io.ts";
+import { DenoTerminalIO, type TerminalIO } from "./io.ts";
 import {
   type TerminalInputEvent,
   TerminalInputReader,
@@ -33,7 +33,17 @@ import {
 } from "./markdown-browser-renderer.ts";
 import { CompleteFramePainter } from "./painter.ts";
 import { signalPassthrough } from "./signals.ts";
+import {
+  AbortMailbox,
+  ResizeMailbox,
+  type TerminalFacts,
+  terminalFacts,
+} from "./owned-viewport.ts";
 import type { InteractionRuntime } from "./types.ts";
+
+type Settled<T> =
+  | { readonly ok: true; readonly value: T }
+  | { readonly ok: false; readonly error: unknown };
 
 type BrowserRenderer = <Action>(
   state: MarkdownBrowserState<Action>,
@@ -57,43 +67,14 @@ export interface MarkdownBrowserRequestServices {
   readonly createInputReader?: (io: TerminalIO) => BrowserInputReader;
 }
 
-interface TerminalFacts {
-  readonly capabilities: TerminalCapabilities;
-  readonly size: TerminalSize;
-}
-
-type Settled<T> =
-  | { readonly ok: true; readonly value: T }
-  | { readonly ok: false; readonly error: unknown };
-
-function terminalFacts(io: TerminalIO): TerminalFacts {
-  let last: TerminalFacts | undefined;
-  for (let attempt = 0; attempt < 8; attempt += 1) {
-    const size = io.size();
-    const capabilities = io.capabilities();
-    const confirmed = io.size();
-    last = { size: confirmed, capabilities };
-    if (
-      size.columns !== confirmed.columns || size.rows !== confirmed.rows ||
-      capabilities.columns !== confirmed.columns
-    ) {
-      continue;
-    }
-    if (capabilities.ansiControl === false) {
-      throw new MarkdownBrowserRefusalError(
-        "ansi-control-unavailable",
-        confirmed,
-      );
-    }
-    return { size: confirmed, capabilities };
+function browserTerminalFacts(io: TerminalIO): TerminalFacts {
+  if (io.capabilities().ansiControl === false) {
+    throw new MarkdownBrowserRefusalError(
+      "ansi-control-unavailable",
+      io.size(),
+    );
   }
-  throw new TypeError(
-    `Terminal geometry did not stabilise while sampling its viewport and capabilities${
-      last === undefined
-        ? "."
-        : ` (last saw ${last.size.columns} columns and capability width ${last.capabilities.columns}).`
-    }`,
-  );
+  return terminalFacts(io);
 }
 
 function sameGeometry(
@@ -101,59 +82,6 @@ function sameGeometry(
   facts: TerminalFacts,
 ): boolean {
   return state.columns === facts.size.columns && state.rows === facts.size.rows;
-}
-
-class ResizeMailbox {
-  #pending = false;
-  #waiter: (() => void) | undefined;
-
-  notify = (): void => {
-    const waiter = this.#waiter;
-    if (waiter === undefined) {
-      this.#pending = true;
-      return;
-    }
-    this.#waiter = undefined;
-    waiter();
-  };
-
-  next(): Promise<void> {
-    if (this.#pending) {
-      this.#pending = false;
-      return Promise.resolve();
-    }
-    return new Promise((resolve) => {
-      this.#waiter = resolve;
-    });
-  }
-}
-
-class AbortMailbox {
-  readonly event: Promise<{ readonly kind: "abort" }>;
-  readonly #signal: AbortSignal | undefined;
-  readonly #notify: (() => void) | undefined;
-
-  constructor(signal: AbortSignal | undefined) {
-    this.#signal = signal;
-    if (signal === undefined) {
-      this.#notify = undefined;
-      this.event = new Promise(() => {});
-      return;
-    }
-    let notify: () => void = () => {};
-    this.event = new Promise((resolve) => {
-      notify = () => resolve({ kind: "abort" });
-    });
-    this.#notify = notify;
-    if (signal.aborted) notify();
-    else signal.addEventListener("abort", notify, { once: true });
-  }
-
-  stop(): void {
-    if (this.#signal !== undefined && this.#notify !== undefined) {
-      this.#signal.removeEventListener("abort", this.#notify);
-    }
-  }
 }
 
 function defaultLinkResolution(
@@ -239,7 +167,7 @@ export async function runMarkdownBrowserRequest<Action>(
 
   // Refuse unsupported control and incoherent initial geometry before raw
   // mode, cursor visibility, or alternate-screen state changes.
-  let facts = terminalFacts(io);
+  let facts = browserTerminalFacts(io);
   let state = fitMarkdownBrowserState(
     createMarkdownBrowserState(options, facts.size, runtime),
     facts.capabilities,
@@ -261,7 +189,7 @@ export async function runMarkdownBrowserRequest<Action>(
   };
   const paintLatestFrame = (): void => {
     while (!painter.replace(frame, facts.size)) {
-      const currentFacts = terminalFacts(io);
+      const currentFacts = browserTerminalFacts(io);
       if (!sameGeometry(state, currentFacts)) {
         state = transitionMarkdownBrowser(
           state,
@@ -306,7 +234,7 @@ export async function runMarkdownBrowserRequest<Action>(
             }));
           }
 
-          const currentFacts = terminalFacts(io);
+          const currentFacts = browserTerminalFacts(io);
           if (!sameGeometry(state, currentFacts)) {
             const resized = transitionMarkdownBrowser(
               state,
@@ -360,7 +288,7 @@ export async function runMarkdownBrowserRequest<Action>(
                 next.linkRequest,
                 abort,
               );
-              const resolvedFacts = terminalFacts(io);
+              const resolvedFacts = browserTerminalFacts(io);
               if (!sameGeometry(state, resolvedFacts)) {
                 state = transitionMarkdownBrowser(
                   state,

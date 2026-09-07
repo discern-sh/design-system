@@ -1,3 +1,7 @@
+import {
+  fitTerminalLine as fitStyledLine,
+  terminalScrollOffset,
+} from "../viewport.ts";
 /** Pure adaptive renderer for the link-aware Markdown browser. */
 
 import { stripAnsi, styleText } from "../ansi.ts";
@@ -67,17 +71,6 @@ export type MarkdownBrowserPointerTarget =
 
 function lineCount(value: string): number {
   return value === "" ? 0 : value.split("\n").length;
-}
-
-function fitStyledLine(
-  value: string,
-  columns: number,
-  capabilities: TerminalCapabilities,
-): string {
-  const fitted = measureText(value) <= columns
-    ? value
-    : truncateStyledText(value, columns, capabilities.unicode ? "…" : ".");
-  return padText(fitted, columns);
 }
 
 function limitStyledLines(
@@ -749,8 +742,11 @@ function renderDocumentPane<Action>(
   }
   const lines = markdownBrowserDocumentLines(state, capabilities);
   const bodyRows = markdownBrowserDocumentVisibleRows(state);
-  const maximum = Math.max(0, lines.length - bodyRows);
-  const offset = Math.min(state.documentScrollOffset, maximum);
+  const offset = terminalScrollOffset(
+    state.documentScrollOffset,
+    lines.length,
+    bodyRows,
+  );
   const visible = lines.slice(offset, offset + bodyRows).map((line) =>
     fitStyledLine(line, state.columns - 2, capabilities)
   );

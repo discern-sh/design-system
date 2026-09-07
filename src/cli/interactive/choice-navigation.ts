@@ -114,26 +114,9 @@ export function choiceVisibleCount(value: number | undefined): number {
 export function frameChoices<T>(
   choices: readonly InteractionEntry<T>[],
 ): readonly InteractiveChoiceEntryState[] {
-  return choices.map((entry) =>
-    isInteractionGroupHeading(entry)
-      ? {
-        kind: "group-heading",
-        id: entry.id,
-        label: entry.label,
-        ...(entry.description === undefined
-          ? {}
-          : { description: entry.description }),
-      }
-      : {
-        ...(entry.kind === undefined ? {} : { kind: entry.kind }),
-        id: entry.id,
-        label: entry.label,
-        ...(entry.description === undefined
-          ? {}
-          : { description: entry.description }),
-        ...(entry.disabled === undefined ? {} : { disabled: entry.disabled }),
-      }
-  );
+  // Interaction entries already satisfy the pure visual contract. Keeping the
+  // immutable collection identity avoids re-projecting every row on each key.
+  return choices;
 }
 
 function entryMatches(
