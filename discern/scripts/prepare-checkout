@@ -1,0 +1,6 @@
+#!/bin/sh
+# desc: Install locked dependencies and rebuild the current checkout
+set -eu
+cd "$(dirname "$0")/../.."
+deno install --frozen
+deno task build

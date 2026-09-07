@@ -94,10 +94,7 @@
   # Idempotent commands that make any checkout usable for its tracked tree,
   # such as installing dependencies from a lockfile. They run in order on every
   # worktree pass and after a landing.
-  ensure = [
-    "deno install --frozen",
-    "deno task build",
-  ]
+  ensure = ["sh discern/scripts/prepare-checkout"]
 
 # ─────────────────────────────────────────────────────────────────────────────
 # [map]
@@ -459,6 +456,24 @@
   # Maximum speculative positions beyond the next authorized source; requires
   # an eligible released environment.
   lookahead = 0
+
+# The source owner stops preview/watch processes before releasing the checkout.
+# Preparation and return share the ordinary checkout convergence procedure.
+[execution.local]
+  kind = "borrowed"
+  prepare = "sh discern/scripts/prepare-checkout"
+  restore = "sh discern/scripts/prepare-checkout"
+  reusable = true
+  resources = []
+  ignored = [
+    "node_modules/**",
+    "dist/**",
+    "catalogue/generated/**",
+    ".agents/skills/**",
+    ".claude/skills/**",
+  ]
+  inputs = ["**"]
+  capacity = 1
 
 # ─────────────────────────────────────────────────────────────────────────────
 # [standards.<name>]
