@@ -1,6 +1,8 @@
-# Discern design system
+# ◮ discern design system
 
-The design system behind [discern.sh](https://discern.sh): an opinionated, framework-neutral visual system for Deno sites and terminals. It ships semantic tokens, light/dark themes, scoped component CSS under one `discern` namespace, pure terminal renderers, optional React and interactive-terminal adapters, and a deterministic runtime emitter that outputs only what a consumer selects.
+As the web and CLI design system behind [discern.sh](https://discern.sh), discern's opinionated, framework-neutral visual system provides production-ready frontend components for Deno sites and console apps.
+
+The design system includes semantic tokens, light/dark themes, scoped component CSS under the `discern` namespace, pure terminal renderers, optional React and interactive-terminal adapters, and a deterministic runtime emitter that outputs only what a consumer selects.
 
 ```sh
 deno add jsr:@discern-sh/design-system
