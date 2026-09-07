@@ -4,7 +4,9 @@ The completion queue may borrow a released effort checkout to validate an immuta
 
 ## Review and release
 
-Provide a Catalogue preview for visible changes while the owner reviews them. Use `discern done --retain-checkout` while the preview is running. After approval, stop the effort's preview/watch processes and run `discern done` without retention. Follow its next action for acceptance; a recorded grant or conversation consent still governs landing. There is no post-acceptance preview requirement.
+Provide a Catalogue preview for visible changes while the owner reviews them, before final completion. After approval, stop the effort's preview/watch processes and run `discern done` on clean final HEAD. Follow its next action for acceptance; a recorded grant or conversation consent still governs landing. There is no post-acceptance preview requirement.
+
+Stop preview/watch processes before every gate run: the gate itself can install a temporary candidate. If review requires a green gate first, run `discern done --retain-checkout` with those processes stopped, then restart the preview after it returns. After approval, stop them again and use `discern done --rerun` to complete with checkout release. Plain `done` can reuse a retained green Proof without releasing the checkout; the explicit rerun costs another gate. Previewing before final completion avoids that extra run.
 
 ## Preparation and return
 
