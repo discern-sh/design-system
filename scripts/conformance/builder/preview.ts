@@ -17,6 +17,7 @@ import {
   type KeyboardSummary,
   useScopedTheme,
   visibleEnabledTargets,
+  waitForPreviewEvent,
 } from "./support.ts";
 
 function text(id: string, value: string): BuilderTextChild {
@@ -647,22 +648,14 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
     );
     const eventLog = page.getByRole("list", { name: "Preview event log" });
     await preview.getByRole("link", { name: "External link" }).click();
-    await eventLog.getByText("Blocked link").waitFor({
-      timeout: ACTION_TIMEOUT,
-    });
+    await waitForPreviewEvent(page, "Blocked link");
     await preview.getByRole("link", { name: "Popup link" }).click();
-    await eventLog.getByText("Blocked popup").waitFor({
-      timeout: ACTION_TIMEOUT,
-    });
+    await waitForPreviewEvent(page, "Blocked popup");
     await preview.getByRole("link", { name: "Download link" }).click();
-    await eventLog.getByText("Blocked download").waitFor({
-      timeout: ACTION_TIMEOUT,
-    });
+    await waitForPreviewEvent(page, "Blocked download");
     await preview.getByRole("button", { name: "Switch to the dark theme" })
       .click();
-    await eventLog.getByText('onThemeChange("dark")').waitFor({
-      timeout: ACTION_TIMEOUT,
-    });
+    await waitForPreviewEvent(page, 'onThemeChange("dark")');
     await preview.locator("body").evaluate((body) => {
       const form = document.createElement("form");
       const input = document.createElement("input");
@@ -673,9 +666,7 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
     await preview.getByRole("textbox", { name: "Submit witness field" }).press(
       "Enter",
     );
-    await eventLog.getByText("Blocked form submission").waitFor({
-      timeout: ACTION_TIMEOUT,
-    });
+    await waitForPreviewEvent(page, "Blocked form submission");
     const eventText = await eventLog.innerText();
     const populatedStatusHeight = await previewStatus.evaluate((element) =>
       element.getBoundingClientRect().height
@@ -889,10 +880,7 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
     await restoredPreview.getByRole("button", {
       name: "Close contained dialog",
     }).click();
-    await page.getByRole("list", { name: "Preview event log" })
-      .getByText("onOpenChange(false)").waitFor({
-        timeout: ACTION_TIMEOUT,
-      });
+    await waitForPreviewEvent(page, "onOpenChange(false)");
     await page.waitForFunction(
       (selector) => {
         const dialog = document.querySelector<HTMLIFrameElement>(selector)

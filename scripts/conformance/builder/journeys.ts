@@ -23,6 +23,7 @@ import {
   resetBuilderStorage,
   useScopedTheme,
   useTheme,
+  waitForPreviewEvent,
   WIDE_VIEWPORT,
   withAuxiliaryPage,
 } from "./support.ts";
@@ -225,9 +226,7 @@ export async function verifyIntegratedCompositionJourney(
       "iframe[data-discern-builder-preview-frame]",
     );
     await preview.getByRole("tab", { name: "Details", exact: true }).click();
-    await page.getByRole("list", { name: "Preview event log" }).getByText(
-      'onValueChange("details")',
-    ).waitFor({ timeout: ACTION_TIMEOUT });
+    await waitForPreviewEvent(page, 'onValueChange("details")');
     await page.getByRole("button", { name: "Edit", exact: true }).click();
     const tabs = await outlineItem(page, "Tabs");
     invariant(
@@ -507,10 +506,9 @@ export async function captureBuilderScreenshots(
   );
   const tabs = preview.getByRole("tablist");
   await tabs.getByRole("tab", { name: "Overview", exact: true }).click();
+  await waitForPreviewEvent(page, 'onValueChange("overview")');
   await tabs.getByRole("tab", { name: "Details", exact: true }).click();
-  await page.getByRole("list", { name: "Preview event log" }).getByText(
-    'onValueChange("details")',
-  ).waitFor({ timeout: ACTION_TIMEOUT });
+  await waitForPreviewEvent(page, 'onValueChange("details")');
   await capture("builder-interactive-events.png");
   await page.getByRole("button", { name: "Edit", exact: true }).click();
 

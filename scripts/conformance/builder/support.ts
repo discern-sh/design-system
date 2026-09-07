@@ -330,3 +330,13 @@ export async function withAuxiliaryPage<Result>(
     await context.close();
   }
 }
+
+/** Wait for the newest preview witness, even when its summary repeats. */
+export async function waitForPreviewEvent(
+  page: Page,
+  summary: string,
+): Promise<void> {
+  await page.getByRole("list", { name: "Preview event log" })
+    .getByRole("listitem").first().filter({ hasText: summary })
+    .waitFor({ timeout: ACTION_TIMEOUT });
+}
