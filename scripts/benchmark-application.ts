@@ -35,11 +35,13 @@ const entries = Array.from(
 );
 const fitting = [];
 for (
-  const [presentation, columns, rows] of [["form", 80, 26], ["menu", 40, 13], [
-    "menu",
-    80,
-    24,
-  ], ["menu", 0, 0]] as const
+  const { presentation, columns, rows, scenario } of [
+    { presentation: "form", columns: 80, rows: 26, scenario: "static" },
+    { presentation: "menu", columns: 40, rows: 13, scenario: "static" },
+    { presentation: "menu", columns: 80, rows: 24, scenario: "static" },
+    { presentation: "menu", columns: 0, rows: 0, scenario: "resize" },
+    { presentation: "form", columns: 80, rows: 26, scenario: "navigation" },
+  ] as const
 ) {
   for (const algorithm of ["baseline", "shared"] as const) {
     const times: number[] = [];
@@ -55,18 +57,27 @@ for (
         unicode: true,
       };
       const viewportRows = geometry[1]!;
-      const frame = (v: InteractionFrameViewport): SelectFrameState => ({
-        kind: "select",
-        label: "Choose",
-        lifecycle: { status: "active" },
-        options: entries,
-        highlightedIndex: 0,
-        visibleStart: 0,
-        visibleCount: v.controlRows(10),
-        ...(presentation === "menu"
-          ? { presentation: "menu", menuDetailLineLimit: v.controlRows(3) }
-          : {}),
-      });
+      const frame = (v: InteractionFrameViewport): SelectFrameState => {
+        const count = v.controlRows(10);
+        const focused = scenario === "navigation"
+          ? iteration % entries.length
+          : 0;
+        return {
+          kind: "select",
+          label: "Choose",
+          lifecycle: { status: "active" },
+          options: entries,
+          highlightedIndex: focused,
+          visibleStart: Math.max(
+            0,
+            Math.min(focused - Math.floor(count / 2), entries.length - count),
+          ),
+          visibleCount: count,
+          ...(presentation === "menu"
+            ? { presentation: "menu", menuDetailLineLimit: v.controlRows(3) }
+            : {}),
+        };
+      };
       const render = (state: SelectFrameState) => {
         calls++;
         const output = renderSelectCli(state, caps);
@@ -88,6 +99,7 @@ for (
       times.push(performance.now() - start);
     }
     fitting.push({
+      scenario,
       presentation,
       columns,
       rows,
@@ -170,7 +182,7 @@ for (const count of [20, 10_000]) {
   const updates = new FakeTerminalIO(["\x1b[B".repeat(40) + "q"]);
   const updateObservations: TerminalApplicationObservation[] = [];
   const updateStart = performance.now();
-  await runTerminalApplication({
+  const updated = await runTerminalApplication({
     view,
     start: (context) => {
       for (let burst = 0; burst < 100; burst++) {
@@ -180,6 +192,10 @@ for (const count of [20, 10_000]) {
     onKey: (key) =>
       key.kind === "text" && key.text === "q" ? { kind: "exit" } : undefined,
   }, { io: updates, observe: (event) => updateObservations.push(event) });
+  if (
+    updated.positions.items?.selectedId !== String(Math.min(40, count - 1)) ||
+    updated.view.title !== "Update 99"
+  ) throw new Error("coalescing lost an update or navigation key");
   navigation.push({
     items: count,
     navigation: summary(times),
