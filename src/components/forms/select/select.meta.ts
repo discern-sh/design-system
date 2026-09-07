@@ -7,7 +7,7 @@ const meta = {
   group: "Forms",
   order: 40,
   description:
-    "Styled native select with typed options and associated field messaging.",
+    "Native browser select and terminal single-choice list, including a focused action menu with contextual detail.",
   cli: { stance: "rendered" },
 } satisfies ComponentMeta;
 
@@ -15,6 +15,13 @@ export const componentExampleVocabulary = [
   { id: "default", label: "Idle" },
   { id: "grouped", label: "Grouped options" },
   { id: "active", label: "Active" },
+  {
+    id: "menu",
+    label: "Action menu",
+    only: "cli",
+    reason:
+      "Native HTML select popups cannot contain independently styled row annotations and a focus-driven contextual detail region.",
+  },
   { id: "filled", label: "Selected" },
   { id: "validation-error", label: "Validation error" },
   { id: "disabled", label: "Disabled" },
