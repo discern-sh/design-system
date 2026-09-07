@@ -451,11 +451,12 @@
   required_contexts = ["local"]
 
   # Maximum live candidate executions across the repository queue.
-  concurrency = 1
+  # Keep a slot for approved head work while the next candidate executes.
+  concurrency = 2
 
   # Maximum speculative positions beyond the next authorized source; requires
   # an eligible released environment.
-  lookahead = 0
+  lookahead = 1
 
 # The source owner stops preview/watch processes before releasing the checkout.
 # Preparation and return share the ordinary checkout convergence procedure.
@@ -473,7 +474,7 @@
     ".claude/skills/**",
   ]
   inputs = ["**"]
-  capacity = 1
+  capacity = 2
 
 # ─────────────────────────────────────────────────────────────────────────────
 # [standards.<name>]

@@ -1,6 +1,6 @@
 # Validation workspaces
 
-The completion queue may borrow a released effort checkout to validate an immutable combination before it lands. Each agent keeps its assigned worktree. A preview or watcher must stop before that checkout is released: a watcher can rebuild files during candidate installation, and a preview could display the temporary combination.
+The completion queue may borrow a released effort checkout to validate an immutable combination before it lands. Each agent keeps its assigned worktree. Completion and environment capacity leave room for the next candidate while the queue head retains a slot; the test-stage queue separately limits browser-heavy execution. A preview or watcher must stop before that checkout is released: a watcher can rebuild files during candidate installation, and a preview could display the temporary combination.
 
 ## Review and release
 
