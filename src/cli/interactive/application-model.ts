@@ -459,7 +459,10 @@ export function renderTerminalApplication<Action>(
         },
       });
       lines = fitted.rendered.split("\n");
-      regionRows[region.id] = fitted.state.count;
+      regionRows[region.id] = Math.max(
+        1,
+        fitted.state.options.filter(isInteractionChoice).length,
+      );
       bottomLabel = `${
         (index.ordinal.get(position.selectedId ?? "") ?? 0) + 1
       }/${index.choices.length}`;

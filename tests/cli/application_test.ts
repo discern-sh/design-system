@@ -372,3 +372,36 @@ Deno.test("long grouped labels keep the active choice reachable at minimum geome
     }, result.regionRows).state;
   }
 });
+
+Deno.test("application paging advances by visible choices rather than group headings", () => {
+  const entries = Array.from({ length: 12 }, (_, index) => [
+    {
+      kind: "group-heading" as const,
+      id: `group-${index}`,
+      label: `Group ${index}`,
+    },
+    { id: `item-${index}`, label: `Choice ${index}`, value: index },
+  ]).flat();
+  const io = new FakeTerminalIO([], { columns: 32, rows: 10 });
+  const state = updateTerminalApplication({
+    title: "Groups",
+    regions: [{ kind: "choices", id: "items", title: "Items", entries }],
+  });
+  const rendered = renderTerminalApplication(
+    state,
+    io.size(),
+    io.capabilities(),
+  );
+  const visibleChoices =
+    stripAnsi(rendered.frame).split("\n").filter((line) =>
+      line.includes("Choice ")
+    ).length;
+  const paged = transitionTerminalApplication(rendered.state, {
+    kind: "named",
+    name: "page-down",
+  }, rendered.regionRows);
+  assertEquals(
+    paged.state.positions.items?.selectedId,
+    `item-${visibleChoices}`,
+  );
+});
