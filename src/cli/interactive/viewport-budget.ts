@@ -4,6 +4,8 @@
 export interface InteractionFrameViewport {
   /** Maximum control rows the machine may expose in this fitting attempt. */
   readonly maximumControlRows: number;
+  /** Clamp and register a variable region's requested row ceiling. */
+  readonly controlRows: (requested: number) => number;
 }
 
 /** One interaction frame proven to fit the current terminal height. */
@@ -32,13 +34,31 @@ export function fitInteractionFrame<State>(options: {
   const viewportRows = Math.max(1, options.viewportRows);
   let controlRows = viewportRows;
   while (controlRows >= 1) {
-    const state = options.frame({ maximumControlRows: controlRows });
+    let used = 0;
+    const state = options.frame({
+      get maximumControlRows() {
+        used = controlRows;
+        return controlRows;
+      },
+      controlRows: (requested) => {
+        if (!Number.isSafeInteger(requested) || requested < 1) {
+          throw new TypeError(
+            "control row ceiling must be a positive safe integer",
+          );
+        }
+        const rows = Math.min(requested, controlRows);
+        used = Math.max(used, rows);
+        return rows;
+      },
+    });
     const rendered = options.render(state);
     const frameRows = renderedRows(rendered);
     if (frameRows <= viewportRows) {
       return { state, rendered, frameRows, viewportRows, controlRows };
     }
-    controlRows -= 1;
+    // Only skip budgets certified equivalent by every variable region.
+    // Raw maximumControlRows access conservatively disables that shortcut.
+    controlRows = used - 1;
   }
   throw new TypeError(
     `terminal viewport of ${viewportRows} row(s) cannot hold a coherent interaction frame`,

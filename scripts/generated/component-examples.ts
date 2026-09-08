@@ -1011,6 +1011,15 @@ export const componentExampleRegistry = {
       ],
     },
     {
+      "id": "menu",
+      "label": "Action menu",
+      "surfaces": [
+        "cli",
+      ],
+      "reason":
+        "Native HTML select popups cannot contain independently styled row annotations and a focus-driven contextual detail region.",
+    },
+    {
       "id": "filled",
       "label": "Selected",
       "surfaces": [

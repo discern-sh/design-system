@@ -445,3 +445,6 @@ export function assertStyledFrame(
   }
   assertExactFrame(stripAnsi(actual), expectedPlaintext, capabilities);
 }
+
+export * from "./pty-testing.ts";
+export * from "./capture-testing.ts";

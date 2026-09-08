@@ -4,6 +4,9 @@
  * @module
  */
 
+import type { SemanticInlineContent } from "./semantic-inline.ts";
+import type { TerminalSemanticTone } from "./theme.ts";
+
 import type { ActivityLogLineTone } from "../components/workflow/activity-log/activity-log.types.ts";
 
 /** Lifecycle shared by active, failed, submitted, and cancelled interaction frames. */
@@ -46,8 +49,20 @@ export interface ConfirmFrameState extends InteractiveFrameBase {
   readonly noLabel: string;
 }
 
+/** Caller-authored text and tone for an independently styled row annotation. */
+export interface TerminalRowAnnotation {
+  readonly content: SemanticInlineContent;
+  /** Optional replacement text for terminals without Unicode. */
+  readonly ascii?: SemanticInlineContent;
+  readonly tone?: TerminalSemanticTone;
+}
+
 /** One addressable option displayed by selection-like frames. */
 export interface InteractiveChoiceState {
+  /** Compact leading annotation, independent of the focus marker. */
+  readonly indicator?: TerminalRowAnnotation;
+  /** Right-aligned status; visible text must carry its meaning without colour. */
+  readonly status?: TerminalRowAnnotation;
   /** Optional explicit discriminant; omitted choices remain source-compatible. */
   readonly kind?: "choice";
   readonly id: string;

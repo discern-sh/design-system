@@ -705,7 +705,7 @@ class ActivityLogRun implements ActivityLogController {
         frame: (viewport) =>
           this.#state(
             { status: "active" },
-            Math.min(this.requestedTailRows, viewport.maximumControlRows),
+            viewport.controlRows(this.requestedTailRows),
           ),
         render: (state) => this.#render(state),
       });

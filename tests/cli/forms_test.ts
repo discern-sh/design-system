@@ -482,6 +482,7 @@ const selectFrames = [
     sectionRule("Other", 24)
   } │\n│   [ ] Charlie (disabled) │\n└──────────────────────────┘\n`,
   "Environment\n┌──────────────────────────┐\n│   [ ] Alpha              │\n│ › [ ] Bravo              │\n│   [ ] Charlie (disabled) │\n└──────────────────────────┘\n",
+  "Next step\n┌──────────────────────────┐\n│     Read the guide       │\n│ ›   + Run sample   Ready │\n│   × Export sample        │\n│ ──────────────────────── │\n│ Borrow the terminal and  │\n│ return to the same       │\n│ place.                   │\n└──────────────────────────┘\n",
   "Environment\n┌──────────────────────────┐\n│ Bravo ⌄                  │\n└──────────────────────────┘\n",
   "Environment\n┌──────────────────────────┐\n│ › [ ] Alpha              │\n│   [ ] Bravo              │\n│   [ ] Charlie (disabled) │\n└──────────────────────────┘\n! Choose an environment",
   "Environment\n┌──────────────────────────┐\n│ Alpha ⌄                  │\n└──────────────────────────┘\nDisabled",
@@ -499,7 +500,7 @@ Deno.test("Select covers narrow, standard, wide, colour, and ASCII frames", () =
     renderSelectCli,
     [
       "Environment\n┌──────────────┐\n│ Bravo ⌄      │\n└──────────────┘\n",
-      selectFrames[3],
+      selectFrames[4],
       "Environment\n┌──────────────────────────────────────────────┐\n│ Bravo ⌄                                      │\n└──────────────────────────────────────────────┘\n",
     ],
     selectFrames[2],

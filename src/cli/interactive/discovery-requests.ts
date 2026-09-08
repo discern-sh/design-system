@@ -352,9 +352,8 @@ class SearchInteractionMachine<T>
     lifecycle: InteractiveFrameLifecycle,
     viewport: InteractionFrameViewport,
   ): SearchFrameState {
-    const visibleCount = Math.min(
-      this.#visibleCount,
-      viewport.maximumControlRows,
+    const visibleCount = viewport.controlRows(
+      Math.max(1, Math.min(this.#visibleCount, this.#matches.length)),
     );
     const anchor = this.#highlighted ?? 0;
     const start = choiceVisibleStart(
@@ -382,7 +381,7 @@ class SearchInteractionMachine<T>
       results: visible.map(({ entry }) => entry),
       ...(this.#presentation === "menu" ? { menuDetailEntries: choices } : {}),
       ...(this.#presentation === "menu"
-        ? { menuDetailLineLimit: Math.min(3, viewport.maximumControlRows) }
+        ? { menuDetailLineLimit: viewport.controlRows(3) }
         : {}),
       ...interactiveChoiceOverflow(choices, start, visibleCount),
       ...(this.#presentation === undefined
@@ -555,9 +554,8 @@ class SearchSelectionsInteractionMachine<T>
     lifecycle: InteractiveFrameLifecycle,
     viewport: InteractionFrameViewport,
   ): SearchMultiselectFrameState {
-    const visibleCount = Math.min(
-      this.#visibleCount,
-      viewport.maximumControlRows,
+    const visibleCount = viewport.controlRows(
+      Math.max(1, Math.min(this.#visibleCount, this.#entries.length)),
     );
     const anchor = this.#highlighted ?? 0;
     const start = choiceVisibleStart(
