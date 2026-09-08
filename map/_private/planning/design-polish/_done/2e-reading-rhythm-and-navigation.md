@@ -82,7 +82,7 @@ Authored feature files stay with their owner. Shared derived files and the narro
 - Return the branch/worktree identity for an adversarial review against this brief. The planning agent will inspect the diff and reproduce the important journeys; gate success alone is not a visual review.
 - In the final implementation commit, before the final prepare → commit → done sequence, move `map/_private/planning/design-polish/2e-reading-rhythm-and-navigation.md` to `map/_private/planning/design-polish/_done/2e-reading-rhythm-and-navigation.md`, repair any moved relative links, and update **only this stream's row** in the programme README to the `_done/` path and completed state, preserving every sibling row.
 
-## Implementation review — awaiting script-budget decision
+## Implementation review
 
 The implementation is in `agent/refine-2e-3d5b8e`. A's strengthened muted body role remains unchanged after light/dark long-article review. Prose now owns direct-child rhythm, Article layout prioritizes its reading column from local allocation, and Footnotes keeps definition-grid rules out of nested lists. Heading and note targets receive fragment focus; Markdown avoids heading/note ID collisions and keeps distinct citation return destinations.
 
@@ -90,4 +90,4 @@ Native direct links work in static HTML. Browser Forward navigation can leave fo
 
 Review covered light/dark reading, 320/390/720/1120/1440-pixel allocations, mixed blocks, repeated notes/headings, document and nested scrolling under an actual 80-pixel header, history traversal, and forced-colour focus. The complete article, Anchor heading, and repeated-note return postures are available on port 18195. Focused and publication checks passed (46 tests); canonical images were regenerated from the integrated tree.
 
-The measured minimal Docs CSS is 40,928 bytes against a 40,930-byte ceiling. Behavior script is 9,367 bytes against 8,582, a 785-byte overage. No limit has changed. The recommended owner decision is to retain reliable history navigation and approve a measured `behavior_script` proposal; the alternative is native-only navigation with browser-dependent history focus and nested-scroll restoration. This brief stays outside `_done` until that decision and final verification are resolved.
+The measured minimal Docs CSS is 40,928 bytes against a 40,930-byte ceiling. The owner approved the measured 9,367-byte behavior-script ceiling (785 bytes above 8,582) to retain reliable history navigation. This is a focused new capability; reducing unrelated behavior scripts to fund it would cross this stream's ownership boundary. The alternative retains native direct links but leaves browser-dependent history focus and nested-scroll restoration.
