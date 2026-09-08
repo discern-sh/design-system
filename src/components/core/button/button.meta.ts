@@ -28,7 +28,7 @@ export const componentExampleVocabulary = [
     label: "Action layout",
     only: "web",
     reason:
-      "Terminal text cannot exercise native disabled focus, CSS intrinsic geometry, or injected SVG layout.",
+      "Terminal action text cannot exercise multiline CSS labels between SVG slots or native unavailable anchor navigation.",
   },
 ] as const;
 defineComponentExampleVocabulary(meta, componentExampleVocabulary);

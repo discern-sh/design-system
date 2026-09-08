@@ -53,7 +53,7 @@ export const componentExampleRegistry = {
         "web",
       ],
       "reason":
-        "Terminal text cannot exercise native disabled focus, CSS intrinsic geometry, or injected SVG layout.",
+        "Terminal action text cannot exercise multiline CSS labels between SVG slots or native unavailable anchor navigation.",
     },
   ],
   "icon-button": [
@@ -80,7 +80,7 @@ export const componentExampleRegistry = {
         "web",
       ],
       "reason":
-        "Terminal text cannot exercise native disabled focus, CSS intrinsic geometry, or injected SVG layout.",
+        "Terminal labelled glyphs cannot exercise square browser hit targets, injected SVG sizing, or disabled native focus.",
     },
   ],
   "theme-toggle": [
