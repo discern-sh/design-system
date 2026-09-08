@@ -10,7 +10,10 @@ const meta = {
     "Typed button and anchor variants with vendor-neutral leading and trailing icon slots.",
   cli: { stance: "rendered" },
   accessibility: [
-    "Anchor and button props are mutually exclusive.",
+    "Busy retains the action identity and size, sets aria-busy, and disables native activation; the caller owns lifecycle and focus restoration.",
+    "Unavailable actions use readable ink and a dashed outline; busy adds a still dotted progress rail.",
+    "Anchor and button props are mutually exclusive; aria-disabled anchors omit href and leave keyboard navigation.",
+    "Destructive actions require explicit visible wording such as Delete; danger colour alone does not communicate intent.",
     "Visible focus and disabled states are built in.",
   ],
 } satisfies ComponentMeta;
@@ -20,6 +23,13 @@ export const componentExampleVocabulary = [
   { id: "secondary", label: "Secondary" },
   { id: "ghost", label: "Ghost" },
   { id: "danger", label: "Danger" },
+  {
+    id: "action-layout",
+    label: "Action layout",
+    only: "web",
+    reason:
+      "Terminal text cannot exercise native disabled focus, CSS intrinsic geometry, or injected SVG layout.",
+  },
 ] as const;
 defineComponentExampleVocabulary(meta, componentExampleVocabulary);
 

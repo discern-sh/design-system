@@ -10,6 +10,8 @@ const meta = {
     "Square icon action with a required accessible label and injected graphic.",
   cli: { stance: "rendered" },
   accessibility: [
+    "Busy retains the action identity and size, sets aria-busy, and disables native activation; the caller owns lifecycle and focus restoration.",
+    "Unavailable actions use readable ink and a dashed outline; busy adds a still dotted progress rail.",
     "A text label is required even when only an icon is visible.",
   ],
 } satisfies ComponentMeta;
@@ -17,6 +19,13 @@ const meta = {
 export const componentExampleVocabulary = [
   { id: "default", label: "Quiet" },
   { id: "outline", label: "Outline" },
+  {
+    id: "action-layout",
+    label: "Action layout",
+    only: "web",
+    reason:
+      "Terminal text cannot exercise native disabled focus, CSS intrinsic geometry, or injected SVG layout.",
+  },
 ] as const;
 defineComponentExampleVocabulary(meta, componentExampleVocabulary);
 

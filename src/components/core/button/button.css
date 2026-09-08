@@ -11,12 +11,15 @@
     --discern-shadow-button-pressed: calc(var(--discern-space-1) / 4)
       calc(var(--discern-space-1) / 4) 0
       var(--discern-color-action-shadow);
+    position: relative;
     display: inline-flex;
+    max-inline-size: 100%;
+    min-inline-size: 0;
     align-items: center;
     justify-content: center;
     gap: var(--discern-space-2);
     min-block-size: var(--discern-control-size-md);
-    padding: 0 var(--discern-space-5);
+    padding: var(--discern-space-1) var(--discern-space-5);
     border: 0.125rem solid var(--discern-color-button-edge);
     border-radius: var(--discern-radius-md);
     background: var(--discern-button-fill);
@@ -31,10 +34,10 @@
     transition-property: background, box-shadow, transform;
     transition-duration: var(--discern-duration-fast);
   }
-  .discern-button:hover {
+  .discern-button:hover:not(:disabled):not([aria-disabled="true"]) {
     background: var(--discern-button-fill-hover);
   }
-  .discern-button:active {
+  .discern-button:active:not(:disabled):not([aria-disabled="true"]) {
     transform: translate(
       calc(var(--discern-space-1) / 2),
       calc(var(--discern-space-1) / 2)
@@ -44,12 +47,6 @@
   .discern-button:focus-visible {
     outline: 0.125rem solid var(--discern-color-accent-500);
     outline-offset: var(--discern-space-1);
-  }
-  .discern-button:disabled {
-    cursor: not-allowed;
-    opacity: 0.48;
-    transform: none;
-    box-shadow: none;
   }
   .discern-button--secondary {
     --discern-button-fill: var(--discern-color-surface);
@@ -72,10 +69,8 @@
     --discern-button-fill: var(--discern-color-danger-soft);
     --discern-button-fill-hover: color-mix(in oklab, var(--discern-color-danger-soft) 78%, var(--discern-color-danger));
     --discern-color-button-edge: var(--discern-color-danger);
-    --discern-shadow-button: calc(var(--discern-space-1) / 2)
-      calc(var(--discern-space-1) / 2) 0 var(--discern-color-danger);
-    --discern-shadow-button-pressed: calc(var(--discern-space-1) / 4)
-      calc(var(--discern-space-1) / 4) 0 var(--discern-color-danger);
+    --discern-shadow-button: none;
+    --discern-shadow-button-pressed: none;
     --discern-button-text: var(--discern-color-danger);
   }
   .discern-button--sm {
@@ -88,7 +83,13 @@
     padding-inline: var(--discern-space-6);
     font-size: 1.0625rem;
   }
+  .discern-button__label {
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+    text-align: center;
+  }
   .discern-button__icon {
+    flex: none;
     display: inline-grid;
     place-items: center;
     align-content: center;
@@ -96,7 +97,32 @@
     block-size: 1em;
   }
   .discern-button__icon > :where(svg, img) {
-    inline-size: 100%;
-    block-size: 100%;
+    max-inline-size: 100%;
+    max-block-size: 100%;
+  }
+  .discern-button:is(:disabled, [aria-disabled="true"]) {
+    border-style: dashed;
+    border-color: var(--discern-color-border-strong);
+    background: var(--discern-color-surface-sunken);
+    color: var(--discern-color-ink-muted);
+    cursor: not-allowed;
+    opacity: 1;
+    transform: none;
+    box-shadow: none;
+  }
+  .discern-button[aria-busy="true"] {
+    cursor: progress;
+  }
+  .discern-button[aria-busy="true"]::after {
+    content: "";
+    position: absolute;
+    inset-block-end: calc(var(--discern-space-1) / 2);
+    inline-size: 1em;
+    border-block-end: 0.1875rem dotted var(--discern-color-ink-muted);
+  }
+  @media (forced-colors: active) {
+    .discern-button:is(:disabled, [aria-disabled="true"]) {
+      color: GrayText;
+    }
   }
 }

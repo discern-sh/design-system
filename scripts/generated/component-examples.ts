@@ -46,6 +46,15 @@ export const componentExampleRegistry = {
         "cli",
       ],
     },
+    {
+      "id": "action-layout",
+      "label": "Action layout",
+      "surfaces": [
+        "web",
+      ],
+      "reason":
+        "Terminal text cannot exercise native disabled focus, CSS intrinsic geometry, or injected SVG layout.",
+    },
   ],
   "icon-button": [
     {
@@ -63,6 +72,15 @@ export const componentExampleRegistry = {
         "web",
         "cli",
       ],
+    },
+    {
+      "id": "action-layout",
+      "label": "Action layout",
+      "surfaces": [
+        "web",
+      ],
+      "reason":
+        "Terminal text cannot exercise native disabled focus, CSS intrinsic geometry, or injected SVG layout.",
     },
   ],
   "theme-toggle": [

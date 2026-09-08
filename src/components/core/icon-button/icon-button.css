@@ -1,5 +1,7 @@
 @layer discern.components {
   .discern-icon-button {
+    position: relative;
+    flex: none;
     display: inline-grid;
     place-items: center;
     inline-size: var(--discern-control-size-md);
@@ -22,12 +24,13 @@
     transform: translateY(0.0625rem);
   }
   .discern-icon-button:disabled {
-    border-color: var(--discern-color-border);
+    border-color: var(--discern-color-border-strong);
     background: var(--discern-color-surface-sunken);
-    color: var(--discern-color-ink-faint);
+    color: var(--discern-color-ink-muted);
+    border-style: dashed;
     cursor: not-allowed;
   }
-  .discern-icon-button--outline {
+  .discern-icon-button--outline:not(:disabled) {
     border-color: var(--discern-color-border-strong);
     background: var(--discern-color-surface);
   }
@@ -54,8 +57,23 @@
     inline-size: 1.3125rem;
     block-size: 1.3125rem;
   }
-  .discern-icon-button svg {
-    inline-size: 100%;
-    block-size: 100%;
+  .discern-icon-button > span > :where(svg, img) {
+    max-inline-size: 100%;
+    max-block-size: 100%;
+  }
+  .discern-icon-button[aria-busy="true"] {
+    cursor: progress;
+  }
+  .discern-icon-button[aria-busy="true"]::after {
+    content: "";
+    position: absolute;
+    inset-block-end: calc(var(--discern-space-1) / 2);
+    inline-size: 1em;
+    border-block-end: 0.1875rem dotted var(--discern-color-ink-muted);
+  }
+  @media (forced-colors: active) {
+    .discern-icon-button:disabled {
+      color: GrayText;
+    }
   }
 }
