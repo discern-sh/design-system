@@ -132,6 +132,10 @@ export function frameChoices<T>(
           ? {}
           : { description: entry.description }),
         ...(entry.disabled === undefined ? {} : { disabled: entry.disabled }),
+        ...(entry.indicator === undefined
+          ? {}
+          : { indicator: entry.indicator }),
+        ...(entry.status === undefined ? {} : { status: entry.status }),
       }
   );
 }

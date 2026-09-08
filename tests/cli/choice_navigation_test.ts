@@ -172,3 +172,18 @@ Deno.test("paging jumps a window, lands on enabled choices, and clamps at the ed
     "a degenerate window still moves by at least one row before clamping",
   );
 });
+
+Deno.test("choice projection carries annotations without leaking caller values", () => {
+  const indicator = { content: "+", tone: "success" as const };
+  const status = { content: "Ready", tone: "success" as const };
+  assertEquals(
+    frameChoices([{
+      id: "sample",
+      label: "Sample",
+      value: () => "caller-owned",
+      indicator,
+      status,
+    }]),
+    [{ id: "sample", label: "Sample", indicator, status }],
+  );
+});

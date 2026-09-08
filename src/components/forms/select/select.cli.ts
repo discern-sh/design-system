@@ -30,6 +30,12 @@ import meta, { componentExampleVocabulary } from "./select.meta.ts";
 export interface SelectCliProps
   extends SelectFrameState, CliPresentationOptions {
   readonly presentation?: FormCliSelectionPresentation;
+  /** Omit surrounding label, border, hint, and overflow footer inside an owned region. */
+  readonly chrome?: "frame" | "none";
+  /** Whether to draw keyboard focus; selection and status retain their own styling. */
+  readonly focused?: boolean;
+  /** Optional bounded label height when a parent owns scrolling; the final line is ellipsized. */
+  readonly maximumLabelLines?: number;
   readonly placeholder?: string;
   readonly required?: boolean;
   readonly showStatus?: boolean;
@@ -81,6 +87,36 @@ const cliExampleImplementations = [
       ...base,
       highlightedIndex: 1,
       lifecycle: { status: "active" },
+    },
+  },
+  {
+    name: "menu",
+    props: {
+      ...base,
+      label: "Next step",
+      lifecycle: { status: "active" },
+      presentation: "menu",
+      options: [
+        {
+          id: "read",
+          label: "Read the guide",
+          description: "Open a bounded reading region.",
+        },
+        {
+          id: "sample",
+          label: "Run sample",
+          indicator: { content: "+", tone: "success" },
+          status: { content: "Ready", tone: "success" },
+          description: "Borrow the terminal and return to the same place.",
+        },
+        {
+          id: "export",
+          label: "Export sample",
+          disabled: true,
+          description: "Unavailable in this demonstration.",
+        },
+      ],
+      highlightedIndex: 1,
     },
   },
   {
@@ -138,7 +174,7 @@ export const cliExamples: readonly CliExample<SelectCliProps>[] =
 const renderSelectCli: CliRenderer<SelectCliProps> = (props, capabilities) => {
   const state = props;
   const width = formCliChoiceFrameWidth(
-    props.width,
+    props.width ?? (props.chrome === "none" ? capabilities.columns : undefined),
     capabilities,
     props.presentation,
   );
@@ -174,7 +210,8 @@ const renderSelectCli: CliRenderer<SelectCliProps> = (props, capabilities) => {
       const rows = visibleFormCliChoiceEntries(state).map(
         ({ entry, sourceIndex }) => {
           const absoluteIndex = sourceIndex;
-          const isHighlighted = absoluteIndex === state.highlightedIndex;
+          const isHighlighted = props.focused !== false &&
+            absoluteIndex === state.highlightedIndex;
           const pointer = isHighlighted
             ? `${capabilities.unicode ? "›" : ">"} `
             : "  ";
@@ -204,6 +241,10 @@ const renderSelectCli: CliRenderer<SelectCliProps> = (props, capabilities) => {
           return renderFormCliChoiceEntry({
             ...cliPresentationPassthrough(props),
             entry,
+            ...(props.maximumLabelLines === undefined
+              ? {}
+              : { maximumLabelLines: props.maximumLabelLines }),
+            ...(props.chrome === "none" ? { contentWidth: width } : {}),
             pointer,
             marker,
             highlighted: isHighlighted,
@@ -218,10 +259,13 @@ const renderSelectCli: CliRenderer<SelectCliProps> = (props, capabilities) => {
         },
       );
       const choices = rows.join("\n");
-      if (props.presentation !== "menu") return choices;
+      if (
+        props.presentation !== "menu" || state.menuDetailLineLimit === 0
+      ) return choices;
       const detail = renderFormCliMenuDetail({
         ...cliPresentationPassthrough(props),
         entries: state.options,
+        ...(props.chrome === "none" ? { contentWidth: width } : {}),
         highlightedIndex: state.highlightedIndex,
         ...(state.menuDetailLineLimit === undefined
           ? {}
@@ -243,6 +287,7 @@ const renderSelectCli: CliRenderer<SelectCliProps> = (props, capabilities) => {
       },
       capabilities,
     );
+  if (props.chrome === "none") return control;
   return renderFormCliFrame({
     ...cliPresentationPassthrough(props),
     label: state.label,

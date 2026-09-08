@@ -1,3 +1,4 @@
+import { applicationDemoOptions } from "./application.ts";
 /**
  * The playground's journey inventory: focused live journeys for every
  * high-level interactive API, stress and lifecycle review cases, and the
@@ -24,6 +25,7 @@ import {
   requestSelections,
   requestText,
   requestTextarea,
+  runTerminalApplication,
   segmentGraphemes,
   senseTerminalBackground,
   withActivityLog,
@@ -193,6 +195,24 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
             : undefined,
       }, { io: runtime.io });
       report(runtime, value);
+    },
+  },
+  {
+    id: "application",
+    title: "Live bounded application",
+    section: "Interactive APIs",
+    description:
+      "A calm live collection, responsive regions, a reading pane and foreground return. Run playground:application for the real child fixture.",
+    run: async (runtime) => {
+      await runTerminalApplication(
+        applicationDemoOptions(async () => {
+          runtime.print("A short detour. Continue to return to Studio.");
+          await requestAcknowledgement({ presentation: "compact" }, {
+            io: runtime.io,
+          });
+        }),
+        { io: runtime.io, appearance: { accent: 220 } },
+      );
     },
   },
   {
@@ -1137,6 +1157,21 @@ export const interactiveExportCoverage: Readonly<
     { readonly journey: string } | { readonly excluded: string }
   >
 > = {
+  runTerminalApplication: { journey: "application" },
+  TERMINAL_APPLICATION_MINIMUM: {
+    excluded:
+      "The application journey exercises the minimum viewport and resize fallback.",
+  },
+  updateTerminalApplication: {
+    excluded: "Pure view adoption exercised by the application journey.",
+  },
+  transitionTerminalApplication: {
+    excluded: "Pure navigation exercised by the application journey.",
+  },
+  renderTerminalApplication: {
+    excluded:
+      "Pure bounded frames exercised by the application journey and capture tool.",
+  },
   requestAcknowledgement: { journey: "acknowledge" },
   requestText: { journey: "text" },
   requestMaskedText: { journey: "masked" },

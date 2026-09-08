@@ -4,10 +4,16 @@
  * @module
  */
 
+import process from "node:process";
+import { InteractionCancelled } from "./errors.ts";
+
 import {
   detectTerminalCapabilities,
   type TerminalCapabilities,
 } from "../capabilities.ts";
+
+// Serialize native stdin reads across adapter instances.
+let terminalReadPending = false;
 
 const DEFAULT_COLUMNS = 80;
 const DEFAULT_ROWS = 24;
@@ -36,6 +42,14 @@ export interface TerminalIO {
   size(): TerminalSize;
   /** Read the next raw input chunk, or `null` after terminal end-of-input. */
   read(): Promise<Uint8Array | null>;
+  /**
+   * Stop native input polling and reject the pending read, returning true only
+   * when a read was cancelled. Preserve already delivered bytes and keep stdin
+   * open for a later interaction or foreground operation. The raw-terminal
+   * lifecycle calls this before relinquishing ownership. Hosts without native
+   * pending reads may omit it; forwarding wrappers must preserve this hook.
+   */
+  cancelRead?(): boolean;
   /** Enable or disable raw input mode. */
   setRawMode(enabled: boolean): void;
   /** Write terminal control or display bytes synchronously. */
@@ -53,7 +67,7 @@ export interface TerminalIO {
 export interface DenoTerminalIOOptions {
   /** Environment facts used for deterministic capability detection. */
   readonly environment?: Readonly<Record<string, string | undefined>>;
-  /** Maximum raw input bytes requested from stdin per read. */
+  /** Maximum raw input bytes returned per read. */
   readonly readBufferSize?: number;
 }
 
@@ -80,6 +94,8 @@ function validDimension(value: number | undefined, fallback: number): number {
 export class DenoTerminalIO implements TerminalIO {
   readonly #environment: Readonly<Record<string, string | undefined>>;
   readonly #readBufferSize: number;
+  #buffered = new Uint8Array(0);
+  #cancelPending: (() => void) | undefined;
 
   constructor(options: DenoTerminalIOOptions = {}) {
     const readBufferSize = options.readBufferSize ?? 1024;
@@ -122,11 +138,70 @@ export class DenoTerminalIO implements TerminalIO {
     }
   }
 
-  /** Read one raw byte chunk from Deno stdin. */
+  /** Read a bounded raw chunk, pausing native TTY polling between reads. */
   async read(): Promise<Uint8Array | null> {
-    const buffer = new Uint8Array(this.#readBufferSize);
-    const count = await Deno.stdin.read(buffer);
-    return count === null ? null : buffer.slice(0, count);
+    if (!Deno.stdin.isTerminal()) {
+      const buffer = new Uint8Array(this.#readBufferSize);
+      const count = await Deno.stdin.read(buffer);
+      return count === null ? null : buffer.slice(0, count);
+    }
+    if (this.#buffered.length > 0) return this.#takeChunk(this.#buffered);
+    if (terminalReadPending) {
+      throw new Error("Terminal stdin already has an active reader.");
+    }
+    // process.stdin stops reads scheduled after pause, including cancellation
+    // in the first turn. Its descriptor remains open for foreground input.
+    const stream = process.stdin;
+    if (stream.readableEnded || stream.destroyed) return null;
+    return await new Promise<Uint8Array | null>((resolve, reject) => {
+      const cleanup = (): void => {
+        stream.pause();
+        stream.unref();
+        stream.off("data", onData);
+        stream.off("end", onEnd);
+        stream.off("error", onError);
+        this.#cancelPending = undefined;
+        terminalReadPending = false;
+      };
+      const onData = (chunk: Uint8Array): void => {
+        cleanup();
+        resolve(this.#takeChunk(chunk));
+      };
+      const onEnd = (): void => {
+        cleanup();
+        resolve(null);
+      };
+      const onError = (error: unknown): void => {
+        cleanup();
+        reject(error);
+      };
+      this.#cancelPending = () =>
+        onError(new InteractionCancelled("Terminal input released."));
+      terminalReadPending = true;
+      stream.once("data", onData);
+      stream.once("end", onEnd);
+      stream.once("error", onError);
+      try {
+        stream.ref();
+        stream.resume();
+      } catch (error) {
+        onError(error);
+      }
+    });
+  }
+
+  #takeChunk(chunk: Uint8Array): Uint8Array {
+    const result = new Uint8Array(chunk.subarray(0, this.#readBufferSize));
+    this.#buffered = new Uint8Array(chunk.subarray(this.#readBufferSize));
+    return result;
+  }
+
+  /** Stop an outstanding native TTY read without closing process-owned stdin. */
+  cancelRead(): boolean {
+    const cancel = this.#cancelPending;
+    if (cancel === undefined) return false;
+    cancel();
+    return true;
   }
 
   /** Switch Deno stdin raw mode. */
