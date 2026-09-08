@@ -1,4 +1,6 @@
+import { useId } from "react";
 import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
 import { Blockquote } from "../blockquote/blockquote.tsx";
 import { CodeBlock } from "../code-block/code-block.tsx";
 import { List } from "../list/list.tsx";
@@ -7,23 +9,30 @@ import meta, { componentExampleVocabulary } from "./footnotes.meta.ts";
 import { Footnotes } from "./footnotes.tsx";
 
 function SourceNotesExample() {
+  const prefix = `example-${useId()}`;
+  const id = (name: string) => `${prefix}-${name}`;
   return (
     <>
       <Paragraph>
         A claim can point to a source{" "}
-        <sup id="example-source-note-ref">
-          <a href="#example-source-note">[1]</a>
+        <sup>
+          <a
+            id={id("example-source-note-ref")}
+            href={`#${id("example-source-note")}`}
+          >
+            [1]
+          </a>
         </sup>.
       </Paragraph>
       <Footnotes
         items={[{
-          id: "example-source-note",
+          id: id("example-source-note"),
           content: (
             <Paragraph>
               The source remains a distinct, addressable definition.
             </Paragraph>
           ),
-          backReferences: [{ href: "#example-source-note-ref" }],
+          backReferences: [{ href: `#${id("example-source-note-ref")}` }],
         }]}
       />
     </>
@@ -31,21 +40,33 @@ function SourceNotesExample() {
 }
 
 function RichMultiBlockNotesExample() {
+  const prefix = `example-${useId()}`;
+  const id = (name: string) => `${prefix}-${name}`;
   return (
     <>
       <Paragraph>
         The same note can be cited{" "}
-        <sup id="example-rich-note-ref-1">
-          <a href="#example-rich-note">[1]</a>
+        <sup>
+          <a
+            id={id("example-rich-note-ref-1")}
+            href={`#${id("example-rich-note")}`}
+          >
+            [1]
+          </a>
         </sup>{" "}
         from more than one place{" "}
-        <sup id="example-rich-note-ref-2">
-          <a href="#example-rich-note">[1]</a>
+        <sup>
+          <a
+            id={id("example-rich-note-ref-2")}
+            href={`#${id("example-rich-note")}`}
+          >
+            [1]
+          </a>
         </sup>.
       </Paragraph>
       <Footnotes
         items={[{
-          id: "example-rich-note",
+          id: id("example-rich-note"),
           content: (
             <>
               <Paragraph>
@@ -60,8 +81,8 @@ function RichMultiBlockNotesExample() {
             </>
           ),
           backReferences: [
-            { href: "#example-rich-note-ref-1", label: "1" },
-            { href: "#example-rich-note-ref-2", label: "2" },
+            { href: `#${id("example-rich-note-ref-1")}`, label: "1" },
+            { href: `#${id("example-rich-note-ref-2")}`, label: "2" },
           ],
         }]}
       />
@@ -104,3 +125,43 @@ export default function FootnotesExamples() {
     </div>
   );
 }
+
+export const reviewPostures = defineComponentReviewPostures(
+  meta,
+  componentExampleVocabulary,
+  [{
+    id: "second-reference-return",
+    label: "Return to the second reference",
+    example: "rich-multi-block",
+    category: "interaction",
+    sequence: [
+      {
+        action: "focus",
+        target: { selector: '[id$="-example-rich-note-ref-2"]' },
+      },
+      {
+        action: "click",
+        target: { selector: '[id$="-example-rich-note-ref-2"]' },
+      },
+      { expect: "focused", target: { selector: '[id$="-example-rich-note"]' } },
+      {
+        action: "focus",
+        target: { selector: 'a[href$="-example-rich-note-ref-2"]' },
+      },
+      {
+        action: "click",
+        target: { selector: 'a[href$="-example-rich-note-ref-2"]' },
+      },
+      {
+        expect: "focused",
+        target: { selector: '[id$="-example-rich-note-ref-2"]' },
+      },
+      {
+        checkpoint: {
+          id: "second-reference-focus",
+          label: "Second citation receives focus",
+        },
+      },
+    ],
+  }],
+);

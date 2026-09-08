@@ -34,13 +34,14 @@ export const AnchorHeading: DiscernComponent<
       ref={ref}
       level={level}
       id={id}
+      tabIndex={-1}
       className={classNames("discern-anchor-heading", className)}
       {...props}
     >
       {children}
       <a
         className="discern-anchor-heading__anchor"
-        href={`#${id}`}
+        href={`#${encodeURIComponent(id)}`}
         aria-label={anchorLabel}
       >
         §

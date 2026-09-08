@@ -39,27 +39,29 @@ export const ArticleLayout: DiscernComponent<
       )}
       {...props}
     >
-      {navigation
-        ? (
-          <aside
-            className="discern-article-layout__navigation"
-            aria-label={navigationLabel}
-          >
-            <div className="discern-article-layout__sticky">{navigation}</div>
-          </aside>
-        )
-        : null}
-      <article className="discern-article-layout__body">{children}</article>
-      {rail
-        ? (
-          <aside
-            className="discern-article-layout__rail"
-            aria-label={railLabel}
-          >
-            <div className="discern-article-layout__sticky">{rail}</div>
-          </aside>
-        )
-        : null}
+      <div className="discern-article-layout__columns">
+        {navigation
+          ? (
+            <aside
+              className="discern-article-layout__navigation"
+              aria-label={navigationLabel}
+            >
+              <div className="discern-article-layout__sticky">{navigation}</div>
+            </aside>
+          )
+          : null}
+        <article className="discern-article-layout__body">{children}</article>
+        {rail
+          ? (
+            <aside
+              className="discern-article-layout__rail"
+              aria-label={railLabel}
+            >
+              <div className="discern-article-layout__sticky">{rail}</div>
+            </aside>
+          )
+          : null}
+      </div>
     </div>
   );
 });

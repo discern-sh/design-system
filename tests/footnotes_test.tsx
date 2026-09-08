@@ -47,7 +47,7 @@ Deno.test("Footnotes retains ordered definitions, rich blocks, and its legacy re
   assertStringIncludes(html, 'id="sources"');
   assertStringIncludes(html, 'data-reading-order="last"');
   assertStringIncludes(html, "<h2>Notes &amp; sources</h2>");
-  assertStringIncludes(html, '<ol><li id="note-alpha">');
+  assertStringIncludes(html, '<ol><li id="note-alpha" tabindex="-1">');
   assertStringIncludes(
     html,
     "<p>Rich <strong>phrasing</strong> stays in its paragraph.</p>",

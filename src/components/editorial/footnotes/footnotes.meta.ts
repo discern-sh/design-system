@@ -7,6 +7,7 @@ const meta = {
   group: "Editorial",
   order: 110,
   cli: { stance: "rendered" },
+  behaviors: ["article-navigation"],
   description:
     "End-note definitions with stable identities, rich multi-block bodies, and one or more explicit return links.",
   purposes: ["building-documentation"],
@@ -20,6 +21,7 @@ const meta = {
   accessibility: [
     "Notes remain a native ordered list with unique stable ids, and every return link carries a descriptive accessible label.",
     "Repeated references receive separate return targets in source order rather than collapsing to one ambiguous link.",
+    "Definitions receive native fragment focus without joining the Tab order. Put each return id on its citation link, or make a caller-owned reference wrapper focusable with tabIndex -1.",
     "Terminal definitions retain visible positional labels and return targets in no-colour and ASCII output.",
   ],
 } satisfies ComponentMeta;

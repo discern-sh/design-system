@@ -1,6 +1,7 @@
 @layer discern.components {
   .discern-anchor-heading {
     position: relative;
+    scroll-margin-block-start: var(--discern-space-4);
   }
   .discern-anchor-heading__anchor {
     display: inline-grid;

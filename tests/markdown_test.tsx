@@ -180,7 +180,7 @@ A note[^proof].
   );
   assertStringIncludes(
     html,
-    '<h1 class="discern-heading" id="document-title">',
+    '<h1 class="discern-heading" id="document-title" tabindex="-1">',
   );
   assertStringIncludes(html, "<strong>title</strong>");
   assertStringIncludes(html, '<p class="discern-paragraph">');
@@ -415,7 +415,7 @@ Deno.test("empty headings and marker-only alerts remain valid semantic blocks", 
   const html = renderToStaticMarkup(<Markdown source={source} />);
   assertStringIncludes(
     html,
-    '<h1 class="discern-heading" id="section"></h1>',
+    '<h1 class="discern-heading" id="section" tabindex="-1"></h1>',
   );
   assertStringIncludes(
     html,

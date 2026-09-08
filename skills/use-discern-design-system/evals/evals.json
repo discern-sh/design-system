@@ -1087,6 +1087,7 @@
         "Cites at least one Metadata fact for Prose — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
         "Uses the attached canonical example only as supporting evidence for density or hierarchy; imagery does not override Metadata guidance.",
         "Authors through `Prose` from /react or `renderProseCli` from /cli rather than inventing another projection.",
+        "Selects `prose` through the Runtime emitter and relies on its generated browser behavior instead of wiring package-internal JavaScript by hand.",
         "States the exact package version or checkout the answer was authored against."
       ]
     },
@@ -1240,6 +1241,7 @@
         "Cites at least one Metadata fact for Footnotes — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
         "Uses the attached canonical example only as supporting evidence for density or hierarchy; imagery does not override Metadata guidance.",
         "Authors through `Footnotes` from /react or `renderFootnotesCli` from /cli rather than inventing another projection.",
+        "Selects `footnotes` through the Runtime emitter and relies on its generated browser behavior instead of wiring package-internal JavaScript by hand.",
         "States the exact package version or checkout the answer was authored against."
       ]
     },

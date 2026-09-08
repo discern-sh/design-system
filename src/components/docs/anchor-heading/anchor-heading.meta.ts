@@ -7,10 +7,12 @@ const meta = {
   group: "Docs",
   order: 60,
   cli: { stance: "rendered" },
+  behaviors: ["article-navigation"],
   description:
     "Heading with a hover-revealed self link for direct section linking.",
   purposes: ["building-documentation"],
   accessibility: [
+    "The heading receives native fragment focus through tabIndex -1; authors supply a document-unique id. Scroll-padding on the scroll container owns any covering-header clearance.",
     "The self link carries a configurable descriptive label rather than the bare section-mark glyph.",
     "The link stays keyboard reachable while visually hidden, becomes visible on focus, and is always visible on hoverless devices.",
   ],

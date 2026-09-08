@@ -7,12 +7,15 @@ const meta = {
   group: "Editorial",
   order: 20,
   cli: { stance: "rendered" },
+  behaviors: ["article-navigation"],
   description:
     "Responsive long-form reading shell with optional navigation and contextual rail around a primary article column.",
   purposes: ["building-documentation"],
   accessibility: [
     "The primary reading stream is an article; optional rails are labelled complementary landmarks.",
     "Source order keeps navigation, article, and supporting context understandable without the visual grid.",
+    "Columns respond to the allocated width; navigation and context stack around the reading column when space is limited.",
+    "With fixed or sticky consumer chrome, set --discern-article-sticky-offset from its occupied height and set scroll-padding-block-start on the actual scroll container. The default assumes no covering header.",
   ],
 } satisfies ComponentMeta;
 

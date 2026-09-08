@@ -27,13 +27,6 @@ export const componentViewportLayoutPolicies = Object.freeze(
         "The publication opener composes optional lead media and its bounded inner grid as a page-scale relationship.",
     },
     {
-      slug: "article-layout",
-      stylesheet: "src/components/editorial/article-layout/article-layout.css",
-      reviewAllocation: "page",
-      reason:
-        "The page reading shell owns the sticky global-header offset and the table-of-contents, body, and rail relationship.",
-    },
-    {
       slug: "pull-quote",
       stylesheet: "src/components/editorial/pull-quote/pull-quote.css",
       reviewAllocation: "page",

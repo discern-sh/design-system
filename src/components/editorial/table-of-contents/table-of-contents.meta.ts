@@ -10,6 +10,7 @@ const meta = {
   description:
     "Compact article navigation with numbered sections, unnumbered nested entries, an optional reading-progress note, and a clear current-location state.",
   accessibility: [
+    "Navigation uses native fragment links and browser history. Authors supply unique, focusable destinations and own current-location state; no scrollspy is installed.",
     "The component is a labelled navigation landmark and exposes the current location with aria-current.",
     "Nested entries remain visible text and omit a misleading section number.",
   ],

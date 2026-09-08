@@ -48,6 +48,7 @@ export interface MarkdownProps extends
 
 interface ReactProjectionContext {
   readonly referenceCounts: Map<string, number>;
+  readonly headingDestinations: ReadonlyMap<string, string>;
 }
 
 const SOFT_BREAK_TEXT = "\n";
@@ -122,10 +123,10 @@ function renderInlineNode(
       return (
         <sup
           className="discern-markdown__footnote-reference"
-          id={referenceId}
           key={key}
         >
           <a
+            id={referenceId}
             href={`#${node.identifier}`}
             aria-label={`See note ${label}, reference ${occurrence}`}
           >
@@ -164,12 +165,14 @@ function renderBlock(
           {renderInline(block.content, context, `${key}-inline`)}
         </Paragraph>
       );
-    case "heading":
+    case "heading": {
+      const id = context.headingDestinations.get(block.id) ?? block.id;
       return (
-        <Heading level={block.level} id={block.id} key={key}>
+        <Heading level={block.level} id={id} tabIndex={-1} key={key}>
           {renderInline(block.content, context, `${key}-inline`)}
         </Heading>
       );
+    }
     case "list":
       return (
         <List
@@ -300,8 +303,50 @@ function renderBlock(
   }
 }
 
+function headingIds(blocks: readonly MarkdownBlock[]): readonly string[] {
+  return blocks.flatMap((block) => {
+    switch (block.kind) {
+      case "heading":
+        return [block.id];
+      case "blockquote":
+      case "callout":
+        return headingIds(block.children);
+      case "list":
+        return block.items.flatMap((item) => headingIds(item.blocks));
+      case "footnotes":
+        return block.items.flatMap((item) => headingIds(item.children));
+      default:
+        return [];
+    }
+  });
+}
+
 function renderDocument(document: MarkdownDocument): readonly ReactNode[] {
-  const context: ReactProjectionContext = { referenceCounts: new Map() };
+  // The document model appends its resolved note definitions at the root.
+  // Reserve their destinations before projecting any headings.
+  const noteDestinations = new Set(
+    document.children.flatMap((block) =>
+      block.kind === "footnotes"
+        ? block.items.flatMap((item) => [item.id, ...item.returnIds])
+        : []
+    ),
+  );
+  const headings = headingIds(document.children);
+  const destinationIds = new Set([...noteDestinations, ...headings]);
+  const headingDestinations = new Map<string, string>();
+  for (const original of headings) {
+    if (!noteDestinations.has(original)) continue;
+    let id = original;
+    for (let suffix = 1; destinationIds.has(id); suffix += 1) {
+      id = `${original}-${suffix}`;
+    }
+    destinationIds.add(id);
+    headingDestinations.set(original, id);
+  }
+  const context: ReactProjectionContext = {
+    referenceCounts: new Map(),
+    headingDestinations,
+  };
   return document.children.map((block, index) =>
     renderBlock(block, context, `markdown-block-${index}`)
   );

@@ -121,7 +121,7 @@ Deno.test("a synthetic future embedded Component cannot add a viewport layout qu
 Deno.test("page-scale review allocation follows the page while embedded evidence stays local", () => {
   assertEquals(componentReviewResponsiveAllocation("hover-card"), "local");
   assertEquals(componentReviewResponsiveAllocation("future-grid"), "local");
-  assertEquals(componentReviewResponsiveAllocation("article-layout"), "page");
+  assertEquals(componentReviewResponsiveAllocation("article-layout"), "local");
   assertEquals(
     componentReviewInlineSize({
       slug: "future-grid",
@@ -136,7 +136,7 @@ Deno.test("page-scale review allocation follows the page while embedded evidence
       requestedInlineSize: 390,
       pageViewportWidth: 1440,
     }),
-    1120,
+    390,
   );
   assertEquals(
     componentReviewInlineSize({
@@ -144,6 +144,6 @@ Deno.test("page-scale review allocation follows the page while embedded evidence
       requestedInlineSize: 1120,
       pageViewportWidth: 430,
     }),
-    430,
+    1120,
   );
 });
