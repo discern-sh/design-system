@@ -48,6 +48,38 @@ export const conformance = [{
     { action: "press", key: "Enter", target: { role: "tab", name: "Details" } },
     { expect: "visible", target: { role: "tabpanel", name: "Details" } },
   ],
+}, {
+  example: "crowded",
+  name: "wrapped tabs keep full names and boundary keyboard selection",
+  steps: [
+    {
+      action: "focus",
+      target: { role: "tab", name: "Publication history and correspondence" },
+    },
+    { action: "press", key: "Home" },
+    {
+      expect: "focused",
+      target: { role: "tab", name: "Overview and responsibilities" },
+    },
+    {
+      expect: "attribute",
+      target: { role: "tab", name: "Overview and responsibilities" },
+      attribute: "aria-selected",
+      value: "true",
+    },
+    { action: "press", key: "End" },
+    {
+      expect: "focused",
+      target: { role: "tab", name: "Publication history and correspondence" },
+    },
+    {
+      expect: "visible",
+      target: {
+        role: "tabpanel",
+        name: "Publication history and correspondence",
+      },
+    },
+  ],
 }] satisfies readonly ConformanceScenario[];
 
 const items = [{
@@ -88,6 +120,32 @@ const tabsCapture = {
   paintBleed: 1,
 } as const;
 
+function CrowdedExample() {
+  return (
+    <Tabs
+      label="Research sections"
+      defaultValue="history"
+      items={[
+        {
+          value: "overview",
+          label: "Overview and responsibilities",
+          content: <p>Summary content.</p>,
+        },
+        {
+          value: "details",
+          label: "Research across several regions",
+          content: <p>Detailed content.</p>,
+        },
+        {
+          value: "history",
+          label: "Publication history and correspondence",
+          content: <p>Read the publication archive.</p>,
+        },
+      ]}
+    />
+  );
+}
+
 export const catalogueExamples = defineCatalogueExamples(
   meta,
   componentExampleVocabulary,
@@ -99,6 +157,7 @@ export const catalogueExamples = defineCatalogueExamples(
     },
     { id: "details", Example: DetailsExample, capture: tabsCapture },
     { id: "manual", Example: ManualActivationExample, capture: tabsCapture },
+    { id: "crowded", Example: CrowdedExample, capture: tabsCapture },
   ],
 );
 
@@ -106,6 +165,19 @@ export const reviewPostures = defineComponentReviewPostures(
   meta,
   componentExampleVocabulary,
   [
+    {
+      id: "narrow-content",
+      label: "Full content at narrow local width",
+      example: "crowded",
+      category: "responsive",
+      requirements: { inlineSize: 240 },
+      sequence: [{
+        checkpoint: {
+          id: "tabs-narrow-content",
+          label: "Names, current state, and actions remain visible",
+        },
+      }],
+    },
     {
       id: "manual-focus",
       label: "Manual focus before activation",

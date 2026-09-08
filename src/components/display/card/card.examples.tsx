@@ -1,3 +1,6 @@
+import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
+import { Badge } from "../badge/badge.tsx";
+import { Tag } from "../tag/tag.tsx";
 import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { fixtureCopy } from "../../../fixtures/content.ts";
 import meta, { componentExampleVocabulary } from "./card.meta.ts";
@@ -30,6 +33,45 @@ function DottedExample() {
   );
 }
 
+function CrowdedExample() {
+  return (
+    <Card
+      style={{
+        maxWidth: "24rem",
+        display: "grid",
+        gap: "var(--discern-rhythm-item)",
+      }}
+    >
+      <h3>Regional research correspondence</h3>
+      <p>Read the latest questions and choose the next follow-up.</p>
+      <p
+        style={{
+          color: "var(--discern-color-ink-muted)",
+          fontSize: "var(--discern-font-size-xs)",
+        }}
+      >
+        Updated 11 August · 5 contributors
+      </p>
+      <div className="discern-example-row">
+        <Badge tone="neutral">Reference</Badge>
+        <Tag>International correspondence</Tag>
+      </div>
+      <p>
+        <a href="#correspondence">Read correspondence</a>
+      </p>
+      <Card
+        raised
+        padding="none"
+        style={{ display: "grid", gap: "var(--discern-rhythm-item)" }}
+      >
+        <h4>Related field notes</h4>
+        <p>Background from the previous visit.</p>
+        <a href="#field-notes">Read field notes</a>
+      </Card>
+    </Card>
+  );
+}
+
 export const catalogueExamples = defineCatalogueExamples(
   meta,
   componentExampleVocabulary,
@@ -37,6 +79,7 @@ export const catalogueExamples = defineCatalogueExamples(
     { id: "default", Example: PlainExample },
     { id: "raised", Example: RaisedExample },
     { id: "dotted", Example: DottedExample },
+    { id: "crowded", Example: CrowdedExample },
   ],
 );
 
@@ -49,3 +92,21 @@ export default function CardExamples() {
     </div>
   );
 }
+
+export const reviewPostures = defineComponentReviewPostures(
+  meta,
+  componentExampleVocabulary,
+  [{
+    id: "narrow-content",
+    label: "Full content at narrow local width",
+    example: "crowded",
+    category: "responsive",
+    requirements: { inlineSize: 240 },
+    sequence: [{
+      checkpoint: {
+        id: "card-narrow-content",
+        label: "Names, current state, and actions remain visible",
+      },
+    }],
+  }],
+);

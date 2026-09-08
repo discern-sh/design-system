@@ -1,3 +1,4 @@
+import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
 import {
   type ConformanceScenario,
   defineCatalogueExamples,
@@ -51,12 +52,24 @@ function CompactGroupExample() {
   );
 }
 
+function CrowdedExample() {
+  return (
+    <AvatarGroup label="Contributors" max={10}>
+      {Array.from(
+        { length: 115 },
+        (_, index) => <Avatar key={index} name={`Contributor ${index}`} />,
+      )}
+    </AvatarGroup>
+  );
+}
+
 export const catalogueExamples = defineCatalogueExamples(
   meta,
   componentExampleVocabulary,
   [
     { id: "default", Example: OverflowingGroupExample },
     { id: "compact", Example: CompactGroupExample },
+    { id: "crowded", Example: CrowdedExample },
   ],
 );
 
@@ -68,3 +81,21 @@ export default function AvatarGroupExamples() {
     </div>
   );
 }
+
+export const reviewPostures = defineComponentReviewPostures(
+  meta,
+  componentExampleVocabulary,
+  [{
+    id: "narrow-content",
+    label: "Full content at narrow local width",
+    example: "crowded",
+    category: "responsive",
+    requirements: { inlineSize: 240 },
+    sequence: [{
+      checkpoint: {
+        id: "avatar-group-narrow-content",
+        label: "Names, current state, and actions remain visible",
+      },
+    }],
+  }],
+);

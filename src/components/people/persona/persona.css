@@ -15,23 +15,19 @@
     min-inline-size: 0;
   }
   .discern-persona__name {
-    overflow: hidden;
+    overflow-wrap: anywhere;
     color: var(--discern-color-ink);
     font-size: var(--discern-font-size-sm);
     font-weight: var(--discern-font-weight-strong);
     letter-spacing: -0.01em;
     line-height: 1.3;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
   .discern-persona__detail {
-    overflow: hidden;
+    overflow-wrap: anywhere;
     color: var(--discern-color-ink-muted);
     font-size: var(--discern-font-size-xs);
     letter-spacing: 0.005em;
     line-height: 1.35;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
   .discern-persona--sm {
     gap: var(--discern-space-2);

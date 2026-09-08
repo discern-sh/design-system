@@ -24,9 +24,9 @@
     line-height: 1.45;
     text-decoration: none;
     vertical-align: baseline;
-    white-space: nowrap;
   }
   a.discern-mention .discern-mention__name {
+    min-inline-size: 0;
     text-decoration: underline;
     text-decoration-color: color-mix(in oklab, currentColor 45%, transparent);
     text-underline-offset: 0.16em;
@@ -47,8 +47,8 @@
     font-weight: var(--discern-font-weight-body);
   }
   .discern-mention__name {
-    overflow: hidden;
-    text-overflow: ellipsis;
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
   }
   .discern-mention .discern-mention__avatar.discern-avatar {
     --discern-avatar-size: 1.35em;

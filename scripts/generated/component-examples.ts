@@ -421,6 +421,14 @@ export const componentExampleRegistry = {
         "cli",
       ],
     },
+    {
+      "id": "crowded",
+      "label": "Crowded content",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
   ],
   "divider": [
     {
@@ -1545,6 +1553,14 @@ export const componentExampleRegistry = {
         "cli",
       ],
     },
+    {
+      "id": "crowded",
+      "label": "Long labels, last selected",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
   ],
   "breadcrumbs": [
     {
@@ -1590,6 +1606,14 @@ export const componentExampleRegistry = {
         "cli",
       ],
     },
+    {
+      "id": "fallback",
+      "label": "Long-name fallback",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
   ],
   "avatar-group": [
     {
@@ -1603,6 +1627,14 @@ export const componentExampleRegistry = {
     {
       "id": "compact",
       "label": "Compact group",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
+    {
+      "id": "crowded",
+      "label": "Many contributors",
       "surfaces": [
         "web",
         "cli",

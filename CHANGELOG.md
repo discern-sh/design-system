@@ -6,6 +6,8 @@ Each release is cut from a green run of the full release gate — formatting, li
 
 ## Unreleased
 
+- Preserve dense content at local width: Card and metadata wrap long content; Tabs and Breadcrumbs wrap full labels and current state; People names wrap, Avatar retains a static photo fallback, and AvatarGroup wraps with readable overflow counts. Add crowded examples and narrow review postures without changing navigation or CLI renderer semantics.
+
 - Separate private Catalogue discovery, detail, comparison, and terminal-preview ownership across state, navigation, styles, and browser checks. Existing routes, specimen call shapes, visual output, and public package contracts are unchanged.
 - Add SegmentedControl and Progress to the public React and pure CLI surfaces. SegmentedControl uses native labelled radios, stable form values, disabled states, and local narrow reflow without hydration. Progress shares truthful value normalization across browser and terminal, retains an explicit indeterminate waiting state under reduced motion and forced colours, and distinguishes task completion from Meter measurements. Both Components include canonical examples, exact images, and interaction review postures. The manual Tabs specimen leaves focus changes to explicit review actions.
 - Make static CopyButton output functional through its selection-scoped browser behaviour, inherited by composed users. Preserve exact authored text, consumer cancellation, labels/icons, and focus; announce only successful writes and expose failure guidance through the new `failedLabel` prop. Buttons stay inert and visibly unavailable without the script; live React hosts now use that same script as the sole clipboard owner.

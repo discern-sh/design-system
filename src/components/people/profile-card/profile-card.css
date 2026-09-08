@@ -8,7 +8,8 @@
     padding: var(--discern-space-6);
     border: 1px solid var(--discern-color-border);
     border-radius: var(--discern-radius-md);
-    overflow: hidden;
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
     background:
       linear-gradient(
       180deg,
@@ -54,11 +55,10 @@
     line-height: var(--discern-leading-snug);
   }
   .discern-profile-card__detail {
-    color: var(--discern-color-accent-700);
+    color: var(--discern-color-ink-muted);
     font-size: var(--discern-font-size-xs);
     font-weight: var(--discern-font-weight-strong);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    line-height: var(--discern-leading-body);
   }
   .discern-profile-card__bio {
     color: var(--discern-color-ink-muted);
@@ -92,7 +92,7 @@
     align-items: flex-start;
   }
   .discern-profile-card--landscape .discern-profile-card__body {
-    flex: 1;
+    flex: 1 1 12rem;
   }
   .discern-profile-card--landscape .discern-profile-card__name {
     font-size: var(--discern-font-size-card-title);
