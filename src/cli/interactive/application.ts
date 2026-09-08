@@ -79,7 +79,7 @@ export interface TerminalApplicationRuntime extends InteractionRuntime {
 /**
  * Own an alternate-screen session with bounded regions, live updates and foreground handoff.
  * No provider runs on navigation. Handlers run synchronously after a consumed read, so a
- * foreground child never competes with an application stdin read. Escape exits by default;
+ * foreground child receives exclusive terminal ownership. Escape exits by default;
  * Ctrl+C, EOF and abort throw InteractionCancelled after terminal restoration.
  */
 export async function runTerminalApplication<Action>(

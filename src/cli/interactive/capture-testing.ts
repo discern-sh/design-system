@@ -89,6 +89,9 @@ export function observeTerminalIO(
       observe({ kind: "read", bytes: value?.length ?? null });
       return value;
     },
+    ...(io.cancelRead === undefined ? {} : {
+      cancelRead: () => io.cancelRead!(),
+    }),
     write: (value) => {
       observe({
         kind: "write",

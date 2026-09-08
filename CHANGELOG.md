@@ -6,6 +6,8 @@ Each release is cut from a green run of the full release gate — formatting, li
 
 ## Unreleased
 
+- Release pending native TTY reads during raw-terminal restoration, so Escape, abort, and provider faults neither keep the process alive nor consume a foreground child's input. `DenoTerminalIO` uses a lazy, stoppable built-in TTY stream without closing stdin. Custom native `TerminalIO` adapters implement the optional `cancelRead` ownership hook; forwarding wrappers preserve it.
+
 - Add `runTerminalApplication` and pure application state/transition/render functions to `./cli/interactive`: one owned viewport, responsive selectable and reading regions, stable live selection, local scrolling, resize recovery, caller-owned foreground operations, and exception-safe cleanup. The generic Studio demonstration and consumer migration guide use public entrypoints. Extend optional `./cli/interactive/testing` with real-PTY fixtures, readiness-gated named captures, strict settled-frame projection, and transparent I/O observations; ordinary renderer imports remain process-free.
 - Add semantic leading indicators and independently styled trailing statuses to choice rows, semantic inline `tone`, and Select's `chrome`, `focused`, and `maximumLabelLines` composition options. The canonical Select catalogue includes its terminal menu. Existing defaults are preserved; no public API is removed. Discern consumers must widen their older single-selection presentation wrapper to `InteractionSelectionPresentation` to use `menu`.
 - Skip certified equivalent control budgets in interaction fitting, preserving non-linear wrapped/grouped layouts. Shared viewport sampling, mailboxes, line fitting, pane allocation, and scrolling serve applications and the existing Markdown browser.
