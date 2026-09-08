@@ -6,6 +6,7 @@
 
 import { NonInteractiveTerminalError } from "./errors.ts";
 import type { TerminalIO } from "./io.ts";
+import { cancelTerminalRead } from "./read-broker.ts";
 import { denoTerminalSignals, type TerminalSignalOptions } from "./signals.ts";
 
 /** ANSI sequence that hides the terminal cursor. */
@@ -144,6 +145,11 @@ async function withTerminalRestoration<T>(
     }
     if (rawEnabled) {
       rawEnabled = false;
+      try {
+        cancelTerminalRead(io);
+      } catch (error) {
+        cleanupErrors.push(error);
+      }
       try {
         io.setRawMode(false);
       } catch (error) {

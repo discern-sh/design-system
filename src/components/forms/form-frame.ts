@@ -21,6 +21,7 @@ import type {
   InteractiveFrameLifecycle,
   InteractiveSelectionFramePresentation,
   SelectFrameState,
+  TerminalRowAnnotation,
 } from "../../cli/interactive-states.ts";
 import {
   interactiveChoiceOverflow,
@@ -30,6 +31,8 @@ import {
 } from "../../cli/interactive-choice.ts";
 import {
   measureText,
+  padText,
+  truncateStyledText,
   truncateText,
   wrapStyledText,
   wrapText,
@@ -39,6 +42,7 @@ import {
   terminalThemeColor,
   terminalToneColor,
 } from "../../cli/theme.ts";
+import { renderSemanticInlineContent } from "../../cli/semantic-inline.ts";
 import { renderMotifSectionRule } from "../../cli/motifs.ts";
 
 /** Static presentation layered over an active Wave 1 frame. */
@@ -414,6 +418,8 @@ function renderFormCliMenuHeading(
   heading: InteractiveChoiceGroupHeadingState,
   options: CliPresentationOptions & {
     readonly separate?: boolean;
+    readonly maximumLabelLines?: number;
+    readonly contentWidth?: number;
     readonly width?: number;
   },
   capabilities: TerminalCapabilities,
@@ -428,13 +434,31 @@ function renderFormCliMenuHeading(
   }, capabilities);
   const lines = wrapStyledText(
     label,
-    formCliControlWidth(options.width, capabilities),
+    options.contentWidth ?? formCliControlWidth(options.width, capabilities),
   );
-  return [...(options.separate === true ? [""] : []), ...lines].join("\n");
+  const maximum = options.maximumLabelLines;
+  if (
+    maximum !== undefined && (!Number.isSafeInteger(maximum) || maximum < 1)
+  ) {
+    throw new TypeError(
+      "maximum label lines must be a positive safe integer",
+    );
+  }
+  const bounded = maximum === undefined || lines.length <= maximum ? lines : [
+    ...lines.slice(0, maximum - 1),
+    truncateStyledText(
+      lines.slice(maximum - 1).join(" "),
+      options.contentWidth ?? formCliControlWidth(options.width, capabilities),
+      capabilities.unicode ? "…" : ".",
+    ),
+  ];
+  return [...(options.separate === true ? [""] : []), ...bounded].join("\n");
 }
 
 /** Inputs for a focus-driven menu's stable contextual inspector. */
 export interface FormCliMenuDetailOptions extends CliPresentationOptions {
+  /** Explicit content measure when a parent already owns the frame. */
+  readonly contentWidth?: number;
   readonly entries: readonly InteractiveChoiceEntryState[];
   readonly highlightedIndex: number | undefined;
   /** Optional viewport-derived cap; static frames reserve up to three lines. */
@@ -474,7 +498,8 @@ export function renderFormCliMenuDetail(
   options: FormCliMenuDetailOptions,
   capabilities: TerminalCapabilities,
 ): string {
-  const width = formCliControlWidth(options.width, capabilities);
+  const width = options.contentWidth ??
+    formCliControlWidth(options.width, capabilities);
   const maximumLines = options.maximumLines ?? 3;
   if (
     !Number.isSafeInteger(maximumLines) || maximumLines < 1 ||
@@ -574,6 +599,11 @@ function formCliChoiceHeadingGeometry(
 
 /** Inputs for one prefix-stable, hanging-indent choice row. */
 export interface FormCliChoiceRowOptions extends CliPresentationOptions {
+  readonly maximumLabelLines?: number;
+  readonly indicator?: TerminalRowAnnotation;
+  readonly status?: TerminalRowAnnotation;
+  /** Explicit content measure when a parent already owns the frame. */
+  readonly contentWidth?: number;
   /** Fixed-width pointer slot, including its following space. */
   readonly pointer: string;
   /** Component-specific selection marker, already semantically styled. */
@@ -612,15 +642,62 @@ export function renderFormCliChoiceRow(
     styleFormCliChoiceText(options.pointer, styleOptions, capabilities)
   }${marker} `;
   const prefixWidth = measureText(prefix);
-  const controlWidth = formCliControlWidth(options.width, capabilities);
+  const controlWidth = options.contentWidth ??
+    formCliControlWidth(options.width, capabilities);
   if (prefixWidth >= controlWidth) {
     throw new TypeError(
       `choice row prefix requires ${prefixWidth} of ${controlWidth} control columns`,
     );
   }
-  const lines = wrapStyledText(
+  const annotation = (
+    value: TerminalRowAnnotation | undefined,
+    maximum: number,
+  ): string => {
+    if (value === undefined) return "";
+    const text = renderSemanticInlineContent(
+      capabilities.unicode ? value.content : value.ascii ?? value.content,
+      capabilities,
+      { ...options, tone: value.tone ?? "neutral" },
+    );
+    return truncateStyledText(text, maximum, capabilities.unicode ? "…" : ".");
+  };
+  const available = controlWidth - prefixWidth;
+  const leading = annotation(
+    options.indicator,
+    Math.min(3, Math.max(1, available - 4)),
+  );
+  const lead = leading === "" ? "" : `${leading} `;
+  const trailing = annotation(
+    options.status,
+    Math.max(1, Math.floor(available / 3)),
+  );
+  const labelWidth = Math.max(
+    1,
+    available - measureText(lead) -
+      (trailing === "" ? 0 : measureText(trailing) + 1),
+  );
+  const labels = wrapStyledText(
     styleFormCliChoiceText(options.label, styleOptions, capabilities),
-    controlWidth - prefixWidth,
+    labelWidth,
+  );
+  const limit = options.maximumLabelLines ?? labels.length;
+  if (!Number.isSafeInteger(limit) || limit < 1) {
+    throw new TypeError("maximum label lines must be a positive safe integer");
+  }
+  const boundedLabels = labels.length <= limit ? labels : [
+    ...labels.slice(0, limit - 1),
+    truncateStyledText(
+      labels.slice(limit - 1).join(" "),
+      labelWidth,
+      capabilities.unicode ? "…" : ".",
+    ),
+  ];
+  const lines = boundedLabels.map((line, index) =>
+    `${index === 0 ? lead : " ".repeat(measureText(lead))}${
+      index === 0 && trailing !== ""
+        ? `${padText(line, labelWidth)} ${trailing}`
+        : line
+    }`
   );
   const semanticLines = options.description === undefined ? lines : [
     ...lines,
@@ -645,6 +722,9 @@ export function renderFormCliChoiceRow(
 
 /** Inputs shared by every expanded form-choice entry renderer. */
 export interface FormCliChoiceEntryOptions extends CliPresentationOptions {
+  readonly maximumLabelLines?: number;
+  /** Explicit content measure when a parent already owns the frame. */
+  readonly contentWidth?: number;
   readonly entry: InteractiveChoiceEntryState;
   /** Fixed-width pointer slot for selectable entries. */
   readonly pointer: string;
@@ -670,6 +750,12 @@ export function renderFormCliChoiceEntry(
     if (options.presentation === "menu") {
       return renderFormCliMenuHeading(options.entry, {
         ...cliPresentationPassthrough(options),
+        ...(options.maximumLabelLines === undefined
+          ? {}
+          : { maximumLabelLines: options.maximumLabelLines }),
+        ...(options.contentWidth === undefined
+          ? {}
+          : { contentWidth: options.contentWidth }),
         ...(options.separateHeading === undefined
           ? {}
           : { separate: options.separateHeading }),
@@ -684,6 +770,18 @@ export function renderFormCliChoiceEntry(
     ...cliPresentationPassthrough(options),
     pointer: options.pointer,
     marker: options.marker,
+    ...(options.maximumLabelLines === undefined
+      ? {}
+      : { maximumLabelLines: options.maximumLabelLines }),
+    ...(options.contentWidth === undefined
+      ? {}
+      : { contentWidth: options.contentWidth }),
+    ...(options.entry.indicator === undefined
+      ? {}
+      : { indicator: options.entry.indicator }),
+    ...(options.entry.status === undefined
+      ? {}
+      : { status: options.entry.status }),
     label: `${options.entry.label}${
       options.entry.disabled === true && !menu ? " (disabled)" : ""
     }`,

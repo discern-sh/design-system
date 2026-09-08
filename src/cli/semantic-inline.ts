@@ -1,3 +1,4 @@
+import type { TerminalSemanticTone } from "./theme.ts";
 /**
  * Package-owned semantic inline content, its hostile-input boundary, one
  * lossless plain-text projection, and Theme-derived terminal rendering.
@@ -122,6 +123,8 @@ export type SemanticInlineContent =
 
 /** Theme selection for semantic inline terminal rendering. */
 export interface SemanticInlineRenderOptions extends TerminalThemeOptions {
+  /** Optional semantic colour applied independently of the base typography. */
+  readonly tone?: TerminalSemanticTone;
   /**
    * Package-owned base typography for otherwise unannotated text. Nested
    * emphasis, strong text, code, links, images, and references still derive
@@ -753,7 +756,17 @@ export function renderSemanticInlineContent(
   ) {
     throw new TypeError(`unknown semantic inline base role: ${role}`);
   }
-  return renderContent(content, baseStyle(theme, role), capabilities, theme);
+  return renderContent(
+    content,
+    {
+      ...baseStyle(theme, role),
+      ...(options.tone === undefined
+        ? {}
+        : { color: terminalToneColor(theme, options.tone) }),
+    },
+    capabilities,
+    theme,
+  );
 }
 
 /**

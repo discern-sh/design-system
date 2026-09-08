@@ -4,6 +4,7 @@
  * @module
  */
 
+import type { TerminalRowAnnotation } from "../interactive-states.ts";
 import type { CliPresentationOptions } from "../contracts.ts";
 import type { TerminalIO } from "./io.ts";
 import type { TerminalSignalOptions } from "./signals.ts";
@@ -93,6 +94,10 @@ export interface InteractionRuntime
 
 /** One stable, labeled value offered by a choice interaction. */
 export interface InteractionChoice<T> {
+  /** Compact leading annotation, styled independently of keyboard focus. */
+  readonly indicator?: TerminalRowAnnotation;
+  /** Trailing semantic status aligned by the renderer. */
+  readonly status?: TerminalRowAnnotation;
   /** Optional explicit discriminant; omitted choices remain source-compatible. */
   readonly kind?: "choice";
   readonly id: string;

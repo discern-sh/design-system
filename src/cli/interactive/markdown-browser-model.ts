@@ -1,3 +1,4 @@
+import { allocateTerminalPanes } from "../viewport.ts";
 /**
  * Immutable data and geometry model for the link-aware Markdown browser.
  *
@@ -610,10 +611,11 @@ function layoutFor(
     });
   }
   if (paneRows >= pickerMinimumRows + documentMinimumRows) {
-    const target = Math.round(paneRows / 3);
-    const pickerRows = Math.max(
+    const [pickerRows] = allocateTerminalPanes(
+      paneRows,
       pickerMinimumRows,
-      Math.min(target, paneRows - documentMinimumRows),
+      documentMinimumRows,
+      focusedPane === "picker" ? 0 : 1,
     );
     return Object.freeze({
       mode: "split",
