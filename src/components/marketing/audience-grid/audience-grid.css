@@ -46,12 +46,13 @@
   }
   .discern-audience-grid__items {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
     gap: var(--discern-space-4);
   }
   .discern-audience-grid__item {
     display: flex;
-    min-height: 25rem;
+    min-width: 0;
+    overflow-wrap: anywhere;
     flex-direction: column;
     padding: var(--discern-space-8);
     border: 1px solid var(--discern-color-border);
@@ -112,9 +113,6 @@
     }
     .discern-audience-grid__items {
       grid-template-columns: 1fr;
-    }
-    .discern-audience-grid__item {
-      min-height: 20rem;
     }
   }
 }

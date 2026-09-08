@@ -1,6 +1,6 @@
 @layer discern.components {
   .discern-marketing-intro {
-    --discern-marketing-intro-title-size: var(--discern-font-size-display-lg);
+    --discern-marketing-intro-title-size: clamp(var(--discern-font-size-display-md), 5cqi, var(--discern-font-size-display-lg));
     --discern-marketing-intro-title-leading: var(--discern-leading-tight);
     --discern-marketing-intro-title-tracking: -0.014em;
     container: discern-marketing-intro / inline-size;
@@ -12,8 +12,8 @@
   }
   .discern-marketing-intro--editorial {
     --discern-marketing-intro-title-size:
-      clamp(2.7rem, calc(1.5rem + 6.5cqi), 5.5rem);
-    --discern-marketing-intro-title-leading: 0.98;
+      clamp(var(--discern-font-size-display-md), calc(1rem + 5cqi), calc(var(--discern-font-size-display-lg) * 2));
+    --discern-marketing-intro-title-leading: var(--discern-leading-tight);
     --discern-marketing-intro-title-tracking: -0.035em;
   }
   .discern-marketing-intro--center {
@@ -30,6 +30,8 @@
       var(--discern-color-accent-600));
   }
   .discern-marketing-intro__title {
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
     margin: 0;
     color: inherit;
     font-size: var(--discern-marketing-intro-title-size);
@@ -41,8 +43,8 @@
     max-inline-size: 42rem;
     margin-block-start: var(--discern-space-6);
     color: var(--discern-color-ink-muted);
-    font-size: clamp(1.05rem, 1.6cqi, 1.3rem);
-    line-height: 1.65;
+    font-size: var(--discern-font-size-lg);
+    line-height: var(--discern-leading-body);
   }
   .discern-marketing-intro--contrast .discern-marketing-intro__description {
     color: color-mix(in oklab, var(--discern-color-inverse-ink) 76%,

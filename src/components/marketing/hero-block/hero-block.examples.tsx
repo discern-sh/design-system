@@ -9,26 +9,31 @@ import { HeroBlock } from "./hero-block.tsx";
 function SplitHeroState() {
   return (
     <HeroBlock
-      eyebrow={<Badge tone="accent" dot>New collection</Badge>}
-      title={<>Make the complicated feel inevitable.</>}
+      eyebrow={<Badge tone="accent" dot>Workshop guide</Badge>}
+      title={<>Bring a question. Leave with a plan.</>}
       description={
         <p>
-          A flexible opening composition for a clear promise, an immediate next
-          step, and one memorable piece of evidence.
+          Prepare the discussion, compare the options, and capture a next step
+          with a named owner.
         </p>
       }
       actions={
         <>
-          <Button href="#start">Start exploring</Button>
-          <Button href="#details" variant="secondary">See the details</Button>
+          <Button href="#start">Plan a workshop</Button>
+          <Button href="#details" variant="secondary">
+            Read the checklist
+          </Button>
         </>
       }
-      meta="Primary action · secondary action · optional note"
+      meta="A practical guide for facilitators and participants."
       visual={
-        <Window title="A useful example view">
+        <Window title="Session preparation">
           <div style={{ padding: "2rem", minHeight: "15rem" }}>
-            <strong>Flexible visual slot</strong>
-            <p>Windows, diagrams, screenshots, code, or editorial artwork.</p>
+            <strong>What to bring</strong>
+            <p>
+              One question, relevant notes, and the constraints the decision
+              needs to respect.
+            </p>
           </div>
         </Window>
       }
@@ -40,16 +45,16 @@ function SplitHeroState() {
 function ShowcaseHeroState() {
   return (
     <HeroBlock
-      eyebrow="For people doing consequential work"
+      eyebrow="Collaborative planning"
       title={
         <>
-          A <em>bolder</em> way to build.
+          A <em>clearer</em> way to decide.
         </>
       }
       description={
         <p>
-          Give a substantial idea the scale, evidence, and working space it
-          needs without changing the rest of the interface.
+          Give each participant the same starting point: the question, the
+          evidence, and a place to record what remains uncertain.
         </p>
       }
       actions={
@@ -58,20 +63,20 @@ function ShowcaseHeroState() {
           <Button href="#details" variant="secondary">Read the method</Button>
         </>
       }
-      meta="One clear promise · one substantial piece of evidence"
+      meta="Preparation · discussion · a recorded decision"
       visual={
         <Window
-          title="project · ready for review"
-          actions={<Badge tone="success" dot>evidence ready</Badge>}
+          title="Workshop brief"
+          actions={<Badge tone="success" dot>ready to discuss</Badge>}
           variant="showcase"
         >
-          <div style={{ padding: "clamp(1.5rem, 4vw, 3rem)" }}>
+          <div style={{ padding: "var(--discern-space-6)" }}>
             <strong>
-              Wide visual evidence remains the final word.
+              Decision: which option should we try first?
             </strong>
             <p>
-              The showcase layout gives a supporting preview room to breathe
-              beneath the opening promise.
+              Compare the available options against the agreed constraints.
+              Record the smallest next step that would answer an open question.
             </p>
           </div>
         </Window>
@@ -85,15 +90,15 @@ function ShowcaseHeroState() {
 function BackdropHeroState() {
   return (
     <HeroBlock
-      eyebrow="Artwork backdrop"
-      title="Give the opening a quiet geometry."
+      eyebrow="Start with a question"
+      title="Make room for different perspectives."
       description={
         <p>
-          The optional backdrop sits behind complete copy and actions, so
-          atmosphere can change without changing the section's meaning.
+          Invite the people affected by the decision. Share the brief in advance
+          so everyone has time to prepare a response.
         </p>
       }
-      actions={<Button href="#continue">Continue through the field</Button>}
+      actions={<Button href="#continue">Read the invitation checklist</Button>}
       backdrop={<EnvelopeBackdrop presence={1.1} />}
       layout="centered"
     />

@@ -55,28 +55,27 @@ function ConceptVisual() {
 function VisualHeroState() {
   return (
     <EditorialHero
-      eyebrow="A clearer beginning"
+      eyebrow="A guide to collaborative planning"
       title={
         <>
-          Make the difficult <em>feel navigable.</em>
+          Turn an open question <em>into a shared plan.</em>
         </>
       }
       description={
         <p>
-          Lead with one idea, explain it in ordinary language, and let the
-          accompanying visual create understanding rather than another reading
-          assignment.
+          Prepare a focused workshop with a clear question, useful reading, and
+          a decision record everyone can return to.
         </p>
       }
       actions={
         <>
-          <Button href="#approach">Explore the approach</Button>
+          <Button href="#approach">Plan the session</Button>
           <Button href="#principles" variant="secondary">
-            Read the principles
+            Read the preparation guide
           </Button>
         </>
       }
-      meta="Designed to explain before it asks."
+      meta="Start with one question and the people closest to it."
       visual={<ConceptVisual />}
       visualLabel="One relationship"
       visualCaption="Two independent planes meet at one deliberate hand-off."
@@ -88,16 +87,16 @@ function VisualHeroState() {
 function TextOnlyHeroState() {
   return (
     <EditorialHero
-      eyebrow="A text-first opening"
-      title="A strong idea does not always need an illustration."
+      eyebrow="Written participation"
+      title="Make space for people who cannot join the room."
       headingLevel={2}
       description={
         <p>
-          The composition remains deliberate when the clearest choice is to give
-          the language room and stop there.
+          Share the brief early, set a response date, and carry written
+          contributions into the same decision record.
         </p>
       }
-      actions={<Button href="#continue">Continue</Button>}
+      actions={<Button href="#continue">Read the participation guide</Button>}
       surface="surface"
     />
   );

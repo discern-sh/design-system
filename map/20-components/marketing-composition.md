@@ -1,0 +1,11 @@
+# Marketing composition and content
+
+Review marketing as a reading journey before judging individual section silhouettes. The `reading-first-landing` recipe in [compositions.tsx](../../catalogue/compositions.tsx) uses a generic workshop guide: invitation, preparation, checklist, discussion, and a return to a useful action. It lives in the recipe authority because no individual Component owns that complete journey. Its render and adaptable source consume the same structured content; the viewer remains independent.
+
+Use MarketingSection's existing frame, spacing, and surface contracts to pace a page. Consecutive passages on the same surface can share a join; the preparation introduction removes its starting padding after the opener. A sunken checklist groups actionable material, while a contrast closing separates the final invitation. Every call to action resolves to content in the example rather than an imaginary product route.
+
+EditorialHero, HeroBlock, and MarketingIntro size their large titles against their local allocation with existing display roles. Semantic heading rank remains independent of visual scale. Titles balance ordinary lines and break otherwise unbreakable words; no fixed height or clipping carries the typography contract. Shared Section and type Tokens remain the authorities for global rhythm.
+
+FeatureBento keeps its strict, complete rectangular footprint contract in [feature-bento-layout.ts](../../src/components/marketing/feature-bento/feature-bento-layout.ts). Choose footprints for the story: tall and large items need enough evidence to earn their span. Rows follow intrinsic content instead of imposing a minimum poster height; a wide item divides copy and visual only when the visual exists. The narrow layout follows source order. Unrelated item heights still belong to Grid or Masonry. AudienceGrid similarly lets short content stay short and lets its available cards fill the row.
+
+[Marketing browser checks](../../tests/marketing_composition_browser_test.tsx) cover long titles, sparse cards, optional visual tracks, the complete page and canonical bento content at local and real page widths, doubled text, and fallback fonts. Existing matrix tests guard complete footprints; the Catalogue contact sheet remains the perceptual review surface, not a pixel-approval gate.

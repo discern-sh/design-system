@@ -4,37 +4,42 @@ import { JourneyOverview } from "./journey-overview.tsx";
 
 const overviewSteps = [
   {
-    title: "Begin with the outcome",
+    title: "Prepare the question",
     description: (
-      <p>State what should become possible before introducing the method.</p>
+      <p>
+        Write what the group needs to decide and share the relevant reading.
+      </p>
     ),
-    outcome: <span>The reader knows where the journey leads.</span>,
+    outcome: <span>A brief everyone can prepare from.</span>,
   },
   {
-    title: "Make the change legible",
+    title: "Compare the options",
     description: (
-      <p>Show the few moments that materially alter the experience.</p>
+      <p>
+        Give people time to think privately, then discuss the differences in
+        evidence and assumptions.
+      </p>
     ),
-    outcome: <span>The route feels finite and understandable.</span>,
+    outcome: <span>Reasons for a choice, with uncertainty recorded.</span>,
   },
   {
-    title: "Return with confidence",
+    title: "Record the next step",
     description: (
-      <p>End on the evidence or decision the audience actually needs.</p>
+      <p>Name the action, its owner, and a date to review the result.</p>
     ),
-    outcome: <span>The process resolves instead of merely stopping.</span>,
+    outcome: <span>A decision the group can act on.</span>,
   },
 ] as const;
 
 function ThreeStepState() {
   return (
     <JourneyOverview
-      eyebrow="Demonstrate"
-      title="Show the journey without reproducing the machinery."
+      eyebrow="A workshop sequence"
+      title="Move from a question to a shared next step."
       description={
         <p>
-          Three plain-language moments can explain a transformation more clearly
-          than a complete operational transcript.
+          Use this sequence to structure the conversation. Allow more time when
+          people need additional context or have different starting points.
         </p>
       }
       steps={overviewSteps}
@@ -45,8 +50,8 @@ function ThreeStepState() {
 function CompactState() {
   return (
     <JourneyOverview
-      eyebrow="A short sequence"
-      title="Two moments can still form a complete story."
+      eyebrow="Before the decision"
+      title="Prepare first, then compare what you found."
       steps={overviewSteps.slice(0, 2)}
       surface="sunken"
     />
