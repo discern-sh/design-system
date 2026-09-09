@@ -33,6 +33,7 @@ Deno.test("content structures preserve full labels and current state within loca
       components: [
         "card",
         "button",
+        "stack",
         "badge",
         "tag",
         "tabs",
@@ -169,6 +170,36 @@ Deno.test("content structures preserve full labels and current state within loca
           }).evaluate((node) => node === document.activeElement),
         );
         assertEquals(await page.locator("a a, button a, a button").count(), 0);
+        const primary = await page.getByRole("link", {
+          name: "Read correspondence",
+          exact: true,
+        }).boundingBox();
+        const tags = await page.locator(".discern-example-row").boundingBox();
+        const title = await page.getByRole("heading", {
+          name: "Regional research correspondence",
+          exact: true,
+        }).boundingBox();
+        const nested = await page.getByRole("link", {
+          name: "Read field notes",
+          exact: true,
+        }).boundingBox();
+        const nestedTitle = await page.getByRole("heading", {
+          name: "Related field notes",
+          exact: true,
+        }).boundingBox();
+        assert(primary && tags && title && nested && nestedTitle);
+        assert(
+          primary.y - (tags.y + tags.height) >= 8,
+          "Card actions stay separated from metadata",
+        );
+        assert(
+          Math.abs(primary.x - title.x) < 1,
+          "Primary Card action follows the title alignment",
+        );
+        assert(
+          Math.abs(nested.x - nestedTitle.x) < 1,
+          "Nested Card action follows its heading alignment",
+        );
         for (const label of ["Read correspondence", "Read field notes"]) {
           const target = await page.getByRole("link", {
             name: label,

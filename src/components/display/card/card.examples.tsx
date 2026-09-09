@@ -1,4 +1,5 @@
 import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
+import { Stack } from "../../layout/stack/stack.tsx";
 import { Button } from "../../core/button/button.tsx";
 import { Badge } from "../badge/badge.tsx";
 import { Tag } from "../tag/tag.tsx";
@@ -36,43 +37,39 @@ function DottedExample() {
 
 function CrowdedExample() {
   return (
-    <Card
-      style={{
-        maxWidth: "24rem",
-        display: "grid",
-        gap: "var(--discern-rhythm-item)",
-      }}
-    >
-      <h3>Regional research correspondence</h3>
-      <p>Read the latest questions and choose the next follow-up.</p>
-      <p
-        style={{
-          color: "var(--discern-color-ink-muted)",
-          fontSize: "var(--discern-font-size-xs)",
-        }}
-      >
-        Updated 11 August · 5 contributors
-      </p>
-      <div className="discern-example-row">
-        <Badge tone="neutral">Reference</Badge>
-        <Tag>International correspondence</Tag>
-      </div>
-      <p>
+    <Card style={{ maxWidth: "24rem" }}>
+      <Stack gap={4} align="start">
+        <Stack gap={2}>
+          <h3>Regional research correspondence</h3>
+          <p>Read the latest questions and choose the next follow-up.</p>
+        </Stack>
+        <Stack gap={2}>
+          <p
+            style={{
+              color: "var(--discern-color-ink-muted)",
+              fontSize: "var(--discern-font-size-xs)",
+            }}
+          >
+            Updated 11 August · 5 contributors
+          </p>
+          <div className="discern-example-row">
+            <Badge tone="neutral">Reference</Badge>
+            <Tag>International correspondence</Tag>
+          </div>
+        </Stack>
         <Button href="#correspondence" variant="secondary" size="sm">
           Read correspondence
         </Button>
-      </p>
-      <Card
-        raised
-        padding="none"
-        style={{ display: "grid", gap: "var(--discern-rhythm-item)" }}
-      >
-        <h4>Related field notes</h4>
-        <p>Background from the previous visit.</p>
-        <Button href="#field-notes" variant="ghost" size="sm">
-          Read field notes
-        </Button>
-      </Card>
+        <Card raised padding="none">
+          <Stack gap={2} align="start">
+            <h4>Related field notes</h4>
+            <p>Background from the previous visit.</p>
+            <Button href="#field-notes" variant="ghost" size="sm">
+              Read field notes
+            </Button>
+          </Stack>
+        </Card>
+      </Stack>
     </Card>
   );
 }
