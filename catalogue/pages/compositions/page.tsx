@@ -250,7 +250,7 @@ function CompositionDetail(
               className="discern-catalogue-pattern__viewport"
               data-discern-pattern-stage={recipe.stage}
             >
-              <Example />
+              <Example rootHeadingLevel={2} />
             </div>
           </div>
         </OverflowCue>

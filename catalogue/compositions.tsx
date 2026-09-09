@@ -38,6 +38,11 @@ export interface JourneyContract {
 /** Intentional presentation boundary for a Composition demonstration. */
 export type CompositionStage = "inset" | "full-bleed";
 
+/** Host context that keeps a Composition's root heading semantic. */
+export interface CompositionExampleProps {
+  readonly rootHeadingLevel?: 1 | 2;
+}
+
 /** A Catalogue-only composition with a preview and source built from one definition. */
 export interface CompositionRecipe {
   readonly id: string;
@@ -47,7 +52,7 @@ export interface CompositionRecipe {
   readonly stage: CompositionStage;
   readonly components: readonly string[];
   readonly journey?: JourneyContract;
-  readonly Example: ComponentType;
+  readonly Example: ComponentType<CompositionExampleProps>;
   readonly source: string;
 }
 
@@ -59,7 +64,10 @@ interface RecipeDefinition<Definition> {
   readonly journey?: JourneyContract;
   readonly stage?: CompositionStage;
   readonly definition: Definition;
-  readonly render: (definition: Definition) => ReactNode;
+  readonly render: (
+    definition: Definition,
+    context: Required<CompositionExampleProps>,
+  ) => ReactNode;
   readonly source: (definition: Definition) => string;
 }
 
@@ -128,8 +136,12 @@ export function defineRecipe<Definition>(
   const identity = { id: recipe.id, components };
   compositionConstituents(identity);
 
-  function Example(): ReactNode {
-    return recipe.render(recipe.definition);
+  function Example(
+    { rootHeadingLevel = 1 }: CompositionExampleProps,
+  ): ReactNode {
+    return recipe.render(recipe.definition, {
+      rootHeadingLevel,
+    });
   }
 
   return {
@@ -710,10 +722,11 @@ const readingFirstLandingRecipe = defineRecipe({
     ],
   },
   definition: readingFirstLanding,
-  render: (definition) => (
+  render: (definition, { rootHeadingLevel }) => (
     <div>
       <EditorialHero
         {...definition.hero}
+        headingLevel={rootHeadingLevel}
         actions={
           <Button href="#workshop-preparation">
             Use the preparation checklist
