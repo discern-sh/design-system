@@ -1,3 +1,5 @@
+import { BusyGlyph } from "../icon/busy-glyph.tsx";
+import { Icon } from "../icon/icon.tsx";
 import { forwardRef } from "react";
 import type {
   AnchorHTMLAttributes,
@@ -50,6 +52,7 @@ function content(
   leadingIcon: ReactNode,
   children: ReactNode,
   trailingIcon: ReactNode,
+  busy: boolean,
 ) {
   return (
     <>
@@ -66,6 +69,16 @@ function content(
           <span className="discern-button__icon" aria-hidden="true">
             {trailingIcon}
           </span>
+        )
+        : null}
+      {busy
+        ? (
+          <Icon
+            className="discern-icon--busy discern-button__busy"
+            size="var(--discern-button-busy-size)"
+          >
+            <BusyGlyph />
+          </Icon>
         )
         : null}
     </>
@@ -116,7 +129,7 @@ export const Button: DiscernComponent<
         aria-disabled={unavailable || undefined}
         aria-busy={busy || undefined}
       >
-        {content(leadingIcon, children, trailingIcon)}
+        {content(leadingIcon, children, trailingIcon, busy)}
       </a>
     );
   }
@@ -141,7 +154,7 @@ export const Button: DiscernComponent<
       disabled={buttonProps.disabled || unavailable}
       aria-busy={busy || undefined}
     >
-      {content(leadingIcon, children, trailingIcon)}
+      {content(leadingIcon, children, trailingIcon, busy)}
     </button>
   );
 });

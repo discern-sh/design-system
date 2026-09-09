@@ -45,6 +45,21 @@ Deno.test("Action matrix preserves meaning, size floors, icon slots and unavaila
   const browser = await launchBrowser();
   const output = await Deno.makeTempDir();
   try {
+    for (const action of ["button", "icon-button"]) {
+      await emitDesignSystemRuntime({
+        outputRoot: toFileUrl(`${output}/`),
+        components: [action],
+      });
+      const selectedCss = await Deno.readTextFile(`${output}/discern.css`);
+      assert(
+        selectedCss.includes("@keyframes discern-icon-busy"),
+        `${action} alone includes its loading ring motion`,
+      );
+      assert(
+        selectedCss.includes(".discern-icon > svg"),
+        `${action} alone includes its loading ring stroke`,
+      );
+    }
     await emitDesignSystemRuntime({
       outputRoot: toFileUrl(`${output}/`),
       components: ["button", "icon-button", "icon"],
@@ -89,11 +104,30 @@ Deno.test("Action matrix preserves meaning, size floors, icon slots and unavaila
                   (style.opacity !== "1" || style.borderTopStyle !== "dashed")
                 ) errors.push("disabled witness");
                 if (node.getAttribute("aria-busy") === "true") {
-                  const marker = getComputedStyle(node, "::after");
+                  const glyph = node.querySelector(".discern-icon--busy svg");
                   if (
-                    marker.borderBottomStyle !== "dotted" ||
-                    marker.animationName !== "none"
-                  ) errors.push("still busy witness");
+                    !glyph || getComputedStyle(glyph).animationName !== "none"
+                  ) {
+                    errors.push("still loading ring");
+                  } else {
+                    const ring = glyph.getBoundingClientRect();
+                    if (
+                      ring.width <= 0 || ring.height <= 0 ||
+                      ring.left < box.left || ring.right > box.right ||
+                      ring.top < box.top || ring.bottom > box.bottom
+                    ) {
+                      errors.push("contained loading ring");
+                    }
+                    const label = node.querySelector(".discern-button__label")
+                      ?.getBoundingClientRect();
+                    if (
+                      label && ring.right > label.left &&
+                      ring.left < label.right &&
+                      ring.bottom > label.top && ring.top < label.bottom
+                    ) {
+                      errors.push("loading ring overlaps action label");
+                    }
+                  }
                 }
                 for (
                   const icon of node.querySelectorAll(
@@ -119,7 +153,22 @@ Deno.test("Action matrix preserves meaning, size floors, icon slots and unavaila
         }
       }
     }
-    await page.emulateMedia({ forcedColors: "none" });
+    await page.emulateMedia({
+      forcedColors: "none",
+      reducedMotion: "no-preference",
+    });
+    assertEquals(
+      await page.locator(".discern-icon--busy svg").evaluateAll((nodes) =>
+        nodes.length > 0 && nodes.every((node) => {
+          const style = getComputedStyle(node);
+          return style.animationName === "discern-icon-busy" &&
+            parseFloat(style.animationDuration) > 0;
+        })
+      ),
+      true,
+      "loading rings rotate when motion is allowed",
+    );
+    await page.emulateMedia({ reducedMotion: "reduce" });
     for (const darkness of [0, 0.25, 0.5, 0.75, 1]) {
       for (const hue of [undefined, 2, 120, 255, 360]) {
         await page.locator("html").evaluate((node, point) => {

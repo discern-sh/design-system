@@ -1,3 +1,5 @@
+import { BusyGlyph } from "../icon/busy-glyph.tsx";
+import { Icon } from "../icon/icon.tsx";
 import { forwardRef } from "react";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
@@ -7,7 +9,7 @@ import type { IconButtonSize, IconButtonVariant } from "./icon-button.types.ts";
 /** Props for the {@linkcode IconButton} component. */
 export interface IconButtonProps
   extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children"> {
-  /** Caller-owned pending state; disables native activation and retains the icon and name. */
+  /** Caller-owned pending state; disables native activation and retains the action name and icon slot. */
   readonly busy?: boolean;
   readonly icon: ReactNode;
   readonly label: string;
@@ -49,7 +51,19 @@ export const IconButton: DiscernComponent<HTMLButtonElement, IconButtonProps> =
         disabled={unavailable}
         aria-busy={pending || undefined}
       >
-        <span aria-hidden="true">{icon}</span>
+        <span className="discern-icon-button__glyph" aria-hidden="true">
+          {icon}
+        </span>
+        {pending
+          ? (
+            <Icon
+              className="discern-icon--busy discern-icon-button__busy"
+              size="var(--discern-icon-button-icon-size)"
+            >
+              <BusyGlyph />
+            </Icon>
+          )
+          : null}
       </button>
     );
   });

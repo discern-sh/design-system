@@ -19,4 +19,18 @@
     fill: none;
     stroke: currentColor;
   }
+  .discern-icon--busy > svg {
+    animation: discern-icon-busy calc(var(--discern-duration-reveal) * 4) linear
+      infinite;
+  }
+  @keyframes discern-icon-busy {
+    to {
+      transform: rotate(1turn);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .discern-icon--busy > svg {
+      animation: none;
+    }
+  }
 }

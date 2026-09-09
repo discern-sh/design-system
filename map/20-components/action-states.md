@@ -1,6 +1,6 @@
 # Action states
 
-[`Button`](../../src/components/core/button/button.tsx) and [`IconButton`](../../src/components/core/icon-button/icon-button.tsx) render browser-native actions at build time. Their caller owns task lifecycle. Set `busy` before allowing another activation, retain the original action label and icon, and clear it when the task settles. The busy frame has `aria-busy` and a still dotted progress rail; it adds no layout space and needs no animation to convey state.
+[`Button`](../../src/components/core/button/button.tsx) and [`IconButton`](../../src/components/core/icon-button/icon-button.tsx) render browser-native actions at build time. Their caller owns task lifecycle. Set `busy` before allowing another activation, retain the original action label, and clear it when the task settles. The busy frame has `aria-busy` and a loading ring in the leading icon slot or existing side padding; it adds no layout space. IconButton shows the ring in its icon slot. The ring remains visible and still under reduced motion.
 
 ## Activation and focus
 
@@ -8,7 +8,7 @@ Busy or `aria-disabled=true` native buttons emit `disabled`. They cannot be clic
 
 Unavailable Button anchors retain link semantics but omit `href` and use `tabIndex=-1`. Their old URL cannot be followed through Enter, middle-click, or a context menu. This does not intercept consumer event handlers: those remain the consumer's responsibility. A CSS-only class on consumer-authored HTML conveys appearance, not activation suppression.
 
-Disabled actions retain muted ink on a sunken surface and a dashed edge. Busy adds a dotted rail and progress cursor. Forced colours use system disabled ink; no disabled meaning depends on opacity or an accessible-name-only suffix. IconButton requires a meaningful label; provide surrounding context or a tooltip when the graphic alone is unfamiliar.
+Disabled actions retain muted ink on a sunken surface and a dashed edge. Busy shows a loading ring and progress cursor. Forced colours use system disabled ink; no disabled meaning depends on opacity or an accessible-name-only suffix. IconButton requires a meaningful label; provide surrounding context or a tooltip when the graphic alone is unfamiliar.
 
 ## Composition
 

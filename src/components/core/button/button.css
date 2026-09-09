@@ -1,5 +1,6 @@
 @layer discern.components {
   .discern-button {
+    --discern-button-padding-inline: var(--discern-space-5);
     --discern-button-fill: var(--discern-color-action);
     --discern-button-fill-hover: color-mix(in oklab,
       var(--discern-color-action) 88%, var(--discern-color-on-action));
@@ -19,7 +20,7 @@
     justify-content: center;
     gap: var(--discern-space-2);
     min-block-size: var(--discern-control-size-md);
-    padding: var(--discern-space-1) var(--discern-space-5);
+    padding: var(--discern-space-1) var(--discern-button-padding-inline);
     border: 0.125rem solid var(--discern-color-button-edge);
     border-radius: var(--discern-radius-md);
     background: var(--discern-button-fill);
@@ -75,12 +76,12 @@
   }
   .discern-button--sm {
     min-block-size: var(--discern-control-size-sm);
-    padding-inline: var(--discern-space-3);
+    --discern-button-padding-inline: var(--discern-space-3);
     font-size: var(--discern-font-size-xs);
   }
   .discern-button--lg {
     min-block-size: var(--discern-control-size-lg);
-    padding-inline: var(--discern-space-6);
+    --discern-button-padding-inline: var(--discern-space-6);
     font-size: 1.0625rem;
   }
   .discern-button__label {
@@ -111,14 +112,24 @@
     box-shadow: none;
   }
   .discern-button[aria-busy="true"] {
+    --discern-button-busy-size: min(0.625em, calc(var(--discern-button-padding-inline) * 0.75));
     cursor: progress;
   }
-  .discern-button[aria-busy="true"]::after {
-    content: "";
+  .discern-button__busy {
     position: absolute;
-    inset-block-end: calc(var(--discern-space-1) / 2);
-    inline-size: 1em;
-    border-block-end: 0.1875rem dotted var(--discern-color-ink-muted);
+    inset-block-start: 50%;
+    inset-inline-start: calc((var(--discern-button-padding-inline) -
+      var(--discern-button-busy-size)) / 2);
+    transform: translateY(-50%);
+  }
+  .discern-button[aria-busy="true"]:has(> .discern-button__icon:first-child) {
+    --discern-button-busy-size: 1em;
+  }
+  .discern-button[aria-busy="true"] > .discern-button__icon:first-child {
+    visibility: hidden;
+  }
+  .discern-button:has(> .discern-button__icon:first-child) > .discern-button__busy {
+    inset-inline-start: var(--discern-button-padding-inline);
   }
   @media (forced-colors: active) {
     .discern-button:is(:disabled, [aria-disabled="true"]) {
