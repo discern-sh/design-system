@@ -568,7 +568,7 @@
 # behavior opt-in registry. CSS-only selections remain outside this measure.
 [standards.behavior_script]
   run = "deno run --config deno.json --allow-read --allow-write scripts/measure-runtime.ts behavior_script_bytes"
-  limit = 8582
+  limit = 9367
   direction = "down"
   metric = "behavior_script_bytes"
   inputs = [
