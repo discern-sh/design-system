@@ -3,6 +3,7 @@ import { toFileUrl } from "@std/path";
 import { renderToStaticMarkup } from "react-dom/server";
 import { launchBrowser } from "../scripts/browser.ts";
 import { emitDesignSystemRuntime } from "../src/runtime.ts";
+import { catalogueExamples as cardExamples } from "../src/components/display/card/card.examples.tsx";
 import { Card } from "../src/components/display/card/card.tsx";
 import { Badge } from "../src/components/display/badge/badge.tsx";
 import { Tag } from "../src/components/display/tag/tag.tsx";
@@ -31,6 +32,7 @@ Deno.test("content structures preserve full labels and current state within loca
       outputRoot: toFileUrl(`${output}/`),
       components: [
         "card",
+        "button",
         "badge",
         "tag",
         "tabs",
@@ -45,6 +47,7 @@ Deno.test("content structures preserve full labels and current state within loca
     const css = await Deno.readTextFile(`${output}/discern.css`);
     const page = await browser.newPage();
     const structures = [
+      ...cardExamples.map(({ id, Example }) => <Example key={id} />),
       <Card key="Card">
         <h3>{name}</h3>
         <p>Essential content before metadata and action.</p>
@@ -166,6 +169,17 @@ Deno.test("content structures preserve full labels and current state within loca
           }).evaluate((node) => node === document.activeElement),
         );
         assertEquals(await page.locator("a a, button a, a button").count(), 0);
+        for (const label of ["Read correspondence", "Read field notes"]) {
+          const target = await page.getByRole("link", {
+            name: label,
+            exact: true,
+          })
+            .boundingBox();
+          assert(
+            target && target.width >= 24 && target.height >= 24,
+            `${label} retains a standalone action target at ${width}px / ${rootSize}px root`,
+          );
+        }
       }
     }
   } finally {

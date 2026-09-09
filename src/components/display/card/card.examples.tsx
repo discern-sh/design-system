@@ -1,4 +1,5 @@
 import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
+import { Button } from "../../core/button/button.tsx";
 import { Badge } from "../badge/badge.tsx";
 import { Tag } from "../tag/tag.tsx";
 import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
@@ -57,7 +58,9 @@ function CrowdedExample() {
         <Tag>International correspondence</Tag>
       </div>
       <p>
-        <a href="#correspondence">Read correspondence</a>
+        <Button href="#correspondence" variant="secondary" size="sm">
+          Read correspondence
+        </Button>
       </p>
       <Card
         raised
@@ -66,7 +69,9 @@ function CrowdedExample() {
       >
         <h4>Related field notes</h4>
         <p>Background from the previous visit.</p>
-        <a href="#field-notes">Read field notes</a>
+        <Button href="#field-notes" variant="ghost" size="sm">
+          Read field notes
+        </Button>
       </Card>
     </Card>
   );

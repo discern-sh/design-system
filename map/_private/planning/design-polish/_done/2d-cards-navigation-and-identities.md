@@ -79,7 +79,7 @@ Authored feature files stay with their owner. Shared derived files and the narro
 
 ## Implementation and review evidence
 
-- Card retains passive semantics, A's title scale and flat nested treatment. Its crowded example uses explicit vertical rhythm and separate named links after essential content and quiet metadata.
+- Card retains passive semantics, A's title scale and flat nested treatment. Its crowded example uses explicit vertical rhythm and separate named Button anchors after essential content and quiet metadata. Canonical Card actions retain at least 24px targets at every tested local width and text size.
 - Tabs and Breadcrumbs wrap locally, preserving complete current labels. Tabs retains its existing panel contract and DOM-order keyboard navigation across rows.
 - People names wrap; the shared Avatar renders its inert monogram beneath the photo for loading/failure. AvatarGroup wraps across every supported size and accommodates three-digit overflow counts. CLI renderer behavior is unchanged; new canonical CLI examples cover the added shared states.
 - Browser regression coverage exercises 240/390/720px local widths at 16/32px root text, unbroken labels, last-selected navigation, failed images through the shared composers, all AvatarGroup sizes, and separate card action reachability. The original reproduction failed for navigation scrolling, truncated names, overflowing metadata, and missing photo fallback. Local wrapping and the permanent monogram resolve those failures without changing the shared foundations.
