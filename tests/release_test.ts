@@ -460,6 +460,31 @@ Deno.test("the publish-shaped artifact serves the neutral consumer alone", async
         2,
       ),
     );
+    await Deno.copyFile(
+      join(PACKAGE_ROOT, "scripts/playground/application.ts"),
+      join(consumer, "application-demo.ts"),
+    );
+    await Deno.writeTextFile(
+      join(consumer, "application.ts"),
+      `
+import { runTerminalApplication } from "${config.name}/cli/interactive";
+import { FakeTerminalIO, captureTerminalFrame, runPtyProcess } from "${config.name}/cli/interactive/testing";
+import { applicationDemoOptions } from "./application-demo.ts";
+const io = new FakeTerminalIO(["\\x1b[B\\r", "\\x1b[B\\r", "q"]);
+let calls = 0;
+const state = await runTerminalApplication(applicationDemoOptions(() => { calls++; }), { io });
+const capture = captureTerminalFrame(io.output(), io.size());
+if (calls !== 1 || state.positions.projects?.selectedId !== "1" || !capture.html.includes("Run sample") || typeof runPtyProcess !== "function") throw new Error("Published application contract failed");
+console.log("application-public-ok");
+`,
+    );
+    const application = await run(consumer, [
+      "run",
+      "--no-prompt",
+      "application.ts",
+    ]);
+    assertEquals(application.code, 0, application.output);
+    assertStringIncludes(application.output, "application-public-ok");
     await Deno.writeTextFile(
       join(consumer, "charts.ts"),
       `import type { ChartSpec } from "${config.name}/chart";

@@ -1,3 +1,4 @@
+import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
 import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import meta, { componentExampleVocabulary } from "./profile-card.meta.ts";
 import { ProfileCard } from "./profile-card.tsx";
@@ -21,7 +22,7 @@ function LandscapeLayoutExample() {
   return (
     <ProfileCard
       layout="landscape"
-      name="June Park"
+      name="Alexandrine Featherstonehaugh-Cholmondeley"
       detail="Editor at large"
       bio="Edits each guide until the next action is clear."
       links={<a href="#from-the-desk">From the desk</a>}
@@ -46,3 +47,21 @@ export default function ProfileCardExamples() {
     </div>
   );
 }
+
+export const reviewPostures = defineComponentReviewPostures(
+  meta,
+  componentExampleVocabulary,
+  [{
+    id: "narrow-content",
+    label: "Full content at narrow local width",
+    example: "landscape",
+    category: "responsive",
+    requirements: { inlineSize: 240 },
+    sequence: [{
+      checkpoint: {
+        id: "profile-card-narrow-content",
+        label: "Names, current state, and actions remain visible",
+      },
+    }],
+  }],
+);

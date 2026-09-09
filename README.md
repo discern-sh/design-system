@@ -17,7 +17,7 @@ deno add jsr:@discern-sh/design-system
 | `@discern-sh/design-system/chart`                   | Typed chart specs, descriptions, kind Metadata, and portable standalone SVG               |
 | `@discern-sh/design-system/cli`                     | Pure React-free terminal renderers, capabilities, themes, and semantic motif primitives   |
 | `@discern-sh/design-system/cli/interactive`         | Optional Deno terminal driver and typed interaction state machines                        |
-| `@discern-sh/design-system/cli/interactive/testing` | Deterministic fake terminal, semantic key/resize scripts, and frame assertions            |
+| `@discern-sh/design-system/cli/interactive/testing` | Fake terminal, real-PTY fixtures, named captures, I/O observation, and frame assertions   |
 | `@discern-sh/design-system/cli/projection`          | Package-output decoding, browser projection, and explicit layout inspection               |
 | `@discern-sh/design-system/glyphs`                  | Typed Unicode glyphs, discovery metadata, and explicit ASCII resolution                   |
 | `@discern-sh/design-system/diagram`                 | Typed diagram specs, descriptions, kind Metadata, and portable standalone SVG             |
@@ -529,6 +529,58 @@ console.log(inspection.rowsBelowFold, inspection.overflowRows);
 
 The inspection reports visible-cell widths, overflow, content height, and the fold as geometry facts. Consecutive blank rows and repeated exact nonblank rows are advisory review cues, not failures: a Component may own either deliberately. The returned HTML is a self-contained fragment with the real projected styles, row and column rulers, the fold, and optional cell guides; it contains no script and does not emulate cursor-driven terminal sessions.
 
+### Terminal applications
+
+Use `runTerminalApplication` for a persistent screen whose data changes while it stays open. The package owns one viewport, responsive selectable and reading regions, focus, scrolling, resizing and terminal cleanup. Your code supplies product facts, navigation decisions and effects:
+
+```ts
+import {
+  createCliBlock,
+  renderMarkdownCli,
+} from "@discern-sh/design-system/cli";
+import { runTerminalApplication } from "@discern-sh/design-system/cli/interactive";
+
+await runTerminalApplication({
+  view: {
+    title: "Studio",
+    tip: "Tab switches regions.",
+    regions: [
+      {
+        kind: "choices",
+        id: "items",
+        title: "Items",
+        entries: [
+          {
+            id: "notes",
+            label: "Field notes",
+            value: "notes",
+            indicator: { content: "✓", ascii: "+", tone: "success" },
+            status: { content: "Ready", tone: "success" },
+          },
+        ],
+      },
+      {
+        kind: "reading",
+        id: "guide",
+        title: "Guide",
+        content: createCliBlock(renderMarkdownCli, {
+          source: "# Guide\n\nA little room to work.",
+        }),
+      },
+    ],
+  },
+  onAction: () => ({ kind: "exit" }),
+}, { theme: "dark", appearance: { accent: 220 } });
+```
+
+`start(context)` starts a subscription once and returns its cleanup. Providers publish immutable replacements with `context.update(view)` and report errors with `context.fail(error)`; they are never awaited on arrow keys. Choice focus follows stable IDs through reorder and status changes. Unavailable rows remain inspectable, and only Enter on an available choice activates it. `onAction` may return `{ kind: "foreground", run: async () => { /* caller-owned operation */ } }`: terminal modes restore before the operation, and the same selection and reading offset resume afterwards. Keyboard shortcut handlers return `handled` or `exit`; caller-owned effects stay in activation handlers.
+
+The minimum is **32 × 10**. Below it the session shows a resize notice with an exit; wide terminals split columns, tall terminals stack regions, and smaller terminals show the focused region. Tab reaches the other region in all layouts. Ctrl+C, EOF and cooperative abort clean up and throw `InteractionCancelled`; Escape returns normally unless the caller handles it as back navigation. Unsupported TTY/control capabilities refuse before entering raw mode. Default appearance remains monochrome; use explicit appearance inputs when reviewing semantic color.
+
+Run `deno task playground:application` for the live Studio demo with a harmless foreground child, or choose `application` in `deno task playground:cli`. `deno run --config deno.json -A scripts/application-capture.ts` captures named real-PTY states as HTML and PNGs. Optional `./cli/interactive/testing` exports `runPtyProcess` with controlled geometry, observable readiness and named keyframes; `captureTerminalFrame` extracts a settled full repaint and uses the existing HTML projection. `observeTerminalIO` and runtime `observe` expose writes, geometry and rendering work. PTY transport supports macOS/BSD and Linux/util-linux with `script`, `stty` and `ps`; Windows and arbitrary cursor-driven transcripts are unsupported. Broad behavioral tests should continue to use FakeTerminalIO.
+
+See the [application and migration guide](map/70-cli/applications.md) for exact focus/overflow rules, ownership, capture examples and the remaining discern helper migration. Existing request defaults are unchanged. For standalone actions, discover Select's canonical **Action menu** example and pass `presentation: "menu"`; consumers wrapping the older `InteractionChoicePresentation` must use `InteractionSelectionPresentation` for a single selection.
+
 The optional `./cli/interactive` adapter turns raw terminal input into typed interaction state and renders it through the package's Forms Component renderers. Running an interaction is the effects boundary; importing the module does not mutate the terminal:
 
 ```ts
@@ -681,7 +733,7 @@ A mandatory resilience phase discovers rendered disclosures, interactive control
 
 ### Terminal review surfaces
 
-`deno task catalogue:cli` opens an alternate-screen browser over every rendered Component example, recorded exemption, and terminal-foundation sheet; `--list`, an exact selector, and the explicit `all` dump remain finite or deterministic stdout modes. The browser Catalogue maps that same registry into searchable Foundation specimens. `deno task playground:cli` is the live terminal counterpart, driving the real interactive adapter. Its alternate-screen hub first divides the forty journeys into review sections and offers global search; the menu restores normal scrollback before a journey runs, remembers the previous destination, and pauses after completion with Repeat, Next, Back, and Quit actions. `deno task playground:cli --list` prints every journey ID without a TTY, `tour` visits them all in recommended order, and a direct `<journey-id>` bypasses the hub entirely. These surfaces derive their inventories from the generated Component registries or the shared terminal-foundation registry, so a new member auto-enrols in its applicable review paths; each journey prints the current terminal facts (columns, rows, Unicode, colour depth, ANSI control) before it runs so observations are reproducible. These are development and review instruments for this repository, not published package APIs.
+`deno task catalogue:cli` opens an alternate-screen browser over every rendered Component example, recorded exemption, and terminal-foundation sheet; `--list`, an exact selector, and the explicit `all` dump remain finite or deterministic stdout modes. The browser Catalogue maps that same registry into searchable Foundation specimens. `deno task playground:cli` is the live terminal counterpart, driving the real interactive adapter. Its alternate-screen hub first divides the journeys into review sections and offers global search; the menu restores normal scrollback before a journey runs, remembers the previous destination, and pauses after completion with Repeat, Next, Back, and Quit actions. `deno task playground:cli --list` prints every journey ID without a TTY, `tour` visits them all in recommended order, and a direct `<journey-id>` bypasses the hub entirely. These surfaces derive their inventories from the generated Component registries or the shared terminal-foundation registry, so a new member auto-enrols in its applicable review paths; each journey prints the current terminal facts (columns, rows, Unicode, colour depth, ANSI control) before it runs so observations are reproducible. These are development and review instruments for this repository, not published package APIs.
 
 ### Authoring rules
 

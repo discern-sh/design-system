@@ -1,5 +1,8 @@
 @layer discern.components {
   .discern-icon-button {
+    --discern-icon-button-icon-size: 1.125rem;
+    position: relative;
+    flex: none;
     display: inline-grid;
     place-items: center;
     inline-size: var(--discern-control-size-md);
@@ -22,20 +25,23 @@
     transform: translateY(0.0625rem);
   }
   .discern-icon-button:disabled {
-    border-color: var(--discern-color-border);
+    border-color: var(--discern-color-border-strong);
     background: var(--discern-color-surface-sunken);
-    color: var(--discern-color-ink-faint);
+    color: var(--discern-color-ink-muted);
+    border-style: dashed;
     cursor: not-allowed;
   }
-  .discern-icon-button--outline {
+  .discern-icon-button--outline:not(:disabled) {
     border-color: var(--discern-color-border-strong);
     background: var(--discern-color-surface);
   }
   .discern-icon-button--sm {
+    --discern-icon-button-icon-size: 0.9375rem;
     inline-size: var(--discern-control-size-sm);
     block-size: var(--discern-control-size-sm);
   }
   .discern-icon-button--lg {
+    --discern-icon-button-icon-size: 1.3125rem;
     inline-size: var(--discern-control-size-lg);
     block-size: var(--discern-control-size-lg);
   }
@@ -43,19 +49,25 @@
     display: grid;
     place-items: center;
     align-content: center;
-    inline-size: 1.125rem;
-    block-size: 1.125rem;
+    inline-size: var(--discern-icon-button-icon-size);
+    block-size: var(--discern-icon-button-icon-size);
   }
-  .discern-icon-button--sm > span {
-    inline-size: 0.9375rem;
-    block-size: 0.9375rem;
+  .discern-icon-button > span > :where(svg, img) {
+    max-inline-size: 100%;
+    max-block-size: 100%;
   }
-  .discern-icon-button--lg > span {
-    inline-size: 1.3125rem;
-    block-size: 1.3125rem;
+  .discern-icon-button[aria-busy="true"] {
+    cursor: progress;
   }
-  .discern-icon-button svg {
-    inline-size: 100%;
-    block-size: 100%;
+  .discern-icon-button[aria-busy="true"] > .discern-icon-button__glyph {
+    visibility: hidden;
+  }
+  .discern-icon-button > .discern-icon-button__busy {
+    position: absolute;
+  }
+  @media (forced-colors: active) {
+    .discern-icon-button:disabled {
+      color: GrayText;
+    }
   }
 }

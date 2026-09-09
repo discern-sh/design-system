@@ -1,3 +1,4 @@
+import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
 import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import meta, { componentExampleVocabulary } from "./persona.meta.ts";
 import { Persona } from "./persona.tsx";
@@ -49,3 +50,21 @@ export default function PersonaExamples() {
     </div>
   );
 }
+
+export const reviewPostures = defineComponentReviewPostures(
+  meta,
+  componentExampleVocabulary,
+  [{
+    id: "narrow-content",
+    label: "Full content at narrow local width",
+    example: "long-name",
+    category: "responsive",
+    requirements: { inlineSize: 240 },
+    sequence: [{
+      checkpoint: {
+        id: "persona-narrow-content",
+        label: "Names, current state, and actions remain visible",
+      },
+    }],
+  }],
+);

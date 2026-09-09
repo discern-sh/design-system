@@ -1,5 +1,5 @@
 import { Children, forwardRef } from "react";
-import type { HTMLAttributes, ReactNode } from "react";
+import type { CSSProperties, HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { Avatar } from "../avatar/avatar.tsx";
@@ -28,6 +28,7 @@ export const AvatarGroup: DiscernComponent<HTMLSpanElement, AvatarGroupProps> =
       size = "md",
       overflowLabel = defaultOverflowLabel,
       className,
+      style,
       ...props
     },
     ref,
@@ -41,6 +42,10 @@ export const AvatarGroup: DiscernComponent<HTMLSpanElement, AvatarGroupProps> =
         ref={ref}
         className={classNames("discern-avatar-group", className)}
         {...(label !== undefined ? { role: "group", "aria-label": label } : {})}
+        style={{
+          "--discern-avatar-size": `var(--discern-avatar-size-${size})`,
+          ...style,
+        } as CSSProperties}
         {...props}
       >
         {visible}

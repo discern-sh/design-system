@@ -1,3 +1,4 @@
+import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
 import {
   type ConformanceScenario,
   defineCatalogueExamples,
@@ -39,6 +40,15 @@ function SquareExample() {
   return <Avatar name="Tomás Vega" shape="square" size="lg" />;
 }
 
+function CrowdedExample() {
+  return (
+    <Avatar
+      name="Alexandrine Featherstonehaugh-Cholmondeley"
+      size="lg"
+    />
+  );
+}
+
 export const catalogueExamples = defineCatalogueExamples(
   meta,
   componentExampleVocabulary,
@@ -46,6 +56,7 @@ export const catalogueExamples = defineCatalogueExamples(
     { id: "default", Example: InitialsWithPresenceExample },
     { id: "portrait", Example: PortraitExample },
     { id: "square", Example: SquareExample },
+    { id: "fallback", Example: CrowdedExample },
   ],
 );
 
@@ -58,3 +69,21 @@ export default function AvatarExamples() {
     </div>
   );
 }
+
+export const reviewPostures = defineComponentReviewPostures(
+  meta,
+  componentExampleVocabulary,
+  [{
+    id: "narrow-content",
+    label: "Full content at narrow local width",
+    example: "fallback",
+    category: "responsive",
+    requirements: { inlineSize: 240 },
+    sequence: [{
+      checkpoint: {
+        id: "avatar-narrow-content",
+        label: "Names, current state, and actions remain visible",
+      },
+    }],
+  }],
+);

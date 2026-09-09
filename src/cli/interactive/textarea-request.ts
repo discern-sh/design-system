@@ -76,7 +76,7 @@ class TextareaInteractionMachine
       lifecycle,
       value: this.#editor.value,
       cursor: this.#editor.cursor,
-      rows: Math.min(this.#rows, viewport.maximumControlRows),
+      rows: viewport.controlRows(this.#rows),
       ...(this.options.hint === undefined
         ? { hint: "Ctrl+D to submit" }
         : { hint: this.options.hint }),

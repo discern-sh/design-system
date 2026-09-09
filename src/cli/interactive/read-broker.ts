@@ -126,6 +126,15 @@ export function adoptTerminalRead(io: TerminalIO): TerminalReadLease {
   return lease;
 }
 
+/** Release native input ownership while preserving already-read bytes and protocol filters. */
+export function cancelTerminalRead(io: TerminalIO): void {
+  if (io.cancelRead?.() !== true) return;
+  const state = terminalReads.get(io);
+  if (state === undefined) return;
+  state.active?.defer();
+  state.raw = undefined;
+}
+
 /** Park already-read bytes ahead of, without replacing, any pending read. */
 export function parkTerminalChunk(io: TerminalIO, chunk: Uint8Array): void {
   if (chunk.length === 0) return;

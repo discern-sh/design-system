@@ -1,5 +1,7 @@
 # CLI rendering
 
+For persistent screens with live rows, bounded reading regions, foreground handoff, and capture, start with [bounded applications](applications.md).
+
 The React-free CLI surface has four entrypoints. `./cli` renders deterministic terminal strings; the optional `./cli/interactive` Adapter owns terminal effects and turns raw input into semantic frame states; `./cli/interactive/testing` publishes the deterministic terminal that drives the real interaction machinery in package and consumer tests; and `./cli/projection` decodes package-emitted output into typed spans, reviewable HTML, and explicit terminal-layout geometry. Together they combine explicit terminal capabilities, a bound presenter, Token-derived colour and spacing, grapheme-aware text layout and editing, consumer-bindable semantic motifs with a discern preset, narration lines, a vertical rhythm contract, typed interaction state, and generated per-Component CLI enrollment.
 
 [ADR-0011](../_adr/0011-terminal-input-uses-request-vocabulary.md) reserves “prompt” for coding-agent instructions. The terminal Adapter names individual value-producing operations `request*` and names their shared lifecycle and machinery `Interaction*`.

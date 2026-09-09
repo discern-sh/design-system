@@ -33,7 +33,12 @@
     ]
   },
   "compilerOptions": {
-    "lib": ["dom", "dom.iterable", "esnext", "deno.ns"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext",
+      "deno.ns"
+    ],
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
@@ -58,7 +63,11 @@
     "react": "npm:react@18.3.1",
     "react/jsx-runtime": "npm:react@18.3.1/jsx-runtime",
     "react-dom/client": "npm:react-dom@18.3.1/client",
-    "react-dom/server": "npm:react-dom@18.3.1/server"
+    "react-dom/server": "npm:react-dom@18.3.1/server",
+    "@discern-sh/design-system/cli": "./src/cli/mod.ts",
+    "@discern-sh/design-system/cli/interactive": "./src/cli/interactive/mod.ts",
+    "@discern-sh/design-system/cli/interactive/testing": "./src/cli/interactive/testing.ts",
+    "@discern-sh/design-system/cli/projection": "./src/cli/projection.ts"
   },
   "tasks": {
     "codegen": "deno run --config deno.json --allow-read --allow-write --allow-env=NODE_ENV --allow-run=deno scripts/generate.ts",
@@ -71,13 +80,14 @@
     "check:catalogue": "deno check --config deno.json catalogue/app.tsx catalogue/review/app.tsx catalogue/builder/app.tsx catalogue/example-images/capture.tsx catalogue/example-images.ts",
     "conformance": "deno run --config deno.json -A scripts/conformance.ts",
     "lint": "deno lint --no-config src catalogue scripts discern/scripts tests",
-    "typecheck": "deno check --config deno.json src/mod.ts src/component-metadata.ts src/diagram/mod.ts src/chart/mod.ts src/glyphs/mod.ts src/chart/conformance.ts src/cli/mod.ts src/cli/interactive/mod.ts src/cli/interactive/testing.ts src/cli/projection.ts src/manifest.ts src/runtime.ts src/react.ts scripts/build.ts scripts/catalogue-cli.ts scripts/component-example-images.ts scripts/component-review.ts scripts/conformance.ts scripts/playground-cli.ts scripts/generate.ts scripts/measure.ts scripts/watch.ts scripts/measure-runtime.ts",
+    "typecheck": "deno check --config deno.json src/mod.ts src/component-metadata.ts src/diagram/mod.ts src/chart/mod.ts src/glyphs/mod.ts src/chart/conformance.ts src/cli/mod.ts src/cli/interactive/mod.ts src/cli/interactive/testing.ts src/cli/projection.ts src/manifest.ts src/runtime.ts src/react.ts scripts/build.ts scripts/catalogue-cli.ts scripts/component-example-images.ts scripts/component-review.ts scripts/conformance.ts scripts/playground-cli.ts scripts/generate.ts scripts/measure.ts scripts/watch.ts scripts/measure-runtime.ts scripts/application-demo.ts scripts/application-capture.ts scripts/benchmark-application.ts",
     "fix": "deno fmt --config deno.json . && deno lint --no-config --fix src catalogue scripts discern/scripts tests",
     "serve": "deno task build && deno serve --host 127.0.0.1 --allow-read --port $(discern identity --port 2>/dev/null || echo 8010) scripts/serve.ts",
     "watch": "deno serve --config deno.json --host 127.0.0.1 --allow-read --allow-write --allow-run --allow-env=NODE_ENV --port $(discern identity --port 2>/dev/null || echo 8010) --watch=src/,catalogue/,assets/ --watch-exclude=src/generated/,catalogue/generated/,dist/ scripts/watch.ts",
     "test": "deno task test:unit && deno task catalogue:images --verify && deno task conformance",
     "test:unit": "deno test --config deno.json --allow-read --allow-write --allow-env --allow-run --allow-sys tests",
-    "verify": "deno task build && deno task check && deno task check:catalogue && deno task test"
+    "verify": "deno task build && deno task check && deno task check:catalogue && deno task test",
+    "playground:application": "deno run --config deno.json --allow-env --allow-run scripts/application-demo.ts"
   },
   "fmt": {
     "proseWrap": "never",
@@ -95,6 +105,10 @@
     ]
   },
   "lint": {
-    "exclude": ["dist/", "src/generated/", "catalogue/generated/"]
+    "exclude": [
+      "dist/",
+      "src/generated/",
+      "catalogue/generated/"
+    ]
   }
 }
