@@ -1,3 +1,4 @@
+import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
 import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import meta, { componentExampleVocabulary } from "./breadcrumbs.meta.ts";
 import { Breadcrumbs } from "./breadcrumbs.tsx";
@@ -25,7 +26,7 @@ function DeepHierarchyExample() {
         { label: "Components", href: "#components" },
         { label: "Navigation", href: "#navigation" },
       ]}
-      current="Breadcrumbs"
+      current="Breadcrumbs with long current location names"
     />
   );
 }
@@ -51,3 +52,21 @@ export default function BreadcrumbsExamples() {
     </div>
   );
 }
+
+export const reviewPostures = defineComponentReviewPostures(
+  meta,
+  componentExampleVocabulary,
+  [{
+    id: "narrow-content",
+    label: "Full content at narrow local width",
+    example: "deep",
+    category: "responsive",
+    requirements: { inlineSize: 240 },
+    sequence: [{
+      checkpoint: {
+        id: "breadcrumbs-narrow-content",
+        label: "Names, current state, and actions remain visible",
+      },
+    }],
+  }],
+);

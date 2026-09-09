@@ -1,5 +1,7 @@
 @layer discern.components {
   .discern-byline {
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
     display: flex;
     column-gap: var(--discern-space-3);
     row-gap: var(--discern-space-2);
@@ -14,6 +16,8 @@
   .discern-byline,
   .discern-byline__authors,
   .discern-byline__meta {
+    min-inline-size: 0;
+    max-inline-size: 100%;
     flex-wrap: wrap;
     align-items: center;
   }

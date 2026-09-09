@@ -12,6 +12,8 @@ Compact icon slots accept both graphics and text glyphs. Center the grid row as 
 
 See [Selection and task progress](selection-and-progress.md) for the native form boundary, controlled adapter usage, and task completion versus measurement.
 
+See [Cards, navigation, and identity at local width](content-structures.md) for content order, wrapping, and image fallback ownership.
+
 ## Browser interaction and review
 
 Every canonical Web example automatically joins settled local review. A Component adds authored postures beside its example only for meaningful interaction, motion, Appearance, or local-width states; those postures reuse the same bounded action and capture vocabularies as browser conformance. Every rendered CLI example joins the generated cross-surface Appearance and capability population through the same canonical identity. [Browser visual review](../60-catalogue/visual-review.md) is the posture and production-speed authority, and the population guards prove that current and synthetic future examples enrol without a central registry edit.

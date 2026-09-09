@@ -24,7 +24,7 @@ Relative sizes are planning judgments, not elapsed-time promises: S is a bounded
 | 2A  | [Polish buttons and action states](_done/2a-buttons-and-action-states.md)                 | B1, B2, B3, B4, B5     | None            | M    | Complete |
 | 2B  | [Polish form alignment and validation](2b-form-alignment-and-validation.md)               | C1, C2, C4             | None            | M    | Prepared |
 | 2C  | [Clarify feedback and state transitions](2c-feedback-and-state-transitions.md)            | D3, D4, D5             | 1A              | M    | Prepared |
-| 2D  | [Polish cards, navigation, and identities](2d-cards-navigation-and-identities.md)         | E3, E4, E5             | None            | M    | Prepared |
+| 2D  | [Polish cards, navigation, and identities](_done/2d-cards-navigation-and-identities.md)   | E3, E4, E5             | None            | M    | Complete |
 | 2E  | [Polish sustained reading and article navigation](2e-reading-rhythm-and-navigation.md)    | F1, F2, F4             | None            | M    | Prepared |
 | 2F  | [Improve source listing copy and wrapping](2f-code-listing-copy-and-wrap.md)              | F3                     | 1B              | S–M  | Prepared |
 | 2G  | [Clarify operational status and evidence](2g-operational-hierarchy-and-evidence.md)       | G1, G2, G3, G4, G5     | 1B              | L    | Prepared |

@@ -67,6 +67,9 @@ export const Avatar: DiscernComponent<HTMLSpanElement, AvatarProps> =
         {...identity}
         {...props}
       >
+        <span className="discern-avatar__monogram" aria-hidden="true">
+          {monogram}
+        </span>
         {src !== undefined
           ? (
             <img
@@ -76,11 +79,7 @@ export const Avatar: DiscernComponent<HTMLSpanElement, AvatarProps> =
               loading="lazy"
             />
           )
-          : (
-            <span className="discern-avatar__monogram" aria-hidden="true">
-              {monogram}
-            </span>
-          )}
+          : null}
         {presence !== undefined
           ? (
             <span

@@ -1,25 +1,30 @@
 @layer discern.components {
   .discern-breadcrumbs {
     max-inline-size: 100%;
-    overflow-x: auto;
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
     color: var(--discern-color-ink-muted);
     font-family: var(--discern-font-ui);
     font-size: var(--discern-font-size-xs);
-    scrollbar-width: thin;
   }
   .discern-breadcrumbs :is(ol, li, a) {
     display: inline-flex;
     align-items: center;
   }
   .discern-breadcrumbs ol {
-    min-inline-size: 100%;
-    width: max-content;
+    flex-wrap: wrap;
+    max-inline-size: 100%;
+    row-gap: var(--discern-space-2);
     margin: 0;
-    padding: var(--discern-space-2) 0;
+    padding: var(--discern-space-2) var(--discern-space-1);
     list-style: none;
-    white-space: nowrap;
+  }
+  .discern-breadcrumbs li {
+    min-inline-size: 0;
+    max-inline-size: 100%;
   }
   .discern-breadcrumbs a {
+    min-inline-size: 0;
     min-block-size: 1.5rem;
     border-radius: var(--discern-radius-xs);
     color: inherit;
@@ -34,15 +39,13 @@
     color: var(--discern-color-ink);
   }
   .discern-breadcrumbs__separator {
+    flex: none;
     margin-inline: var(--discern-space-3);
     color: var(--discern-color-border-strong);
   }
   .discern-breadcrumbs .discern-breadcrumbs__current {
     display: block;
-    max-inline-size: min(48ch, 72vw);
-    overflow: hidden;
     color: var(--discern-color-ink);
     font-weight: var(--discern-font-weight-strong);
-    text-overflow: ellipsis;
   }
 }

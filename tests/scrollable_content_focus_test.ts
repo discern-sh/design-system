@@ -21,14 +21,6 @@ const descendantFocusPolicies = new Map<string, string>([
     "Site header navigation contains authored links.",
   ],
   [
-    "src/components/navigation/breadcrumbs/breadcrumbs.css::.discern-breadcrumbs",
-    "Breadcrumb overflow is traversed through its ancestor links.",
-  ],
-  [
-    "src/components/navigation/tabs/tabs.css::.discern-tabs__list",
-    "The tablist owns roving-focus buttons.",
-  ],
-  [
     "src/components/feedback/hover-card/hover-card.css::.discern-hover-card__panel",
     "Hover card overflow is supplementary to its focusable trigger and rich-content focus route.",
   ],
