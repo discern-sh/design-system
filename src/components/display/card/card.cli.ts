@@ -53,6 +53,14 @@ const cliExampleImplementations = [
     name: "dotted",
     props: { body: "Textured supporting content.", texture: "dots" },
   },
+  {
+    name: "crowded",
+    props: {
+      title: "Regional research correspondence",
+      body:
+        "Read the latest questions and choose the next follow-up.\nUpdated 11 August · 5 contributors\nReference · International correspondence\nRead correspondence\n\nRelated field notes\nBackground from the previous visit.\nRead field notes",
+    },
+  },
 ] as const satisfies readonly CliExample<CardCliProps>[];
 defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
 

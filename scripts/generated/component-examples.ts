@@ -46,6 +46,15 @@ export const componentExampleRegistry = {
         "cli",
       ],
     },
+    {
+      "id": "action-layout",
+      "label": "Action layout",
+      "surfaces": [
+        "web",
+      ],
+      "reason":
+        "Terminal action text cannot exercise multiline CSS labels between SVG slots or native unavailable anchor navigation.",
+    },
   ],
   "icon-button": [
     {
@@ -63,6 +72,15 @@ export const componentExampleRegistry = {
         "web",
         "cli",
       ],
+    },
+    {
+      "id": "action-layout",
+      "label": "Action layout",
+      "surfaces": [
+        "web",
+      ],
+      "reason":
+        "Terminal labelled glyphs cannot exercise square browser hit targets, injected SVG sizing, or disabled native focus.",
     },
   ],
   "theme-toggle": [
@@ -416,6 +434,14 @@ export const componentExampleRegistry = {
     {
       "id": "dotted",
       "label": "Dotted texture",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
+    {
+      "id": "crowded",
+      "label": "Crowded content",
       "surfaces": [
         "web",
         "cli",
@@ -1554,6 +1580,14 @@ export const componentExampleRegistry = {
         "cli",
       ],
     },
+    {
+      "id": "crowded",
+      "label": "Long labels, last selected",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
   ],
   "breadcrumbs": [
     {
@@ -1599,6 +1633,14 @@ export const componentExampleRegistry = {
         "cli",
       ],
     },
+    {
+      "id": "fallback",
+      "label": "Long-name fallback",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
   ],
   "avatar-group": [
     {
@@ -1612,6 +1654,14 @@ export const componentExampleRegistry = {
     {
       "id": "compact",
       "label": "Compact group",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
+    {
+      "id": "crowded",
+      "label": "Many contributors",
       "surfaces": [
         "web",
         "cli",

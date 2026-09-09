@@ -8,24 +8,22 @@ function ContrastClosingState() {
   return (
     <ClosingStatement
       eyebrow="One next step"
-      title="End with a decision, not another explanation."
+      title="Write the question before you book the room."
       description={
         <p>
-          The complete story has already done its work. The closing chapter
-          makes the next action clear and leaves the supporting detail behind.
+          Draft the invitation with a clear question, the relevant reading, and
+          a place for people to contribute before the session.
         </p>
       }
       actions={
         <>
-          <Button href="#begin">Begin here</Button>
+          <Button href="#begin">Prepare the invitation</Button>
           <Button href="#details" variant="secondary">
-            Read the details
+            Read the checklist
           </Button>
         </>
       }
-      reassurance={
-        <p>No account or specialist knowledge is needed to begin.</p>
-      }
+      reassurance={<p>Keep the preparation notes with the decision record.</p>}
       backdrop={<FoldBackdrop />}
     />
   );
@@ -35,9 +33,11 @@ function QuietClosingState() {
   return (
     <ClosingStatement
       eyebrow="Continue"
-      title="Keep the final invitation simple."
-      description={<p>A quiet surface can close a quieter page.</p>}
-      actions={<Button href="#next">Take the next step</Button>}
+      title="Share the next step with everyone involved."
+      description={
+        <p>Record the action, its owner, and a date to review what happened.</p>
+      }
+      actions={<Button href="#next">Review the decision record</Button>}
       surface="surface"
     />
   );

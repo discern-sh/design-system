@@ -10,6 +10,8 @@ const meta = {
     "Scrollable hierarchical page location with linked ancestors and one explicit current page.",
   cli: { stance: "rendered" },
   accessibility: [
+    "Ancestors and the current location wrap within local width; full names and separators remain visible without horizontal scrolling.",
+
     "A configurable label names the navigation landmark, and the hierarchy remains an ordered list.",
     "Only the final, unlinked item carries aria-current=page; visual separators are hidden from assistive technology.",
   ],

@@ -42,7 +42,11 @@ function InlineMentionExample() {
 function AvatarMentionExample() {
   return (
     <p style={{ margin: 0, maxWidth: "38rem" }}>
-      The follow-up belongs to <Mention name="June Park" src={portrait} />.
+      The follow-up belongs to{" "}
+      <Mention
+        name="Alexandrine Featherstonehaugh-Cholmondeley"
+        src={portrait}
+      />.
     </p>
   );
 }
@@ -60,6 +64,19 @@ export const reviewPostures = defineComponentReviewPostures(
   meta,
   componentExampleVocabulary,
   [
+    {
+      id: "narrow-content",
+      label: "Full content at narrow local width",
+      example: "avatar",
+      category: "responsive",
+      requirements: { inlineSize: 240 },
+      sequence: [{
+        checkpoint: {
+          id: "mention-narrow-content",
+          label: "Names, current state, and actions remain visible",
+        },
+      }],
+    },
     {
       id: "hover-link",
       label: "Mention link hover",

@@ -41,6 +41,10 @@ const cliExampleImplementations = [
     name: "square",
     props: { name: "Tomás Vega", shape: "square", size: "lg" },
   },
+  {
+    name: "fallback",
+    props: { name: "Alexandrine Featherstonehaugh-Cholmondeley", size: "lg" },
+  },
 ] as const satisfies readonly CliExample<AvatarCliProps>[];
 defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
 

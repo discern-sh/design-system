@@ -73,7 +73,10 @@
   }
   .discern-hero-block__title {
     min-inline-size: 0;
-    max-width: 12ch;
+    max-width: 16ch;
+    font-size: clamp(var(--discern-font-size-display-md), calc(1rem + 4cqi),
+      var(--discern-font-size-display-lg));
+    text-wrap: balance;
     margin: 0;
     overflow-wrap: anywhere;
   }
@@ -145,8 +148,9 @@
   }
   .discern-hero-block--showcase .discern-hero-block__title {
     max-inline-size: 64rem;
-    font-size: clamp(4rem, 7.5cqi, 7.25rem);
-    line-height: 0.92;
+    font-size: clamp(var(--discern-font-size-display-lg), calc(1rem + 7cqi),
+      calc(var(--discern-font-size-display-lg) * 2.5));
+    line-height: var(--discern-leading-tight);
     letter-spacing: -0.045em;
   }
   .discern-hero-block--showcase .discern-hero-block__title em {
@@ -192,9 +196,6 @@
       width: min(100% - 2 * var(--discern-space-4), 86rem);
       padding-block-start:
         calc(var(--discern-space-16) + var(--discern-space-2));
-    }
-    .discern-hero-block--showcase .discern-hero-block__title {
-      font-size: clamp(3.35rem, 17cqi, 5.25rem);
     }
     .discern-hero-block--showcase .discern-hero-block__description {
       font-size: 1.08rem;

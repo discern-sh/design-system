@@ -5,12 +5,12 @@ import { MarketingIntro } from "./marketing-intro.tsx";
 function EditorialIntroState() {
   return (
     <MarketingIntro
-      eyebrow="A new chapter"
-      title="Give the central idea enough room to lead."
+      eyebrow="Before the workshop"
+      title="A shared question makes preparation easier."
       description={
         <p>
-          The editorial scale creates a deliberate change of pace without
-          changing the default heading system for application pages.
+          Send the question with the reading material. Explain what the group
+          needs to decide and which parts are still open.
         </p>
       }
       scale="editorial"
@@ -22,16 +22,17 @@ function ContrastIntroState() {
   return (
     <div
       style={{
-        padding: "clamp(2rem, 7vw, 5rem)",
+        padding: "var(--discern-space-6)",
         background: "var(--discern-color-inverse-surface)",
       }}
     >
       <MarketingIntro
-        eyebrow="A contrasting chapter"
-        title="Keep the hierarchy readable when the surface turns dark."
+        eyebrow="After the discussion"
+        title="Keep the decision and its reasoning together."
         description={
           <p>
-            The contrast treatment stays light-on-dark in both site themes.
+            Record the options considered, the chosen next step, and the person
+            responsible for following up.
           </p>
         }
         align="center"

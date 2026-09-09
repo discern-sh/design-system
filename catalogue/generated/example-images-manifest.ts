@@ -3,7 +3,7 @@ import type { ComponentExampleImageManifest } from "../example-images/contract.t
 
 export const componentExampleImageManifest: ComponentExampleImageManifest = {
   "captureContractVersion": "5",
-  "sourceHash": "sha256:62676a39423c61d008402816dfa7a7df2388d94c34831d3d951926f538572b52",
+  "sourceHash": "sha256:e4e8a1ae20d13364621f77b1c2c678c4c4a2843cb4f975c4742bac3f00bc3002",
   "entries": [
     {
       "slug": "icon",
@@ -19,7 +19,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 48,
       "density": 2,
       "contentHash": "sha256:b4bda94d1c0cb1429afad7967ef83719dc9d6376960297399016f56b8343035f",
-      "sourceHash": "sha256:9f14fc3e838f29a6fb217791b5ed427c61d4bc085938aa5cb062fe0214391044",
+      "sourceHash": "sha256:40a464ca24ec9708b9646585aa0a7418fd3ba6ae3dd96a8fbc302094fedc3137",
       "captureContractVersion": "5"
     },
     {
@@ -36,7 +36,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 48,
       "density": 2,
       "contentHash": "sha256:8db518deee51614f65abef8ac4e6db91a4e40b0287ac3eb1c952451847f0906d",
-      "sourceHash": "sha256:9f14fc3e838f29a6fb217791b5ed427c61d4bc085938aa5cb062fe0214391044",
+      "sourceHash": "sha256:40a464ca24ec9708b9646585aa0a7418fd3ba6ae3dd96a8fbc302094fedc3137",
       "captureContractVersion": "5"
     },
     {
@@ -47,13 +47,13 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "theme": "light",
       "assetPath": "catalogue/generated/example-images/button--default--light.png",
       "assetUrl": "/catalogue/generated/example-images/button--default--light.png",
-      "width": 506,
+      "width": 844,
       "height": 42,
-      "pixelWidth": 1012,
+      "pixelWidth": 1688,
       "pixelHeight": 84,
       "density": 2,
-      "contentHash": "sha256:01e65864b60484842b028d55024360e1c4746efedbf4318184af8c779579600f",
-      "sourceHash": "sha256:d32329f7a4e530cd97ef81bf4c0927508e4c3f3ed39802f99b620c140ba99e4a",
+      "contentHash": "sha256:e1489b232e3daa696be84e76ef0a1cbda8e29418348649d9ba46fcd020c0749c",
+      "sourceHash": "sha256:18f8e446b8a011a11f951f59bc2fed96b6d565ffc153c3ae55f43f15ff3c7a45",
       "captureContractVersion": "5"
     },
     {
@@ -64,13 +64,13 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "theme": "dark",
       "assetPath": "catalogue/generated/example-images/button--default--dark.png",
       "assetUrl": "/catalogue/generated/example-images/button--default--dark.png",
-      "width": 506,
+      "width": 844,
       "height": 42,
-      "pixelWidth": 1012,
+      "pixelWidth": 1688,
       "pixelHeight": 84,
       "density": 2,
-      "contentHash": "sha256:3318e688cb17533b7704ecb891216b3157e292835c70fe5c5bb4454c3bcef900",
-      "sourceHash": "sha256:d32329f7a4e530cd97ef81bf4c0927508e4c3f3ed39802f99b620c140ba99e4a",
+      "contentHash": "sha256:0b55af4b3e991f05a9bf02f3fccddbc0aad4c6b5ca640ff4550e3b41aaf3f056",
+      "sourceHash": "sha256:18f8e446b8a011a11f951f59bc2fed96b6d565ffc153c3ae55f43f15ff3c7a45",
       "captureContractVersion": "5"
     },
     {
@@ -87,7 +87,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 80,
       "density": 2,
       "contentHash": "sha256:33c61675227d1fedefc1de68fb4ce9d9f9b037bf71e34d670cd48012adae710b",
-      "sourceHash": "sha256:d32329f7a4e530cd97ef81bf4c0927508e4c3f3ed39802f99b620c140ba99e4a",
+      "sourceHash": "sha256:18f8e446b8a011a11f951f59bc2fed96b6d565ffc153c3ae55f43f15ff3c7a45",
       "captureContractVersion": "5"
     },
     {
@@ -104,7 +104,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 80,
       "density": 2,
       "contentHash": "sha256:a8dbeba3d7b680724dc1283918b7da3b236fa7df208e10435ff4280a8c1c20cb",
-      "sourceHash": "sha256:d32329f7a4e530cd97ef81bf4c0927508e4c3f3ed39802f99b620c140ba99e4a",
+      "sourceHash": "sha256:18f8e446b8a011a11f951f59bc2fed96b6d565ffc153c3ae55f43f15ff3c7a45",
       "captureContractVersion": "5"
     },
     {
@@ -121,7 +121,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 80,
       "density": 2,
       "contentHash": "sha256:84a12f73aec1691b2bb8bd419212a54641d1ac4cce3098f118dd66da2cc172b6",
-      "sourceHash": "sha256:d32329f7a4e530cd97ef81bf4c0927508e4c3f3ed39802f99b620c140ba99e4a",
+      "sourceHash": "sha256:18f8e446b8a011a11f951f59bc2fed96b6d565ffc153c3ae55f43f15ff3c7a45",
       "captureContractVersion": "5"
     },
     {
@@ -138,7 +138,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 80,
       "density": 2,
       "contentHash": "sha256:02544d9d194f70d9b5eee4c45717b3ee8cd8f281509c2708ba037ff11c0edcd2",
-      "sourceHash": "sha256:d32329f7a4e530cd97ef81bf4c0927508e4c3f3ed39802f99b620c140ba99e4a",
+      "sourceHash": "sha256:18f8e446b8a011a11f951f59bc2fed96b6d565ffc153c3ae55f43f15ff3c7a45",
       "captureContractVersion": "5"
     },
     {
@@ -149,13 +149,13 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "theme": "light",
       "assetPath": "catalogue/generated/example-images/button--danger--light.png",
       "assetUrl": "/catalogue/generated/example-images/button--danger--light.png",
-      "width": 94,
-      "height": 42,
-      "pixelWidth": 188,
-      "pixelHeight": 84,
+      "width": 92,
+      "height": 40,
+      "pixelWidth": 184,
+      "pixelHeight": 80,
       "density": 2,
-      "contentHash": "sha256:a74a0d77989a521a11a659ed55bc590e90b00194b66fea83a6f3fff3bbc38829",
-      "sourceHash": "sha256:d32329f7a4e530cd97ef81bf4c0927508e4c3f3ed39802f99b620c140ba99e4a",
+      "contentHash": "sha256:0158d0ae6e6383fd8ec888c90ddce09f51c9a20c9be15be058f08c6a732010fa",
+      "sourceHash": "sha256:18f8e446b8a011a11f951f59bc2fed96b6d565ffc153c3ae55f43f15ff3c7a45",
       "captureContractVersion": "5"
     },
     {
@@ -166,13 +166,47 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "theme": "dark",
       "assetPath": "catalogue/generated/example-images/button--danger--dark.png",
       "assetUrl": "/catalogue/generated/example-images/button--danger--dark.png",
-      "width": 94,
-      "height": 42,
-      "pixelWidth": 188,
-      "pixelHeight": 84,
+      "width": 92,
+      "height": 40,
+      "pixelWidth": 184,
+      "pixelHeight": 80,
       "density": 2,
-      "contentHash": "sha256:cb69440f2439d5fde78669011ebd29e2f288613a435a34b94dcb597658094fea",
-      "sourceHash": "sha256:d32329f7a4e530cd97ef81bf4c0927508e4c3f3ed39802f99b620c140ba99e4a",
+      "contentHash": "sha256:a2e645c0cb09fbb7b4ff58694981162a76aa1037b4af14763ac0197c0d6590dc",
+      "sourceHash": "sha256:18f8e446b8a011a11f951f59bc2fed96b6d565ffc153c3ae55f43f15ff3c7a45",
+      "captureContractVersion": "5"
+    },
+    {
+      "slug": "button",
+      "componentName": "Button",
+      "exampleId": "action-layout",
+      "label": "Action layout",
+      "theme": "light",
+      "assetPath": "catalogue/generated/example-images/button--action-layout--light.png",
+      "assetUrl": "/catalogue/generated/example-images/button--action-layout--light.png",
+      "width": 960,
+      "height": 1281,
+      "pixelWidth": 1920,
+      "pixelHeight": 2562,
+      "density": 2,
+      "contentHash": "sha256:3cfcc3f2e30dda88020a96a7462ee26242810ad83d2004f7b85cae27cfe8f8c2",
+      "sourceHash": "sha256:18f8e446b8a011a11f951f59bc2fed96b6d565ffc153c3ae55f43f15ff3c7a45",
+      "captureContractVersion": "5"
+    },
+    {
+      "slug": "button",
+      "componentName": "Button",
+      "exampleId": "action-layout",
+      "label": "Action layout",
+      "theme": "dark",
+      "assetPath": "catalogue/generated/example-images/button--action-layout--dark.png",
+      "assetUrl": "/catalogue/generated/example-images/button--action-layout--dark.png",
+      "width": 960,
+      "height": 1281,
+      "pixelWidth": 1920,
+      "pixelHeight": 2562,
+      "density": 2,
+      "contentHash": "sha256:6029ba40500cc8fcf1ff3b83fd61bd2acf1a8a7f3d268c621ec38023a74f14ae",
+      "sourceHash": "sha256:18f8e446b8a011a11f951f59bc2fed96b6d565ffc153c3ae55f43f15ff3c7a45",
       "captureContractVersion": "5"
     },
     {
@@ -189,7 +223,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 80,
       "density": 2,
       "contentHash": "sha256:bb217c784d337f19d6e270a9f1b05cad2f6556f38b6df0f72e38345b0676786d",
-      "sourceHash": "sha256:e4ba7421a96cbda61efd0466bf96666c194855387819c610bc98c150d8202eea",
+      "sourceHash": "sha256:c7519a180968c5e390d3f160ec49cedf116aa382e11953162080bf4d65608706",
       "captureContractVersion": "5"
     },
     {
@@ -206,7 +240,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 80,
       "density": 2,
       "contentHash": "sha256:54d26d87fc9ef087269fe0e5d1c94b18ab7da9647335c7956658acf10b166f58",
-      "sourceHash": "sha256:e4ba7421a96cbda61efd0466bf96666c194855387819c610bc98c150d8202eea",
+      "sourceHash": "sha256:c7519a180968c5e390d3f160ec49cedf116aa382e11953162080bf4d65608706",
       "captureContractVersion": "5"
     },
     {
@@ -223,7 +257,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 80,
       "density": 2,
       "contentHash": "sha256:ac7cc64838f6689954ac3d127f43a5d29ba0203f28db00b98ca286c4ce2ac1dd",
-      "sourceHash": "sha256:e4ba7421a96cbda61efd0466bf96666c194855387819c610bc98c150d8202eea",
+      "sourceHash": "sha256:c7519a180968c5e390d3f160ec49cedf116aa382e11953162080bf4d65608706",
       "captureContractVersion": "5"
     },
     {
@@ -240,7 +274,41 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 80,
       "density": 2,
       "contentHash": "sha256:359fdd9f9a1ef073cf0ccdca71acd437984d84844b1514c73fe422762e2d5253",
-      "sourceHash": "sha256:e4ba7421a96cbda61efd0466bf96666c194855387819c610bc98c150d8202eea",
+      "sourceHash": "sha256:c7519a180968c5e390d3f160ec49cedf116aa382e11953162080bf4d65608706",
+      "captureContractVersion": "5"
+    },
+    {
+      "slug": "icon-button",
+      "componentName": "Icon button",
+      "exampleId": "action-layout",
+      "label": "Action layout",
+      "theme": "light",
+      "assetPath": "catalogue/generated/example-images/icon-button--action-layout--light.png",
+      "assetUrl": "/catalogue/generated/example-images/icon-button--action-layout--light.png",
+      "width": 960,
+      "height": 139,
+      "pixelWidth": 1920,
+      "pixelHeight": 278,
+      "density": 2,
+      "contentHash": "sha256:a698364ec86b75aa59f0951d8e85d6eac8e7705b74afcff42cc6767e46f0b1b5",
+      "sourceHash": "sha256:c7519a180968c5e390d3f160ec49cedf116aa382e11953162080bf4d65608706",
+      "captureContractVersion": "5"
+    },
+    {
+      "slug": "icon-button",
+      "componentName": "Icon button",
+      "exampleId": "action-layout",
+      "label": "Action layout",
+      "theme": "dark",
+      "assetPath": "catalogue/generated/example-images/icon-button--action-layout--dark.png",
+      "assetUrl": "/catalogue/generated/example-images/icon-button--action-layout--dark.png",
+      "width": 960,
+      "height": 139,
+      "pixelWidth": 1920,
+      "pixelHeight": 278,
+      "density": 2,
+      "contentHash": "sha256:97ec82a7d211875e51b83bbe0efd80b1d219877386c6465e7993c42ef9d05662",
+      "sourceHash": "sha256:c7519a180968c5e390d3f160ec49cedf116aa382e11953162080bf4d65608706",
       "captureContractVersion": "5"
     },
     {
@@ -733,7 +801,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 84,
       "density": 2,
       "contentHash": "sha256:6aa77779d68cca34a2c321ee2d2498f12da00a58d67efaf399ca4ef44f36b0c5",
-      "sourceHash": "sha256:6dc3c0f8add1e602ba0921c753a6d6045e95cfad64694d32376ef1451ee062e3",
+      "sourceHash": "sha256:e1a7f0c00e5a15fd0b493a9be804af89616570fe1be62645676659fd810de972",
       "captureContractVersion": "5"
     },
     {
@@ -750,7 +818,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 84,
       "density": 2,
       "contentHash": "sha256:ab0ed3b5c285ed7c40b67fb61e60f84b1cc28addcbb72a2d4c5b5665ddba9195",
-      "sourceHash": "sha256:6dc3c0f8add1e602ba0921c753a6d6045e95cfad64694d32376ef1451ee062e3",
+      "sourceHash": "sha256:e1a7f0c00e5a15fd0b493a9be804af89616570fe1be62645676659fd810de972",
       "captureContractVersion": "5"
     },
     {
@@ -767,7 +835,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 80,
       "density": 2,
       "contentHash": "sha256:d35e1c680dd693dd689f72a4cf02b3e1758ba2353c832d7c18ba83ca5a81a140",
-      "sourceHash": "sha256:6dc3c0f8add1e602ba0921c753a6d6045e95cfad64694d32376ef1451ee062e3",
+      "sourceHash": "sha256:e1a7f0c00e5a15fd0b493a9be804af89616570fe1be62645676659fd810de972",
       "captureContractVersion": "5"
     },
     {
@@ -784,7 +852,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 80,
       "density": 2,
       "contentHash": "sha256:dc99245c03f39723519c8196aa202e3950c158c6b57a610624a7e06957d599a0",
-      "sourceHash": "sha256:6dc3c0f8add1e602ba0921c753a6d6045e95cfad64694d32376ef1451ee062e3",
+      "sourceHash": "sha256:e1a7f0c00e5a15fd0b493a9be804af89616570fe1be62645676659fd810de972",
       "captureContractVersion": "5"
     },
     {
@@ -864,11 +932,11 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/masonry--default--light.png",
       "assetUrl": "/catalogue/generated/example-images/masonry--default--light.png",
       "width": 962,
-      "height": 371,
+      "height": 355,
       "pixelWidth": 1924,
-      "pixelHeight": 742,
+      "pixelHeight": 710,
       "density": 2,
-      "contentHash": "sha256:79edefd83ffd634dbe6e589b759f25993d056568a99d7c6051ebf954f3ff2a4b",
+      "contentHash": "sha256:7281219c58c77f2f7de8c90ea6df96cc3638b0703e3d24a01a143617b57a7299",
       "sourceHash": "sha256:69bc237d9f9ec35f92736069a4db71b3128eba2cf11b8eb94c946041d8ac1da6",
       "captureContractVersion": "5"
     },
@@ -881,11 +949,11 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/masonry--default--dark.png",
       "assetUrl": "/catalogue/generated/example-images/masonry--default--dark.png",
       "width": 962,
-      "height": 371,
+      "height": 355,
       "pixelWidth": 1924,
-      "pixelHeight": 742,
+      "pixelHeight": 710,
       "density": 2,
-      "contentHash": "sha256:c25bd3ab16a56f1cdb40dc09896535c03ea94f3f44eda06e5b71f68b4c146cec",
+      "contentHash": "sha256:b25437a76eafb5b6db71befc629d94951bc94016cdd2ed215158885259b32c66",
       "sourceHash": "sha256:69bc237d9f9ec35f92736069a4db71b3128eba2cf11b8eb94c946041d8ac1da6",
       "captureContractVersion": "5"
     },
@@ -898,11 +966,11 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/masonry--single-column--light.png",
       "assetUrl": "/catalogue/generated/example-images/masonry--single-column--light.png",
       "width": 962,
-      "height": 406,
+      "height": 358,
       "pixelWidth": 1924,
-      "pixelHeight": 812,
+      "pixelHeight": 716,
       "density": 2,
-      "contentHash": "sha256:0fa08c681368c132a6a067e86a77c76f37d21a9de529ff983db7f410a8dd0542",
+      "contentHash": "sha256:2bc8a24d748b9f27289edf9ed7292c12a52abc88629026b4eefe2b1233282245",
       "sourceHash": "sha256:69bc237d9f9ec35f92736069a4db71b3128eba2cf11b8eb94c946041d8ac1da6",
       "captureContractVersion": "5"
     },
@@ -915,11 +983,11 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/masonry--single-column--dark.png",
       "assetUrl": "/catalogue/generated/example-images/masonry--single-column--dark.png",
       "width": 962,
-      "height": 406,
+      "height": 358,
       "pixelWidth": 1924,
-      "pixelHeight": 812,
+      "pixelHeight": 716,
       "density": 2,
-      "contentHash": "sha256:668050ea45c5434564be3bf0121b0ee265d2786c7bdfdcb8529e9e7e1a2f3333",
+      "contentHash": "sha256:9e9df39c405bb1a76eb89a103b4af1ef00cf0af122e84d6b3a94b7d1c8b30082",
       "sourceHash": "sha256:69bc237d9f9ec35f92736069a4db71b3128eba2cf11b8eb94c946041d8ac1da6",
       "captureContractVersion": "5"
     },
@@ -1345,7 +1413,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 48,
       "density": 2,
       "contentHash": "sha256:4dd1bfe592bcc56a2bb8b63883124ae3464fb0346ab245b00f01c569aa9a61f9",
-      "sourceHash": "sha256:db870fbca42c266cb7e482120ba34de55bc5f15a578897b254e7eeca8f0e2d97",
+      "sourceHash": "sha256:c00619d20e8db913aa347e702224ea5384f032e18f5030b210cbbcc89cc72ea8",
       "captureContractVersion": "5"
     },
     {
@@ -1362,7 +1430,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 48,
       "density": 2,
       "contentHash": "sha256:2ca57bb7a9e27bb00a22e0c76e452412d4afcf13c348b2f4d73f89a1d691f695",
-      "sourceHash": "sha256:db870fbca42c266cb7e482120ba34de55bc5f15a578897b254e7eeca8f0e2d97",
+      "sourceHash": "sha256:c00619d20e8db913aa347e702224ea5384f032e18f5030b210cbbcc89cc72ea8",
       "captureContractVersion": "5"
     },
     {
@@ -1379,7 +1447,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 48,
       "density": 2,
       "contentHash": "sha256:eef3c7c9d8b6c3fd6ce808673dce86ce6c192cadf1da6d539e527ff8132fd946",
-      "sourceHash": "sha256:db870fbca42c266cb7e482120ba34de55bc5f15a578897b254e7eeca8f0e2d97",
+      "sourceHash": "sha256:c00619d20e8db913aa347e702224ea5384f032e18f5030b210cbbcc89cc72ea8",
       "captureContractVersion": "5"
     },
     {
@@ -1396,7 +1464,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 48,
       "density": 2,
       "contentHash": "sha256:a3d0c99c2c2e3d7eac7fbbe21bf420b2aab2c94be9bbe1b24dbe76e23483e6f8",
-      "sourceHash": "sha256:db870fbca42c266cb7e482120ba34de55bc5f15a578897b254e7eeca8f0e2d97",
+      "sourceHash": "sha256:c00619d20e8db913aa347e702224ea5384f032e18f5030b210cbbcc89cc72ea8",
       "captureContractVersion": "5"
     },
     {
@@ -1413,7 +1481,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 48,
       "density": 2,
       "contentHash": "sha256:283b59fe6d8bc6ee574942ce39db5797c049e1ceb06e9e2717e572feb92cd8a3",
-      "sourceHash": "sha256:db870fbca42c266cb7e482120ba34de55bc5f15a578897b254e7eeca8f0e2d97",
+      "sourceHash": "sha256:c00619d20e8db913aa347e702224ea5384f032e18f5030b210cbbcc89cc72ea8",
       "captureContractVersion": "5"
     },
     {
@@ -1430,7 +1498,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 48,
       "density": 2,
       "contentHash": "sha256:ec0f3157191797bc7baa53ffd184090590dc1e361c138ad17216bb39aa74db25",
-      "sourceHash": "sha256:db870fbca42c266cb7e482120ba34de55bc5f15a578897b254e7eeca8f0e2d97",
+      "sourceHash": "sha256:c00619d20e8db913aa347e702224ea5384f032e18f5030b210cbbcc89cc72ea8",
       "captureContractVersion": "5"
     },
     {
@@ -1447,7 +1515,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 48,
       "density": 2,
       "contentHash": "sha256:533f14b95826240e55d6ba52a3b32f745a0162f1310d476236bec2fe51c37d00",
-      "sourceHash": "sha256:db870fbca42c266cb7e482120ba34de55bc5f15a578897b254e7eeca8f0e2d97",
+      "sourceHash": "sha256:c00619d20e8db913aa347e702224ea5384f032e18f5030b210cbbcc89cc72ea8",
       "captureContractVersion": "5"
     },
     {
@@ -1464,7 +1532,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 48,
       "density": 2,
       "contentHash": "sha256:c1646fa7303cfb61668cc2b2dd51b90c4823d0a4a84570e5b1de6872f38dadc0",
-      "sourceHash": "sha256:db870fbca42c266cb7e482120ba34de55bc5f15a578897b254e7eeca8f0e2d97",
+      "sourceHash": "sha256:c00619d20e8db913aa347e702224ea5384f032e18f5030b210cbbcc89cc72ea8",
       "captureContractVersion": "5"
     },
     {
@@ -1481,7 +1549,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 48,
       "density": 2,
       "contentHash": "sha256:46ff08c39d362cb6e1f654186926ed0da0f282789f18ac1d284259809ac28d1d",
-      "sourceHash": "sha256:db870fbca42c266cb7e482120ba34de55bc5f15a578897b254e7eeca8f0e2d97",
+      "sourceHash": "sha256:c00619d20e8db913aa347e702224ea5384f032e18f5030b210cbbcc89cc72ea8",
       "captureContractVersion": "5"
     },
     {
@@ -1498,7 +1566,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 48,
       "density": 2,
       "contentHash": "sha256:c70c33067e4166c520f534dc313b2d9f28dd02ab4231a26a7313c49078c382d2",
-      "sourceHash": "sha256:db870fbca42c266cb7e482120ba34de55bc5f15a578897b254e7eeca8f0e2d97",
+      "sourceHash": "sha256:c00619d20e8db913aa347e702224ea5384f032e18f5030b210cbbcc89cc72ea8",
       "captureContractVersion": "5"
     },
     {
@@ -1510,12 +1578,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/card--default--light.png",
       "assetUrl": "/catalogue/generated/example-images/card--default--light.png",
       "width": 960,
-      "height": 151,
+      "height": 135,
       "pixelWidth": 1920,
-      "pixelHeight": 302,
+      "pixelHeight": 270,
       "density": 2,
-      "contentHash": "sha256:9cef87cb6498615f047b6fa818d5604fe07bca3bd9856a380412bc4e8e4f4011",
-      "sourceHash": "sha256:913686e158e944e1cded6d1815f989acb38f30b0a7d0a79dc84de863266a483e",
+      "contentHash": "sha256:dfc176c308f63e88cf99b06e7f5c2773ee278e156d1f06726c1a89ba80c6a462",
+      "sourceHash": "sha256:45a9161f61b736ac49c6059a4b83d4eefd1aae717dc9204ee8b3ffd452501516",
       "captureContractVersion": "5"
     },
     {
@@ -1527,12 +1595,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/card--default--dark.png",
       "assetUrl": "/catalogue/generated/example-images/card--default--dark.png",
       "width": 960,
-      "height": 151,
+      "height": 135,
       "pixelWidth": 1920,
-      "pixelHeight": 302,
+      "pixelHeight": 270,
       "density": 2,
-      "contentHash": "sha256:a3b052a015a76bfc7ea2468a263b0b13fb601ca0d100b20464062bb3e350f807",
-      "sourceHash": "sha256:913686e158e944e1cded6d1815f989acb38f30b0a7d0a79dc84de863266a483e",
+      "contentHash": "sha256:17ea2e0629704330c34be3b4de37998834f4e824423959660a65025acf7b6b0a",
+      "sourceHash": "sha256:45a9161f61b736ac49c6059a4b83d4eefd1aae717dc9204ee8b3ffd452501516",
       "captureContractVersion": "5"
     },
     {
@@ -1544,12 +1612,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/card--raised--light.png",
       "assetUrl": "/catalogue/generated/example-images/card--raised--light.png",
       "width": 962,
-      "height": 153,
+      "height": 137,
       "pixelWidth": 1924,
-      "pixelHeight": 306,
+      "pixelHeight": 274,
       "density": 2,
-      "contentHash": "sha256:8cfd678a619cd970a2155c18e8c18aa9a550d25d7e196433098f0d7317c5cbd1",
-      "sourceHash": "sha256:913686e158e944e1cded6d1815f989acb38f30b0a7d0a79dc84de863266a483e",
+      "contentHash": "sha256:03ad4ec2cdcdaccf36511d83b740e9c7d97d6ddf49d156cb80ff5665ccc45f26",
+      "sourceHash": "sha256:45a9161f61b736ac49c6059a4b83d4eefd1aae717dc9204ee8b3ffd452501516",
       "captureContractVersion": "5"
     },
     {
@@ -1561,12 +1629,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/card--raised--dark.png",
       "assetUrl": "/catalogue/generated/example-images/card--raised--dark.png",
       "width": 962,
-      "height": 153,
+      "height": 137,
       "pixelWidth": 1924,
-      "pixelHeight": 306,
+      "pixelHeight": 274,
       "density": 2,
-      "contentHash": "sha256:606bf9993e8b0311f1d40cea0e65ddb05ebcd0fc7d98cfe6d3bb432edd454c95",
-      "sourceHash": "sha256:913686e158e944e1cded6d1815f989acb38f30b0a7d0a79dc84de863266a483e",
+      "contentHash": "sha256:a8c986f586fdc0b8cb443094e04c5fce5e8abb04cedd5ebc1e5f9cd4d9c63403",
+      "sourceHash": "sha256:45a9161f61b736ac49c6059a4b83d4eefd1aae717dc9204ee8b3ffd452501516",
       "captureContractVersion": "5"
     },
     {
@@ -1578,12 +1646,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/card--dotted--light.png",
       "assetUrl": "/catalogue/generated/example-images/card--dotted--light.png",
       "width": 960,
-      "height": 151,
+      "height": 135,
       "pixelWidth": 1920,
-      "pixelHeight": 302,
+      "pixelHeight": 270,
       "density": 2,
-      "contentHash": "sha256:83ec5f4e7b3be139ddca6c3a814dbd1800f33fd6be525cf8faa0935d35c37e52",
-      "sourceHash": "sha256:913686e158e944e1cded6d1815f989acb38f30b0a7d0a79dc84de863266a483e",
+      "contentHash": "sha256:c73f57677d72c5b6d2f7a49028e40c71a96f1e0def118ddf17f3bbacd76ca216",
+      "sourceHash": "sha256:45a9161f61b736ac49c6059a4b83d4eefd1aae717dc9204ee8b3ffd452501516",
       "captureContractVersion": "5"
     },
     {
@@ -1595,12 +1663,46 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/card--dotted--dark.png",
       "assetUrl": "/catalogue/generated/example-images/card--dotted--dark.png",
       "width": 960,
-      "height": 151,
+      "height": 135,
       "pixelWidth": 1920,
-      "pixelHeight": 302,
+      "pixelHeight": 270,
       "density": 2,
-      "contentHash": "sha256:89e3bfddd08b8e8aecb3b09174ffae15d02ccb985c90296dc986322ec4d6f4ea",
-      "sourceHash": "sha256:913686e158e944e1cded6d1815f989acb38f30b0a7d0a79dc84de863266a483e",
+      "contentHash": "sha256:f26b0f50d84dc86c8d77f21a64ab5a0ee03330bf5691c65599cdf96205d49afe",
+      "sourceHash": "sha256:45a9161f61b736ac49c6059a4b83d4eefd1aae717dc9204ee8b3ffd452501516",
+      "captureContractVersion": "5"
+    },
+    {
+      "slug": "card",
+      "componentName": "Card",
+      "exampleId": "crowded",
+      "label": "Crowded content",
+      "theme": "light",
+      "assetPath": "catalogue/generated/example-images/card--crowded--light.png",
+      "assetUrl": "/catalogue/generated/example-images/card--crowded--light.png",
+      "width": 384,
+      "height": 367,
+      "pixelWidth": 768,
+      "pixelHeight": 734,
+      "density": 2,
+      "contentHash": "sha256:196c02bff0aece9673dd06e096eff0b9097c2784518f725beed588f7d9076cec",
+      "sourceHash": "sha256:45a9161f61b736ac49c6059a4b83d4eefd1aae717dc9204ee8b3ffd452501516",
+      "captureContractVersion": "5"
+    },
+    {
+      "slug": "card",
+      "componentName": "Card",
+      "exampleId": "crowded",
+      "label": "Crowded content",
+      "theme": "dark",
+      "assetPath": "catalogue/generated/example-images/card--crowded--dark.png",
+      "assetUrl": "/catalogue/generated/example-images/card--crowded--dark.png",
+      "width": 384,
+      "height": 367,
+      "pixelWidth": 768,
+      "pixelHeight": 734,
+      "density": 2,
+      "contentHash": "sha256:a9cd5da0e0e8b7f1e0c0fd0e5b3080b737ea0d027a2e5d8eec94ec00f011db12",
+      "sourceHash": "sha256:45a9161f61b736ac49c6059a4b83d4eefd1aae717dc9204ee8b3ffd452501516",
       "captureContractVersion": "5"
     },
     {
@@ -1855,7 +1957,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 52,
       "density": 2,
       "contentHash": "sha256:8413867396d0ee5fe166a10274f8396c4bb4fbfcea517f92cbc96aeecbcfa7b0",
-      "sourceHash": "sha256:759b84f0da30efe1e996d73284af4f98a3b472b6efa22943fbc065a2f4bac551",
+      "sourceHash": "sha256:fffd5eeeed417fae74a751f7d055ca56ca8beeda3bd1febc2095cea67ef17651",
       "captureContractVersion": "5"
     },
     {
@@ -1872,7 +1974,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 52,
       "density": 2,
       "contentHash": "sha256:97d8336e4d51def5bcc8af2a41bfc098f17bd219b98c5497f1053c0dff9100f3",
-      "sourceHash": "sha256:759b84f0da30efe1e996d73284af4f98a3b472b6efa22943fbc065a2f4bac551",
+      "sourceHash": "sha256:fffd5eeeed417fae74a751f7d055ca56ca8beeda3bd1febc2095cea67ef17651",
       "captureContractVersion": "5"
     },
     {
@@ -1889,7 +1991,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 54,
       "density": 2,
       "contentHash": "sha256:c3e38a62ac0074bbde7444651d08b20fcd28ee3720100eec01ebcd314bbf7a45",
-      "sourceHash": "sha256:759b84f0da30efe1e996d73284af4f98a3b472b6efa22943fbc065a2f4bac551",
+      "sourceHash": "sha256:fffd5eeeed417fae74a751f7d055ca56ca8beeda3bd1febc2095cea67ef17651",
       "captureContractVersion": "5"
     },
     {
@@ -1906,7 +2008,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 54,
       "density": 2,
       "contentHash": "sha256:4e9108a3ba5b23f2def2a3fe1c817656d482c52e00721ade9fc5e85739f1fe07",
-      "sourceHash": "sha256:759b84f0da30efe1e996d73284af4f98a3b472b6efa22943fbc065a2f4bac551",
+      "sourceHash": "sha256:fffd5eeeed417fae74a751f7d055ca56ca8beeda3bd1febc2095cea67ef17651",
       "captureContractVersion": "5"
     },
     {
@@ -4575,7 +4677,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 162,
       "density": 2,
       "contentHash": "sha256:95753297b621c2585886bd16af20c02d8c8ea66f8b695c4e6c3a594f4ffe32da",
-      "sourceHash": "sha256:bf1003d5f21b0b0fda6fbe2934974499386e809f1abf1c69623d9287c523fa3c",
+      "sourceHash": "sha256:49d59ff34e5d97f1e892c5450731521dd47a53d6eb42a44dd5b80db9141b79ec",
       "captureContractVersion": "5"
     },
     {
@@ -4592,7 +4694,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 162,
       "density": 2,
       "contentHash": "sha256:8db065d72c1682549c3cebf10730ee7b0e87ab2f38277dff545a00f9290c1772",
-      "sourceHash": "sha256:bf1003d5f21b0b0fda6fbe2934974499386e809f1abf1c69623d9287c523fa3c",
+      "sourceHash": "sha256:49d59ff34e5d97f1e892c5450731521dd47a53d6eb42a44dd5b80db9141b79ec",
       "captureContractVersion": "5"
     },
     {
@@ -4609,7 +4711,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 162,
       "density": 2,
       "contentHash": "sha256:33eef786478b0291933bde2fa9c1198b38f4afc456e1f47162ef694309865568",
-      "sourceHash": "sha256:bf1003d5f21b0b0fda6fbe2934974499386e809f1abf1c69623d9287c523fa3c",
+      "sourceHash": "sha256:49d59ff34e5d97f1e892c5450731521dd47a53d6eb42a44dd5b80db9141b79ec",
       "captureContractVersion": "5"
     },
     {
@@ -4626,7 +4728,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 162,
       "density": 2,
       "contentHash": "sha256:7fa92d82ac738219eec3379efa0381a964bcd38cb8b8f98bbe978e582b8e2c89",
-      "sourceHash": "sha256:bf1003d5f21b0b0fda6fbe2934974499386e809f1abf1c69623d9287c523fa3c",
+      "sourceHash": "sha256:49d59ff34e5d97f1e892c5450731521dd47a53d6eb42a44dd5b80db9141b79ec",
       "captureContractVersion": "5"
     },
     {
@@ -4643,7 +4745,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 162,
       "density": 2,
       "contentHash": "sha256:213e2b55fb9c8389963c792bc180a4917d101f7ae32f13606c65aee7055255f5",
-      "sourceHash": "sha256:bf1003d5f21b0b0fda6fbe2934974499386e809f1abf1c69623d9287c523fa3c",
+      "sourceHash": "sha256:49d59ff34e5d97f1e892c5450731521dd47a53d6eb42a44dd5b80db9141b79ec",
       "captureContractVersion": "5"
     },
     {
@@ -4660,7 +4762,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 162,
       "density": 2,
       "contentHash": "sha256:a38bf6ae59cb59e16c94f20dc2ce13bcbfdf54629fc6bcd19b9535670924b7bc",
-      "sourceHash": "sha256:bf1003d5f21b0b0fda6fbe2934974499386e809f1abf1c69623d9287c523fa3c",
+      "sourceHash": "sha256:49d59ff34e5d97f1e892c5450731521dd47a53d6eb42a44dd5b80db9141b79ec",
       "captureContractVersion": "5"
     },
     {
@@ -4677,7 +4779,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 162,
       "density": 2,
       "contentHash": "sha256:1a436ac100b5b7746ceb269ffff3a3cf3348b373ac90d6a70ef9b803531520ed",
-      "sourceHash": "sha256:bf1003d5f21b0b0fda6fbe2934974499386e809f1abf1c69623d9287c523fa3c",
+      "sourceHash": "sha256:49d59ff34e5d97f1e892c5450731521dd47a53d6eb42a44dd5b80db9141b79ec",
       "captureContractVersion": "5"
     },
     {
@@ -4694,7 +4796,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 162,
       "density": 2,
       "contentHash": "sha256:fbfe3ee77ade673820cd70455dbc2c0482b260c13905129d4ef34139fb345fb5",
-      "sourceHash": "sha256:bf1003d5f21b0b0fda6fbe2934974499386e809f1abf1c69623d9287c523fa3c",
+      "sourceHash": "sha256:49d59ff34e5d97f1e892c5450731521dd47a53d6eb42a44dd5b80db9141b79ec",
       "captureContractVersion": "5"
     },
     {
@@ -5249,13 +5351,13 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "theme": "light",
       "assetPath": "catalogue/generated/example-images/tooltip--default--light.png",
       "assetUrl": "/catalogue/generated/example-images/tooltip--default--light.png",
-      "width": 143,
+      "width": 142,
       "height": 90,
-      "pixelWidth": 286,
+      "pixelWidth": 284,
       "pixelHeight": 180,
       "density": 2,
-      "contentHash": "sha256:99409d9c72f971a137e82e1ea36d900cc438e24b96117c9a5c9350b3511d79fa",
-      "sourceHash": "sha256:f092a34d2d9417aa1232d7af1326c4826d284c1b75067cc0eec1b064cd7db727",
+      "contentHash": "sha256:279a3865ee1b7e03b96a8f436101e90cce37f19de4b85c2b776feda1803f93b3",
+      "sourceHash": "sha256:df10b42afcf19e2608807c41eaf580ccb2425908f63a85cc79b23038a05e7acd",
       "captureContractVersion": "5"
     },
     {
@@ -5272,7 +5374,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 180,
       "density": 2,
       "contentHash": "sha256:f9a9f075d45bf0a73c6721d39ae58744c8468337040c9cd2155ab92afab7829c",
-      "sourceHash": "sha256:f092a34d2d9417aa1232d7af1326c4826d284c1b75067cc0eec1b064cd7db727",
+      "sourceHash": "sha256:df10b42afcf19e2608807c41eaf580ccb2425908f63a85cc79b23038a05e7acd",
       "captureContractVersion": "5"
     },
     {
@@ -5289,7 +5391,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 178,
       "density": 2,
       "contentHash": "sha256:ef218ff0de5c56a615e2b2ffd43fb9cd7f44e0c0edd3601502aac1668de53069",
-      "sourceHash": "sha256:f092a34d2d9417aa1232d7af1326c4826d284c1b75067cc0eec1b064cd7db727",
+      "sourceHash": "sha256:df10b42afcf19e2608807c41eaf580ccb2425908f63a85cc79b23038a05e7acd",
       "captureContractVersion": "5"
     },
     {
@@ -5306,7 +5408,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 178,
       "density": 2,
       "contentHash": "sha256:f2074d0b7a37fecd8f981637981046f18d38961ed6d6bc95a8633580cee3f49d",
-      "sourceHash": "sha256:f092a34d2d9417aa1232d7af1326c4826d284c1b75067cc0eec1b064cd7db727",
+      "sourceHash": "sha256:df10b42afcf19e2608807c41eaf580ccb2425908f63a85cc79b23038a05e7acd",
       "captureContractVersion": "5"
     },
     {
@@ -5323,7 +5425,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 80,
       "density": 2,
       "contentHash": "sha256:d1a986bffd099f638748e04d4689c14defb00a5210f46687c0e0969002ab5fab",
-      "sourceHash": "sha256:21684e104ad69f4f8d53801336b1018610e127eca23dffdf16531047cd980ee4",
+      "sourceHash": "sha256:bd24a80ccc943c4931cbb658f3d1b4f6e1201f2562a957dc2c74b6fa261b5f82",
       "captureContractVersion": "5"
     },
     {
@@ -5340,7 +5442,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 80,
       "density": 2,
       "contentHash": "sha256:3912b262b5553d355eaf1eb75e22cebd40a856e2015978f4cd12f34b85bc6bf6",
-      "sourceHash": "sha256:21684e104ad69f4f8d53801336b1018610e127eca23dffdf16531047cd980ee4",
+      "sourceHash": "sha256:bd24a80ccc943c4931cbb658f3d1b4f6e1201f2562a957dc2c74b6fa261b5f82",
       "captureContractVersion": "5"
     },
     {
@@ -5357,7 +5459,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 54,
       "density": 2,
       "contentHash": "sha256:c72c289b30eee9083d15cccf52e95058605be8c496ae7d7d703bd8752f5170ed",
-      "sourceHash": "sha256:21684e104ad69f4f8d53801336b1018610e127eca23dffdf16531047cd980ee4",
+      "sourceHash": "sha256:bd24a80ccc943c4931cbb658f3d1b4f6e1201f2562a957dc2c74b6fa261b5f82",
       "captureContractVersion": "5"
     },
     {
@@ -5374,7 +5476,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 54,
       "density": 2,
       "contentHash": "sha256:e0d9aacb6f6d2c0609303e37ceb84b8e7f8a9f6b66785958f0fc309b316f24d0",
-      "sourceHash": "sha256:21684e104ad69f4f8d53801336b1018610e127eca23dffdf16531047cd980ee4",
+      "sourceHash": "sha256:bd24a80ccc943c4931cbb658f3d1b4f6e1201f2562a957dc2c74b6fa261b5f82",
       "captureContractVersion": "5"
     },
     {
@@ -5386,12 +5488,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/hover-card--overflow--light.png",
       "assetUrl": "/catalogue/generated/example-images/hover-card--overflow--light.png",
       "width": 144,
-      "height": 72,
+      "height": 78,
       "pixelWidth": 288,
-      "pixelHeight": 144,
+      "pixelHeight": 156,
       "density": 2,
-      "contentHash": "sha256:d4de002625c7bbf96abc0b5f021a7eee5fc1dd5b3b96aa7994b1a9a86953ef9f",
-      "sourceHash": "sha256:21684e104ad69f4f8d53801336b1018610e127eca23dffdf16531047cd980ee4",
+      "contentHash": "sha256:ca1936a6e5c53296bf9d1867c85b619622293cb96db046045935bbec45961f93",
+      "sourceHash": "sha256:bd24a80ccc943c4931cbb658f3d1b4f6e1201f2562a957dc2c74b6fa261b5f82",
       "captureContractVersion": "5"
     },
     {
@@ -5403,12 +5505,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/hover-card--overflow--dark.png",
       "assetUrl": "/catalogue/generated/example-images/hover-card--overflow--dark.png",
       "width": 144,
-      "height": 72,
+      "height": 78,
       "pixelWidth": 288,
-      "pixelHeight": 144,
+      "pixelHeight": 156,
       "density": 2,
-      "contentHash": "sha256:645e6f1879cc84714a0452b18f1ee9928d840114390b0240e22f04eef902c614",
-      "sourceHash": "sha256:21684e104ad69f4f8d53801336b1018610e127eca23dffdf16531047cd980ee4",
+      "contentHash": "sha256:d8d0e30e56edab8c48870edb350a23326d56a258c84efe394f356170eb18002d",
+      "sourceHash": "sha256:bd24a80ccc943c4931cbb658f3d1b4f6e1201f2562a957dc2c74b6fa261b5f82",
       "captureContractVersion": "5"
     },
     {
@@ -5425,7 +5527,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 456,
       "density": 2,
       "contentHash": "sha256:0d0e0c042fd7fefae1e102a8826bf4f5ec88d7047a48308d7fa19ba30f1416fb",
-      "sourceHash": "sha256:d08ebefb2a695f8326f52da8a5181e4b9b8ffa84eb3e8fef4c597eedc23316c4",
+      "sourceHash": "sha256:ad90326f38c98afd1faf25bf1b58f652877eaee4fbb75309b5c946770202dcb7",
       "captureContractVersion": "5"
     },
     {
@@ -5442,7 +5544,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 456,
       "density": 2,
       "contentHash": "sha256:c412b1405bb4a9c7a7d560b1c48283e12d9de9d6900d122abd477040664575fc",
-      "sourceHash": "sha256:d08ebefb2a695f8326f52da8a5181e4b9b8ffa84eb3e8fef4c597eedc23316c4",
+      "sourceHash": "sha256:ad90326f38c98afd1faf25bf1b58f652877eaee4fbb75309b5c946770202dcb7",
       "captureContractVersion": "5"
     },
     {
@@ -5459,7 +5561,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 308,
       "density": 2,
       "contentHash": "sha256:83c144848cb08ca08dc96b5fb6999f9f88f1a54bb48018d4938e4b048bc4f4a3",
-      "sourceHash": "sha256:d08ebefb2a695f8326f52da8a5181e4b9b8ffa84eb3e8fef4c597eedc23316c4",
+      "sourceHash": "sha256:ad90326f38c98afd1faf25bf1b58f652877eaee4fbb75309b5c946770202dcb7",
       "captureContractVersion": "5"
     },
     {
@@ -5476,7 +5578,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 308,
       "density": 2,
       "contentHash": "sha256:f68860f3c043f59f9d798d0bdd9713924c1d28cd5751578f9619c3878f9cd9b0",
-      "sourceHash": "sha256:d08ebefb2a695f8326f52da8a5181e4b9b8ffa84eb3e8fef4c597eedc23316c4",
+      "sourceHash": "sha256:ad90326f38c98afd1faf25bf1b58f652877eaee4fbb75309b5c946770202dcb7",
       "captureContractVersion": "5"
     },
     {
@@ -5493,7 +5595,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 308,
       "density": 2,
       "contentHash": "sha256:ac4904598e7270e341820cce61da0bd173f77ee523c0e222f30e503386087d38",
-      "sourceHash": "sha256:d08ebefb2a695f8326f52da8a5181e4b9b8ffa84eb3e8fef4c597eedc23316c4",
+      "sourceHash": "sha256:ad90326f38c98afd1faf25bf1b58f652877eaee4fbb75309b5c946770202dcb7",
       "captureContractVersion": "5"
     },
     {
@@ -5510,7 +5612,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 308,
       "density": 2,
       "contentHash": "sha256:9f7e464eb4bce476880e87b3aa32e6d411bb32b22e48df069dba26a5a8c82554",
-      "sourceHash": "sha256:d08ebefb2a695f8326f52da8a5181e4b9b8ffa84eb3e8fef4c597eedc23316c4",
+      "sourceHash": "sha256:ad90326f38c98afd1faf25bf1b58f652877eaee4fbb75309b5c946770202dcb7",
       "captureContractVersion": "5"
     },
     {
@@ -5833,7 +5935,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 402,
       "density": 2,
       "contentHash": "sha256:9f15e6b0cea8757a330892c56abc73ec491ab1132728870364c115af99b11056",
-      "sourceHash": "sha256:156837ce76df09da1bad269d94da78cdb7ec3d1451963c886a74f2c225ae8acc",
+      "sourceHash": "sha256:d46a2095aae27503eaaf9332e3a7b296c2954f47cce7431a0631553329463506",
       "captureContractVersion": "5"
     },
     {
@@ -5850,7 +5952,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 402,
       "density": 2,
       "contentHash": "sha256:0c3a076bf44b7919fece00abf878383afb2b5e903f2cf7147d4e8905af8ac548",
-      "sourceHash": "sha256:156837ce76df09da1bad269d94da78cdb7ec3d1451963c886a74f2c225ae8acc",
+      "sourceHash": "sha256:d46a2095aae27503eaaf9332e3a7b296c2954f47cce7431a0631553329463506",
       "captureContractVersion": "5"
     },
     {
@@ -5867,7 +5969,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 218,
       "density": 2,
       "contentHash": "sha256:1e8fe0614ddfcac61e71f002c93727412bd5aec33ae8a4e4875fe4151cf3ce82",
-      "sourceHash": "sha256:156837ce76df09da1bad269d94da78cdb7ec3d1451963c886a74f2c225ae8acc",
+      "sourceHash": "sha256:d46a2095aae27503eaaf9332e3a7b296c2954f47cce7431a0631553329463506",
       "captureContractVersion": "5"
     },
     {
@@ -5884,7 +5986,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 218,
       "density": 2,
       "contentHash": "sha256:160bc2daf63e8b8fc0b98ef3c5df8daf479252f79f2ed4c13b42e9c5fa935a0a",
-      "sourceHash": "sha256:156837ce76df09da1bad269d94da78cdb7ec3d1451963c886a74f2c225ae8acc",
+      "sourceHash": "sha256:d46a2095aae27503eaaf9332e3a7b296c2954f47cce7431a0631553329463506",
       "captureContractVersion": "5"
     },
     {
@@ -5896,12 +5998,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/tabs--default--light.png",
       "assetUrl": "/catalogue/generated/example-images/tabs--default--light.png",
       "width": 962,
-      "height": 95,
+      "height": 103,
       "pixelWidth": 1924,
-      "pixelHeight": 190,
+      "pixelHeight": 206,
       "density": 2,
-      "contentHash": "sha256:40197e6966607b322152d119734c699db30588b7b209d04725de7aa3ca441659",
-      "sourceHash": "sha256:6666e8765e5de9e8b822363b11af24550e2796ed7b22a6b72eff6109cac6216f",
+      "contentHash": "sha256:0ed0b80a44ded8e3b33e22fac55d6266a64240e91d15ec3eaa980961be0ded2c",
+      "sourceHash": "sha256:d097a3a07f5441025c04b75c68a5a98770c0c02de41b4a5f2032d8fb2cd9da89",
       "captureContractVersion": "5"
     },
     {
@@ -5913,12 +6015,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/tabs--default--dark.png",
       "assetUrl": "/catalogue/generated/example-images/tabs--default--dark.png",
       "width": 962,
-      "height": 95,
+      "height": 103,
       "pixelWidth": 1924,
-      "pixelHeight": 190,
+      "pixelHeight": 206,
       "density": 2,
-      "contentHash": "sha256:7a0a2a47ebfc6f992ca5be2d38be0fcf6bd81d14bd1bf17132a7773afb3b87ef",
-      "sourceHash": "sha256:6666e8765e5de9e8b822363b11af24550e2796ed7b22a6b72eff6109cac6216f",
+      "contentHash": "sha256:a53f7a115790b6314d8e53d64514bd8524952035e680348a6240c67a65a3dc76",
+      "sourceHash": "sha256:d097a3a07f5441025c04b75c68a5a98770c0c02de41b4a5f2032d8fb2cd9da89",
       "captureContractVersion": "5"
     },
     {
@@ -5930,12 +6032,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/tabs--details--light.png",
       "assetUrl": "/catalogue/generated/example-images/tabs--details--light.png",
       "width": 962,
-      "height": 95,
+      "height": 103,
       "pixelWidth": 1924,
-      "pixelHeight": 190,
+      "pixelHeight": 206,
       "density": 2,
-      "contentHash": "sha256:e5950e41241b848d1e4d93c74f620131ed9fb9da59e4304fd9c27dd09997526e",
-      "sourceHash": "sha256:6666e8765e5de9e8b822363b11af24550e2796ed7b22a6b72eff6109cac6216f",
+      "contentHash": "sha256:d4a8cac64a0c4525150aa2d0ad11c1e9f6a61838ed80de20e1406840fee26fd7",
+      "sourceHash": "sha256:d097a3a07f5441025c04b75c68a5a98770c0c02de41b4a5f2032d8fb2cd9da89",
       "captureContractVersion": "5"
     },
     {
@@ -5947,12 +6049,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/tabs--details--dark.png",
       "assetUrl": "/catalogue/generated/example-images/tabs--details--dark.png",
       "width": 962,
-      "height": 95,
+      "height": 103,
       "pixelWidth": 1924,
-      "pixelHeight": 190,
+      "pixelHeight": 206,
       "density": 2,
-      "contentHash": "sha256:bafe738049d2824ada88b8529f4765733f3b27d3ba6df24852b67cd47715403d",
-      "sourceHash": "sha256:6666e8765e5de9e8b822363b11af24550e2796ed7b22a6b72eff6109cac6216f",
+      "contentHash": "sha256:d45ae3e9e1f3823aa1b33234fedc02dcf878ae4f63b697b6c769f4c21a43ef41",
+      "sourceHash": "sha256:d097a3a07f5441025c04b75c68a5a98770c0c02de41b4a5f2032d8fb2cd9da89",
       "captureContractVersion": "5"
     },
     {
@@ -5964,12 +6066,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/tabs--manual--light.png",
       "assetUrl": "/catalogue/generated/example-images/tabs--manual--light.png",
       "width": 962,
-      "height": 95,
+      "height": 103,
       "pixelWidth": 1924,
-      "pixelHeight": 190,
+      "pixelHeight": 206,
       "density": 2,
-      "contentHash": "sha256:40197e6966607b322152d119734c699db30588b7b209d04725de7aa3ca441659",
-      "sourceHash": "sha256:6666e8765e5de9e8b822363b11af24550e2796ed7b22a6b72eff6109cac6216f",
+      "contentHash": "sha256:0ed0b80a44ded8e3b33e22fac55d6266a64240e91d15ec3eaa980961be0ded2c",
+      "sourceHash": "sha256:d097a3a07f5441025c04b75c68a5a98770c0c02de41b4a5f2032d8fb2cd9da89",
       "captureContractVersion": "5"
     },
     {
@@ -5981,12 +6083,46 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/tabs--manual--dark.png",
       "assetUrl": "/catalogue/generated/example-images/tabs--manual--dark.png",
       "width": 962,
-      "height": 95,
+      "height": 103,
       "pixelWidth": 1924,
-      "pixelHeight": 190,
+      "pixelHeight": 206,
       "density": 2,
-      "contentHash": "sha256:7a0a2a47ebfc6f992ca5be2d38be0fcf6bd81d14bd1bf17132a7773afb3b87ef",
-      "sourceHash": "sha256:6666e8765e5de9e8b822363b11af24550e2796ed7b22a6b72eff6109cac6216f",
+      "contentHash": "sha256:a53f7a115790b6314d8e53d64514bd8524952035e680348a6240c67a65a3dc76",
+      "sourceHash": "sha256:d097a3a07f5441025c04b75c68a5a98770c0c02de41b4a5f2032d8fb2cd9da89",
+      "captureContractVersion": "5"
+    },
+    {
+      "slug": "tabs",
+      "componentName": "Tabs",
+      "exampleId": "crowded",
+      "label": "Long labels, last selected",
+      "theme": "light",
+      "assetPath": "catalogue/generated/example-images/tabs--crowded--light.png",
+      "assetUrl": "/catalogue/generated/example-images/tabs--crowded--light.png",
+      "width": 962,
+      "height": 103,
+      "pixelWidth": 1924,
+      "pixelHeight": 206,
+      "density": 2,
+      "contentHash": "sha256:eca1f2a04c71858fcd535b57364039490641b8510512abaa383d1934ad7a6a03",
+      "sourceHash": "sha256:d097a3a07f5441025c04b75c68a5a98770c0c02de41b4a5f2032d8fb2cd9da89",
+      "captureContractVersion": "5"
+    },
+    {
+      "slug": "tabs",
+      "componentName": "Tabs",
+      "exampleId": "crowded",
+      "label": "Long labels, last selected",
+      "theme": "dark",
+      "assetPath": "catalogue/generated/example-images/tabs--crowded--dark.png",
+      "assetUrl": "/catalogue/generated/example-images/tabs--crowded--dark.png",
+      "width": 962,
+      "height": 103,
+      "pixelWidth": 1924,
+      "pixelHeight": 206,
+      "density": 2,
+      "contentHash": "sha256:5efde2ae5c9850504adb7387d3ba92de80ec9a1c8db2f9f7c1e783eef1d215c3",
+      "sourceHash": "sha256:d097a3a07f5441025c04b75c68a5a98770c0c02de41b4a5f2032d8fb2cd9da89",
       "captureContractVersion": "5"
     },
     {
@@ -6003,7 +6139,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 48,
       "density": 2,
       "contentHash": "sha256:bdd6dc09bf309bffa6168711a1244bfe93c6cc91d8a50b8c00a23f1bbf436e66",
-      "sourceHash": "sha256:b4c7c124bee0645f81a629dc4de21653ec0791b2a8522855462cc4a69f9c37a2",
+      "sourceHash": "sha256:4151018cc38cd4907e4a9ede9f4d0ac3a97c1b2dbca7f13d2da3edde124df66e",
       "captureContractVersion": "5"
     },
     {
@@ -6020,7 +6156,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 48,
       "density": 2,
       "contentHash": "sha256:14abbbf3f765df6634c0c311aac6ea2e23f07bca89802abddcba6cd89436272a",
-      "sourceHash": "sha256:b4c7c124bee0645f81a629dc4de21653ec0791b2a8522855462cc4a69f9c37a2",
+      "sourceHash": "sha256:4151018cc38cd4907e4a9ede9f4d0ac3a97c1b2dbca7f13d2da3edde124df66e",
       "captureContractVersion": "5"
     },
     {
@@ -6031,13 +6167,13 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "theme": "light",
       "assetPath": "catalogue/generated/example-images/breadcrumbs--deep--light.png",
       "assetUrl": "/catalogue/generated/example-images/breadcrumbs--deep--light.png",
-      "width": 491,
+      "width": 713,
       "height": 24,
-      "pixelWidth": 982,
+      "pixelWidth": 1426,
       "pixelHeight": 48,
       "density": 2,
-      "contentHash": "sha256:3d9d39469b31d7cc18709cfa183df2bcbdd2dc7dd2161e7114be4ab92213f139",
-      "sourceHash": "sha256:b4c7c124bee0645f81a629dc4de21653ec0791b2a8522855462cc4a69f9c37a2",
+      "contentHash": "sha256:ba4afa65b33db00226ae810ecb8590683d2badb988b9dea169bb6495a3d9eaa6",
+      "sourceHash": "sha256:4151018cc38cd4907e4a9ede9f4d0ac3a97c1b2dbca7f13d2da3edde124df66e",
       "captureContractVersion": "5"
     },
     {
@@ -6048,13 +6184,13 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "theme": "dark",
       "assetPath": "catalogue/generated/example-images/breadcrumbs--deep--dark.png",
       "assetUrl": "/catalogue/generated/example-images/breadcrumbs--deep--dark.png",
-      "width": 491,
+      "width": 713,
       "height": 24,
-      "pixelWidth": 982,
+      "pixelWidth": 1426,
       "pixelHeight": 48,
       "density": 2,
-      "contentHash": "sha256:f0995030994fb84331c4ba5ed2e667c7952be621d40869216e5907cd1d1f5625",
-      "sourceHash": "sha256:b4c7c124bee0645f81a629dc4de21653ec0791b2a8522855462cc4a69f9c37a2",
+      "contentHash": "sha256:efbab478fd0fae6db68316a1caa4bd5c5ec4a1517f49e637326493151dbeb05f",
+      "sourceHash": "sha256:4151018cc38cd4907e4a9ede9f4d0ac3a97c1b2dbca7f13d2da3edde124df66e",
       "captureContractVersion": "5"
     },
     {
@@ -6071,7 +6207,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 112,
       "density": 2,
       "contentHash": "sha256:e1999bdf15345e5ee0fafae2e53573a470a9b52311279a2776f9833f955b4a68",
-      "sourceHash": "sha256:efe01e9450a9134a7534020683c7b88f11889a8464755624f71a6aabfe2b79ed",
+      "sourceHash": "sha256:bbbc6851348d08d3b3c3abac47d28a8a683832bea54b6270e115771bc248185c",
       "captureContractVersion": "5"
     },
     {
@@ -6088,7 +6224,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 112,
       "density": 2,
       "contentHash": "sha256:acf089f7aeabe200ea1f3997b71bddd3e1090e3d632ce3282fcd61d2fef261d2",
-      "sourceHash": "sha256:efe01e9450a9134a7534020683c7b88f11889a8464755624f71a6aabfe2b79ed",
+      "sourceHash": "sha256:bbbc6851348d08d3b3c3abac47d28a8a683832bea54b6270e115771bc248185c",
       "captureContractVersion": "5"
     },
     {
@@ -6105,7 +6241,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 112,
       "density": 2,
       "contentHash": "sha256:914c76b2550cb4a2c494eab8305ca1d90cc0823ac96fe5dd6380a5239ff0d9c8",
-      "sourceHash": "sha256:efe01e9450a9134a7534020683c7b88f11889a8464755624f71a6aabfe2b79ed",
+      "sourceHash": "sha256:bbbc6851348d08d3b3c3abac47d28a8a683832bea54b6270e115771bc248185c",
       "captureContractVersion": "5"
     },
     {
@@ -6122,7 +6258,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 112,
       "density": 2,
       "contentHash": "sha256:3aacf37e330dcd30ad9421c6c31d7f3fde1dc0dd0a0e59cdd67e546215fbc34f",
-      "sourceHash": "sha256:efe01e9450a9134a7534020683c7b88f11889a8464755624f71a6aabfe2b79ed",
+      "sourceHash": "sha256:bbbc6851348d08d3b3c3abac47d28a8a683832bea54b6270e115771bc248185c",
       "captureContractVersion": "5"
     },
     {
@@ -6139,7 +6275,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 112,
       "density": 2,
       "contentHash": "sha256:8e32c5806c5842acdeb32a6936e260538bc47cd74f9edbd26516839cbc7b71bc",
-      "sourceHash": "sha256:efe01e9450a9134a7534020683c7b88f11889a8464755624f71a6aabfe2b79ed",
+      "sourceHash": "sha256:bbbc6851348d08d3b3c3abac47d28a8a683832bea54b6270e115771bc248185c",
       "captureContractVersion": "5"
     },
     {
@@ -6156,7 +6292,41 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 112,
       "density": 2,
       "contentHash": "sha256:10084dc2d4f224bfe256d18052fe00c0963367b79290b9056b706d8ea0382291",
-      "sourceHash": "sha256:efe01e9450a9134a7534020683c7b88f11889a8464755624f71a6aabfe2b79ed",
+      "sourceHash": "sha256:bbbc6851348d08d3b3c3abac47d28a8a683832bea54b6270e115771bc248185c",
+      "captureContractVersion": "5"
+    },
+    {
+      "slug": "avatar",
+      "componentName": "Avatar",
+      "exampleId": "fallback",
+      "label": "Long-name fallback",
+      "theme": "light",
+      "assetPath": "catalogue/generated/example-images/avatar--fallback--light.png",
+      "assetUrl": "/catalogue/generated/example-images/avatar--fallback--light.png",
+      "width": 56,
+      "height": 56,
+      "pixelWidth": 112,
+      "pixelHeight": 112,
+      "density": 2,
+      "contentHash": "sha256:fcf10b64bc30dabeba771776a59c53442c917ea045816124bff9e8a8d56c65a9",
+      "sourceHash": "sha256:bbbc6851348d08d3b3c3abac47d28a8a683832bea54b6270e115771bc248185c",
+      "captureContractVersion": "5"
+    },
+    {
+      "slug": "avatar",
+      "componentName": "Avatar",
+      "exampleId": "fallback",
+      "label": "Long-name fallback",
+      "theme": "dark",
+      "assetPath": "catalogue/generated/example-images/avatar--fallback--dark.png",
+      "assetUrl": "/catalogue/generated/example-images/avatar--fallback--dark.png",
+      "width": 56,
+      "height": 56,
+      "pixelWidth": 112,
+      "pixelHeight": 112,
+      "density": 2,
+      "contentHash": "sha256:775740ff2f3e6b18e4d64071b9d354c60930eda8945f8453ad025fb9f889f873",
+      "sourceHash": "sha256:bbbc6851348d08d3b3c3abac47d28a8a683832bea54b6270e115771bc248185c",
       "captureContractVersion": "5"
     },
     {
@@ -6173,7 +6343,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 88,
       "density": 2,
       "contentHash": "sha256:717cffb0fed70d9953d645f1f0e4a6c43bb7fe96a66356bb60d87310d5ab61d0",
-      "sourceHash": "sha256:3b89c20012804927940ca9b673349a7602d9cae2145dae8b8eac28f2a8f7afe6",
+      "sourceHash": "sha256:ae146094bf2bbdb4200784ad2ec5835886dfccf271284d22a7a9d4ec8df55cbc",
       "captureContractVersion": "5"
     },
     {
@@ -6190,7 +6360,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 88,
       "density": 2,
       "contentHash": "sha256:6a0d14d02177464e0363efa5b7b7d896b481eea9f08796dfc0706f95ad11a92b",
-      "sourceHash": "sha256:3b89c20012804927940ca9b673349a7602d9cae2145dae8b8eac28f2a8f7afe6",
+      "sourceHash": "sha256:ae146094bf2bbdb4200784ad2ec5835886dfccf271284d22a7a9d4ec8df55cbc",
       "captureContractVersion": "5"
     },
     {
@@ -6207,7 +6377,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 72,
       "density": 2,
       "contentHash": "sha256:f02b3483dadfa545f8e75199579aeb1adb9cbc48935158ab776b288884df78b4",
-      "sourceHash": "sha256:3b89c20012804927940ca9b673349a7602d9cae2145dae8b8eac28f2a8f7afe6",
+      "sourceHash": "sha256:ae146094bf2bbdb4200784ad2ec5835886dfccf271284d22a7a9d4ec8df55cbc",
       "captureContractVersion": "5"
     },
     {
@@ -6224,7 +6394,41 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 72,
       "density": 2,
       "contentHash": "sha256:d85d5a0541f5cae0db3b73e83eb7b7c8dec05f66868fc2ec3f978cb48e2a8437",
-      "sourceHash": "sha256:3b89c20012804927940ca9b673349a7602d9cae2145dae8b8eac28f2a8f7afe6",
+      "sourceHash": "sha256:ae146094bf2bbdb4200784ad2ec5835886dfccf271284d22a7a9d4ec8df55cbc",
+      "captureContractVersion": "5"
+    },
+    {
+      "slug": "avatar-group",
+      "componentName": "Avatar group",
+      "exampleId": "crowded",
+      "label": "Many contributors",
+      "theme": "light",
+      "assetPath": "catalogue/generated/example-images/avatar-group--crowded--light.png",
+      "assetUrl": "/catalogue/generated/example-images/avatar-group--crowded--light.png",
+      "width": 338,
+      "height": 44,
+      "pixelWidth": 676,
+      "pixelHeight": 88,
+      "density": 2,
+      "contentHash": "sha256:ea7a96737b523ca206af6345955ab63182114b92cecd3db44f0db03bbf6e16c2",
+      "sourceHash": "sha256:ae146094bf2bbdb4200784ad2ec5835886dfccf271284d22a7a9d4ec8df55cbc",
+      "captureContractVersion": "5"
+    },
+    {
+      "slug": "avatar-group",
+      "componentName": "Avatar group",
+      "exampleId": "crowded",
+      "label": "Many contributors",
+      "theme": "dark",
+      "assetPath": "catalogue/generated/example-images/avatar-group--crowded--dark.png",
+      "assetUrl": "/catalogue/generated/example-images/avatar-group--crowded--dark.png",
+      "width": 338,
+      "height": 44,
+      "pixelWidth": 676,
+      "pixelHeight": 88,
+      "density": 2,
+      "contentHash": "sha256:b14a657abcd0b0a1943a9cb8f35f4d5bea226f7b2822a52e27aae9949ce15fad",
+      "sourceHash": "sha256:ae146094bf2bbdb4200784ad2ec5835886dfccf271284d22a7a9d4ec8df55cbc",
       "captureContractVersion": "5"
     },
     {
@@ -6241,7 +6445,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 90,
       "density": 2,
       "contentHash": "sha256:ab848e08764e6362779b40767396beab89866ac04d16a9186ffa6f37e95add64",
-      "sourceHash": "sha256:a7cd8dd613a506952630dee81e6c3bbd4f0b24cdf7ddcb857762a78b3b395964",
+      "sourceHash": "sha256:8d2806c83111006cb72f8655dcfa048dfc01d5811f7ca14ff8bae4871be29cd0",
       "captureContractVersion": "5"
     },
     {
@@ -6258,7 +6462,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 90,
       "density": 2,
       "contentHash": "sha256:2a2d3d48df72bcdc9da7021e041ecb08bbe0dfdf9df17ad7f0d911a3081640da",
-      "sourceHash": "sha256:a7cd8dd613a506952630dee81e6c3bbd4f0b24cdf7ddcb857762a78b3b395964",
+      "sourceHash": "sha256:8d2806c83111006cb72f8655dcfa048dfc01d5811f7ca14ff8bae4871be29cd0",
       "captureContractVersion": "5"
     },
     {
@@ -6275,7 +6479,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 90,
       "density": 2,
       "contentHash": "sha256:cd059ca74f2d2b8ea70e2c8e527fc3c838d54319f5d8685039cd3601c8ed0aaf",
-      "sourceHash": "sha256:a7cd8dd613a506952630dee81e6c3bbd4f0b24cdf7ddcb857762a78b3b395964",
+      "sourceHash": "sha256:8d2806c83111006cb72f8655dcfa048dfc01d5811f7ca14ff8bae4871be29cd0",
       "captureContractVersion": "5"
     },
     {
@@ -6292,7 +6496,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 90,
       "density": 2,
       "contentHash": "sha256:a0308a18416172c51f01d0b012f31ad1a2be9626b819ff211e427154deea9783",
-      "sourceHash": "sha256:a7cd8dd613a506952630dee81e6c3bbd4f0b24cdf7ddcb857762a78b3b395964",
+      "sourceHash": "sha256:8d2806c83111006cb72f8655dcfa048dfc01d5811f7ca14ff8bae4871be29cd0",
       "captureContractVersion": "5"
     },
     {
@@ -6304,12 +6508,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/persona--long-name--light.png",
       "assetUrl": "/catalogue/generated/example-images/persona--long-name--light.png",
       "width": 226,
-      "height": 45,
+      "height": 117,
       "pixelWidth": 452,
-      "pixelHeight": 90,
+      "pixelHeight": 234,
       "density": 2,
-      "contentHash": "sha256:92cb6bd5de277336d8be08b405356bd6f79838c7b40a2ff5b736bea9c7e761a9",
-      "sourceHash": "sha256:a7cd8dd613a506952630dee81e6c3bbd4f0b24cdf7ddcb857762a78b3b395964",
+      "contentHash": "sha256:af0712d36e6855842f0a3aed1cfc8da3dc9ac43d5dc2748d4104602d61957e7c",
+      "sourceHash": "sha256:8d2806c83111006cb72f8655dcfa048dfc01d5811f7ca14ff8bae4871be29cd0",
       "captureContractVersion": "5"
     },
     {
@@ -6321,12 +6525,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/persona--long-name--dark.png",
       "assetUrl": "/catalogue/generated/example-images/persona--long-name--dark.png",
       "width": 226,
-      "height": 45,
+      "height": 117,
       "pixelWidth": 452,
-      "pixelHeight": 90,
+      "pixelHeight": 234,
       "density": 2,
-      "contentHash": "sha256:e1bb2951f83945d814a823cb3c032cec7a46f540061af6f8c30912e2f30ce385",
-      "sourceHash": "sha256:a7cd8dd613a506952630dee81e6c3bbd4f0b24cdf7ddcb857762a78b3b395964",
+      "contentHash": "sha256:f30bdbb37517a671dea863be042b3ea356f2b4dc0896293d3c144fc1a85da47d",
+      "sourceHash": "sha256:8d2806c83111006cb72f8655dcfa048dfc01d5811f7ca14ff8bae4871be29cd0",
       "captureContractVersion": "5"
     },
     {
@@ -6343,7 +6547,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 58,
       "density": 2,
       "contentHash": "sha256:6f63331b09164ae9ace23797dfcb49fa48867cd172090984c674c4770ff009ed",
-      "sourceHash": "sha256:82dd17181ce547ac03dad76e66dc1c7e36a9217bd9ab0159d10d98b1a006fa34",
+      "sourceHash": "sha256:4f92cc91196b660ebcfe0d50fc22fe71ae60fdcd0c1dfbda9dbbaf45b20a0fd3",
       "captureContractVersion": "5"
     },
     {
@@ -6360,7 +6564,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 58,
       "density": 2,
       "contentHash": "sha256:3d054c9bb412eef326c4997df9a79f09b6030525a8f703f2df264aa1e4c698a1",
-      "sourceHash": "sha256:82dd17181ce547ac03dad76e66dc1c7e36a9217bd9ab0159d10d98b1a006fa34",
+      "sourceHash": "sha256:4f92cc91196b660ebcfe0d50fc22fe71ae60fdcd0c1dfbda9dbbaf45b20a0fd3",
       "captureContractVersion": "5"
     },
     {
@@ -6372,12 +6576,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/mention--avatar--light.png",
       "assetUrl": "/catalogue/generated/example-images/mention--avatar--light.png",
       "width": 608,
-      "height": 32,
+      "height": 58,
       "pixelWidth": 1216,
-      "pixelHeight": 64,
+      "pixelHeight": 116,
       "density": 2,
-      "contentHash": "sha256:97e418e2e074844823caedfdda5eadb21df00d323f8049fe19ddc60af42e713f",
-      "sourceHash": "sha256:82dd17181ce547ac03dad76e66dc1c7e36a9217bd9ab0159d10d98b1a006fa34",
+      "contentHash": "sha256:46d5461cc7f948ac2f74f4c6ec786eaaf6a1229f3e35a31506c68f5615ffc25e",
+      "sourceHash": "sha256:4f92cc91196b660ebcfe0d50fc22fe71ae60fdcd0c1dfbda9dbbaf45b20a0fd3",
       "captureContractVersion": "5"
     },
     {
@@ -6389,12 +6593,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/mention--avatar--dark.png",
       "assetUrl": "/catalogue/generated/example-images/mention--avatar--dark.png",
       "width": 608,
-      "height": 32,
+      "height": 58,
       "pixelWidth": 1216,
-      "pixelHeight": 64,
+      "pixelHeight": 116,
       "density": 2,
-      "contentHash": "sha256:ce0f88b29fc2d2566717d1baacc677e59dd793df67a1d019d1bd9d26736a71ac",
-      "sourceHash": "sha256:82dd17181ce547ac03dad76e66dc1c7e36a9217bd9ab0159d10d98b1a006fa34",
+      "contentHash": "sha256:4831d817f0fd435e49a30b2ec95e9d9bc320460a4341059e7ccc40e0533936d7",
+      "sourceHash": "sha256:4f92cc91196b660ebcfe0d50fc22fe71ae60fdcd0c1dfbda9dbbaf45b20a0fd3",
       "captureContractVersion": "5"
     },
     {
@@ -6410,8 +6614,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelWidth": 1920,
       "pixelHeight": 52,
       "density": 2,
-      "contentHash": "sha256:f4766df822c82873f946586ec76342af4262adbe595c4b73806d0639b5ea188f",
-      "sourceHash": "sha256:0514ef4cf2d429a50b5026bf4898248cd2c0bb1c9b725f70fdbf6a9cf2745584",
+      "contentHash": "sha256:322c6245dad363bbaf629a853d7bcf8acbca54841ef4c54837347dff199969e7",
+      "sourceHash": "sha256:9a940c77b90275c7a0f2312bc18b9ddc7dfcf1924dd96b45a0272eb810f25738",
       "captureContractVersion": "5"
     },
     {
@@ -6427,8 +6631,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelWidth": 1920,
       "pixelHeight": 52,
       "density": 2,
-      "contentHash": "sha256:4825aec3656a8d5794520ed8993a46f8324894a11b2f047ea1e66d4b587e06be",
-      "sourceHash": "sha256:0514ef4cf2d429a50b5026bf4898248cd2c0bb1c9b725f70fdbf6a9cf2745584",
+      "contentHash": "sha256:6674ded2bea50cb1235f78fa8a23b9c69548f7e4dc425dddec24a8d8555a7615",
+      "sourceHash": "sha256:9a940c77b90275c7a0f2312bc18b9ddc7dfcf1924dd96b45a0272eb810f25738",
       "captureContractVersion": "5"
     },
     {
@@ -6444,8 +6648,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelWidth": 1924,
       "pixelHeight": 580,
       "density": 2,
-      "contentHash": "sha256:2a2e1ec7bdfa8a40e1a24dfcb6c89630ade8be1d438ee554949e5599a6f18e2b",
-      "sourceHash": "sha256:3ff637a18a772c90c0111420ec18358ea64ce7f8793a3285c24de68b753b93ea",
+      "contentHash": "sha256:7d8f43b3487a3515515bfff02c3c9f3f8d586bd28c49a06e3decf366e247a416",
+      "sourceHash": "sha256:4b8dd3d9b6aabccdb02c1b2201715558fce70ef70c5580445095edf46fa4b8e7",
       "captureContractVersion": "5"
     },
     {
@@ -6461,8 +6665,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelWidth": 1924,
       "pixelHeight": 580,
       "density": 2,
-      "contentHash": "sha256:0fd5832f5999d08373d9f44196f3a30eb5cbb0e420403b7ffce1fdb5f5835860",
-      "sourceHash": "sha256:3ff637a18a772c90c0111420ec18358ea64ce7f8793a3285c24de68b753b93ea",
+      "contentHash": "sha256:39c23cff51ae1906821a34871e0f155f024502894d803ddc368bc5889b21faa5",
+      "sourceHash": "sha256:4b8dd3d9b6aabccdb02c1b2201715558fce70ef70c5580445095edf46fa4b8e7",
       "captureContractVersion": "5"
     },
     {
@@ -6478,8 +6682,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelWidth": 1924,
       "pixelHeight": 388,
       "density": 2,
-      "contentHash": "sha256:85045b0bdd6ff9417af01b3c69960d2d1228527cecb55916d15676d1a4f334f2",
-      "sourceHash": "sha256:3ff637a18a772c90c0111420ec18358ea64ce7f8793a3285c24de68b753b93ea",
+      "contentHash": "sha256:2d0d58b6ae6480a20e6bb937262e954c0bf7f47eb44e0395650e3e437f9a492c",
+      "sourceHash": "sha256:4b8dd3d9b6aabccdb02c1b2201715558fce70ef70c5580445095edf46fa4b8e7",
       "captureContractVersion": "5"
     },
     {
@@ -6495,8 +6699,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelWidth": 1924,
       "pixelHeight": 388,
       "density": 2,
-      "contentHash": "sha256:74269c2837936a53e67999d49c620578bf81aa0081f706e4ad1a0537dec79f11",
-      "sourceHash": "sha256:3ff637a18a772c90c0111420ec18358ea64ce7f8793a3285c24de68b753b93ea",
+      "contentHash": "sha256:8b224d1b1a409459564b9e3f73c2a138b3201426c2edbf7c6f921d2901e4bde4",
+      "sourceHash": "sha256:4b8dd3d9b6aabccdb02c1b2201715558fce70ef70c5580445095edf46fa4b8e7",
       "captureContractVersion": "5"
     },
     {
@@ -6819,7 +7023,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 406,
       "density": 2,
       "contentHash": "sha256:a8dc62810c0c040de0eecfa4aaaa66e704f57c50b55367c438ca082e7f80d530",
-      "sourceHash": "sha256:7a444b2453bac43b7de65f72a01636ce57a8cd16b7837b5ce718d0c9a4d3e84c",
+      "sourceHash": "sha256:acfdfb158bf6648eb346ad2fd627eca8efaf1fd893e9cebc90bc39ebb78b9648",
       "captureContractVersion": "5"
     },
     {
@@ -6836,7 +7040,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 406,
       "density": 2,
       "contentHash": "sha256:d4096a12d864112c8d44b120ac61e87b7c1b6cb098a37f2b29f817f4946bbe8b",
-      "sourceHash": "sha256:7a444b2453bac43b7de65f72a01636ce57a8cd16b7837b5ce718d0c9a4d3e84c",
+      "sourceHash": "sha256:acfdfb158bf6648eb346ad2fd627eca8efaf1fd893e9cebc90bc39ebb78b9648",
       "captureContractVersion": "5"
     },
     {
@@ -8485,7 +8689,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 568,
       "density": 2,
       "contentHash": "sha256:a5da09a6354d727589a7874217e9cf5f6473830e733052ab308c4140fd7d508d",
-      "sourceHash": "sha256:a597948c4e9948cecd9da598a50e07060bfee39ef2212c7ccbac108576277034",
+      "sourceHash": "sha256:38cb5c28e3c3900b1eac44a64e9e0dfb2f0487fe3b7468dbaf6bac88c6cf835e",
       "captureContractVersion": "5"
     },
     {
@@ -8502,7 +8706,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 568,
       "density": 2,
       "contentHash": "sha256:33acc4cd3cc7100cd53f1c92ff1de30bda1cabae141975401092777148ce7c56",
-      "sourceHash": "sha256:a597948c4e9948cecd9da598a50e07060bfee39ef2212c7ccbac108576277034",
+      "sourceHash": "sha256:38cb5c28e3c3900b1eac44a64e9e0dfb2f0487fe3b7468dbaf6bac88c6cf835e",
       "captureContractVersion": "5"
     },
     {
@@ -8519,7 +8723,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 490,
       "density": 2,
       "contentHash": "sha256:a52944bf6a7e957637355b9620d408504514e4356dcf1373de030c8a109e5acd",
-      "sourceHash": "sha256:a597948c4e9948cecd9da598a50e07060bfee39ef2212c7ccbac108576277034",
+      "sourceHash": "sha256:38cb5c28e3c3900b1eac44a64e9e0dfb2f0487fe3b7468dbaf6bac88c6cf835e",
       "captureContractVersion": "5"
     },
     {
@@ -8536,7 +8740,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 490,
       "density": 2,
       "contentHash": "sha256:8bb4b26c66c564109f1f9d3b260a8d4a5d00f27e2fe0b4ce07e193f539abb9a4",
-      "sourceHash": "sha256:a597948c4e9948cecd9da598a50e07060bfee39ef2212c7ccbac108576277034",
+      "sourceHash": "sha256:38cb5c28e3c3900b1eac44a64e9e0dfb2f0487fe3b7468dbaf6bac88c6cf835e",
       "captureContractVersion": "5"
     },
     {
@@ -8553,7 +8757,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 50,
       "density": 2,
       "contentHash": "sha256:ec6839786b117bfda6e4359ee0a9b6c5d914831b80e01cb99004686b3408b4d9",
-      "sourceHash": "sha256:e382af5681653895d2b0df82d8be3e387b7e50524b2e137b5a624e4e72bb2399",
+      "sourceHash": "sha256:5f632226d3fb304bfd7b8dcd4feac1333725276709edc060dc76fcfe2cb9c0e0",
       "captureContractVersion": "5"
     },
     {
@@ -8570,7 +8774,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 50,
       "density": 2,
       "contentHash": "sha256:db929b2d1c713f96e38a0a2805c3238c0c4432a82eeba7a53b5d8c00de8f8743",
-      "sourceHash": "sha256:e382af5681653895d2b0df82d8be3e387b7e50524b2e137b5a624e4e72bb2399",
+      "sourceHash": "sha256:5f632226d3fb304bfd7b8dcd4feac1333725276709edc060dc76fcfe2cb9c0e0",
       "captureContractVersion": "5"
     },
     {
@@ -8587,7 +8791,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 50,
       "density": 2,
       "contentHash": "sha256:10bd2e084e91b26696bb70b7869e2aed7649f3c42d6cc10d0bacc9973660f6d2",
-      "sourceHash": "sha256:e382af5681653895d2b0df82d8be3e387b7e50524b2e137b5a624e4e72bb2399",
+      "sourceHash": "sha256:5f632226d3fb304bfd7b8dcd4feac1333725276709edc060dc76fcfe2cb9c0e0",
       "captureContractVersion": "5"
     },
     {
@@ -8604,7 +8808,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 50,
       "density": 2,
       "contentHash": "sha256:1d8564765ba8b556385604090b5ddf87cb6c5fa3b440479444e84155a7311607",
-      "sourceHash": "sha256:e382af5681653895d2b0df82d8be3e387b7e50524b2e137b5a624e4e72bb2399",
+      "sourceHash": "sha256:5f632226d3fb304bfd7b8dcd4feac1333725276709edc060dc76fcfe2cb9c0e0",
       "captureContractVersion": "5"
     },
     {
@@ -8621,7 +8825,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 50,
       "density": 2,
       "contentHash": "sha256:a10d65fe7517acd49abdfb45c05a3ad7c4667e15db7863104ea35050d459e1ea",
-      "sourceHash": "sha256:e382af5681653895d2b0df82d8be3e387b7e50524b2e137b5a624e4e72bb2399",
+      "sourceHash": "sha256:5f632226d3fb304bfd7b8dcd4feac1333725276709edc060dc76fcfe2cb9c0e0",
       "captureContractVersion": "5"
     },
     {
@@ -8638,7 +8842,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 50,
       "density": 2,
       "contentHash": "sha256:1c089b3de86e07c559309100099148fb6c20fd08d23216b5d70c13e55e3b0a69",
-      "sourceHash": "sha256:e382af5681653895d2b0df82d8be3e387b7e50524b2e137b5a624e4e72bb2399",
+      "sourceHash": "sha256:5f632226d3fb304bfd7b8dcd4feac1333725276709edc060dc76fcfe2cb9c0e0",
       "captureContractVersion": "5"
     },
     {
@@ -8655,7 +8859,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 50,
       "density": 2,
       "contentHash": "sha256:e39f28e7ab2b22111a18c3a749853f5dc29721286eff39a2caff65f2f7d7870d",
-      "sourceHash": "sha256:e382af5681653895d2b0df82d8be3e387b7e50524b2e137b5a624e4e72bb2399",
+      "sourceHash": "sha256:5f632226d3fb304bfd7b8dcd4feac1333725276709edc060dc76fcfe2cb9c0e0",
       "captureContractVersion": "5"
     },
     {
@@ -8672,7 +8876,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 50,
       "density": 2,
       "contentHash": "sha256:75df81572effccb97aa1819bf46ad3cb5e22a344be60f6bbab429c2b7cf35633",
-      "sourceHash": "sha256:e382af5681653895d2b0df82d8be3e387b7e50524b2e137b5a624e4e72bb2399",
+      "sourceHash": "sha256:5f632226d3fb304bfd7b8dcd4feac1333725276709edc060dc76fcfe2cb9c0e0",
       "captureContractVersion": "5"
     },
     {
@@ -8689,7 +8893,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 624,
       "density": 2,
       "contentHash": "sha256:7abd134d735fd8e750e732e0d809948cbe6f57eeb355e09e6730492e395b3435",
-      "sourceHash": "sha256:1e5a23667d421ea580d6db2a3cc926f0642ce8e79bf1eabd7a60d7036ed70251",
+      "sourceHash": "sha256:d1c03eed326d33a1edafd173fbdfa2f23384a2bef20cd77d6833884fa60b65ac",
       "captureContractVersion": "5"
     },
     {
@@ -8706,7 +8910,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 624,
       "density": 2,
       "contentHash": "sha256:bc2e502063ec2d37f3e458a08eda5c212a50d1accf901fd47a07c9dc166b0290",
-      "sourceHash": "sha256:1e5a23667d421ea580d6db2a3cc926f0642ce8e79bf1eabd7a60d7036ed70251",
+      "sourceHash": "sha256:d1c03eed326d33a1edafd173fbdfa2f23384a2bef20cd77d6833884fa60b65ac",
       "captureContractVersion": "5"
     },
     {
@@ -8723,7 +8927,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 584,
       "density": 2,
       "contentHash": "sha256:dc63e070b75aa7e85dc8c78dbfbdcd4ebe714c40a90806f9840890f0d4f631d8",
-      "sourceHash": "sha256:1e5a23667d421ea580d6db2a3cc926f0642ce8e79bf1eabd7a60d7036ed70251",
+      "sourceHash": "sha256:d1c03eed326d33a1edafd173fbdfa2f23384a2bef20cd77d6833884fa60b65ac",
       "captureContractVersion": "5"
     },
     {
@@ -8740,7 +8944,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 584,
       "density": 2,
       "contentHash": "sha256:36ecffe60c1035b2a03043ddae535fcccd4d0ff4cc7b7776a0e930e9977b2e16",
-      "sourceHash": "sha256:1e5a23667d421ea580d6db2a3cc926f0642ce8e79bf1eabd7a60d7036ed70251",
+      "sourceHash": "sha256:d1c03eed326d33a1edafd173fbdfa2f23384a2bef20cd77d6833884fa60b65ac",
       "captureContractVersion": "5"
     },
     {
@@ -8961,7 +9165,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 368,
       "density": 2,
       "contentHash": "sha256:cd4d202fcb5d443b6a884019a60d0bffe04de30ae97977ea0c1c46f51690a3cd",
-      "sourceHash": "sha256:89d8b43dca5a5496c656dc1da10126c2cb5e954fccfa276fc627ff89e900b6d5",
+      "sourceHash": "sha256:5e88e5d853288396e4cdee5aba9b1156d73e58611dd00fbc7eada9b3a3d31ebd",
       "captureContractVersion": "5"
     },
     {
@@ -8978,7 +9182,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 368,
       "density": 2,
       "contentHash": "sha256:b61dd6ae7942fe7bb87ebfac51d39fa4b24b071e5e5c625808334d83a356afbe",
-      "sourceHash": "sha256:89d8b43dca5a5496c656dc1da10126c2cb5e954fccfa276fc627ff89e900b6d5",
+      "sourceHash": "sha256:5e88e5d853288396e4cdee5aba9b1156d73e58611dd00fbc7eada9b3a3d31ebd",
       "captureContractVersion": "5"
     },
     {
@@ -9131,7 +9335,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 726,
       "density": 2,
       "contentHash": "sha256:49d75de8e560dfaf80e9fe2c206da5abe2422a8787b065409c80a3b0d45d9f84",
-      "sourceHash": "sha256:df7e18586c458eea599c5c83ee678cd7940772baa7858b7977610dbfd85489bd",
+      "sourceHash": "sha256:17a1a46144785ff97af8b65176566431afe07bea6dce112defa8d44387dc68e0",
       "captureContractVersion": "5"
     },
     {
@@ -9148,7 +9352,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 726,
       "density": 2,
       "contentHash": "sha256:3c062366192e2f318a595fa3b1ab4009a785c6b7c6d4d50c72d82e5b9482acd1",
-      "sourceHash": "sha256:df7e18586c458eea599c5c83ee678cd7940772baa7858b7977610dbfd85489bd",
+      "sourceHash": "sha256:17a1a46144785ff97af8b65176566431afe07bea6dce112defa8d44387dc68e0",
       "captureContractVersion": "5"
     },
     {
@@ -9437,7 +9641,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 220,
       "density": 2,
       "contentHash": "sha256:b9353f87257014fb893a856ced5e74bb92cbac60e477a2fb13b66789d4bb1910",
-      "sourceHash": "sha256:2ead26527368a4b4a26953942eae730088e49e9f3d821d4edc69c2e89b253708",
+      "sourceHash": "sha256:0e76c4f97eddb25ab588321aa78a0c6566123af7f881676df477eccf40bcf7de",
       "captureContractVersion": "5"
     },
     {
@@ -9454,7 +9658,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 220,
       "density": 2,
       "contentHash": "sha256:112cea5b627aa198d10e26fd0bf026206ddfa5983191b3741b9ed7760b37fa07",
-      "sourceHash": "sha256:2ead26527368a4b4a26953942eae730088e49e9f3d821d4edc69c2e89b253708",
+      "sourceHash": "sha256:0e76c4f97eddb25ab588321aa78a0c6566123af7f881676df477eccf40bcf7de",
       "captureContractVersion": "5"
     },
     {
@@ -9471,7 +9675,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 138,
       "density": 2,
       "contentHash": "sha256:ea4d31b63a74e194ad8f2ce21c81a2a464da6c543adb0e0fb184cc485ed0b7cc",
-      "sourceHash": "sha256:2ead26527368a4b4a26953942eae730088e49e9f3d821d4edc69c2e89b253708",
+      "sourceHash": "sha256:0e76c4f97eddb25ab588321aa78a0c6566123af7f881676df477eccf40bcf7de",
       "captureContractVersion": "5"
     },
     {
@@ -9488,7 +9692,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 138,
       "density": 2,
       "contentHash": "sha256:0477673be905680f777c3c539afd742dc37d7c09d61923c680219e3a75176744",
-      "sourceHash": "sha256:2ead26527368a4b4a26953942eae730088e49e9f3d821d4edc69c2e89b253708",
+      "sourceHash": "sha256:0e76c4f97eddb25ab588321aa78a0c6566123af7f881676df477eccf40bcf7de",
       "captureContractVersion": "5"
     },
     {
@@ -9500,12 +9704,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/marketing-intro--editorial--light.png",
       "assetUrl": "/catalogue/generated/example-images/marketing-intro--editorial--light.png",
       "width": 752,
-      "height": 263,
+      "height": 237,
       "pixelWidth": 1504,
-      "pixelHeight": 526,
+      "pixelHeight": 474,
       "density": 2,
-      "contentHash": "sha256:012db9c3579ca48bc7f9d5ccea6e55f2528ec5dd8de01ba681c27fa9a7b58b80",
-      "sourceHash": "sha256:8c411fbadcfbd741e58c12f65d66e8f9bcf4ee90419d6e694940b8569b97f803",
+      "contentHash": "sha256:e472c921f38ffa7dcb65006b4f3f7a358e42a8b10afb9272f4b2ea9ac9dc3d29",
+      "sourceHash": "sha256:8eeb436de02b3f848b76f302a29f4e5f290710bcc3700503d67e2c220564f9ea",
       "captureContractVersion": "5"
     },
     {
@@ -9517,12 +9721,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/marketing-intro--editorial--dark.png",
       "assetUrl": "/catalogue/generated/example-images/marketing-intro--editorial--dark.png",
       "width": 752,
-      "height": 263,
+      "height": 237,
       "pixelWidth": 1504,
-      "pixelHeight": 526,
+      "pixelHeight": 474,
       "density": 2,
-      "contentHash": "sha256:169795516c3b23eb236c20bc66c72a173c6c1ad3126e587cf4ecc16fe9336157",
-      "sourceHash": "sha256:8c411fbadcfbd741e58c12f65d66e8f9bcf4ee90419d6e694940b8569b97f803",
+      "contentHash": "sha256:cfa7a7e5a3b595b91d076f3b9c655b8d65479344c399c1bffae43ddc0d7023d8",
+      "sourceHash": "sha256:8eeb436de02b3f848b76f302a29f4e5f290710bcc3700503d67e2c220564f9ea",
       "captureContractVersion": "5"
     },
     {
@@ -9534,12 +9738,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/marketing-intro--contrast--light.png",
       "assetUrl": "/catalogue/generated/example-images/marketing-intro--contrast--light.png",
       "width": 960,
-      "height": 542,
+      "height": 361,
       "pixelWidth": 1920,
-      "pixelHeight": 1084,
+      "pixelHeight": 722,
       "density": 2,
-      "contentHash": "sha256:7eb1f8f766768ed2eccf3423b5786c61b06c48bc1ada2da591cec4ab6cb3b5e4",
-      "sourceHash": "sha256:8c411fbadcfbd741e58c12f65d66e8f9bcf4ee90419d6e694940b8569b97f803",
+      "contentHash": "sha256:51781b54830101c71e46f76c1697c07b98a18bbd42155c3bbbcddb0632573c48",
+      "sourceHash": "sha256:8eeb436de02b3f848b76f302a29f4e5f290710bcc3700503d67e2c220564f9ea",
       "captureContractVersion": "5"
     },
     {
@@ -9551,12 +9755,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/marketing-intro--contrast--dark.png",
       "assetUrl": "/catalogue/generated/example-images/marketing-intro--contrast--dark.png",
       "width": 960,
-      "height": 542,
+      "height": 361,
       "pixelWidth": 1920,
-      "pixelHeight": 1084,
+      "pixelHeight": 722,
       "density": 2,
-      "contentHash": "sha256:7eb1f8f766768ed2eccf3423b5786c61b06c48bc1ada2da591cec4ab6cb3b5e4",
-      "sourceHash": "sha256:8c411fbadcfbd741e58c12f65d66e8f9bcf4ee90419d6e694940b8569b97f803",
+      "contentHash": "sha256:51781b54830101c71e46f76c1697c07b98a18bbd42155c3bbbcddb0632573c48",
+      "sourceHash": "sha256:8eeb436de02b3f848b76f302a29f4e5f290710bcc3700503d67e2c220564f9ea",
       "captureContractVersion": "5"
     },
     {
@@ -9572,8 +9776,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelWidth": 1920,
       "pixelHeight": 1522,
       "density": 2,
-      "contentHash": "sha256:b8886e15c23879bf9a1f4afb1f55bca0e31594aa073625f64f610ff2e7a2cc75",
-      "sourceHash": "sha256:06e5538668c600ee505a8d44820d2701b416e8883224ada31e20d8ba1931d8ba",
+      "contentHash": "sha256:d8053bab56744edea9cedfe89a125def1bd49811d6c01bc423b6843f6d5dfee0",
+      "sourceHash": "sha256:a870094b0f90e1af274c14a57b076a9a7723ecc263f905c98d56254d0e7a1d87",
       "captureContractVersion": "5"
     },
     {
@@ -9589,8 +9793,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelWidth": 1920,
       "pixelHeight": 1522,
       "density": 2,
-      "contentHash": "sha256:da8975f2d86f798d913df6b9db17cc073461894952fa7d0c461ebb835527c296",
-      "sourceHash": "sha256:06e5538668c600ee505a8d44820d2701b416e8883224ada31e20d8ba1931d8ba",
+      "contentHash": "sha256:07035fcdf9dfce3fa9fc0b1149875618671a5389b31c2652db4bfe5ce8d2e538",
+      "sourceHash": "sha256:a870094b0f90e1af274c14a57b076a9a7723ecc263f905c98d56254d0e7a1d87",
       "captureContractVersion": "5"
     },
     {
@@ -9602,12 +9806,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/hero-block--showcase--light.png",
       "assetUrl": "/catalogue/generated/example-images/hero-block--showcase--light.png",
       "width": 960,
-      "height": 805,
+      "height": 807,
       "pixelWidth": 1920,
-      "pixelHeight": 1610,
+      "pixelHeight": 1614,
       "density": 2,
-      "contentHash": "sha256:422d823e3a885371afb3c20b6e05789b5700156212c87924db0f813b4ff4d985",
-      "sourceHash": "sha256:06e5538668c600ee505a8d44820d2701b416e8883224ada31e20d8ba1931d8ba",
+      "contentHash": "sha256:9d1adf709c02e3b1ceb4dc203d4803f74a93b71f4f07f0fc23b294fd3301094b",
+      "sourceHash": "sha256:a870094b0f90e1af274c14a57b076a9a7723ecc263f905c98d56254d0e7a1d87",
       "captureContractVersion": "5"
     },
     {
@@ -9619,12 +9823,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/hero-block--showcase--dark.png",
       "assetUrl": "/catalogue/generated/example-images/hero-block--showcase--dark.png",
       "width": 960,
-      "height": 805,
+      "height": 807,
       "pixelWidth": 1920,
-      "pixelHeight": 1610,
+      "pixelHeight": 1614,
       "density": 2,
-      "contentHash": "sha256:5625c2819d8b7148403c4d986b9467d51f1e49285af716a49f9dd7b44136d883",
-      "sourceHash": "sha256:06e5538668c600ee505a8d44820d2701b416e8883224ada31e20d8ba1931d8ba",
+      "contentHash": "sha256:396756d0f166b7932a7cf3a446881811235d7e500a2c9d1bdfd591a6e84cb62b",
+      "sourceHash": "sha256:a870094b0f90e1af274c14a57b076a9a7723ecc263f905c98d56254d0e7a1d87",
       "captureContractVersion": "5"
     },
     {
@@ -9640,8 +9844,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelWidth": 1920,
       "pixelHeight": 1522,
       "density": 2,
-      "contentHash": "sha256:9bd319d838ac90a5a7979f13eac7ac40dbb19ed0402ea73cd37203c57ef77944",
-      "sourceHash": "sha256:06e5538668c600ee505a8d44820d2701b416e8883224ada31e20d8ba1931d8ba",
+      "contentHash": "sha256:aa9b8155385870ed128ed433cd8f81a8fea16e4296014b8796aeb3f43a875eef",
+      "sourceHash": "sha256:a870094b0f90e1af274c14a57b076a9a7723ecc263f905c98d56254d0e7a1d87",
       "captureContractVersion": "5"
     },
     {
@@ -9657,8 +9861,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelWidth": 1920,
       "pixelHeight": 1522,
       "density": 2,
-      "contentHash": "sha256:9a4a15c3b5774311158d951b719c7828a43c2f7baf7638d6c9df6698ce7ad17c",
-      "sourceHash": "sha256:06e5538668c600ee505a8d44820d2701b416e8883224ada31e20d8ba1931d8ba",
+      "contentHash": "sha256:934da58c0c33a7b170c62c2a8b926e8809ac262d8fcea87958e357c2ca615c5c",
+      "sourceHash": "sha256:a870094b0f90e1af274c14a57b076a9a7723ecc263f905c98d56254d0e7a1d87",
       "captureContractVersion": "5"
     },
     {
@@ -9738,12 +9942,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/audience-grid--default--light.png",
       "assetUrl": "/catalogue/generated/example-images/audience-grid--default--light.png",
       "width": 960,
-      "height": 851,
+      "height": 827,
       "pixelWidth": 1920,
-      "pixelHeight": 1702,
+      "pixelHeight": 1654,
       "density": 2,
-      "contentHash": "sha256:23343c3505f0834efd0d1ccfbc7cb6a9ffe14c5f495602429ca37dd64f115b72",
-      "sourceHash": "sha256:b5250452f4ed08777a0786b2a3a2942967d98c0fd0b262f1d03b7f502d105263",
+      "contentHash": "sha256:8bc098161298797514338ef2409f58f08942fb3a8bd324d9c097b383cf849b04",
+      "sourceHash": "sha256:5cdf95d971b6ed1866c51132f9d5e38136d6075beeffb300be7a1ed2a6362c80",
       "captureContractVersion": "5"
     },
     {
@@ -9755,12 +9959,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/audience-grid--default--dark.png",
       "assetUrl": "/catalogue/generated/example-images/audience-grid--default--dark.png",
       "width": 960,
-      "height": 851,
+      "height": 827,
       "pixelWidth": 1920,
-      "pixelHeight": 1702,
+      "pixelHeight": 1654,
       "density": 2,
-      "contentHash": "sha256:65d1af1971ca98eacd060a3902e782b2d4985f433d7a1a26b30d157cc76ba8e4",
-      "sourceHash": "sha256:b5250452f4ed08777a0786b2a3a2942967d98c0fd0b262f1d03b7f502d105263",
+      "contentHash": "sha256:b350d9822bda5a93543d0650998cf3b4732ee3adfb01ceed1eccac9a86e917ac",
+      "sourceHash": "sha256:5cdf95d971b6ed1866c51132f9d5e38136d6075beeffb300be7a1ed2a6362c80",
       "captureContractVersion": "5"
     },
     {
@@ -9772,12 +9976,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/feature-bento--lead-matrix--light.png",
       "assetUrl": "/catalogue/generated/example-images/feature-bento--lead-matrix--light.png",
       "width": 960,
-      "height": 1144,
+      "height": 965,
       "pixelWidth": 1920,
-      "pixelHeight": 2288,
+      "pixelHeight": 1930,
       "density": 2,
-      "contentHash": "sha256:a4a30b666c71925411dc988db024e03b49c9edcd573a16249352988c710ddcb5",
-      "sourceHash": "sha256:632395313d35102833da9f532bc8df7ab2c4200f4ce950752e8cb27a25664cc0",
+      "contentHash": "sha256:e5ffbe990f2ccedb1c0c1f84334b00ec914e031a7afed3147cf05260fef8c893",
+      "sourceHash": "sha256:b0b5403a0d8bb1fc1e06223ab04828e0b568ed344d678bb108b92f673e54e086",
       "captureContractVersion": "5"
     },
     {
@@ -9789,12 +9993,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/feature-bento--lead-matrix--dark.png",
       "assetUrl": "/catalogue/generated/example-images/feature-bento--lead-matrix--dark.png",
       "width": 960,
-      "height": 1144,
+      "height": 965,
       "pixelWidth": 1920,
-      "pixelHeight": 2288,
+      "pixelHeight": 1930,
       "density": 2,
-      "contentHash": "sha256:8ddce37bc7b85fa378d7166897ddc82aeb0b06231ffe9c66fa64bd796a973a69",
-      "sourceHash": "sha256:632395313d35102833da9f532bc8df7ab2c4200f4ce950752e8cb27a25664cc0",
+      "contentHash": "sha256:b2cdfa77961a7a6ccaff14cf457f5a867d4f5224b1c638bda64681762242540b",
+      "sourceHash": "sha256:b0b5403a0d8bb1fc1e06223ab04828e0b568ed344d678bb108b92f673e54e086",
       "captureContractVersion": "5"
     },
     {
@@ -9806,12 +10010,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/feature-bento--vertical-matrix--light.png",
       "assetUrl": "/catalogue/generated/example-images/feature-bento--vertical-matrix--light.png",
       "width": 960,
-      "height": 993,
+      "height": 936,
       "pixelWidth": 1920,
-      "pixelHeight": 1986,
+      "pixelHeight": 1872,
       "density": 2,
-      "contentHash": "sha256:c81fec5e1e6eaf8ce2819fef6f31b6d677f23b47b196bea3d8230a9ac2865de3",
-      "sourceHash": "sha256:632395313d35102833da9f532bc8df7ab2c4200f4ce950752e8cb27a25664cc0",
+      "contentHash": "sha256:a6560970ccd9c9208d4e5e1f9f9a2d410bae8869800152de4219901d0bc77648",
+      "sourceHash": "sha256:b0b5403a0d8bb1fc1e06223ab04828e0b568ed344d678bb108b92f673e54e086",
       "captureContractVersion": "5"
     },
     {
@@ -9823,12 +10027,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/feature-bento--vertical-matrix--dark.png",
       "assetUrl": "/catalogue/generated/example-images/feature-bento--vertical-matrix--dark.png",
       "width": 960,
-      "height": 993,
+      "height": 936,
       "pixelWidth": 1920,
-      "pixelHeight": 1986,
+      "pixelHeight": 1872,
       "density": 2,
-      "contentHash": "sha256:4963d6871aae020b31169ad71c0c61d3d834b38857bf7ec3346e031c719c6bb3",
-      "sourceHash": "sha256:632395313d35102833da9f532bc8df7ab2c4200f4ce950752e8cb27a25664cc0",
+      "contentHash": "sha256:fb7484d9a67e2deee3effac879b9b43e3f192ba980d22405eaa2b0f71c5e4983",
+      "sourceHash": "sha256:b0b5403a0d8bb1fc1e06223ab04828e0b568ed344d678bb108b92f673e54e086",
       "captureContractVersion": "5"
     },
     {
@@ -9845,7 +10049,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 1464,
       "density": 2,
       "contentHash": "sha256:c6c669a45bc62142e1f4d1f3efec24b7ea05787b15065c52aa65c2f2588873c1",
-      "sourceHash": "sha256:ff52f81b5672208a8f4ce5be4695d7904edc32bf159cb4ef8626ed9faea9c0a6",
+      "sourceHash": "sha256:47efcfefa63bc5eb62bbfe60413c6881cc4b0ea320c6d1fe4d79d8aae4db69ac",
       "captureContractVersion": "5"
     },
     {
@@ -9862,7 +10066,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 1464,
       "density": 2,
       "contentHash": "sha256:b967e0366c3a46cf1c7791c8bf64341d3a3c0791b0b27b0f2dec539f0f044d7d",
-      "sourceHash": "sha256:ff52f81b5672208a8f4ce5be4695d7904edc32bf159cb4ef8626ed9faea9c0a6",
+      "sourceHash": "sha256:47efcfefa63bc5eb62bbfe60413c6881cc4b0ea320c6d1fe4d79d8aae4db69ac",
       "captureContractVersion": "5"
     },
     {
@@ -10049,7 +10253,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 1436,
       "density": 2,
       "contentHash": "sha256:ef08eeb69bff4e85522318e1c80fb0dcff8f0f05ecd8237bea505040478bc998",
-      "sourceHash": "sha256:af7978983aa1256d70b473a9bc0863efb362fc3697ead2e2f565695654f95afd",
+      "sourceHash": "sha256:b2c1228aeefbadeea604406512c7e32302081323e9b8dd54e9516bc2ebad8cf0",
       "captureContractVersion": "5"
     },
     {
@@ -10066,7 +10270,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 1436,
       "density": 2,
       "contentHash": "sha256:1270494d57911109c2c3c7e3a2eebd48aac50dd72f658384dbe04e125a12e085",
-      "sourceHash": "sha256:af7978983aa1256d70b473a9bc0863efb362fc3697ead2e2f565695654f95afd",
+      "sourceHash": "sha256:b2c1228aeefbadeea604406512c7e32302081323e9b8dd54e9516bc2ebad8cf0",
       "captureContractVersion": "5"
     },
     {
@@ -10083,7 +10287,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 1302,
       "density": 2,
       "contentHash": "sha256:8efa4553e1427951e5ddcba2879930a7bf3a05987cdda9592bf8f2a6de0c0c99",
-      "sourceHash": "sha256:509400af4f8345763bcd78d42fa3676b41ac11d1e88e24c9a6024b28a6e44cc9",
+      "sourceHash": "sha256:60c261d98e586253f63ae60672b5f83580b72e2e7c3c87f26b012ffd4cb92929",
       "captureContractVersion": "5"
     },
     {
@@ -10100,7 +10304,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 1302,
       "density": 2,
       "contentHash": "sha256:eb4d631c9cf2809cebbe17fe125a2747ea8c076636bfaa9283c41322985e815c",
-      "sourceHash": "sha256:509400af4f8345763bcd78d42fa3676b41ac11d1e88e24c9a6024b28a6e44cc9",
+      "sourceHash": "sha256:60c261d98e586253f63ae60672b5f83580b72e2e7c3c87f26b012ffd4cb92929",
       "captureContractVersion": "5"
     },
     {
@@ -10117,7 +10321,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 918,
       "density": 2,
       "contentHash": "sha256:e376f731d8da1ddd5f8ada32d7b1c8529f027d1f00816a88595a983e70cedc91",
-      "sourceHash": "sha256:f59f33d2daa8958b564af833c682fa866552830ff58c3f1e845f5e48c2dde8e6",
+      "sourceHash": "sha256:89af2bb719e9026bfc68236523621aac7f7054c880cd5fa53d7b0bc287ca87d9",
       "captureContractVersion": "5"
     },
     {
@@ -10134,7 +10338,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 918,
       "density": 2,
       "contentHash": "sha256:1eca34f4bc624b00fbf8cd63728c622abd13f8c0b05967edd5dc90f8e5205785",
-      "sourceHash": "sha256:f59f33d2daa8958b564af833c682fa866552830ff58c3f1e845f5e48c2dde8e6",
+      "sourceHash": "sha256:89af2bb719e9026bfc68236523621aac7f7054c880cd5fa53d7b0bc287ca87d9",
       "captureContractVersion": "5"
     },
     {
@@ -10282,12 +10486,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/editorial-hero--visual--light.png",
       "assetUrl": "/catalogue/generated/example-images/editorial-hero--visual--light.png",
       "width": 960,
-      "height": 1014,
+      "height": 1149,
       "pixelWidth": 1920,
-      "pixelHeight": 2028,
+      "pixelHeight": 2298,
       "density": 2,
-      "contentHash": "sha256:6132e54128a9f2d6fa524b720dfec6a6b9784b6cffcbf6e48430cced915616f5",
-      "sourceHash": "sha256:ffe9f255f647d886261fd5af4322df3e6e634cef3b3ce9bf4db11da492c7b59c",
+      "contentHash": "sha256:fd6854bf11f1a00ffc611da839c18025a1e7c996466d76436895554fb6fdcfd9",
+      "sourceHash": "sha256:cb08accf391eb6e4aafa0c4c4559275852e1ad104ce5423b95128e9d052ee737",
       "captureContractVersion": "5"
     },
     {
@@ -10299,12 +10503,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/editorial-hero--visual--dark.png",
       "assetUrl": "/catalogue/generated/example-images/editorial-hero--visual--dark.png",
       "width": 960,
-      "height": 1014,
+      "height": 1149,
       "pixelWidth": 1920,
-      "pixelHeight": 2028,
+      "pixelHeight": 2298,
       "density": 2,
-      "contentHash": "sha256:552c43db3bac78168ca5c0035c5762d508694cf5780ac81e832959e6a113f530",
-      "sourceHash": "sha256:ffe9f255f647d886261fd5af4322df3e6e634cef3b3ce9bf4db11da492c7b59c",
+      "contentHash": "sha256:b858ca1770945306bc34111e69243d115df0ed3d18f4ecc9404e35da532e79f4",
+      "sourceHash": "sha256:cb08accf391eb6e4aafa0c4c4559275852e1ad104ce5423b95128e9d052ee737",
       "captureContractVersion": "5"
     },
     {
@@ -10316,12 +10520,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/editorial-hero--text-only--light.png",
       "assetUrl": "/catalogue/generated/example-images/editorial-hero--text-only--light.png",
       "width": 960,
-      "height": 765,
+      "height": 833,
       "pixelWidth": 1920,
-      "pixelHeight": 1530,
+      "pixelHeight": 1666,
       "density": 2,
-      "contentHash": "sha256:3bf6bdca72e1432fe8d1b4d6333a9416f5741f996fd62ab094edab7c077c991e",
-      "sourceHash": "sha256:ffe9f255f647d886261fd5af4322df3e6e634cef3b3ce9bf4db11da492c7b59c",
+      "contentHash": "sha256:5694e596dbbe07b5f6e2922ac33cabe8417ba03e32f3938c14e47f68ae888d9b",
+      "sourceHash": "sha256:cb08accf391eb6e4aafa0c4c4559275852e1ad104ce5423b95128e9d052ee737",
       "captureContractVersion": "5"
     },
     {
@@ -10333,12 +10537,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/editorial-hero--text-only--dark.png",
       "assetUrl": "/catalogue/generated/example-images/editorial-hero--text-only--dark.png",
       "width": 960,
-      "height": 765,
+      "height": 833,
       "pixelWidth": 1920,
-      "pixelHeight": 1530,
+      "pixelHeight": 1666,
       "density": 2,
-      "contentHash": "sha256:3963dcae69d2780548ba8a92001f793969cba836d1ba51b70626343334f255bc",
-      "sourceHash": "sha256:ffe9f255f647d886261fd5af4322df3e6e634cef3b3ce9bf4db11da492c7b59c",
+      "contentHash": "sha256:ba6aaa4babb3282b4b72df0867e5d92417122904b2c91ccc6150b4aaf27d54a7",
+      "sourceHash": "sha256:cb08accf391eb6e4aafa0c4c4559275852e1ad104ce5423b95128e9d052ee737",
       "captureContractVersion": "5"
     },
     {
@@ -10354,8 +10558,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelWidth": 1920,
       "pixelHeight": 1634,
       "density": 2,
-      "contentHash": "sha256:d085141ac0068c515eb9c8f28afab0e20b6e67be55a5d6263328b4b9ee173c75",
-      "sourceHash": "sha256:a2b7b64daf85c3605a91690049a2ebdea572e68ab3b4d04d6812974c0cc6dc45",
+      "contentHash": "sha256:f2fcfeab0be8752992a3f899585ae30c827df52fa9dfe9303da1800c7a6e01a7",
+      "sourceHash": "sha256:21677c22b0733b386092368f88da908f3c0d475b0487a10097e701420ccd0eb6",
       "captureContractVersion": "5"
     },
     {
@@ -10371,8 +10575,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelWidth": 1920,
       "pixelHeight": 1634,
       "density": 2,
-      "contentHash": "sha256:aa6908a98c9c62e69f86605dc16c41a8a4f3efc20c5bfe43d795631d21a79f04",
-      "sourceHash": "sha256:a2b7b64daf85c3605a91690049a2ebdea572e68ab3b4d04d6812974c0cc6dc45",
+      "contentHash": "sha256:676c7a715e6ead1cd8fdf63e84c799cea3091006c23e6abee2f9de601cc889b1",
+      "sourceHash": "sha256:21677c22b0733b386092368f88da908f3c0d475b0487a10097e701420ccd0eb6",
       "captureContractVersion": "5"
     },
     {
@@ -10384,12 +10588,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/narrative-chapter--concise--light.png",
       "assetUrl": "/catalogue/generated/example-images/narrative-chapter--concise--light.png",
       "width": 960,
-      "height": 544,
+      "height": 545,
       "pixelWidth": 1920,
-      "pixelHeight": 1088,
+      "pixelHeight": 1090,
       "density": 2,
-      "contentHash": "sha256:903515547ed19b5da18a02cfd4c477c7c33e8166a267d2b68535d87e8efb52d3",
-      "sourceHash": "sha256:a2b7b64daf85c3605a91690049a2ebdea572e68ab3b4d04d6812974c0cc6dc45",
+      "contentHash": "sha256:0b27dd8909aae203fe1332b1c518d424b64a905e91aac2c459d10dd2e2f89ea3",
+      "sourceHash": "sha256:21677c22b0733b386092368f88da908f3c0d475b0487a10097e701420ccd0eb6",
       "captureContractVersion": "5"
     },
     {
@@ -10401,12 +10605,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/narrative-chapter--concise--dark.png",
       "assetUrl": "/catalogue/generated/example-images/narrative-chapter--concise--dark.png",
       "width": 960,
-      "height": 544,
+      "height": 545,
       "pixelWidth": 1920,
-      "pixelHeight": 1088,
+      "pixelHeight": 1090,
       "density": 2,
-      "contentHash": "sha256:17bd79bd08ca9baea8b26e3dbfdd742197cf6f0812b95abf9a12a5c3e6919728",
-      "sourceHash": "sha256:a2b7b64daf85c3605a91690049a2ebdea572e68ab3b4d04d6812974c0cc6dc45",
+      "contentHash": "sha256:81268d52dd7ffdf031d8efab0ea3cdf9f8eb3ea21b9073bd0dd604a51183e7e3",
+      "sourceHash": "sha256:21677c22b0733b386092368f88da908f3c0d475b0487a10097e701420ccd0eb6",
       "captureContractVersion": "5"
     },
     {
@@ -10418,12 +10622,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/journey-overview--three-step--light.png",
       "assetUrl": "/catalogue/generated/example-images/journey-overview--three-step--light.png",
       "width": 960,
-      "height": 837,
+      "height": 863,
       "pixelWidth": 1920,
-      "pixelHeight": 1674,
+      "pixelHeight": 1726,
       "density": 2,
-      "contentHash": "sha256:75f2311e75976f7345c7ca8c2773ac392c9d40bf5cd3f2bc8e48b7819cf6f882",
-      "sourceHash": "sha256:a82832d10effc1b9a46b2656320af8292d51256554897a58cde0aa4d1824936d",
+      "contentHash": "sha256:154772cbbdbbca8b4b26df64fe5d09f0c35c2f5a8aac3d885e3bf39a045e35ab",
+      "sourceHash": "sha256:821110ddd39517ef726387622a5f4994e7ba3bce63f49b2ab157374cd3c950ec",
       "captureContractVersion": "5"
     },
     {
@@ -10435,12 +10639,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/journey-overview--three-step--dark.png",
       "assetUrl": "/catalogue/generated/example-images/journey-overview--three-step--dark.png",
       "width": 960,
-      "height": 837,
+      "height": 863,
       "pixelWidth": 1920,
-      "pixelHeight": 1674,
+      "pixelHeight": 1726,
       "density": 2,
-      "contentHash": "sha256:069d6b2dce3b00ca866ef48d0119e981673e9e4d7717cdb022b4fdcac255215e",
-      "sourceHash": "sha256:a82832d10effc1b9a46b2656320af8292d51256554897a58cde0aa4d1824936d",
+      "contentHash": "sha256:9624766e7367e0742663a5d3858da69cceab9775e00bd57d89f0a80242107cf3",
+      "sourceHash": "sha256:821110ddd39517ef726387622a5f4994e7ba3bce63f49b2ab157374cd3c950ec",
       "captureContractVersion": "5"
     },
     {
@@ -10456,8 +10660,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelWidth": 1920,
       "pixelHeight": 1468,
       "density": 2,
-      "contentHash": "sha256:16dfcb2b76704f0cff426d00faf37cc75eef2c350b9fe8b3397a44f32fbe34c1",
-      "sourceHash": "sha256:a82832d10effc1b9a46b2656320af8292d51256554897a58cde0aa4d1824936d",
+      "contentHash": "sha256:5efda11ce91c431d94644c996ab2bc5c3d83bcfbe721717def997d57b7d7b474",
+      "sourceHash": "sha256:821110ddd39517ef726387622a5f4994e7ba3bce63f49b2ab157374cd3c950ec",
       "captureContractVersion": "5"
     },
     {
@@ -10473,8 +10677,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelWidth": 1920,
       "pixelHeight": 1468,
       "density": 2,
-      "contentHash": "sha256:e43877ae1f5ed47fa76356672bdf7136269320d2675cfc540aac324d23feb016",
-      "sourceHash": "sha256:a82832d10effc1b9a46b2656320af8292d51256554897a58cde0aa4d1824936d",
+      "contentHash": "sha256:c9f34ac68d68e9d7e1d591217a21738cf0e2ee644b6dac035b000ca504bebbe2",
+      "sourceHash": "sha256:821110ddd39517ef726387622a5f4994e7ba3bce63f49b2ab157374cd3c950ec",
       "captureContractVersion": "5"
     },
     {
@@ -10486,12 +10690,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/outcome-spotlight--focused--light.png",
       "assetUrl": "/catalogue/generated/example-images/outcome-spotlight--focused--light.png",
       "width": 960,
-      "height": 717,
+      "height": 719,
       "pixelWidth": 1920,
-      "pixelHeight": 1434,
+      "pixelHeight": 1438,
       "density": 2,
-      "contentHash": "sha256:3164754e18cd0a9f404f4eb46e0fdb620a68fbfd6ef042d1ba8cddf9e9e7940a",
-      "sourceHash": "sha256:6160fe63dcfd42939a2f11a1dbe1b91eb20708ef917f04ceb84b4cf8aae6955c",
+      "contentHash": "sha256:dfebf5b9b57001f4296eaa13ce3d11ff67403842c6b05163778601dce75651ff",
+      "sourceHash": "sha256:33d7d291421611a7bbf870b290f7273ca8bd55f8fc67bb56ba140852fa5ff0ce",
       "captureContractVersion": "5"
     },
     {
@@ -10503,12 +10707,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/outcome-spotlight--focused--dark.png",
       "assetUrl": "/catalogue/generated/example-images/outcome-spotlight--focused--dark.png",
       "width": 960,
-      "height": 717,
+      "height": 719,
       "pixelWidth": 1920,
-      "pixelHeight": 1434,
+      "pixelHeight": 1438,
       "density": 2,
-      "contentHash": "sha256:3164754e18cd0a9f404f4eb46e0fdb620a68fbfd6ef042d1ba8cddf9e9e7940a",
-      "sourceHash": "sha256:6160fe63dcfd42939a2f11a1dbe1b91eb20708ef917f04ceb84b4cf8aae6955c",
+      "contentHash": "sha256:dfebf5b9b57001f4296eaa13ce3d11ff67403842c6b05163778601dce75651ff",
+      "sourceHash": "sha256:33d7d291421611a7bbf870b290f7273ca8bd55f8fc67bb56ba140852fa5ff0ce",
       "captureContractVersion": "5"
     },
     {
@@ -10525,7 +10729,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 916,
       "density": 2,
       "contentHash": "sha256:d86183e42d661178bd315dcc1a4ef7a823c9e7bfec4e59b5640de04c05b2bf00",
-      "sourceHash": "sha256:6160fe63dcfd42939a2f11a1dbe1b91eb20708ef917f04ceb84b4cf8aae6955c",
+      "sourceHash": "sha256:33d7d291421611a7bbf870b290f7273ca8bd55f8fc67bb56ba140852fa5ff0ce",
       "captureContractVersion": "5"
     },
     {
@@ -10542,7 +10746,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 916,
       "density": 2,
       "contentHash": "sha256:b769143b37c973b6a3e6fc606499a2343fba8068557ba6b895594748daff2152",
-      "sourceHash": "sha256:6160fe63dcfd42939a2f11a1dbe1b91eb20708ef917f04ceb84b4cf8aae6955c",
+      "sourceHash": "sha256:33d7d291421611a7bbf870b290f7273ca8bd55f8fc67bb56ba140852fa5ff0ce",
       "captureContractVersion": "5"
     },
     {
@@ -10622,12 +10826,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/closing-statement--contrast--light.png",
       "assetUrl": "/catalogue/generated/example-images/closing-statement--contrast--light.png",
       "width": 960,
-      "height": 731,
+      "height": 702,
       "pixelWidth": 1920,
-      "pixelHeight": 1462,
+      "pixelHeight": 1404,
       "density": 2,
-      "contentHash": "sha256:5a88a37a7a89e79d4d4e324472ccd1f9d2519ef230b9ff2f9be6166b5691d812",
-      "sourceHash": "sha256:aa0a6e05db5ac36070055e9bf00de4dc9871c6ee4e23cb240fe9a0749794af4c",
+      "contentHash": "sha256:4351d4cc220dc7e5faa1799553d811f28cd78c88d2d543459e78fa2481918eb2",
+      "sourceHash": "sha256:82ce8a01bc65ff89893a7b7f8ed3b5b4584f757a88571830593c8501a9c71b5b",
       "captureContractVersion": "5"
     },
     {
@@ -10639,12 +10843,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/closing-statement--contrast--dark.png",
       "assetUrl": "/catalogue/generated/example-images/closing-statement--contrast--dark.png",
       "width": 960,
-      "height": 731,
+      "height": 702,
       "pixelWidth": 1920,
-      "pixelHeight": 1462,
+      "pixelHeight": 1404,
       "density": 2,
-      "contentHash": "sha256:fa150116db0208403f126e95cb046770d94ad0f9407e584b464bdd3e50b63416",
-      "sourceHash": "sha256:aa0a6e05db5ac36070055e9bf00de4dc9871c6ee4e23cb240fe9a0749794af4c",
+      "contentHash": "sha256:16d670e51dbed267777064659ea4f4b329bf34f102512556eb696e9c3ea83863",
+      "sourceHash": "sha256:82ce8a01bc65ff89893a7b7f8ed3b5b4584f757a88571830593c8501a9c71b5b",
       "captureContractVersion": "5"
     },
     {
@@ -10656,12 +10860,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/closing-statement--quiet--light.png",
       "assetUrl": "/catalogue/generated/example-images/closing-statement--quiet--light.png",
       "width": 960,
-      "height": 655,
+      "height": 626,
       "pixelWidth": 1920,
-      "pixelHeight": 1310,
+      "pixelHeight": 1252,
       "density": 2,
-      "contentHash": "sha256:627e3968fef610ce15b515a03d77797727713a8944733f701c5e99da2cdaa443",
-      "sourceHash": "sha256:aa0a6e05db5ac36070055e9bf00de4dc9871c6ee4e23cb240fe9a0749794af4c",
+      "contentHash": "sha256:15aee25f74ad692c0547d8ae6f667e7f594332fbca7342b797d216dfbc38a7d8",
+      "sourceHash": "sha256:82ce8a01bc65ff89893a7b7f8ed3b5b4584f757a88571830593c8501a9c71b5b",
       "captureContractVersion": "5"
     },
     {
@@ -10673,12 +10877,12 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/closing-statement--quiet--dark.png",
       "assetUrl": "/catalogue/generated/example-images/closing-statement--quiet--dark.png",
       "width": 960,
-      "height": 655,
+      "height": 626,
       "pixelWidth": 1920,
-      "pixelHeight": 1310,
+      "pixelHeight": 1252,
       "density": 2,
-      "contentHash": "sha256:73247ab01d77c6e847d5fbae6042226f479f8839fecb84b3cd65358acb2c1753",
-      "sourceHash": "sha256:aa0a6e05db5ac36070055e9bf00de4dc9871c6ee4e23cb240fe9a0749794af4c",
+      "contentHash": "sha256:620969e4f933c5d3d56c8aae1ed397e871a54764d75e0a57d2a5ef8f9374e4ed",
+      "sourceHash": "sha256:82ce8a01bc65ff89893a7b7f8ed3b5b4584f757a88571830593c8501a9c71b5b",
       "captureContractVersion": "5"
     },
     {
@@ -10695,7 +10899,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 1224,
       "density": 2,
       "contentHash": "sha256:93ba008d1387f015bb58cff06288dc9918f0c476de26d6fda37069497a987bd2",
-      "sourceHash": "sha256:60fa675df45900a7d42c911ff79165fde872fddf4b8606d02d10b129e89769f5",
+      "sourceHash": "sha256:912a0e973b10b2abe11ebbc88aef71c4efa9ae7fe20c31dba4024dd50d7c22f9",
       "captureContractVersion": "5"
     },
     {
@@ -10712,7 +10916,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 1224,
       "density": 2,
       "contentHash": "sha256:0734f8cb83612a68fbb94eda84534a21b8a706533faddedf1d93a2b6f4111f85",
-      "sourceHash": "sha256:60fa675df45900a7d42c911ff79165fde872fddf4b8606d02d10b129e89769f5",
+      "sourceHash": "sha256:912a0e973b10b2abe11ebbc88aef71c4efa9ae7fe20c31dba4024dd50d7c22f9",
       "captureContractVersion": "5"
     },
     {

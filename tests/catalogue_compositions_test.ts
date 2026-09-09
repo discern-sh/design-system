@@ -195,6 +195,24 @@ Deno.test("the gallery stays light and a detail route mounts only its selected d
   assertEquals((detailHtml.match(/<h1/g) ?? []).length, 1);
 });
 
+Deno.test("every Composition detail keeps one page heading", () => {
+  for (const recipe of compositionRecipes) {
+    const html = renderToStaticMarkup(
+      createElement(CompositionsPage, {
+        currentUrl: new URL(
+          compositionRecipePath(recipe.id),
+          "https://catalogue.example",
+        ),
+      }),
+    );
+    assertEquals(
+      (html.match(/<h1/g) ?? []).length,
+      1,
+      recipe.title,
+    );
+  }
+});
+
 Deno.test("local navigation uses stable detail paths and current-pattern state", () => {
   const recipes = [...compositionRecipes, futureRecipe()];
   const current = recipes.at(-1)!;

@@ -1,15 +1,12 @@
 import type { ComponentType, ReactNode } from "react";
 import { VerificationReport } from "../src/components/agents/verification-report/verification-report.tsx";
-import { ApproachBackdrop } from "../src/components/artwork/approach-backdrop/approach-backdrop.tsx";
 import { Button } from "../src/components/core/button/button.tsx";
 import { ClosingStatement } from "../src/components/marketing/closing-statement/closing-statement.tsx";
 import { EditorialHero } from "../src/components/marketing/editorial-hero/editorial-hero.tsx";
+import { FeatureBento } from "../src/components/marketing/feature-bento/feature-bento.tsx";
 import { JourneyOverview } from "../src/components/marketing/journey-overview/journey-overview.tsx";
+import { MarketingIntro } from "../src/components/marketing/marketing-intro/marketing-intro.tsx";
 import { MarketingSection } from "../src/components/marketing/marketing-section/marketing-section.tsx";
-import { MarketingStage } from "../src/components/marketing/marketing-stage/marketing-stage.tsx";
-import { NarrativeChapter } from "../src/components/marketing/narrative-chapter/narrative-chapter.tsx";
-import { OutcomeSpotlight } from "../src/components/marketing/outcome-spotlight/outcome-spotlight.tsx";
-import { VoiceBreak } from "../src/components/marketing/voice-break/voice-break.tsx";
 import { ArtifactCard } from "../src/components/workflow/artifact-card/artifact-card.tsx";
 import { ArtifactTree } from "../src/components/workflow/artifact-tree/artifact-tree.tsx";
 import { BranchChoice } from "../src/components/workflow/branch-choice/branch-choice.tsx";
@@ -41,6 +38,11 @@ export interface JourneyContract {
 /** Intentional presentation boundary for a Composition demonstration. */
 export type CompositionStage = "inset" | "full-bleed";
 
+/** Host context that keeps a Composition's root heading semantic. */
+export interface CompositionExampleProps {
+  readonly rootHeadingLevel?: 1 | 2;
+}
+
 /** A Catalogue-only composition with a preview and source built from one definition. */
 export interface CompositionRecipe {
   readonly id: string;
@@ -50,7 +52,7 @@ export interface CompositionRecipe {
   readonly stage: CompositionStage;
   readonly components: readonly string[];
   readonly journey?: JourneyContract;
-  readonly Example: ComponentType;
+  readonly Example: ComponentType<CompositionExampleProps>;
   readonly source: string;
 }
 
@@ -62,7 +64,10 @@ interface RecipeDefinition<Definition> {
   readonly journey?: JourneyContract;
   readonly stage?: CompositionStage;
   readonly definition: Definition;
-  readonly render: (definition: Definition) => ReactNode;
+  readonly render: (
+    definition: Definition,
+    context: Required<CompositionExampleProps>,
+  ) => ReactNode;
   readonly source: (definition: Definition) => string;
 }
 
@@ -131,8 +136,12 @@ export function defineRecipe<Definition>(
   const identity = { id: recipe.id, components };
   compositionConstituents(identity);
 
-  function Example(): ReactNode {
-    return recipe.render(recipe.definition);
+  function Example(
+    { rootHeadingLevel = 1 }: CompositionExampleProps,
+  ): ReactNode {
+    return recipe.render(recipe.definition, {
+      rootHeadingLevel,
+    });
   }
 
   return {
@@ -605,263 +614,173 @@ const surveyArtifactsRecipe = defineRecipe({
 });
 
 const readingFirstLanding = {
-  journey: [{
-    title: "Name the outcome",
-    description: "Give the audience a destination before the explanation.",
-    outcome: "The central promise is clear.",
-  }, {
-    title: "Reduce the machinery",
+  hero: {
+    eyebrow: "A practical workshop guide",
+    title: "Turn an open question into a shared plan.",
     description:
-      "Show only the moments that change the reader's understanding.",
-    outcome: "The method feels finite.",
-  }, {
-    title: "Return with evidence",
-    description: "End on the result or decision that matters.",
-    outcome: "The story resolves cleanly.",
-  }],
-  supporting: [{
-    value: "3",
-    label: "plain-language moments",
-  }, {
-    value: "1",
-    label: "conceptual visual",
-  }, {
-    value: "0",
-    label: "extra interfaces to decode",
-  }],
+      "Bring the people closest to a decision together. Prepare a focused discussion and leave with a next step everyone can find.",
+    meta:
+      "For facilitators and participants, in the room or contributing in writing.",
+  },
+  introduction: {
+    eyebrow: "Before you invite anyone",
+    title: "Start with a decision worth making together.",
+    description:
+      "A workshop needs a question that benefits from different perspectives. Write it in one sentence, then name the constraints and the people affected.",
+  },
+  preparation: {
+    eyebrow: "Your preparation checklist",
+    title: "Give everyone the same starting point.",
+    description:
+      "Send these four things with the invitation. Keep the reading short enough that participants can prepare thoughtfully.",
+    items: [
+      {
+        title: "The question",
+        description:
+          "State what the group needs to decide and what is outside this session. Include the constraints that every option must respect.",
+        size: "wide",
+        tone: "accent",
+      },
+      {
+        title: "The evidence",
+        description:
+          "Link the relevant observations and research notes. Label assumptions and open questions so they can be challenged.",
+        size: "wide",
+      },
+      {
+        title: "The participants",
+        description:
+          "Invite the people affected by the decision, including someone who can explain how the work happens today.",
+        size: "wide",
+      },
+      {
+        title: "The decision record",
+        description:
+          "Prepare a place for the options, the reasons for the choice, an action owner, and a review date.",
+        size: "wide",
+      },
+    ],
+  },
+  journey: {
+    eyebrow: "During the session",
+    title: "Move from individual thinking to a shared next step.",
+    description:
+      "Use the sequence as a starting point. Allow more time when the question is unfamiliar or the group needs to hear additional perspectives.",
+    steps: [
+      {
+        title: "Make room to think",
+        description:
+          "Restate the question and give everyone time to write privately before anyone presents an answer.",
+        outcome: "A set of independent perspectives.",
+      },
+      {
+        title: "Compare the options",
+        description:
+          "Look for differences in evidence and assumptions. Test the options against the constraints you agreed.",
+        outcome: "Reasons for a choice, with uncertainty recorded.",
+      },
+      {
+        title: "Agree the next step",
+        description:
+          "Write down the action, its owner, and when to review it. Share the record with people who contributed in writing.",
+        outcome: "A decision people can act on and revisit.",
+      },
+    ],
+  },
+  closing: {
+    eyebrow: "Ready to prepare?",
+    title: "Write the question before you book the room.",
+    description:
+      "Use the checklist to draft the invitation. If the question is still too broad, ask the people closest to it what they need to decide first.",
+    reassurance:
+      "Keep the preparation and decision record together so the next conversation starts with context.",
+  },
 } as const;
-
-function ReadingFirstLandingVisual() {
-  return (
-    <div
-      aria-hidden="true"
-      style={{
-        position: "relative",
-        width: "100%",
-        minHeight: "24rem",
-      }}
-    >
-      <div
-        style={{
-          position: "absolute",
-          inset: "12% 40% 28% 8%",
-          border: "1px solid var(--discern-color-border-strong)",
-          borderRadius: "var(--discern-radius-lg)",
-          background: "var(--discern-color-canvas)",
-          transform: "rotate(-4deg)",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          inset: "30% 8% 10% 42%",
-          border: "1px solid var(--discern-color-accent-500)",
-          borderRadius: "var(--discern-radius-lg)",
-          background: "var(--discern-color-surface)",
-          transform: "rotate(3deg)",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          inset: "44% auto auto 47%",
-          width: "4rem",
-          aspectRatio: 1,
-          borderRadius: "var(--discern-radius-pill)",
-          background: "var(--discern-color-accent-500)",
-          boxShadow: "var(--discern-shadow-card)",
-        }}
-      />
-    </div>
-  );
-}
 
 const readingFirstLandingRecipe = defineRecipe({
   id: "reading-first-landing",
   title: "Reading-first landing page",
   description:
-    "Lead readers through an unfamiliar idea with a clear promise, measured evidence, and one final action.",
+    "A complete workshop-planning guide: a clear invitation, preparation checklist, discussion sequence, and useful next action.",
   stage: "full-bleed",
   components: [
     "editorial-hero",
     "button",
-    "approach-backdrop",
-    "narrative-chapter",
     "marketing-section",
-    "marketing-stage",
+    "marketing-intro",
+    "feature-bento",
     "journey-overview",
-    "outcome-spotlight",
-    "voice-break",
     "closing-statement",
   ],
   journey: {
     stages: [
       ".discern-editorial-hero",
-      ".discern-narrative-chapter",
-      ".discern-marketing-stage",
+      "#workshop-question",
+      ".discern-feature-bento",
       ".discern-journey-overview",
-      ".discern-outcome-spotlight",
-      ".discern-voice-break",
       ".discern-closing-statement",
     ],
   },
   definition: readingFirstLanding,
-  render: (definition) => (
+  render: (definition, { rootHeadingLevel }) => (
     <div>
       <EditorialHero
-        headingLevel={2}
-        eyebrow="A complex idea, clearly introduced"
-        title={
-          <>
-            Make the difficult <em>feel navigable.</em>
-          </>
+        {...definition.hero}
+        headingLevel={rootHeadingLevel}
+        actions={
+          <Button href="#workshop-preparation">
+            Use the preparation checklist
+          </Button>
         }
-        description={
-          <p>
-            Lead with one promise in ordinary language, then let the rest of the
-            page earn attention one idea at a time.
-          </p>
-        }
-        actions={<Button href="#explanation">Begin with the idea</Button>}
-        meta="No technical vocabulary is required to start."
-        backdrop={<ApproachBackdrop />}
       />
-      <NarrativeChapter
-        id="explanation"
-        eyebrow="Explain"
-        title="Give substantial prose a comfortable reading shape."
-        lead={
-          <p>
-            Complex products still need explanation. The design can make the
-            route through that explanation obvious without manufacturing more
-            things to inspect.
-          </p>
-        }
-        aside={
-          <>
-            <span>Reading principle</span>
-            <p>
-              A visual earns its place when it compresses, demonstrates, proves,
-              or creates relief.
-            </p>
-          </>
-        }
+      <MarketingSection
+        id="workshop-question"
+        spacing="standard"
+        frame="wide"
+        style={{ paddingBlockStart: 0 }}
       >
-        <p>
-          Begin with what changes for the audience. Introduce the method only
-          after the destination is understood, and keep the detail in one stable
-          reading flow.
-        </p>
-        <h3>Let each section perform one job</h3>
-        <p>
-          A section can orient, explain, demonstrate, prove, or invite action.
-          When it attempts all five, the reader has to reconstruct the story.
-        </p>
-      </NarrativeChapter>
-      <MarketingSection surface="sunken" spacing="spacious" frame="wide">
-        <MarketingStage
-          treatment="plain"
-          label="Conceptual relief"
-          caption="A quiet relationship replaces another realistic interface."
-          aspect="landscape"
-        >
-          <ReadingFirstLandingVisual />
-        </MarketingStage>
+        <MarketingIntro
+          {...definition.introduction}
+          style={{ marginBlockEnd: 0 }}
+        />
       </MarketingSection>
+      <FeatureBento id="workshop-preparation" {...definition.preparation} />
       <JourneyOverview
-        eyebrow="Demonstrate"
-        title="Compress the journey into the moments that matter."
-        description={
-          <p>
-            The complete operational sequence can live elsewhere. This page
-            needs the transformation the audience can remember.
-          </p>
-        }
-        steps={definition.journey.map((step) => ({
-          title: step.title,
-          description: <p>{step.description}</p>,
-          outcome: <span>{step.outcome}</span>,
-        }))}
-      />
-      <OutcomeSpotlight
-        eyebrow="Prove"
-        title="Let one result carry the evidence."
-        value="1"
-        valueLabel="clear outcome to remember after the details have faded."
-        supporting={definition.supporting}
-      />
-      <VoiceBreak
-        eyebrow="A change of voice"
-        quote="We understood the decision before we learned the machinery."
-        attribution="An early reader"
-        context="Encountering an unfamiliar technical product"
-        portrait={<span>ER</span>}
+        id="workshop-sequence"
+        {...definition.journey}
+        surface="canvas"
       />
       <ClosingStatement
-        eyebrow="One next step"
-        title="End with a decision, not another explanation."
-        description={
-          <p>
-            The story has done its work. The final chapter can now make the next
-            action clear.
-          </p>
-        }
+        {...definition.closing}
         actions={
           <>
-            <Button href="#begin">Begin here</Button>
-            <Button href="#details" variant="secondary">
-              Read the details
+            <Button href="#workshop-preparation">Prepare the invitation</Button>
+            <Button href="#workshop-sequence" variant="secondary">
+              Review the session sequence
             </Button>
           </>
         }
-        reassurance={<p>No specialist knowledge is required to begin.</p>}
       />
     </div>
   ),
   source: (definition) =>
-    `const journey = ${value(definition.journey)};
+    `const guide = ${value(definition)} as const;
 
 <div>
-  <EditorialHero
-    headingLevel={2}
-    eyebrow="A complex idea, clearly introduced"
-    title={<>Make the difficult <em>feel navigable.</em></>}
-    description={<p>Lead with one promise in ordinary language.</p>}
-    actions={<Button href="#explanation">Begin with the idea</Button>}
-    backdrop={<ApproachBackdrop />}
+  <EditorialHero {...guide.hero}
+    actions={<Button href="#workshop-preparation">Use the preparation checklist</Button>}
   />
-  <NarrativeChapter
-    id="explanation"
-    eyebrow="Explain"
-    title="Give substantial prose a comfortable reading shape."
-    lead={<p>Complex products still need explanation.</p>}
-  >
-    <p>Keep the detail in one stable reading flow.</p>
-  </NarrativeChapter>
-  <MarketingSection surface="sunken" spacing="spacious" frame="wide">
-    <MarketingStage label="Conceptual relief" treatment="plain">
-      {/* Consumer-supplied conceptual artwork */}
-    </MarketingStage>
+  <MarketingSection id="workshop-question" spacing="standard" frame="wide" style={{ paddingBlockStart: 0 }}>
+    <MarketingIntro {...guide.introduction} style={{ marginBlockEnd: 0 }} />
   </MarketingSection>
-  <JourneyOverview
-    eyebrow="Demonstrate"
-    title="Compress the journey into the moments that matter."
-    steps={journey}
-  />
-  <OutcomeSpotlight
-    eyebrow="Prove"
-    title="Let one result carry the evidence."
-    value="1"
-    valueLabel="clear outcome to remember"
-  />
-  <VoiceBreak
-    quote="We understood the decision before we learned the machinery."
-    attribution="An early reader"
-  />
-  <ClosingStatement
-    title="End with a decision, not another explanation."
-    actions={<Button href="#begin">Begin here</Button>}
-  />
+  <FeatureBento id="workshop-preparation" {...guide.preparation} />
+  <JourneyOverview id="workshop-sequence" {...guide.journey} surface="canvas" />
+  <ClosingStatement {...guide.closing} actions={
+    <>
+      <Button href="#workshop-preparation">Prepare the invitation</Button>
+      <Button href="#workshop-sequence" variant="secondary">Review the session sequence</Button>
+    </>
+  } />
 </div>`,
 });
 

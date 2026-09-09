@@ -64,6 +64,17 @@ const cliExampleImplementations = [
       size: "sm",
     },
   },
+  {
+    name: "crowded",
+    props: {
+      label: "Contributors",
+      max: 10,
+      people: Array.from(
+        { length: 115 },
+        (_, index) => ({ name: `Contributor ${index}` }),
+      ),
+    },
+  },
 ] as const satisfies readonly CliExample<AvatarGroupCliProps>[];
 defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
 

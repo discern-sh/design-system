@@ -18,6 +18,69 @@ function OutlineExample() {
   );
 }
 
+function ActionLayoutExample() {
+  return (
+    <div
+      className="discern-example-row"
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        gap: "var(--discern-space-2)",
+      }}
+    >
+      {(["sm", "md", "lg"] as const).map((size) => (
+        <div
+          key={size}
+          className="discern-example-row"
+          style={{ display: "grid", gap: "var(--discern-space-2)" }}
+        >
+          <strong>{size} · idle, disabled, busy, both</strong>
+          {(["quiet", "outline"] as const).map((variant) => (
+            <div
+              key={variant}
+              className="discern-example-row"
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "var(--discern-space-2)",
+              }}
+            >
+              <IconButton
+                size={size}
+                variant={variant}
+                icon={<ExampleIcon name="info" />}
+                label="Information"
+              />
+              <IconButton
+                size={size}
+                variant={variant}
+                icon="×"
+                label="Close inspector"
+                disabled
+              />
+              <IconButton
+                size={size}
+                variant={variant}
+                icon="↻"
+                label="Refresh results"
+                busy
+              />
+              <IconButton
+                size={size}
+                variant={variant}
+                icon={<ExampleIcon name="spark" />}
+                label="Generate report"
+                disabled
+                busy
+              />
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export const catalogueExamples = defineCatalogueExamples(
   meta,
   componentExampleVocabulary,
@@ -35,6 +98,7 @@ export const catalogueExamples = defineCatalogueExamples(
       },
     },
     { id: "outline", Example: OutlineExample },
+    { id: "action-layout", Example: ActionLayoutExample },
   ],
 );
 
@@ -42,6 +106,15 @@ export const reviewPostures = defineComponentReviewPostures(
   meta,
   componentExampleVocabulary,
   [{
+    id: "icon-action-matrix",
+    label: "Unavailable and busy icon actions",
+    example: "action-layout",
+    category: "responsive",
+    requirements: { inlineSize: 320, reducedMotion: true },
+    sequence: [{
+      checkpoint: { id: "icon-matrix", label: "Sizes, SVG and Unicode" },
+    }],
+  }, {
     id: "press-icon-button",
     label: "Pointer contact",
     example: "default",
@@ -67,7 +140,14 @@ export const reviewPostures = defineComponentReviewPostures(
 
 export default function IconButtonExamples() {
   return (
-    <div className="discern-example-row">
+    <div
+      className="discern-example-row"
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        gap: "var(--discern-space-2)",
+      }}
+    >
       <QuietExample />
       <OutlineExample />
     </div>

@@ -1,13 +1,23 @@
 @layer discern.components {
+  .discern-tabs {
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+  }
   .discern-tabs__list {
     display: flex;
-    gap: var(--discern-space-5);
-    overflow-x: auto;
+    flex-wrap: wrap;
+    column-gap: var(--discern-space-5);
+    row-gap: var(--discern-space-1);
+    padding: var(--discern-space-1);
     border-block-end: 1px solid var(--discern-color-border);
   }
   .discern-tabs__tab {
     position: relative;
-    flex: none;
+    flex: 0 1 auto;
+    max-inline-size: 100%;
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+    text-align: start;
     padding: var(--discern-space-3) calc(var(--discern-space-1) / 4);
     border: 0;
     background: transparent;
@@ -19,7 +29,7 @@
   }
   .discern-tabs__tab::after {
     position: absolute;
-    inset: auto 0 calc(-1 * var(--discern-space-1) / 4);
+    inset: auto 0 0;
     block-size: 0.125rem;
     background: var(--discern-color-accent-600);
     content: "";

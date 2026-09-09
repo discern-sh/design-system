@@ -53,6 +53,25 @@ const cliExampleImplementations = [
       activationMode: "manual",
     },
   },
+  {
+    name: "crowded",
+    props: {
+      items: [{
+        value: "overview",
+        label: "Overview and responsibilities",
+        content: "Summary content.",
+      }, {
+        value: "details",
+        label: "Research across several regions",
+        content: "Detailed content.",
+      }, {
+        value: "history",
+        label: "Publication history and correspondence",
+        content: "Read the publication archive.",
+      }],
+      activeValue: "history",
+    },
+  },
 ] as const satisfies readonly CliExample<TabsCliProps>[];
 defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
 

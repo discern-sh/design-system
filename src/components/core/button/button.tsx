@@ -1,3 +1,5 @@
+import { BusyGlyph } from "../icon/busy-glyph.tsx";
+import { Icon } from "../icon/icon.tsx";
 import { forwardRef } from "react";
 import type {
   AnchorHTMLAttributes,
@@ -10,6 +12,8 @@ import { classNames } from "../../class-names.ts";
 import type { ButtonSize, ButtonVariant } from "./button.types.ts";
 
 interface ButtonCommonProps {
+  /** Caller-owned pending state; disables native activation without replacing the label. */
+  readonly busy?: boolean;
   readonly variant?: ButtonVariant;
   readonly size?: ButtonSize;
   readonly leadingIcon?: ReactNode;
@@ -48,6 +52,7 @@ function content(
   leadingIcon: ReactNode,
   children: ReactNode,
   trailingIcon: ReactNode,
+  busy: boolean,
 ) {
   return (
     <>
@@ -66,6 +71,16 @@ function content(
           </span>
         )
         : null}
+      {busy
+        ? (
+          <Icon
+            className="discern-icon--busy discern-button__busy"
+            size="var(--discern-button-busy-size)"
+          >
+            <BusyGlyph />
+          </Icon>
+        )
+        : null}
     </>
   );
 }
@@ -80,6 +95,10 @@ export const Button: DiscernComponent<
 >(function Button(props, forwardedRef) {
   const variant = props.variant ?? "primary";
   const size = props.size ?? "md";
+  const busy = props.busy === true || props["aria-busy"] === true ||
+    props["aria-busy"] === "true";
+  const unavailable = busy || props["aria-disabled"] === true ||
+    props["aria-disabled"] === "true";
   const classes = classNames(
     "discern-button",
     `discern-button--${variant}`,
@@ -90,6 +109,7 @@ export const Button: DiscernComponent<
   if ("href" in props && typeof props.href === "string") {
     const {
       href,
+      busy: _busy,
       variant: _variant,
       size: _size,
       leadingIcon,
@@ -101,11 +121,15 @@ export const Button: DiscernComponent<
     return (
       <a
         ref={forwardedRef as Ref<HTMLAnchorElement>}
-        href={href}
         className={classes}
         {...anchorProps}
+        href={unavailable ? undefined : href}
+        role={unavailable ? "link" : anchorProps.role}
+        tabIndex={unavailable ? -1 : anchorProps.tabIndex}
+        aria-disabled={unavailable || undefined}
+        aria-busy={busy || undefined}
       >
-        {content(leadingIcon, children, trailingIcon)}
+        {content(leadingIcon, children, trailingIcon, busy)}
       </a>
     );
   }
@@ -117,6 +141,7 @@ export const Button: DiscernComponent<
     trailingIcon,
     children,
     className: _className,
+    busy: _busy,
     type = "button",
     ...buttonProps
   } = props;
@@ -126,8 +151,10 @@ export const Button: DiscernComponent<
       type={type}
       className={classes}
       {...buttonProps}
+      disabled={buttonProps.disabled || unavailable}
+      aria-busy={busy || undefined}
     >
-      {content(leadingIcon, children, trailingIcon)}
+      {content(leadingIcon, children, trailingIcon, busy)}
     </button>
   );
 });
