@@ -44,11 +44,24 @@ function SpecimenHeadingBoundary(
             heading.getAttribute("role") ?? "";
           heading.dataset.discernPreviewOriginalAriaLevel =
             heading.getAttribute("aria-level") ?? "";
+          heading.dataset.discernPreviewHadTabIndex = String(
+            heading.hasAttribute("tabindex"),
+          );
+          heading.dataset.discernPreviewOriginalTabIndex =
+            heading.getAttribute("tabindex") ?? "";
         }
         for (const child of [...heading.childNodes]) {
           if (child !== proxy) proxy.append(child);
         }
         if (proxy.parentNode !== heading) heading.append(proxy);
+        // Presentational roles are ignored on focusable native headings. Keep
+        // equivalent programmatic focus on the proxy that owns the remapped
+        // heading semantics instead.
+        const tabIndex = heading.getAttribute("tabindex");
+        if (tabIndex !== null) {
+          proxy.setAttribute("tabindex", tabIndex);
+          heading.removeAttribute("tabindex");
+        }
         heading.setAttribute("role", "presentation");
         heading.removeAttribute("aria-level");
         proxy.setAttribute("role", "heading");
@@ -59,7 +72,12 @@ function SpecimenHeadingBoundary(
     normalize();
     const observer = new MutationObserver(normalize);
     if (root.current) {
-      observer.observe(root.current, { childList: true, subtree: true });
+      observer.observe(root.current, {
+        attributes: true,
+        attributeFilter: ["tabindex"],
+        childList: true,
+        subtree: true,
+      });
     }
     return () => {
       observer.disconnect();
@@ -79,12 +97,19 @@ function SpecimenHeadingBoundary(
         }
         const role = heading.dataset.discernPreviewOriginalRole;
         const ariaLevel = heading.dataset.discernPreviewOriginalAriaLevel;
+        const hadTabIndex =
+          heading.dataset.discernPreviewHadTabIndex === "true";
+        const tabIndex = heading.dataset.discernPreviewOriginalTabIndex ?? "";
         if (role) heading.setAttribute("role", role);
         else heading.removeAttribute("role");
         if (ariaLevel) heading.setAttribute("aria-level", ariaLevel);
         else heading.removeAttribute("aria-level");
         delete heading.dataset.discernPreviewOriginalRole;
         delete heading.dataset.discernPreviewOriginalAriaLevel;
+        if (hadTabIndex) heading.setAttribute("tabindex", tabIndex);
+        else heading.removeAttribute("tabindex");
+        delete heading.dataset.discernPreviewHadTabIndex;
+        delete heading.dataset.discernPreviewOriginalTabIndex;
       }
     };
   }, [afterLevel]);

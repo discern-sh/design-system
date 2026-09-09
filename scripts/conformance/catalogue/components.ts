@@ -355,12 +355,24 @@ async function assertAutoEnrollment(
       expected.join(", ")
     }\nActual: ${actual.join(", ")}`,
   );
+  const specimenCanvas = page.locator(
+    ".discern-catalogue-example-state__canvas",
+  );
+  const escapedHeadingCount = (await Promise.all(
+    ([1, 2, 3, 4, 5] as const).map((level) =>
+      specimenCanvas.getByRole("heading", { level }).count()
+    ),
+  )).reduce((total, count) => total + count, 0);
   invariant(
-    await page.locator(".discern-catalogue-example-state").getByRole(
-      "heading",
-      { level: 1 },
-    ).count() === 0,
-    "A specimen-owned document heading escaped its Catalogue heading boundary",
+    escapedHeadingCount === 0,
+    "Specimen-owned headings must follow their Catalogue example heading",
+  );
+  invariant(
+    await specimenCanvas.locator(
+      "h1[tabindex], h2[tabindex], h3[tabindex], h4[tabindex], h5[tabindex], h6[tabindex]",
+    )
+      .count() === 0,
+    "A native specimen heading retained focus while its semantics moved to a proxy",
   );
 }
 
