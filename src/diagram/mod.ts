@@ -6,6 +6,8 @@
  */
 
 export { diagramAltText } from "./accessibility.ts";
+export type { DiagramCheckResult, DiagramFinding } from "./check.ts";
+export { checkDiagram } from "./check.ts";
 export {
   canonicalDiagramMarkdownSource,
   renderDiagramMarkdownImage,

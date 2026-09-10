@@ -15,6 +15,7 @@ import {
   isSafeIdentifier,
   snapshotJsonSafe,
 } from "../internal/validation.ts";
+import { reportKindFinding } from "../internal/findings.ts";
 import {
   DiagramBudgetError,
   DiagramConformanceError,
@@ -170,20 +171,25 @@ export function validateDiagramCommonSpec(
   for (const [dimension, text, limit] of commonTextBudgets) {
     const actual = diagramGraphemeCount(text);
     if (actual > limit) {
-      throw new DiagramBudgetError({
-        dimension,
-        limit,
-        actual,
-        unit: "graphemes",
-        authorAction: "shorten-label",
-        path: dimension === "titleGraphemes" ? "spec.title" : "spec.summary",
-      });
+      reportKindFinding(
+        new DiagramBudgetError({
+          dimension,
+          limit,
+          actual,
+          unit: "graphemes",
+          authorAction: "shorten-label",
+          path: dimension === "titleGraphemes" ? "spec.title" : "spec.summary",
+        }),
+      );
     }
   }
   return value as DiagramCommonSpec & Record<string, unknown>;
 }
 
-/** Apply one Metadata-owned kind budget and return its definition. */
+/**
+ * Apply one Metadata-owned kind budget. An exceeded budget throws, or is
+ * recorded when {@linkcode checkDiagram} is collecting every finding.
+ */
 export function assertDiagramKindBudget(
   meta: DiagramKindMeta,
   dimension: string,
@@ -205,8 +211,10 @@ export function assertDiagramKindBudget(
       unit: budget.unit,
       authorAction: budget.remedy,
     } as const;
-    throw path === undefined
-      ? new DiagramBudgetError(options)
-      : new DiagramBudgetError({ ...options, path });
+    reportKindFinding(
+      path === undefined
+        ? new DiagramBudgetError(options)
+        : new DiagramBudgetError({ ...options, path }),
+    );
   }
 }

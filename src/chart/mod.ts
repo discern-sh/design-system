@@ -9,6 +9,8 @@
  */
 
 export { chartAltText } from "./accessibility.ts";
+export type { ChartCheckResult, ChartFinding } from "./check.ts";
+export { checkChart } from "./check.ts";
 export type {
   ChartBudgetRemedy,
   ChartErrorCode,

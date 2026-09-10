@@ -26,6 +26,7 @@ import {
   findChartNumberFormatDefect,
 } from "./format.ts";
 import type { ChartKindMeta } from "./kind-meta.ts";
+import { reportKindFinding } from "../internal/findings.ts";
 import { CHART_COMMON_LIMITS } from "./limits.ts";
 import type {
   ChartCommonSpec,
@@ -182,14 +183,16 @@ export function validateChartCommonSpec(
   for (const [dimension, text, limit] of commonTextBudgets) {
     const actual = chartGraphemeCount(text);
     if (actual > limit) {
-      throw new ChartBudgetError({
-        dimension,
-        limit,
-        actual,
-        unit: "graphemes",
-        authorAction: "shorten-label",
-        path: dimension === "titleGraphemes" ? "spec.title" : "spec.summary",
-      });
+      reportKindFinding(
+        new ChartBudgetError({
+          dimension,
+          limit,
+          actual,
+          unit: "graphemes",
+          authorAction: "shorten-label",
+          path: dimension === "titleGraphemes" ? "spec.title" : "spec.summary",
+        }),
+      );
     }
   }
   return value as ChartCommonSpec & Record<string, unknown>;
@@ -289,7 +292,11 @@ export function validateChartScaledValueAxis(
   return Object.freeze({ ...axis, scale });
 }
 
-/** Apply one Metadata-owned kind budget by its declared dimension. */
+/**
+ * Apply one Metadata-owned kind budget by its declared dimension. An
+ * exceeded budget throws, or is recorded when {@linkcode checkChart} is
+ * collecting every finding.
+ */
 export function assertChartKindBudget(
   meta: ChartKindMeta,
   dimension: string,
@@ -311,8 +318,10 @@ export function assertChartKindBudget(
       unit: budget.unit,
       authorAction: budget.remedy,
     } as const;
-    throw path === undefined
-      ? new ChartBudgetError(options)
-      : new ChartBudgetError({ ...options, path });
+    reportKindFinding(
+      path === undefined
+        ? new ChartBudgetError(options)
+        : new ChartBudgetError({ ...options, path }),
+    );
   }
 }
