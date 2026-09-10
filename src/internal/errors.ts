@@ -50,6 +50,8 @@ export interface KindBudgetFacts<Remedy extends string = string> {
  * Assemble the canonical budget-refusal diagnostic for one family: the
  * message template and frozen fact set exist here once, while the family
  * supplies its scoped code, capitalized subject, and resolved remedy text.
+ * The message names the offending path so a refusal thrown from inside a
+ * whole-page render still says which label to shorten.
  */
 export function kindBudgetDiagnostic<
   Code extends string,
@@ -62,10 +64,11 @@ export function kindBudgetDiagnostic<
     readonly path?: string;
   },
 ): KindErrorOptions<Code> {
+  const location = options.path === undefined ? "" : ` at ${options.path}`;
   const diagnostic = {
     code: options.code,
     message:
-      `${options.subject} budget ${options.dimension} allows ${options.limit} ${options.unit}; received ${options.actual}. ${options.remedy}`,
+      `${options.subject} budget ${options.dimension} allows ${options.limit} ${options.unit}; received ${options.actual}${location}. ${options.remedy}`,
     facts: {
       dimension: options.dimension,
       limit: options.limit,

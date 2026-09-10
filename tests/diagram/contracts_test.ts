@@ -428,7 +428,11 @@ Deno.test("budget refusals expose stable facts and one practical author action",
   assertEquals(error.facts.limit, 72);
   assertEquals(error.facts.actual, 73);
   assertEquals(error.facts.authorAction, "shorten-label");
-  assertMatch(error.message, /Shorten the named label/u);
+  assertEquals(error.path, "spec.nodes[0].label");
+  assertMatch(
+    error.message,
+    /^Diagram budget nodeLabelGraphemes allows 72 graphemes; received 73 at spec\.nodes\[0\]\.label\. Shorten the named label/u,
+  );
 
   const nodes = Array.from({ length: 16 }, (_, index) => ({
     id: `node-${index}`,
