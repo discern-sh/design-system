@@ -22,6 +22,13 @@ import { pascalIdentifier } from "./kind-family.ts";
 export interface ComponentAuthorGuideSource {
   readonly meta: ComponentMeta;
   readonly examples: readonly ResolvedComponentExampleDefinition[];
+  /**
+   * The documented props block rendered by `component-props-guide.ts`:
+   * the props declaration, each property, and every referenced package
+   * type. Absent only for renderers that never reach the React surface,
+   * such as the eval set.
+   */
+  readonly props?: readonly string[];
 }
 
 /** The generated guide's document title. */
@@ -39,6 +46,11 @@ export function componentReactExportName(slug: string): string {
   return pascalIdentifier(slug);
 }
 
+/** The props type every React adapter exports beside itself. */
+export function componentReactPropsName(slug: string): string {
+  return `${pascalIdentifier(slug)}Props`;
+}
+
 /** The terminal renderer export the generated `./cli` barrel publishes. */
 export function componentCliRendererName(slug: string): string {
   return `render${pascalIdentifier(slug)}Cli`;
@@ -48,7 +60,7 @@ const PREAMBLE = [
   "Each section states one Component's identity, purpose collections, when to use it, when another route serves better, its terminal stance, its accessibility contract, and its canonical examples. Choose by the reader's task, then author through the public contract:",
   "",
   "- Runtime: select the slug from a section heading with `emitDesignSystemRuntime` from `@discern-sh/design-system/runtime`. Generated dependency resolution adds prerequisites, and the emitted `discern.css` applies only inside `data-discern-root`.",
-  "- React: import the named adapter from `@discern-sh/design-system/react` and render it at build time.",
+  "- React: import the named adapter from `@discern-sh/design-system/react` and render it at build time; each section ends with the adapter's documented props and the package types they reference.",
   "- Terminal: import the named renderer from `@discern-sh/design-system/cli`; it is pure and takes explicit terminal capabilities.",
   "- Semantic HTML: use the `discern-<slug>` class family the package owns. Consumer styles never target owned classes, copy Component CSS, or fork a Component for appearance.",
 ] as const;
@@ -107,7 +119,9 @@ function componentSection(source: ComponentAuthorGuideSource): string[] {
     meta.description,
     "",
     `Group: ${meta.group}. Purposes: ${purposes}.`,
-    `React: \`${componentReactExportName(meta.slug)}\`. Terminal: ${terminal}`,
+    `React: \`${componentReactExportName(meta.slug)}\` with \`${
+      componentReactPropsName(meta.slug)
+    }\`. Terminal: ${terminal}`,
     ...behaviors,
     "",
     ...guidanceLines(
@@ -127,6 +141,9 @@ function componentSection(source: ComponentAuthorGuideSource): string[] {
     ),
     `Examples: ${examples.map(exampleLabel).join(", ")}.`,
     "",
+    ...(source.props === undefined || source.props.length === 0
+      ? []
+      : [...source.props, ""]),
   ];
 }
 

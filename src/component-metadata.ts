@@ -9,8 +9,15 @@
 import {
   componentAuthorGuide as generatedComponentAuthorGuide,
   componentMetadata as generatedComponentMetadata,
+  packageVersion as generatedPackageVersion,
 } from "./generated/component-metadata.ts";
 import type { ComponentMeta } from "./types/component-meta.ts";
+
+/**
+ * The published version this Metadata and guide describe, so a consumer
+ * reading the guide can report exactly which release it authored against.
+ */
+export const packageVersion: string = generatedPackageVersion;
 
 /** Authored Metadata for every built-in Component, in Catalogue order. */
 export const componentMetadata: readonly ComponentMeta[] = Object.freeze(

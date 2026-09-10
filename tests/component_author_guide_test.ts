@@ -89,7 +89,7 @@ Deno.test("a future Component enrols in the guide with every Metadata fact", () 
   );
   assertStringIncludes(
     guide,
-    "React: `ProbePanel`. Terminal: `renderProbePanelCli`.",
+    "React: `ProbePanel` with `ProbePanelProps`. Terminal: `renderProbePanelCli`.",
   );
   assertStringIncludes(guide, "Browser behavior: `floating-surface`");
   assertStringIncludes(
@@ -105,6 +105,14 @@ Deno.test("a future Component enrols in the guide with every Metadata fact", () 
     "Accessibility:\n- The panel names its status as text before any glyph.\n",
   );
   assertStringIncludes(guide, "Examples: Probe panel at rest (`default`).");
+  const withProps = renderComponentAuthorGuide([{
+    ...source(complete),
+    props: ["Props: `ProbePanelProps`.", "- status: string"],
+  }]);
+  assertStringIncludes(
+    withProps,
+    "Examples: Probe panel at rest (`default`).\n\nProps: `ProbePanelProps`.\n- status: string\n",
+  );
   for (const purpose of complete.purposes ?? []) {
     const line = guide.split("\n").find((candidate) =>
       candidate.includes(`(\`${purpose}\`)`)
@@ -147,7 +155,7 @@ Deno.test("an exempt terminal stance carries its reason and web-only examples", 
   ]);
   assertStringIncludes(
     guide,
-    `React: \`ProbeField\`. Terminal: exempt — ${
+    `React: \`ProbeField\` with \`ProbeFieldProps\`. Terminal: exempt — ${
       exempt.cli.stance === "exempt" ? exempt.cli.reason : ""
     }`,
   );

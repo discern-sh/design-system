@@ -1,4 +1,5 @@
 import { assert, assertEquals, assertStringIncludes } from "@std/assert";
+import { packageVersion } from "../src/component-metadata.ts";
 import { dirname, fromFileUrl, join, relative } from "@std/path";
 import { packageManifest } from "../src/manifest.ts";
 import {
@@ -1049,6 +1050,11 @@ Deno.test("release verification builds generated prerequisites first", () => {
 
 Deno.test("release identity stays coherent across config and changelog", async () => {
   assertEquals(config.name, "@discern-sh/design-system");
+  assertEquals(
+    packageVersion,
+    config.version,
+    "the generated packageVersion lags deno.json; run deno task codegen",
+  );
   const changelog = await Deno.readTextFile(join(PACKAGE_ROOT, "CHANGELOG.md"));
   const heading = changelog.match(/^## (\d+\.\d+\.\d+\S*)/m);
   assert(heading, "the changelog has no release heading");

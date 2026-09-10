@@ -30,7 +30,7 @@ Read `CHANGELOG.md`'s `## Unreleased` section (or reconstruct one from `git log 
 In a worktree (or on `main` only with the user's explicit say-so):
 
 1. Retitle `## Unreleased` to `## <version>` in `CHANGELOG.md`; make sure every consumer-visible change since the last release is listed.
-2. Set `version` in **both** `deno.json` and `package.json`.
+2. Set `version` in **both** `deno.json` and `package.json`, then run `deno task codegen`: the `./components` entrypoint publishes a generated `packageVersion`, and the release test fails a bump that leaves it behind.
 3. Commit as `Bump version to <version>`, gate it green (`discern done`), and land it on `main`.
 
 ## 4. Tag and push — the remote must have both
