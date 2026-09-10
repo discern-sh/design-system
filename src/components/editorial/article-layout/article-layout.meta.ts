@@ -11,6 +11,13 @@ const meta = {
   description:
     "Responsive long-form reading shell with optional navigation and contextual rail around a primary article column.",
   purposes: ["building-documentation"],
+  useWhen: [
+    "A long-form article needs a primary reading column with optional navigation and a contextual rail that stack when width is limited.",
+    "Fragment links into headings and footnotes must restore focus and visible targets during browser history traversal.",
+  ],
+  notWhen: [
+    "Use Container when a page needs only a centred reading measure without navigation or a contextual rail.",
+  ],
   accessibility: [
     "The primary reading stream is an article; optional rails are labelled complementary landmarks.",
     "Source order keeps navigation, article, and supporting context understandable without the visual grid.",

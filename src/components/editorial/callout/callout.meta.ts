@@ -9,6 +9,15 @@ const meta = {
   cli: { stance: "rendered" },
   description:
     "Inset editorial note for context, interpretation, cautions, and successful outcomes without breaking the reading flow.",
+  useWhen: [
+    "An inset note offers context, interpretation, a caution, or a confirmed outcome beside the prose without breaking the reading flow.",
+    "The note has a heading and a semantic tone the reader should recognise at a glance.",
+  ],
+  notWhen: [
+    "Use Banner for a page-level status message that sits outside the reading flow.",
+    "Use Diagnostic for a machine-produced finding with location, severity, and evidence.",
+    "Use Blockquote or Pull quote for quoted material rather than an editorial note.",
+  ],
   accessibility: [
     "The callout is exposed as a note landmark with a real heading and never relies on colour alone for meaning.",
   ],

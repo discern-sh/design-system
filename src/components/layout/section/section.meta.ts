@@ -9,6 +9,13 @@ const meta = {
     "Semantic page section with tokenized surface and vertical rhythm.",
   cli: { stance: "rendered" },
   purposes: ["marketing-site"],
+  useWhen: [
+    "A page region needs semantic section boundaries, a tokenized surface, and consistent vertical rhythm between regions.",
+  ],
+  notWhen: [
+    "Use Container alone when the region needs a readable width but no surface or rhythm of its own.",
+    "Use Card for a bounded surface among peers rather than a full-width page region.",
+  ],
 } satisfies ComponentMeta;
 
 export const componentExampleVocabulary = [
