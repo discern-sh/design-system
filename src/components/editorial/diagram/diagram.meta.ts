@@ -24,6 +24,7 @@ const meta = {
     "The spec's required title and summary name the SVG while its kind-specific structural description preserves every authored fact, annotation, relationship, order, boundary, date, and direction.",
     "Title and summary are accessibility context, not visible canvas headings; surrounding document components own visible editorial prose.",
     "Semantic roles pair colour with labels, shapes, border treatment, or line treatment so colour is never the only distinction.",
+    "The SVG renders at its reference scale inside a keyboard-focusable viewport that scrolls horizontally; it never shrinks to fit the column, so a wide diagram scrolls rather than becoming unreadable.",
   ],
 } satisfies ComponentMeta;
 

@@ -19,6 +19,7 @@ import type {
   DiagramSceneElement,
   DiagramShape,
 } from "../../scene.ts";
+import type { DiagramLayoutMeasures } from "../../kind-meta.ts";
 import meta from "./timeline.meta.ts";
 import type {
   ValidatedTimelineDiagram,
@@ -386,6 +387,43 @@ function milestoneElements(
     }),
   ];
 }
+
+/** The measures this layout wraps text at and how a calendar's scene grows. */
+export const layoutMeasures: DiagramLayoutMeasures = {
+  text: [
+    {
+      text: "group label",
+      budget: "groupLabelLines",
+      width: T.labelColumnWidth - T.groupPadding * 2,
+      fontSize: G.text.primarySize,
+      fontRole: "interface",
+    },
+    {
+      text: "group annotation",
+      budget: "annotationLines",
+      width: T.labelColumnWidth - T.groupPadding * 2,
+      fontSize: G.text.annotationSize,
+      fontRole: "mono",
+    },
+    {
+      text: "row label",
+      budget: "rowLabelLines",
+      width: T.labelColumnWidth - T.groupPadding * 2,
+      fontSize: G.text.annotationSize,
+      fontRole: "interface",
+    },
+    {
+      text: "task or milestone label",
+      budget: "itemLabelLines",
+      width: T.itemLabelWidth,
+      fontSize: G.text.annotationSize,
+      fontRole: "interface",
+    },
+  ],
+  extent: [
+    `The label column is ${T.labelColumnWidth} units and the calendar at least ${T.minimumChartWidth}, widening with the range so that ticks stay ${T.minimumTickGap} units apart; each task or milestone lane adds ${T.itemLaneHeight} units of height.`,
+  ],
+};
 
 /** Lay a validated calendar plan into one projection-neutral scene. */
 export default function layoutTimelineDiagram(

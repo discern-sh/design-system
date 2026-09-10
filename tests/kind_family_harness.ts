@@ -113,7 +113,7 @@ export interface Validated${pascal} extends ${pascal}Spec {}\n`,
     ],
     [
       "layout",
-      "export default function layout(value: unknown): unknown { return value; }\n",
+      "export const layoutMeasures = { text: [], extent: [] };\nexport default function layout(value: unknown): unknown { return value; }\n",
     ],
     [
       "description",

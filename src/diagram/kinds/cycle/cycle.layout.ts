@@ -24,6 +24,7 @@ import type {
   DiagramShape,
   DiagramText,
 } from "../../scene.ts";
+import type { DiagramLayoutMeasures } from "../../kind-meta.ts";
 import meta from "./cycle.meta.ts";
 import type {
   ValidatedCycleDiagram,
@@ -388,6 +389,45 @@ function spokeLabel(
       "Shorten the relationship label or split the cycle into an overview and a focused exchange.",
   });
 }
+
+/** The measures this layout wraps text at and how a cycle's scene grows. */
+export const layoutMeasures: DiagramLayoutMeasures = {
+  text: [
+    {
+      text: "stage label",
+      budget: "stageLabelLines",
+      width: STAGE_MAXIMUM_TEXT_WIDTH,
+      fontSize: G.text.primarySize,
+      fontRole: "interface",
+    },
+    {
+      text: "hub label",
+      budget: "hubLabelLines",
+      width: HUB_MAXIMUM_TEXT_WIDTH,
+      fontSize: G.text.primarySize,
+      fontRole: "interface",
+    },
+    {
+      text: "stage or hub annotation",
+      budget: "annotationLines",
+      width: STAGE_MAXIMUM_TEXT_WIDTH,
+      fontSize: G.text.annotationSize,
+      fontRole: "mono",
+    },
+    {
+      text: "spoke label",
+      budget: "spokeLabelLines",
+      width: SPOKE_MAXIMUM_TEXT_WIDTH,
+      fontSize: G.text.edgeSize,
+      fontRole: "interface",
+    },
+  ],
+  extent: [
+    `Stages sit on a ring of at least ${MINIMUM_RING_RADIUS} units radius (${HUB_RING_RADIUS} with a hub), so a cycle spans at least ${
+      2 * MINIMUM_RING_RADIUS + STAGE_MINIMUM_WIDTH
+    } units before its labels widen it.`,
+  ],
+};
 
 /** Lay out authored stages clockwise, with hub relationships inside the ring. */
 export default function layoutCycleDiagram(

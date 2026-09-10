@@ -8,12 +8,39 @@
  * @module
  */
 
+import type { SceneFontRole } from "./font-metrics.ts";
+
 /** One measurable kind-specific density or safety ceiling. */
 export interface KindBudgetDefinition<Remedy extends string = string> {
   readonly limit: number;
   readonly unit: string;
   readonly remedy: Remedy;
   readonly description: string;
+}
+
+/**
+ * One wrapped text field's measure, published by a kind's layout so the
+ * generated author guide can state where lines break rather than leaving an
+ * author to discover the wrap width by trial.
+ */
+export interface KindTextMeasure {
+  /** The field as an author names it, such as "node label". */
+  readonly text: string;
+  /** The wrapped-line budget dimension this measure feeds. */
+  readonly budget: string;
+  /** Maximum line width in scene user-space units. */
+  readonly width: number;
+  /** Font size in scene user-space units. */
+  readonly fontSize: number;
+  readonly fontRole: SceneFontRole;
+}
+
+/** Layout facts one kind publishes for its generated author guide. */
+export interface KindLayoutMeasures {
+  /** Every wrapped text field, in the order an author meets them. */
+  readonly text: readonly KindTextMeasure[];
+  /** Sentences stating how the kind's scene grows, derived from its constants. */
+  readonly extent: readonly string[];
 }
 
 /** Authored identity, guidance, budgets, and terminal posture for one kind. */

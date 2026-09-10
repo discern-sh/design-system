@@ -24,6 +24,7 @@ import type {
   DiagramShape,
   DiagramText,
 } from "../../scene.ts";
+import type { DiagramLayoutMeasures } from "../../kind-meta.ts";
 import meta from "./sequence.meta.ts";
 import type {
   SequenceMessageKind,
@@ -399,6 +400,44 @@ function messagePlan(
     bottom: roundDiagramNumber(bottom),
   };
 }
+
+/** The measures this layout wraps text at and how a sequence's scene grows. */
+export const layoutMeasures: DiagramLayoutMeasures = {
+  text: [
+    {
+      text: "participant label",
+      budget: "participantLabelLines",
+      width: SEQUENCE_GEOMETRY.participantTextWidth,
+      fontSize: G.text.primarySize,
+      fontRole: "interface",
+    },
+    {
+      text: "participant annotation",
+      budget: "annotationLines",
+      width: SEQUENCE_GEOMETRY.participantTextWidth,
+      fontSize: G.text.annotationSize,
+      fontRole: "mono",
+    },
+    {
+      text: "message label",
+      budget: "messageLabelLines",
+      width: SEQUENCE_GEOMETRY.messageTextWidth,
+      fontSize: G.text.edgeSize,
+      fontRole: "interface",
+    },
+    {
+      text: "note",
+      budget: "noteLines",
+      width: SEQUENCE_GEOMETRY.noteTextWidth,
+      fontSize: G.text.annotationSize,
+      fontRole: "mono",
+    },
+  ],
+  extent: [
+    `Each participant owns a ${SEQUENCE_GEOMETRY.columnGap}-unit column, so the participant count sets the width almost exactly.`,
+    `Every message adds a ${SEQUENCE_GEOMETRY.messageRowGap}-unit row plus its wrapped label and any note, so the message count sets the height.`,
+  ],
+};
 
 /** Lay a validated sequence into one projection-neutral scene. */
 export default function layoutSequenceDiagram(

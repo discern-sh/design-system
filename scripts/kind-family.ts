@@ -7,7 +7,12 @@
  * writes the results.
  */
 
-import type { FamilyKindMeta } from "../src/internal/kind-meta.ts";
+import { wrapSceneText } from "../src/internal/font-metrics.ts";
+import type {
+  FamilyKindMeta,
+  KindLayoutMeasures,
+  KindTextMeasure,
+} from "../src/internal/kind-meta.ts";
 
 /** Recursively list files beneath one directory in stable path order. */
 export async function walk(directory: URL): Promise<URL[]> {
@@ -109,6 +114,13 @@ export interface KindFamilyConfig {
     cli: Record<string, unknown>,
     source: string,
   ) => void;
+  /**
+   * Whether every kind layout must export `layoutMeasures`, the wrapped
+   * text measures and extent facts the generated guide states per kind. A
+   * family whose kinds wrap budgeted text requires it so a future kind
+   * cannot leave authors guessing where its lines break.
+   */
+  readonly layoutMeasures?: "required" | "optional";
   /** Generated file names emitted into the generated root. */
   readonly generatedFiles: {
     readonly spec: string;
@@ -139,6 +151,8 @@ export interface KindFamilySource {
   readonly modUrl: URL;
   readonly cliUrl: URL;
   readonly meta: FamilyKindMeta;
+  /** The layout's published measures, when the layout exports them. */
+  readonly layoutMeasures?: KindLayoutMeasures;
 }
 
 /** Generated source family proving one canonical kind set. */
@@ -407,6 +421,107 @@ function validateKindReleaseCorpus(
   }
 }
 
+/**
+ * Read a kind layout's published `layoutMeasures` and prove every measure
+ * names one of the kind's own wrapped-line budgets, so the guide can never
+ * state a measure the layout does not enforce.
+ */
+async function loadLayoutMeasures(
+  family: KindFamilyConfig,
+  layoutUrl: URL,
+  meta: FamilyKindMeta,
+): Promise<KindLayoutMeasures | undefined> {
+  const module = await import(layoutUrl.href) as {
+    readonly layoutMeasures?: unknown;
+  };
+  const source = sourceName(layoutUrl);
+  const measures = module.layoutMeasures;
+  if (measures === undefined) {
+    if (family.layoutMeasures === "required") {
+      throw new Error(
+        `${source} must export layoutMeasures for the ${family.word} author guide`,
+      );
+    }
+    return undefined;
+  }
+  if (
+    typeof measures !== "object" || measures === null ||
+    !Array.isArray((measures as { text?: unknown }).text) ||
+    !Array.isArray((measures as { extent?: unknown }).extent)
+  ) {
+    throw new Error(`${source} layoutMeasures must carry text and extent`);
+  }
+  const { text, extent } = measures as KindLayoutMeasures;
+  for (const measure of text) {
+    if (
+      !nonEmptyString(measure.text) || !nonEmptyString(measure.budget) ||
+      meta.budgets[measure.budget] === undefined ||
+      !Number.isFinite(measure.width) || measure.width <= 0 ||
+      !Number.isFinite(measure.fontSize) || measure.fontSize <= 0 ||
+      !["interface", "mono"].includes(measure.fontRole)
+    ) {
+      throw new Error(
+        `${source} publishes a layout measure that names no ${family.word} budget or has no finite geometry`,
+      );
+    }
+  }
+  if (extent.some((sentence) => !nonEmptyString(sentence))) {
+    throw new Error(`${source} publishes an empty extent sentence`);
+  }
+  return measures as KindLayoutMeasures;
+}
+
+/**
+ * Ordinary prose wrapped with the layout's own measurer, so the guide's
+ * "about N characters per line" is the measurer's answer averaged over
+ * every full line, not an estimate from a glyph table.
+ */
+const REFERENCE_PROSE =
+  "Review each finding before the change is published, then record the outcome beside its cause so the next reader can trace every decision without asking who made it or why";
+
+function charactersPerLine(measure: KindTextMeasure): number {
+  const lines = wrapSceneText(
+    REFERENCE_PROSE,
+    measure.width,
+    measure.fontSize,
+    measure.fontRole,
+  );
+  const full = lines.slice(0, -1);
+  if (full.length === 0) return lines[0]?.text.length ?? 0;
+  return Math.round(
+    full.reduce((total, line) => total + line.text.length, 0) / full.length,
+  );
+}
+
+function layoutMeasureLines(
+  meta: FamilyKindMeta,
+  measures: KindLayoutMeasures | undefined,
+): readonly string[] {
+  if (measures === undefined) return [];
+  const font = (role: KindTextMeasure["fontRole"]): string =>
+    role === "mono" ? "monospace" : "interface";
+  return [
+    ...(measures.text.length === 0 ? [] : [
+      "Wrapping:",
+      ...measures.text.map((measure) =>
+        `- ${measure.text}: ${measure.width} units of ${measure.fontSize}-unit ${
+          font(measure.fontRole)
+        } type, about ${
+          charactersPerLine(measure)
+        } characters per line, at most ${
+          meta.budgets[measure.budget]?.limit
+        } lines (${measure.budget}).`
+      ),
+      "",
+    ]),
+    ...(measures.extent.length === 0 ? [] : [
+      "Extent:",
+      ...measures.extent.map((sentence) => `- ${sentence}`),
+      "",
+    ]),
+  ];
+}
+
 /** Discover a family's kinds and reject every incomplete or ambiguous anatomy. */
 export async function loadKindFamilySources(
   family: KindFamilyConfig,
@@ -469,6 +584,11 @@ export async function loadKindFamilySources(
     );
     await assertDefaultExport(urls.validationUrl, "function");
     await assertDefaultExport(urls.layoutUrl, "function");
+    const layoutMeasures = await loadLayoutMeasures(
+      family,
+      urls.layoutUrl,
+      module.default,
+    );
     await assertDefaultExport(urls.descriptionUrl, "function");
     await assertDefaultExport(urls.fixturesUrl, "array");
     const fixturesModule = await import(urls.fixturesUrl.href) as {
@@ -517,6 +637,7 @@ export async function loadKindFamilySources(
       metaUrl,
       ...urls,
       meta: module.default,
+      ...(layoutMeasures === undefined ? {} : { layoutMeasures }),
     });
   }
   const slugs = new Set<string>();
@@ -616,6 +737,7 @@ export type Validated${familyType} = ${
         `- ${dimension}: ${budget.limit} ${budget.unit}. ${budget.description} Remedy: ${budget.remedy}.`
       ),
       "",
+      ...layoutMeasureLines(kind.meta, kind.layoutMeasures),
     ]),
     ...(family.authorGuideAppendix ?? []),
   ].join("\n");

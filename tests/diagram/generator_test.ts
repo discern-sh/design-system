@@ -494,3 +494,62 @@ Deno.test("a second family's anatomy, identity, and corpus guards stay family-wo
     );
   }, SYNTHETIC_PREFIX);
 });
+
+Deno.test("a diagram kind layout must publish measures that name its own budgets", async () => {
+  await withTemporaryRoot(async (path, url) => {
+    await writeKind(path, "probe");
+    await Deno.writeTextFile(
+      `${path}/probe/probe.layout.ts`,
+      "export default function layout(value: unknown): unknown { return value; }\n",
+    );
+    await assertRejects(
+      () => loadDiagramKindSources(url),
+      Error,
+      "must export layoutMeasures",
+    );
+  });
+  await withTemporaryRoot(async (path, url) => {
+    await writeKind(path, "probe");
+    await Deno.writeTextFile(
+      `${path}/probe/probe.layout.ts`,
+      `export const layoutMeasures = { text: [{ text: "label", budget: "labelLines", width: 120, fontSize: 16, fontRole: "interface" }], extent: [] };
+export default function layout(value: unknown): unknown { return value; }
+`,
+    );
+    await assertRejects(
+      () => loadDiagramKindSources(url),
+      Error,
+      "names no diagram budget",
+    );
+  });
+});
+
+Deno.test("published measures reach the guide as wrapping and extent facts", async () => {
+  await withTemporaryRoot(async (path, url) => {
+    await writeKind(path, "probe");
+    await Deno.writeTextFile(
+      `${path}/probe/probe.layout.ts`,
+      `export const layoutMeasures = { text: [{ text: "entity label", budget: "entities", width: 176, fontSize: 16, fontRole: "interface" }], extent: ["Each entity is at least 112 units wide."] };
+export default function layout(value: unknown): unknown { return value; }
+`,
+    );
+    const generated = await generateDiagramKindSources(url);
+    assert(
+      generated.metadata.includes(
+        "- entity label: 176 units of 16-unit interface type, about ",
+      ),
+    );
+    assert(generated.metadata.includes("at most 3 lines (entities)."));
+    assert(
+      generated.metadata.includes("Extent:\\n- Each entity is at least 112"),
+    );
+    assert(generated.metadata.includes("## Common budgets"));
+    assert(generated.metadata.includes("checkDiagram"));
+  });
+  await withTemporaryRoot(async (path, url) => {
+    await writeKind(path, "probe");
+    const generated = await generateDiagramKindSources(url);
+    assert(!generated.metadata.includes("Wrapping:"));
+    assert(!generated.metadata.includes("Extent:"));
+  });
+});

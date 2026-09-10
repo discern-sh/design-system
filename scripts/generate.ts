@@ -5,6 +5,8 @@ import {
   type DiagramKindMeta,
 } from "../src/diagram/kind-meta.ts";
 import { DIAGRAM_BUDGET_REMEDIES } from "../src/diagram/errors.ts";
+import { DIAGRAM_COMMON_LIMITS } from "../src/diagram/limits.ts";
+import { CHART_COMMON_LIMITS } from "../src/chart/limits.ts";
 import {
   CHART_CLI_HONESTY_TIERS,
   CHART_RELEASE_POSTURES,
@@ -292,6 +294,33 @@ export async function loadComponentSources(): Promise<ComponentSource[]> {
   );
 }
 
+/**
+ * The safety and text limits every kind of one family applies before its
+ * own budgets, stated in the guide beside the kind budgets so an author
+ * meets the summary ceiling on the page rather than in a refusal.
+ */
+function commonBudgetLines(
+  word: string,
+  limits: {
+    readonly titleGraphemes: number;
+    readonly summaryGraphemes: number;
+    readonly identifierCharacters: number;
+    readonly jsonDepth: number;
+  },
+): readonly string[] {
+  return [
+    "## Common budgets",
+    "",
+    `Every ${word} kind applies these before its own budgets:`,
+    "",
+    `- titleGraphemes: ${limits.titleGraphemes} graphemes. The required title. Remedy: shorten-label.`,
+    `- summaryGraphemes: ${limits.summaryGraphemes} graphemes. The required summary. Remedy: shorten-label.`,
+    `- identifierCharacters: ${limits.identifierCharacters} characters. Every stable identifier. Remedy: shorten-label.`,
+    `- jsonDepth: ${limits.jsonDepth} levels. Nesting of the JSON-safe spec. Remedy: reduce-tier.`,
+    "",
+  ];
+}
+
 /** Family enrolment facts for the built-in diagram kind set. */
 function diagramKindFamily(root: URL): KindFamilyConfig {
   return {
@@ -301,6 +330,16 @@ function diagramKindFamily(root: URL): KindFamilyConfig {
     budgetRemedies: DIAGRAM_BUDGET_REMEDIES,
     releasePostures: DIAGRAM_RELEASE_POSTURES,
     cliStances: ["description", "enhanced"],
+    layoutMeasures: "required",
+    authorGuideAppendix: [
+      ...commonBudgetLines("diagram", DIAGRAM_COMMON_LIMITS),
+      "## Checking and width",
+      "",
+      "- Wrapped-line budgets bind long before grapheme budgets: text wraps at each kind's stated measure, so keep every line short rather than counting graphemes per label.",
+      "- Check a spec with `checkDiagram` from `./diagram` before rendering the page. It returns every budget finding with its path and remedy in one pass, then the one structural or layout refusal, if any, that stopped it.",
+      "- A diagram keeps its reference scale. The Diagram Component shows it inside a horizontally scrollable, keyboard-focusable viewport and never shrinks it to the column; a standalone SVG carries the same intrinsic width. Design to the measure you have using each kind's extent facts.",
+      "",
+    ],
     cli: {
       moduleStance: "enhanced",
       registryFile: "diagram-cli-registry.ts",
@@ -369,6 +408,11 @@ export function chartKindFamily(root: URL): KindFamilyConfig {
       return `CLI stance: enhanced; honesty tier: ${honesty}.`;
     },
     authorGuideAppendix: [
+      ...commonBudgetLines("chart", CHART_COMMON_LIMITS),
+      "## Checking",
+      "",
+      "- Check a spec with `checkChart` from `./chart` before rendering the page. It returns every budget finding with its path and remedy in one pass, then the one structural or layout refusal, if any, that stopped it.",
+      "",
       "## Refused forms",
       "",
       ...CHART_REFUSED_FORMS.map(({ form, remedy }) => `- ${form} — ${remedy}`),

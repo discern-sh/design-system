@@ -14,11 +14,13 @@ import {
   defineKindReleaseCorpus,
   type FamilyKindMeta,
   type KindBudgetDefinition,
+  type KindLayoutMeasures,
   type KindReleaseCase,
   type KindReleaseCorpus,
   kindReleaseFixtures,
   type KindReleaseInvalidCase,
   type KindReleaseRefusal,
+  type KindTextMeasure,
 } from "../internal/kind-meta.ts";
 import type { DiagramBudgetRemedy, DiagramErrorCode } from "./errors.ts";
 import type { DiagramCommonSpec } from "./spec.ts";
@@ -27,6 +29,12 @@ import type { DiagramCommonSpec } from "./spec.ts";
 export type DiagramBudgetDefinition = KindBudgetDefinition<
   DiagramBudgetRemedy
 >;
+
+/** One wrapped text field's measure, published by a diagram kind's layout. */
+export type DiagramTextMeasure = KindTextMeasure;
+
+/** Layout facts a diagram kind publishes for the generated author guide. */
+export type DiagramLayoutMeasures = KindLayoutMeasures;
 
 /** Kind whose terminal contract is the universal structural description. */
 export interface DiagramDescriptionCliStance {

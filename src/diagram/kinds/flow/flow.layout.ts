@@ -30,6 +30,7 @@ import type {
   DiagramShape,
   DiagramText,
 } from "../../scene.ts";
+import type { DiagramLayoutMeasures } from "../../kind-meta.ts";
 import meta from "./flow.meta.ts";
 import type {
   ValidatedFlowDiagram,
@@ -891,6 +892,45 @@ function placeEdgeLabels(
   }
   return labels;
 }
+
+/** The measures this layout wraps text at and how a flow's scene grows. */
+export const layoutMeasures: DiagramLayoutMeasures = {
+  text: [
+    {
+      text: "node label",
+      budget: "nodeLabelLines",
+      width: G.node.maximumTextWidth,
+      fontSize: G.text.primarySize,
+      fontRole: "interface",
+    },
+    {
+      text: "node label in a left-to-right flow",
+      budget: "nodeLabelLines",
+      width: G.node.horizontalMaximumTextWidth,
+      fontSize: G.text.primarySize,
+      fontRole: "interface",
+    },
+    {
+      text: "node annotation",
+      budget: "annotationLines",
+      width: G.node.maximumTextWidth,
+      fontSize: G.text.annotationSize,
+      fontRole: "mono",
+    },
+    {
+      text: "edge label",
+      budget: "edgeLabelLines",
+      width: G.text.edgeMaximumWidth,
+      fontSize: G.text.edgeSize,
+      fontRole: "interface",
+    },
+  ],
+  extent: [
+    `A tier is at least ${G.node.minimumWidth} units per node plus ${G.node.rankMemberGap} between nodes, and a decision is twice its label box; the widest tier sets the width.`,
+    `Ranks sit ${G.connector.baseRankGap} units apart top-to-bottom (${G.connector.horizontalRankGap} left-to-right) plus ${G.connector.laneGap} for each further lane crossing that boundary.`,
+    `Each tier-skipping or return edge adds a rail ${G.connector.externalGap} units outside the nodes plus ${G.connector.laneGap} per further edge on that side, and the canvas adds ${G.canvasPadding} on every side.`,
+  ],
+};
 
 /** Lay a validated flow into one projection-neutral scene. */
 export default function layoutFlowDiagram(

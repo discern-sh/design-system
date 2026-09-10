@@ -26,6 +26,7 @@ import type {
   DiagramShape,
   DiagramText,
 } from "../../scene.ts";
+import type { DiagramLayoutMeasures } from "../../kind-meta.ts";
 import meta from "./architecture.meta.ts";
 import type {
   ValidatedArchitectureDiagram,
@@ -737,6 +738,44 @@ function routeRelationships(
     });
   }
 }
+
+/** The measures this layout wraps text at and how a topology's scene grows. */
+export const layoutMeasures: DiagramLayoutMeasures = {
+  text: [
+    {
+      text: "node label",
+      budget: "nodeLabelLines",
+      width: G.node.maximumTextWidth,
+      fontSize: G.text.primarySize,
+      fontRole: "interface",
+    },
+    {
+      text: "node role and annotation",
+      budget: "annotationLines",
+      width: G.node.maximumTextWidth,
+      fontSize: G.text.annotationSize,
+      fontRole: "mono",
+    },
+    {
+      text: "boundary label",
+      budget: "groupLabelLines",
+      width: G.node.maximumTextWidth,
+      fontSize: G.text.annotationSize,
+      fontRole: "interface",
+    },
+    {
+      text: "relationship label",
+      budget: "relationshipLabelLines",
+      width: G.text.edgeMaximumWidth,
+      fontSize: G.text.edgeSize,
+      fontRole: "interface",
+    },
+  ],
+  extent: [
+    `Every node is at least ${G.node.minimumWidth} units wide and carries its role line, so a topology is rarely narrower than three node widths plus the gaps between them.`,
+    `Relationships route outside their endpoints, and each boundary adds padding around its members, so grouping widens the scene.`,
+  ],
+};
 
 /** Lay a validated bounded topology into one projection-neutral scene. */
 export default function layoutArchitectureDiagram(
