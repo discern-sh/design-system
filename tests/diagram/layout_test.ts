@@ -57,6 +57,11 @@ function contains(outer: DiagramRect, inner: DiagramRect): boolean {
     diagramRectBottom(inner) <= diagramRectBottom(outer) + EPSILON;
 }
 
+/**
+ * Independent oracle for "this point lies on the shape's outline": a
+ * diamond's edge, a straight side between the corner arcs, or one of the
+ * corner arcs themselves.
+ */
 function shapeBoundary(point: DiagramPoint, shape: DiagramShape): boolean {
   const { bounds } = shape;
   const centerX = bounds.x + bounds.width / 2;
@@ -67,12 +72,26 @@ function shapeBoundary(point: DiagramPoint, shape: DiagramShape): boolean {
         Math.abs(point.y - centerY) / (bounds.height / 2) - 1,
     ) <= EPSILON;
   }
-  return (Math.abs(point.x - centerX) <= EPSILON &&
-    (Math.abs(point.y - bounds.y) <= EPSILON ||
-      Math.abs(point.y - diagramRectBottom(bounds)) <= EPSILON)) ||
-    (Math.abs(point.y - centerY) <= EPSILON &&
-      (Math.abs(point.x - bounds.x) <= EPSILON ||
-        Math.abs(point.x - diagramRectRight(bounds)) <= EPSILON));
+  const right = diagramRectRight(bounds);
+  const bottom = diagramRectBottom(bounds);
+  const radius = Math.min(shape.radius, bounds.width / 2, bounds.height / 2);
+  const onHorizontalSide = (Math.abs(point.y - bounds.y) <= EPSILON ||
+    Math.abs(point.y - bottom) <= EPSILON) &&
+    point.x >= bounds.x + radius - EPSILON &&
+    point.x <= right - radius + EPSILON;
+  const onVerticalSide = (Math.abs(point.x - bounds.x) <= EPSILON ||
+    Math.abs(point.x - right) <= EPSILON) &&
+    point.y >= bounds.y + radius - EPSILON &&
+    point.y <= bottom - radius + EPSILON;
+  if (onHorizontalSide || onVerticalSide) return true;
+  const cornerX = point.x < centerX ? bounds.x + radius : right - radius;
+  const cornerY = point.y < centerY ? bounds.y + radius : bottom - radius;
+  const inCorner =
+    (point.x < centerX ? point.x <= cornerX : point.x >= cornerX) &&
+    (point.y < centerY ? point.y <= cornerY : point.y >= cornerY);
+  return inCorner &&
+    Math.abs(Math.hypot(point.x - cornerX, point.y - cornerY) - radius) <=
+      0.05;
 }
 
 function segments(connector: DiagramConnector): readonly (
@@ -335,11 +354,11 @@ function assertIndependentSceneInvariants(scene: DiagramScene): void {
   assertEquals(content.y, scene.canvas.padding);
   assertEquals(
     scene.canvas.bounds.width,
-    content.width + scene.canvas.padding * 2,
+    roundDiagramNumber(content.width + scene.canvas.padding * 2),
   );
   assertEquals(
     scene.canvas.bounds.height,
-    content.height + scene.canvas.padding * 2,
+    roundDiagramNumber(content.height + scene.canvas.padding * 2),
   );
   assertDeepFrozen(scene);
   assertStablePrecision(scene);
@@ -911,4 +930,190 @@ Deno.test("text placed at a half-hundredth keeps every line inside its bounds", 
       );
     }
   }
+});
+
+const centredChain = {
+  kind: "flow",
+  title: "Publish after a review",
+  summary: "A chain, a decision, two branches, and a merge back into a chain.",
+  nodes: [
+    { id: "start", label: "review merge", role: "start" },
+    { id: "collect", label: "every the retry" },
+    { id: "compose", label: "address input address compose" },
+    { id: "decide", label: "carefully retry", role: "decision" },
+    { id: "left", label: "carefully decision" },
+    { id: "right", label: "gather" },
+    { id: "merge", label: "finding merge" },
+    { id: "publish", label: "evidence" },
+    { id: "end", label: "evidence", role: "end" },
+  ],
+  edges: [
+    { id: "e1", from: "start", to: "collect" },
+    { id: "e2", from: "collect", to: "compose" },
+    { id: "e3", from: "compose", to: "decide" },
+    { id: "e4", from: "decide", to: "left", label: "Yes" },
+    { id: "e5", from: "decide", to: "right", label: "No" },
+    { id: "e6", from: "left", to: "merge" },
+    { id: "e7", from: "right", to: "merge" },
+    { id: "e8", from: "merge", to: "publish" },
+    { id: "e9", from: "publish", to: "end" },
+  ],
+} as const satisfies FlowDiagramSpec;
+
+function flowConnectors(spec: FlowDiagramSpec): readonly DiagramConnector[] {
+  const scene = layoutDiagram(spec);
+  assertIndependentSceneInvariants(scene);
+  return scene.elements.filter((element): element is DiagramConnector =>
+    element.kind === "connector"
+  );
+}
+
+Deno.test("flow routes a centred chain whose members round apart as one straight line", () => {
+  const connectors = flowConnectors(centredChain);
+  const merge = connectors.find((connector) => connector.semanticId === "e8");
+  assert(merge !== undefined);
+  const xs = new Set([...merge.points, merge.arrowhead.tip].map((p) => p.x));
+  assertEquals(xs.size, 1, "the chain edge has no horizontal jog");
+  assertEquals(overlappingRuns(connectors), []);
+});
+
+function tierSkippingMerge(shortFirst: boolean): FlowDiagramSpec {
+  const branches = [
+    { id: "short", label: "Short path" },
+    { id: "long1", label: "Long path one" },
+  ];
+  const branchEdges = [
+    { id: "e2", from: "decide", to: "short", label: "Short" },
+    { id: "e3", from: "decide", to: "long1", label: "Long" },
+  ];
+  return {
+    kind: "flow",
+    title: "Merge branches of unequal depth",
+    summary: "A one-node branch and a two-node branch meet at one merge.",
+    nodes: [
+      { id: "start", label: "Start", role: "start" },
+      { id: "decide", label: "Which path?", role: "decision" },
+      ...(shortFirst ? branches : [...branches].reverse()),
+      { id: "long2", label: "Long path two" },
+      { id: "merge", label: "Merge" },
+      { id: "end", label: "Done", role: "end" },
+    ],
+    edges: [
+      { id: "e1", from: "start", to: "decide" },
+      ...(shortFirst ? branchEdges : [...branchEdges].reverse()),
+      { id: "e4", from: "long1", to: "long2" },
+      { id: "e5", from: "short", to: "merge" },
+      { id: "e6", from: "long2", to: "merge" },
+      { id: "e7", from: "merge", to: "end" },
+    ],
+  };
+}
+
+Deno.test("flow gives tier-skipping merges their own lanes in either branch order", () => {
+  for (const shortFirst of [true, false]) {
+    const connectors = flowConnectors(tierSkippingMerge(shortFirst));
+    assertEquals(overlappingRuns(connectors), []);
+    assertEquals(repeatedPorts(connectors), []);
+  }
+});
+
+function returnsToStart(count: number): FlowDiagramSpec {
+  const sources = ["a", "b", "c"].slice(0, count);
+  return {
+    kind: "flow",
+    title: "Retry from several steps",
+    summary: "Each step may send the process back to the start.",
+    nodes: [
+      { id: "start", label: "Start", role: "start" },
+      { id: "a", label: "Step A" },
+      { id: "b", label: "Step B" },
+      { id: "c", label: "Step C" },
+      { id: "end", label: "Done", role: "end" },
+    ],
+    edges: [
+      { id: "e1", from: "start", to: "a" },
+      { id: "e2", from: "a", to: "b" },
+      { id: "e3", from: "b", to: "c" },
+      { id: "e4", from: "c", to: "end" },
+      ...sources.map((from) => ({
+        id: `return-${from}`,
+        from,
+        to: "start",
+        label: "Again",
+        emphasis: "return" as const,
+      })),
+    ],
+  };
+}
+
+Deno.test("flow attaches several returns to one capsule within its curved reach", () => {
+  for (const count of [1, 2, 3]) {
+    const scene = layoutDiagram(returnsToStart(count));
+    assertIndependentSceneInvariants(scene);
+    const start = scene.elements.find((element) =>
+      element.kind === "shape" && element.semanticId === "start"
+    );
+    assert(start?.kind === "shape" && start.shape === "capsule");
+    const centerY = start.bounds.y + start.bounds.height / 2;
+    const reach = start.radius * DIAGRAM_GEOMETRY.node.curvedPortReach;
+    for (const element of scene.elements) {
+      if (element.kind !== "connector" || element.style !== "return") continue;
+      assert(
+        Math.abs(element.arrowhead.tip.y - centerY) <= reach + EPSILON,
+        `${element.semanticId} attaches beyond the curved reach`,
+      );
+    }
+  }
+});
+
+function innerNodeReturns(
+  direction: NonNullable<FlowDiagramSpec["direction"]>,
+): FlowDiagramSpec {
+  return {
+    kind: "flow",
+    title: "Return into a second start and from an inner last step",
+    summary: "Returns leave and arrive at nodes that are not first in rank.",
+    direction,
+    nodes: [
+      { id: "s1", label: "First start", role: "start" },
+      { id: "s2", label: "Second start", role: "start" },
+      { id: "d", label: "Is the evidence sufficient now?", role: "decision" },
+      { id: "a", label: "Accept" },
+      { id: "z", label: "Finish", role: "end" },
+      { id: "b", label: "Reject", role: "step" },
+    ],
+    edges: [
+      { id: "e1", from: "s1", to: "d" },
+      { id: "e2", from: "s2", to: "d" },
+      { id: "e3", from: "d", to: "a", label: "Yes" },
+      { id: "e4", from: "d", to: "b", label: "No" },
+      { id: "e5", from: "a", to: "z" },
+      { id: "r1", from: "a", to: "s2", emphasis: "return" },
+      { id: "r2", from: "b", to: "s1", emphasis: "return" },
+      { id: "r3", from: "b", to: "d", emphasis: "return" },
+    ],
+  };
+}
+
+Deno.test("flow returns from and into inner nodes travel through boundary lanes", () => {
+  for (const direction of ["top-to-bottom", "left-to-right"] as const) {
+    const connectors = flowConnectors(innerNodeReturns(direction));
+    assertEquals(overlappingRuns(connectors), []);
+    assertEquals(repeatedPorts(connectors), []);
+  }
+});
+
+Deno.test("flow keeps decision diamonds no flatter than the arrowhead", () => {
+  const scene = layoutDiagram(innerNodeReturns("top-to-bottom"));
+  const decision = scene.elements.find((element) =>
+    element.kind === "shape" && element.semanticId === "d"
+  );
+  assert(decision?.kind === "shape" && decision.shape === "diamond");
+  const aspect = DIAGRAM_GEOMETRY.connector.arrowLength /
+    DIAGRAM_GEOMETRY.connector.arrowHalfWidth;
+  assert(
+    decision.bounds.width / decision.bounds.height <= aspect + EPSILON,
+    `a diamond ${decision.bounds.width} wide is only ${decision.bounds.height} tall`,
+  );
+  assertEquals(decision.bounds.height % DIAGRAM_GEOMETRY.rhythm, 0);
 });

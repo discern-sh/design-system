@@ -54,6 +54,18 @@ interface RoutedEdge {
 type FlowPortSide = "top" | "right" | "bottom" | "left";
 type FlowEndpoint = "source" | "target";
 
+/**
+ * Which lane an edge occupies at one rank boundary: an adjacent edge crosses
+ * the boundary once, while a tier-skipping edge leaves through a lane at its
+ * source boundary and arrives through another at its target boundary.
+ */
+type FlowLaneRole =
+  | "adjacent"
+  | "source"
+  | "target"
+  | "return-source"
+  | "return-target";
+
 interface FlowPortRequest {
   readonly edge: ValidatedFlowEdge;
   readonly endpoint: FlowEndpoint;
@@ -63,6 +75,15 @@ interface FlowPortRequest {
 }
 
 const G = DIAGRAM_GEOMETRY;
+
+/**
+ * A diamond's sides may slope at most this many units across per unit down.
+ * A horizontal arrowhead attaching off the vertex keeps its inner wing
+ * outside the fill exactly while the side is no flatter than the arrowhead
+ * itself, so a wide label never makes a decision unreachable from its side.
+ */
+const DECISION_MAXIMUM_ASPECT = G.connector.arrowLength /
+  G.connector.arrowHalfWidth;
 
 function layoutFailure(message: string, path: string, remedy: string): never {
   throw new DiagramValidationError({
@@ -138,7 +159,10 @@ function measureNode(
   );
   if (node.role === "decision") {
     width *= G.node.decisionScaleX;
-    height *= G.node.decisionScaleY;
+    height = Math.max(
+      height * G.node.decisionScaleY,
+      Math.ceil(width / DECISION_MAXIMUM_ASPECT / G.rhythm) * G.rhythm,
+    );
   }
   return {
     node,
@@ -155,21 +179,70 @@ function measureNode(
   };
 }
 
+/**
+ * A return edge leaves and arrives through the rail-facing side only when
+ * its node is first in its rank; an inner node would otherwise send the run
+ * straight through its siblings, so it uses a boundary lane instead.
+ */
+function returnUsesRail(node: ValidatedFlowNode): boolean {
+  return node.rankOrder === 0;
+}
+
+function laneKey(edge: ValidatedFlowEdge, role: FlowLaneRole): string {
+  return `${edge.id}\u0000${role}`;
+}
+
+/**
+ * The lanes one rank boundary must hold, in lane order. Edges bound for an
+ * external rail leave first, so their run out crosses no adjacent lane, and
+ * arrive last, so their run back in crosses none either; adjacent edges
+ * keep their authored order between them. The space before the first rank
+ * and after the last count as boundaries too, so an inner first-rank node
+ * can still receive a return and an inner last-rank node can still send one.
+ */
+function laneUsers(
+  spec: ValidatedFlowDiagram,
+  boundary: number,
+): readonly string[] {
+  const byId = new Map(spec.nodes.map((node) => [node.id, node]));
+  const leaving: string[] = [];
+  const adjacent: string[] = [];
+  const arriving: string[] = [];
+  for (const edge of spec.edges) {
+    const source = byId.get(edge.from);
+    const target = byId.get(edge.to);
+    if (source === undefined || target === undefined) continue;
+    const from = source.rank;
+    const to = target.rank;
+    if (edge.emphasis === "return") {
+      if (from === boundary && !returnUsesRail(source)) {
+        leaving.push(laneKey(edge, "return-source"));
+      }
+      if (to - 1 === boundary && !returnUsesRail(target)) {
+        arriving.push(laneKey(edge, "return-target"));
+      }
+      continue;
+    }
+    if (to === from + 1) {
+      if (from === boundary) adjacent.push(laneKey(edge, "adjacent"));
+      continue;
+    }
+    if (from === boundary) leaving.push(laneKey(edge, "source"));
+    if (to - 1 === boundary) arriving.push(laneKey(edge, "target"));
+  }
+  return [...leaving, ...adjacent, ...arriving];
+}
+
+/** The gap after one rank: the base rhythm plus room for every lane it holds. */
 function rankGap(
   spec: ValidatedFlowDiagram,
   boundary: number,
 ): number {
-  const crossing = spec.edges.filter((edge) => {
-    if (edge.emphasis === "return") return false;
-    const source = spec.nodes.find((node) => node.id === edge.from)?.rank ?? 0;
-    const target = spec.nodes.find((node) => node.id === edge.to)?.rank ?? 0;
-    return source <= boundary && target > boundary;
-  }).length;
   const base = spec.direction === "left-to-right"
     ? G.connector.horizontalRankGap
     : G.connector.baseRankGap;
-  return base + Math.max(0, crossing - 1) *
-      G.connector.laneGap;
+  return base +
+    Math.max(0, laneUsers(spec, boundary).length - 1) * G.connector.laneGap;
 }
 
 function placeNodes(
@@ -339,12 +412,13 @@ function endpointSide(
   spec: ValidatedFlowDiagram,
   edge: ValidatedFlowEdge,
   endpoint: FlowEndpoint,
+  plan: NodePlan,
 ): FlowPortSide {
   if (spec.direction === "top-to-bottom") {
-    if (edge.emphasis === "return") return "left";
+    if (edge.emphasis === "return" && returnUsesRail(plan.node)) return "left";
     return endpoint === "source" ? "bottom" : "top";
   }
-  if (edge.emphasis === "return") return "top";
+  if (edge.emphasis === "return" && returnUsesRail(plan.node)) return "top";
   return endpoint === "source" ? "right" : "left";
 }
 
@@ -431,7 +505,10 @@ function portPoint(
   const halfAxis = horizontalSide
     ? plan.bounds.width / 2
     : plan.bounds.height / 2;
-  const maximumOffset = Math.max(0, halfAxis - 1);
+  const radius = nodeRadius(plan);
+  const maximumOffset = plan.node.role === "decision"
+    ? Math.max(0, halfAxis - 1)
+    : Math.max(0, halfAxis - radius + radius * G.node.curvedPortReach);
   const offset = distributedPortOffset(index, count, maximumOffset);
   if (plan.node.role !== "decision") {
     return roundedPortPoint(plan, side, offset);
@@ -472,7 +549,7 @@ function assignEdgePorts(
       const plan = byId.get(endpoint === "source" ? edge.from : edge.to);
       const peer = byId.get(endpoint === "source" ? edge.to : edge.from);
       if (plan === undefined || peer === undefined) continue;
-      const side = endpointSide(spec, edge, endpoint);
+      const side = endpointSide(spec, edge, endpoint, plan);
       const peerCenter = centerOf(peer.bounds);
       const request = {
         edge,
@@ -523,39 +600,63 @@ function connectorFromPath(
   });
 }
 
+/** Give every lane user at each boundary its own deterministic lane. */
+function assignLanes(
+  spec: ValidatedFlowDiagram,
+  plans: readonly NodePlan[],
+): ReadonlyMap<string, number> {
+  const allBounds = diagramRectUnion(plans.map((plan) => plan.bounds));
+  const lanes = new Map<string, number>();
+  const vertical = spec.direction === "top-to-bottom";
+  for (let boundary = -1; boundary < spec.ranks.length; boundary += 1) {
+    const users = laneUsers(spec, boundary);
+    if (users.length === 0) continue;
+    const spread = (users.length - 1) / 2 * G.connector.laneGap;
+    const center = boundary < 0
+      ? roundDiagramNumber(
+        (vertical ? allBounds.y : allBounds.x) - G.connector.externalGap -
+          spread,
+      )
+      : boundary < spec.ranks.length - 1
+      ? boundaryAfterRank(spec, plans, boundary)
+      : roundDiagramNumber(
+        (vertical
+          ? diagramRectBottom(allBounds)
+          : diagramRectRight(allBounds)) + G.connector.externalGap + spread,
+      );
+    users.forEach((key, index) =>
+      lanes.set(
+        key,
+        roundDiagramNumber(
+          center + (index - (users.length - 1) / 2) * G.connector.laneGap,
+        ),
+      )
+    );
+  }
+  return lanes;
+}
+
 function routeEdges(
   spec: ValidatedFlowDiagram,
   plans: readonly NodePlan[],
 ): readonly RoutedEdge[] {
   const byId = new Map(plans.map((plan) => [plan.node.id, plan]));
   const ports = assignEdgePorts(spec, plans);
+  const lanes = assignLanes(spec, plans);
   const allBounds = diagramRectUnion(plans.map((plan) => plan.bounds));
-  const adjacent = spec.edges.filter((edge) =>
-    edge.emphasis !== "return" &&
-    (byId.get(edge.to)?.node.rank ?? 0) ===
-      (byId.get(edge.from)?.node.rank ?? 0) + 1
-  );
-  const laneByEdge = new Map<string, number>();
-  for (let boundary = 0; boundary < spec.ranks.length - 1; boundary += 1) {
-    const crossing = adjacent.filter((edge) =>
-      byId.get(edge.from)?.node.rank === boundary
-    );
-    const center = boundaryAfterRank(spec, plans, boundary);
-    crossing.forEach((edge, index) =>
-      laneByEdge.set(
-        edge.id,
-        roundDiagramNumber(
-          center + (index - (crossing.length - 1) / 2) * G.connector.laneGap,
-        ),
-      )
-    );
-  }
   const long = spec.edges.filter((edge) =>
     edge.emphasis !== "return" &&
     (byId.get(edge.to)?.node.rank ?? 0) >
       (byId.get(edge.from)?.node.rank ?? 0) + 1
   );
   const returns = spec.edges.filter((edge) => edge.emphasis === "return");
+  const lane = (edge: ValidatedFlowEdge, role: FlowLaneRole): number => {
+    const value = lanes.get(laneKey(edge, role));
+    if (value === undefined) {
+      internalLayoutFailure(`Edge ${edge.id} has no ${role} lane.`, edge.id);
+    }
+    return value;
+  };
   return spec.edges.map((edge) => {
     const source = byId.get(edge.from);
     const target = byId.get(edge.to);
@@ -579,27 +680,33 @@ function routeEdges(
         const index = returns.indexOf(edge);
         const external = allBounds.x - G.connector.externalGap -
           index * G.connector.laneGap;
-        path = [
-          sourcePort,
-          { x: external, y: sourcePort.y },
-          { x: external, y: targetPort.y },
-          targetPort,
-        ];
+        const exit = returnUsesRail(source.node)
+          ? [{ x: external, y: sourcePort.y }]
+          : [
+            { x: sourcePort.x, y: lane(edge, "return-source") },
+            { x: external, y: lane(edge, "return-source") },
+          ];
+        const entry = returnUsesRail(target.node)
+          ? [{ x: external, y: targetPort.y }]
+          : [
+            { x: external, y: lane(edge, "return-target") },
+            { x: targetPort.x, y: lane(edge, "return-target") },
+          ];
+        path = [sourcePort, ...exit, ...entry, targetPort];
       } else if (target.node.rank === source.node.rank + 1) {
-        const lane = laneByEdge.get(edge.id) ??
-          boundaryAfterRank(spec, plans, source.node.rank);
+        const crossing = lane(edge, "adjacent");
         path = [
           sourcePort,
-          { x: sourcePort.x, y: lane },
-          { x: targetPort.x, y: lane },
+          { x: sourcePort.x, y: crossing },
+          { x: targetPort.x, y: crossing },
           targetPort,
         ];
       } else {
         const index = long.indexOf(edge);
         const external = diagramRectRight(allBounds) + G.connector.externalGap +
           index * G.connector.laneGap;
-        const sourceLane = boundaryAfterRank(spec, plans, source.node.rank);
-        const targetLane = boundaryAfterRank(spec, plans, target.node.rank - 1);
+        const sourceLane = lane(edge, "source");
+        const targetLane = lane(edge, "target");
         path = [
           sourcePort,
           { x: sourcePort.x, y: sourceLane },
@@ -613,27 +720,33 @@ function routeEdges(
       const index = returns.indexOf(edge);
       const external = allBounds.y - G.connector.externalGap -
         index * G.connector.laneGap;
-      path = [
-        sourcePort,
-        { x: sourcePort.x, y: external },
-        { x: targetPort.x, y: external },
-        targetPort,
-      ];
+      const exit = returnUsesRail(source.node)
+        ? [{ x: sourcePort.x, y: external }]
+        : [
+          { x: lane(edge, "return-source"), y: sourcePort.y },
+          { x: lane(edge, "return-source"), y: external },
+        ];
+      const entry = returnUsesRail(target.node)
+        ? [{ x: targetPort.x, y: external }]
+        : [
+          { x: lane(edge, "return-target"), y: external },
+          { x: lane(edge, "return-target"), y: targetPort.y },
+        ];
+      path = [sourcePort, ...exit, ...entry, targetPort];
     } else if (target.node.rank === source.node.rank + 1) {
-      const lane = laneByEdge.get(edge.id) ??
-        boundaryAfterRank(spec, plans, source.node.rank);
+      const crossing = lane(edge, "adjacent");
       path = [
         sourcePort,
-        { x: lane, y: sourcePort.y },
-        { x: lane, y: targetPort.y },
+        { x: crossing, y: sourcePort.y },
+        { x: crossing, y: targetPort.y },
         targetPort,
       ];
     } else {
       const index = long.indexOf(edge);
       const external = diagramRectBottom(allBounds) + G.connector.externalGap +
         index * G.connector.laneGap;
-      const sourceLane = boundaryAfterRank(spec, plans, source.node.rank);
-      const targetLane = boundaryAfterRank(spec, plans, target.node.rank - 1);
+      const sourceLane = lane(edge, "source");
+      const targetLane = lane(edge, "target");
       path = [
         sourcePort,
         { x: sourceLane, y: sourcePort.y },
@@ -675,7 +788,7 @@ function labelCandidates(
     const centerX = (start.x + end.x) / 2;
     const centerY = (start.y + end.y) / 2;
     const offset = G.connector.labelGap + G.text.clearance;
-    if (Math.abs(start.y - end.y) <= 0.02) {
+    if (Math.abs(start.y - end.y) <= G.tolerance) {
       candidates.push(
         {
           x: centerX - text.width / 2,
@@ -724,20 +837,21 @@ function placeEdgeLabels(
   routed: readonly RoutedEdge[],
   nodeElementsValue: readonly DiagramSceneElement[],
 ): readonly DiagramText[] {
+  const clearance = G.text.clearance + G.tolerance;
   const obstacles: DiagramRect[] = nodeElementsValue.map((element) =>
-    expandDiagramRect(element.bounds, G.text.clearance)
+    expandDiagramRect(element.bounds, clearance)
   );
   const connectorObstacles = routed.flatMap(({ connector }) => {
     const bodies = connector.points.slice(1).map((end, index) =>
       segmentBounds(
         connector.points[index] as DiagramPoint,
         end,
-        G.text.clearance,
+        clearance,
       )
     );
     return [
       ...bodies,
-      expandDiagramRect(connector.arrowhead.bounds, G.text.clearance),
+      expandDiagramRect(connector.arrowhead.bounds, clearance),
     ];
   });
   const labels: DiagramText[] = [];
@@ -773,7 +887,7 @@ function placeEdgeLabels(
       bounds.y,
     );
     labels.push(text);
-    obstacles.push(expandDiagramRect(text.bounds, G.text.clearance));
+    obstacles.push(expandDiagramRect(text.bounds, clearance));
   }
   return labels;
 }
