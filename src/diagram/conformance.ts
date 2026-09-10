@@ -35,7 +35,7 @@ import type {
   DiagramText,
 } from "./scene.ts";
 
-const EPSILON = 0.02;
+const EPSILON = DIAGRAM_GEOMETRY.tolerance;
 const ATTACHMENT_TOLERANCE = 0.05;
 const TEXT_CLEARANCE = DIAGRAM_GEOMETRY.text.clearance;
 const ARROW_CLEARANCE = DIAGRAM_GEOMETRY.connector.arrowClearance;
@@ -122,12 +122,15 @@ function segmentCrossesShapeInterior(
   shape: DiagramShape,
 ): boolean {
   const interval = segmentRectInterval(start, end, shape.bounds);
-  if (interval === undefined || interval[1] - interval[0] <= EPSILON) {
-    return false;
-  }
   const dx = end.x - start.x;
   const dy = end.y - start.y;
   const lengthSquared = dx * dx + dy * dy;
+  if (
+    interval === undefined ||
+    (interval[1] - interval[0]) * Math.sqrt(lengthSquared) <= EPSILON
+  ) {
+    return false;
+  }
   if (lengthSquared <= EPSILON) return pointStrictlyInShape(start, shape);
   const centerX = shape.bounds.x + shape.bounds.width / 2;
   const centerY = shape.bounds.y + shape.bounds.height / 2;
@@ -656,20 +659,23 @@ export function conformDiagramScene(scene: DiagramScene): DiagramScene {
     ) {
       defect(
         `Connector ${connector.semanticId} arrowhead passes behind its target fill.`,
+        { connector: connector.semanticId, node: target.semanticId },
       );
     }
     const second = connector.points[1];
     if (
       source.kind === "shape" && second !== undefined &&
-      pointStrictlyInRect(second, source.bounds)
+      pointStrictlyInShape(second, source)
     ) {
       defect(
         `Connector ${connector.semanticId} passes behind its source fill.`,
+        { connector: connector.semanticId, node: source.semanticId },
       );
     }
-    if (target.kind === "shape" && pointStrictlyInRect(last, target.bounds)) {
+    if (target.kind === "shape" && pointStrictlyInShape(last, target)) {
       defect(
         `Connector ${connector.semanticId} passes behind its target fill.`,
+        { connector: connector.semanticId, node: target.semanticId },
       );
     }
     if (
@@ -680,7 +686,10 @@ export function conformDiagramScene(scene: DiagramScene): DiagramScene {
     }
     for (const [start, end] of connectorSegments(connector)) {
       if (equalPoint(start, end)) {
-        defect(`Connector ${connector.semanticId} contains a zero-length run.`);
+        defect(
+          `Connector ${connector.semanticId} contains a zero-length run.`,
+          { connector: connector.semanticId, x: start.x, y: start.y },
+        );
       }
       if (
         connector.routing === "orthogonal" &&
@@ -689,6 +698,7 @@ export function conformDiagramScene(scene: DiagramScene): DiagramScene {
       ) {
         defect(
           `Orthogonal connector ${connector.semanticId} contains a diagonal segment.`,
+          { connector: connector.semanticId },
         );
       }
       for (const shape of shapes) {
@@ -698,6 +708,7 @@ export function conformDiagramScene(scene: DiagramScene): DiagramScene {
               `Connector ${connector.semanticId} passes behind its ${
                 shape === source ? "source" : "target"
               } fill.`,
+              { connector: connector.semanticId, node: shape.semanticId },
             );
           }
           continue;
@@ -711,6 +722,7 @@ export function conformDiagramScene(scene: DiagramScene): DiagramScene {
         ) {
           defect(
             `Connector ${connector.semanticId} crosses unrelated node ${shape.semanticId}.`,
+            { connector: connector.semanticId, node: shape.semanticId },
           );
         }
       }
@@ -722,7 +734,10 @@ export function conformDiagramScene(scene: DiagramScene): DiagramScene {
             expandDiagramRect(text.bounds, TEXT_CLEARANCE),
           )
         ) {
-          defect(`Connector ${connector.semanticId} crosses text ${text.id}.`);
+          defect(
+            `Connector ${connector.semanticId} crosses text ${text.id}.`,
+            { connector: connector.semanticId, text: text.id },
+          );
         }
       }
     }
@@ -737,6 +752,7 @@ export function conformDiagramScene(scene: DiagramScene): DiagramScene {
       ) {
         defect(
           `Connector ${connector.semanticId} arrowhead lacks node clearance.`,
+          { connector: connector.semanticId, node: shape.semanticId },
         );
       }
     }
@@ -750,6 +766,7 @@ export function conformDiagramScene(scene: DiagramScene): DiagramScene {
       ) {
         defect(
           `Connector ${connector.semanticId} arrowhead lacks text clearance.`,
+          { connector: connector.semanticId, text: text.id },
         );
       }
     }
@@ -778,6 +795,11 @@ export function conformDiagramScene(scene: DiagramScene): DiagramScene {
       ) {
         defect(
           `Connectors ${leftPort.relationshipId} and ${rightPort.relationshipId} reuse node ${leftPort.nodeId} port.`,
+          {
+            connector: leftPort.relationshipId,
+            other: rightPort.relationshipId,
+            node: leftPort.nodeId,
+          },
         );
       }
     }
@@ -796,6 +818,7 @@ export function conformDiagramScene(scene: DiagramScene): DiagramScene {
         ) {
           defect(
             `Connector ${leftConnector.semanticId} retraces a positive-length run.`,
+            { connector: leftConnector.semanticId },
           );
         }
       }
@@ -812,6 +835,10 @@ export function conformDiagramScene(scene: DiagramScene): DiagramScene {
       ) {
         defect(
           `Connectors ${leftConnector.semanticId} and ${rightConnector.semanticId} overlap along a positive-length run.`,
+          {
+            connector: leftConnector.semanticId,
+            other: rightConnector.semanticId,
+          },
         );
       }
     }

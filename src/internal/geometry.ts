@@ -135,7 +135,12 @@ export function scenePointInRect(
     point.y <= sceneRectBottom(rect) + epsilon;
 }
 
-/** Parametric [entry, exit] interval where a segment meets bounds, if any. */
+/**
+ * Parametric [entry, exit] interval where a segment meets bounds, if any.
+ * The tolerance is a distance in scene units on every axis, so a long
+ * segment that stops short of the bounds by more than `epsilon` never
+ * counts as touching them.
+ */
 export function sceneSegmentRectInterval(
   start: ScenePoint,
   end: ScenePoint,
@@ -144,6 +149,7 @@ export function sceneSegmentRectInterval(
 ): readonly [number, number] | undefined {
   const dx = end.x - start.x;
   const dy = end.y - start.y;
+  const length = Math.hypot(dx, dy);
   let entry = 0;
   let exit = 1;
   const boundaries = [
@@ -160,7 +166,7 @@ export function sceneSegmentRectInterval(
     const ratio = distance / direction;
     if (direction < 0) entry = Math.max(entry, ratio);
     else exit = Math.min(exit, ratio);
-    if (entry > exit + epsilon) return undefined;
+    if ((entry - exit) * length > epsilon) return undefined;
   }
   return [entry, exit];
 }

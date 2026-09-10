@@ -117,7 +117,7 @@ export class DiagramConformanceError extends DiagramValidationError {
       message,
       facts,
       remedy:
-        "Fix the owning kind layout or the shared geometry authority; do not project this scene.",
+        "The package's own layout produced a scene it refuses to project, so this is a layout defect for this shape rather than an authoring error; report the spec to the package. Until it is fixed, restructure: equalise the depth of merging branches, keep one return edge per target, shorten labels, or split the overview.",
     });
   }
 }

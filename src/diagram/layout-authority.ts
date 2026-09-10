@@ -102,12 +102,17 @@ export function diagramRectCenter(rect: DiagramRect): DiagramPoint {
   };
 }
 
-/** Remove repeated neighboring points and round the remaining path once. */
+/**
+ * Round a path once and collapse every run shorter than the shared
+ * coincidence tolerance, snapping each coordinate to its predecessor so a
+ * centred column whose members round to neighbouring hundredths still
+ * routes as one straight line.
+ */
 export function compactDiagramPoints(
   points: readonly DiagramPoint[],
 ): readonly DiagramPoint[] {
   const compact: DiagramPoint[] = [];
-  const precisionStep = 10 ** -DIAGRAM_GEOMETRY.precision;
+  const { tolerance } = DIAGRAM_GEOMETRY;
   for (const point of points) {
     let rounded = {
       x: roundDiagramNumber(point.x),
@@ -116,10 +121,10 @@ export function compactDiagramPoints(
     const previous = compact.at(-1);
     if (previous !== undefined) {
       rounded = {
-        x: Math.abs(previous.x - rounded.x) <= precisionStep
+        x: Math.abs(previous.x - rounded.x) <= tolerance
           ? previous.x
           : rounded.x,
-        y: Math.abs(previous.y - rounded.y) <= precisionStep
+        y: Math.abs(previous.y - rounded.y) <= tolerance
           ? previous.y
           : rounded.y,
       };

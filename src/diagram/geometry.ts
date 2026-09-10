@@ -19,6 +19,13 @@ import type { DiagramPoint, DiagramRect } from "./scene.ts";
 export const DIAGRAM_GEOMETRY = Object.freeze({
   rhythm: 4,
   precision: SCENE_PRECISION,
+  /**
+   * Coincidence tolerance in user-space units. Layout compaction merges
+   * neighbouring points closer than this, and conformance treats such points
+   * as equal, so a rounding jog can never survive one authority only to be
+   * refused by the other.
+   */
+  tolerance: 0.02,
   canvasPadding: 24,
   node: Object.freeze({
     minimumWidth: 112,
@@ -32,6 +39,13 @@ export const DIAGRAM_GEOMETRY = Object.freeze({
     decisionScaleX: 2,
     decisionScaleY: 2,
     rankMemberGap: 48,
+    /**
+     * How far along a rounded corner's radius a connector port may sit, as a
+     * fraction of that radius. Keeping ports within the first 45 degrees of
+     * the curve keeps every approach close to perpendicular, so an arrowhead
+     * never has to bite into a capsule's tip.
+     */
+    curvedPortReach: Math.SQRT1_2,
   }),
   text: Object.freeze({
     primarySize: 16,

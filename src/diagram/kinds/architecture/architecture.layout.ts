@@ -609,7 +609,7 @@ function routeRelationships(
         const gapStart = diagramRectRight(sourcePlan.bounds);
         const gapEnd = targetPlan.bounds.x;
         const centerX = roundDiagramNumber((gapStart + gapEnd) / 2);
-        if (Math.abs(source.y - target.y) <= 0.02) {
+        if (Math.abs(source.y - target.y) <= G.tolerance) {
           path = [source, target];
           labelCenterX = centerX;
           labelTop = source.y - LABEL_GAP - plan.label.height;
@@ -633,7 +633,7 @@ function routeRelationships(
         const gapEnd = targetPlan.bounds.y;
         const centerY = roundDiagramNumber((gapStart + gapEnd) / 2);
         labelTop = roundDiagramNumber(centerY - plan.label.height / 2);
-        if (Math.abs(source.x - target.x) <= 0.02) {
+        if (Math.abs(source.x - target.x) <= G.tolerance) {
           path = [source, target];
           labelCenterX = roundDiagramNumber(
             source.x + LABEL_GAP + plan.label.width / 2,

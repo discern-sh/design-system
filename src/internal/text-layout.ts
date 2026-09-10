@@ -75,18 +75,24 @@ export interface PositionedSceneText {
   readonly lines: readonly PositionedSceneTextLine[];
 }
 
-/** Centre a measured block and its lines around one stable horizontal centre. */
+/**
+ * Centre a measured block and its lines around one stable horizontal centre.
+ * The top edge is rounded once and every baseline derives from that rounded
+ * value, so a block placed at a half-hundredth cannot round its bounds one
+ * way and its first line the other.
+ */
 export function positionSceneText(options: {
   readonly measured: MeasuredSceneText;
   readonly centerX: number;
   readonly top: number;
 }): PositionedSceneText {
+  const top = roundToPrecision(options.top, SCENE_PRECISION);
   const bounds = {
     x: roundToPrecision(
       options.centerX - options.measured.width / 2,
       SCENE_PRECISION,
     ),
-    y: roundToPrecision(options.top, SCENE_PRECISION),
+    y: top,
     width: options.measured.width,
     height: options.measured.height,
   };
@@ -94,8 +100,7 @@ export function positionSceneText(options: {
     text: line.text,
     x: roundToPrecision(options.centerX - line.width / 2, SCENE_PRECISION),
     baseline: roundToPrecision(
-      options.top + index * options.measured.lineHeight +
-        options.measured.fontSize,
+      top + index * options.measured.lineHeight + options.measured.fontSize,
       SCENE_PRECISION,
     ),
     width: line.width,

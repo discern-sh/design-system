@@ -15,10 +15,13 @@ import {
   roundDiagramNumber,
 } from "../../src/diagram/geometry.ts";
 import {
+  compactDiagramPoints,
   createDiagramConnector,
   createDiagramGuide,
   translateDiagramElement,
 } from "../../src/diagram/layout-authority.ts";
+import { sceneSegmentIntersectsRect } from "../../src/internal/geometry.ts";
+import { positionSceneText } from "../../src/internal/text-layout.ts";
 import type {
   DiagramConnector,
   DiagramPoint,
@@ -790,4 +793,122 @@ Deno.test("shared conformance rejects orphaned scene members", () => {
   const error = assertThrows(() => conformDiagramScene(scene));
   assertInstanceOf(error, DiagramConformanceError);
   assert(error.message.includes("reachable exactly once"));
+});
+
+Deno.test("path compaction collapses runs shorter than the shared tolerance", () => {
+  const jog = compactDiagramPoints([
+    { x: 200.48, y: 972 },
+    { x: 200.48, y: 1020 },
+    { x: 200.49, y: 1020 },
+    { x: 200.49, y: 1058 },
+  ]);
+  assertEquals(jog, [
+    { x: 200.48, y: 972 },
+    { x: 200.48, y: 1020 },
+    { x: 200.48, y: 1058 },
+  ]);
+  const step = DIAGRAM_GEOMETRY.tolerance + 0.01;
+  const kept = compactDiagramPoints([
+    { x: 10, y: 10 },
+    { x: 10 + step, y: 10 },
+  ]);
+  assertEquals(kept.length, 2);
+});
+
+Deno.test("segment tolerance is a distance, not a fraction of the segment", () => {
+  const label = { x: 242.6, y: 1375.5, width: 94.45, height: 25 };
+  const clear = sceneSegmentIntersectsRect(
+    { x: 338.49, y: 1382 },
+    { x: 533.06, y: 1382 },
+    label,
+    DIAGRAM_GEOMETRY.tolerance,
+  );
+  assertEquals(
+    clear,
+    false,
+    "a run 1.44 units clear of a label never crosses it",
+  );
+  const touching = sceneSegmentIntersectsRect(
+    { x: 337.06, y: 1382 },
+    { x: 533.06, y: 1382 },
+    label,
+    DIAGRAM_GEOMETRY.tolerance,
+  );
+  assertEquals(touching, true, "a run within the tolerance touches");
+  const crossing = sceneSegmentIntersectsRect(
+    { x: 300, y: 1382 },
+    { x: 533.06, y: 1382 },
+    label,
+    DIAGRAM_GEOMETRY.tolerance,
+  );
+  assertEquals(crossing, true);
+});
+
+Deno.test("fill checks judge the endpoint shape, not its bounding box", () => {
+  const capsule: DiagramShape = {
+    kind: "shape",
+    id: "start-shape",
+    semanticId: "start",
+    shape: "capsule",
+    style: "start",
+    bounds: { x: 200, y: 100, width: 112, height: 56 },
+    radius: 28,
+  };
+  const source: DiagramShape = {
+    ...syntheticShape("origin", 20, 300),
+    id: "origin-shape",
+  };
+  const offset = 26;
+  const inset = 28 - Math.sqrt(28 ** 2 - offset ** 2);
+  const tip = {
+    x: roundDiagramNumber(capsule.bounds.x + inset),
+    y: roundDiagramNumber(capsule.bounds.y + 28 - offset),
+  };
+  const connector = createDiagramConnector({
+    id: "return-connector",
+    semanticId: "return",
+    sourceId: "origin",
+    targetId: "start",
+    style: "return",
+    routing: "orthogonal",
+    pathWithTip: [
+      { x: 20, y: 320 },
+      { x: 5, y: 320 },
+      { x: 5, y: tip.y },
+      tip,
+    ],
+  });
+  const base = connector.points.at(-1);
+  assert(base !== undefined);
+  assert(
+    base.x > capsule.bounds.x,
+    "the arrow base sits inside the capsule's bounding box",
+  );
+  const scene = conformDiagramScene(
+    syntheticScene([source, capsule, connector]),
+  );
+  assertEquals(scene.elements.length, 3);
+});
+
+Deno.test("text placed at a half-hundredth keeps every line inside its bounds", () => {
+  const measured = {
+    lines: [{ text: "Review", width: 46.4 }, { text: "again", width: 38.2 }],
+    width: 46.4,
+    height: 40,
+    fontRole: "interface" as const,
+    fontSize: 16,
+    lineHeight: 20,
+  };
+  for (const top of [100.125, 116.125, 33.005, 0.995]) {
+    const positioned = positionSceneText({ measured, centerX: 50, top });
+    for (const line of positioned.lines) {
+      const lineTop = roundDiagramNumber(line.baseline - measured.fontSize);
+      assert(
+        lineTop >= positioned.bounds.y &&
+          lineTop + measured.lineHeight <=
+            diagramRectBottom(positioned.bounds) + DIAGRAM_GEOMETRY.tolerance,
+        `line at ${line.baseline} escapes bounds starting at ${positioned.bounds.y} for top ${top}`,
+      );
+    }
+  }
 });
