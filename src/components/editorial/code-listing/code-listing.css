@@ -7,7 +7,15 @@
     border: 1px solid var(--discern-color-border-strong);
     border-radius: var(--discern-radius-lg);
     background: var(--discern-color-surface-sunken);
+    color: var(--discern-color-ink);
     box-shadow: var(--discern-shadow-window);
+  }
+  .discern-code-listing__header,
+  .discern-code-listing figcaption {
+    background: var(--discern-color-surface);
+    color: var(--discern-color-ink-muted);
+    font-family: var(--discern-font-ui);
+    overflow-wrap: anywhere;
   }
   .discern-code-listing__header {
     display: flex;
@@ -17,56 +25,24 @@
     min-height: 2.7rem;
     padding: var(--discern-space-2) var(--discern-space-4);
     border-block-end: 1px solid var(--discern-color-border-strong);
-    background: var(--discern-color-surface);
-    color: var(--discern-color-ink-muted);
+    font-size: var(--discern-font-size-xs);
   }
-  .discern-code-listing__header > span {
-    display: flex;
-    gap: calc(var(--discern-space-1) * 1.36);
-  }
-  .discern-code-listing__header i {
-    inline-size: 0.48rem;
-    block-size: 0.48rem;
-    border-radius: 50%;
-    background: var(--discern-color-ink-faint);
-  }
-  .discern-code-listing__header i:nth-child(1) {
-    background: var(--discern-color-danger);
-  }
-  .discern-code-listing__header i:nth-child(2) {
-    background: var(--discern-color-warning);
-  }
-  .discern-code-listing__header i:nth-child(3) {
-    background: var(--discern-color-success);
-  }
-  .discern-code-listing__header strong,
-  .discern-code-listing__header small,
-  .discern-code-listing figcaption {
-    font-family: var(--discern-font-ui);
-  }
-
   .discern-code-listing__header strong {
     flex: 1 1 10rem;
+    font-weight: var(--discern-font-weight-body);
   }
-  .discern-code-listing__header .discern-copy-button {
-    max-width: 100%;
-  }
-  .discern-code-listing__header strong,
-  .discern-code-listing__header small {
+  .discern-code-listing__header > * {
     min-width: 0;
     max-width: 100%;
-    overflow-wrap: anywhere;
-    font-size: var(--discern-font-size-xs);
-    font-weight: var(--discern-font-weight-body);
   }
   .discern-code-listing__header small {
     color: var(--discern-color-ink-faint);
+    font-size: inherit;
   }
   .discern-code-listing__body {
     margin: 0;
     overflow: auto;
     padding-block: var(--discern-space-4);
-    color: var(--discern-color-ink);
     font: var(--discern-font-size-xs)/1.72 var(--discern-font-mono);
     tab-size: 2;
   }
@@ -87,7 +63,6 @@
     display: block;
     position: relative;
     min-height: 1lh;
-    border-inline-start: 0.125rem solid transparent;
     padding-inline: calc(var(--discern-space-16) + var(--discern-space-1))
       var(--discern-space-6);
     white-space: pre;
@@ -102,64 +77,38 @@
     text-align: end;
   }
   .discern-code-listing__line--highlighted {
-    border-inline-start-color: var(--discern-color-accent-500);
     background: var(--discern-color-accent-100);
+  }
+  .discern-code-listing__line--highlighted::after {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    border-inline-start: 0.125rem solid var(--discern-color-accent-500);
   }
   .discern-code-listing figcaption {
     padding: var(--discern-space-3) var(--discern-space-5);
     border-block-start: 1px solid var(--discern-color-border-strong);
-    background: var(--discern-color-surface);
-    color: var(--discern-color-ink-muted);
     font-size: var(--discern-font-size-sm);
     line-height: var(--discern-leading-body);
   }
   .discern-code-listing--showcase {
-    margin-block: 0;
-    border-color: color-mix(in oklab,
-      var(--discern-color-inverse-ink) 16%, transparent);
-    border-radius: clamp(1.25rem, 3vw, 2rem);
-    background: var(--discern-color-inverse-surface);
-  }
-  .discern-code-listing--showcase .discern-code-listing__header,
-  .discern-code-listing--showcase figcaption {
-    border-color: color-mix(in oklab,
-      var(--discern-color-inverse-ink) 16%, transparent);
-    background: color-mix(in oklab,
-      var(--discern-color-inverse-ink) 6%,
-      var(--discern-color-inverse-surface));
-    color: color-mix(in oklab,
-      var(--discern-color-inverse-ink) 76%, transparent);
-  }
-  .discern-code-listing--showcase .discern-code-listing__header small,
-  .discern-code-listing--showcase .discern-code-listing__line::before {
-    color: color-mix(in oklab,
-      var(--discern-color-inverse-ink) 58%, transparent);
-  }
-  .discern-code-listing--showcase .discern-copy-button {
-    --discern-color-surface: var(--discern-color-inverse-surface);
     --discern-color-surface-sunken: var(--discern-color-inverse-surface);
-    --discern-color-ink: var(--discern-color-inverse-ink);
-    --discern-color-ink-muted: var(--discern-color-inverse-ink);
-    --discern-color-ink-faint: var(--discern-color-inverse-ink);
-    --discern-color-border: var(--discern-color-inverse-ink);
-    --discern-color-border-strong: var(--discern-color-inverse-ink);
+    --discern-color-surface: color-mix(in oklab, var(--discern-color-inverse-ink) 6%, var(--discern-color-inverse-surface));
+    --discern-color-border-strong: color-mix(in oklab, var(--discern-color-inverse-ink) 16%, transparent);
+    --discern-color-ink: color-mix(in oklab, var(--discern-color-inverse-ink) 90%, transparent);
+    --discern-color-ink-muted: color-mix(in oklab, var(--discern-color-inverse-ink) 76%, transparent);
+    --discern-color-ink-faint: color-mix(in oklab, var(--discern-color-inverse-ink) 58%, transparent);
+    --discern-color-accent-100: color-mix(in oklab, var(--discern-color-ink) 19%, transparent);
+    margin-block: 0;
+    border-radius: clamp(1.25rem, 3vw, 2rem);
   }
-  .discern-code-listing--showcase .discern-code-listing__body {
-    background: var(--discern-color-inverse-surface);
-    color: color-mix(in oklab,
-      var(--discern-color-inverse-ink) 90%, transparent);
-  }
-  .discern-code-listing--showcase .discern-code-listing__body:focus-visible {
+  .discern-code-listing--showcase :focus-visible {
     outline-color: var(--discern-color-inverse-ink);
   }
-  .discern-code-listing--showcase .discern-code-listing__line--highlighted {
-    background: color-mix(in oklab,
-      var(--discern-color-accent-500) 17%, transparent);
-  }
-}
-
-@media (forced-colors: active) {
-  .discern-code-listing__body:focus-visible {
-    outline-offset: -2px !important;
+  @media (forced-colors: active) {
+    .discern-code-listing__body:focus-visible {
+      outline-offset: -0.125rem !important;
+    }
   }
 }

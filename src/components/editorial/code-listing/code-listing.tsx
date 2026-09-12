@@ -58,11 +58,6 @@ export const CodeListing: DiscernComponent<HTMLElement, CodeListingProps> =
         {title || filename || language || copyable
           ? (
             <header className="discern-code-listing__header">
-              <span>
-                <i aria-hidden="true" />
-                <i aria-hidden="true" />
-                <i aria-hidden="true" />
-              </span>
               <strong>{filename ?? title}</strong>
               {language ? <small>{language}</small> : null}
               {copyable && <CopyButton value={code} />}
