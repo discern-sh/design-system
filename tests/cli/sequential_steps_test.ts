@@ -152,6 +152,31 @@ Deno.test("choice constructors retain stable IDs across rebuilt values, and drop
   );
 });
 
+Deno.test("single selections distinguish a submitted undefined payload from an unanswered step", async () => {
+  const io = new FakeTerminalIO(["\x1b[B\r", "\x15", "\r", "\r"]);
+  const values = await createSequentialForm({ label: "Optional choice", io })
+    .add(sequentialSelectionStep<number | undefined>({
+      id: "choice",
+      label: "Choice",
+      request: {
+        label: "Choice",
+        initialId: "first",
+        choices: [
+          { id: "first", label: "First", value: 1 },
+          { id: "unset", label: "Unset", value: undefined },
+        ],
+      },
+    }))
+    .add(sequentialConfirmationStep({
+      id: "finish",
+      label: "Finish",
+      request: { label: "Finish" },
+    }))
+    .submit();
+  assertEquals(Object.hasOwn(values, "choice"), true);
+  assertEquals(values.choice, undefined);
+});
+
 Deno.test("changed upstream answers clear skipped steps before re-entry and retain still-applicable answers", async () => {
   const observed: unknown[] = [];
   // Fill detail, back twice to disable it, then revisit and re-enable it.

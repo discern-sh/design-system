@@ -129,9 +129,11 @@ export function sequentialSelectionStep<Value>(
       const remembered = Object.is(previous, retainedValue)
         ? retainedId
         : enabled.find((choice) => Object.is(choice.value, previous))?.id;
-      const id = previous === undefined
-        ? initialId
-        : enabled.find((choice) => choice.id === remembered)?.id;
+      const hasPrevious = previous !== undefined ||
+        Object.hasOwn(values, step.id);
+      const id = hasPrevious
+        ? enabled.find((choice) => choice.id === remembered)?.id
+        : initialId;
       const value = await requestSelection({
         ...request,
         ...(id === undefined ? {} : { initialId: id }),
