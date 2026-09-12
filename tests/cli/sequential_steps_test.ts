@@ -161,6 +161,7 @@ Deno.test("single selections distinguish a submitted undefined payload from an u
       request: {
         label: "Choice",
         initialId: "first",
+        required: false,
         choices: [
           { id: "first", label: "First", value: 1 },
           { id: "unset", label: "Unset", value: undefined },

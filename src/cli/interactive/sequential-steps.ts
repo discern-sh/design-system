@@ -68,7 +68,7 @@ export function sequentialTextStep(
     Parameters<typeof requestText>[0],
     Awaited<ReturnType<typeof requestText>>
   >,
-) {
+): SequentialFormStep<Awaited<ReturnType<typeof requestText>>> {
   return valueStep(requestText, options);
 }
 
@@ -78,7 +78,7 @@ export function sequentialConfirmationStep(
     Parameters<typeof requestConfirmation>[0],
     Awaited<ReturnType<typeof requestConfirmation>>
   >,
-) {
+): SequentialFormStep<Awaited<ReturnType<typeof requestConfirmation>>> {
   return valueStep(requestConfirmation, options);
 }
 
@@ -88,7 +88,7 @@ export function sequentialTextareaStep(
     Parameters<typeof requestTextarea>[0],
     Awaited<ReturnType<typeof requestTextarea>>
   >,
-) {
+): SequentialFormStep<Awaited<ReturnType<typeof requestTextarea>>> {
   return valueStep(requestTextarea, options);
 }
 
@@ -98,7 +98,7 @@ export function sequentialAutocompleteStep(
     Parameters<typeof requestAutocomplete>[0],
     Awaited<ReturnType<typeof requestAutocomplete>>
   >,
-) {
+): SequentialFormStep<Awaited<ReturnType<typeof requestAutocomplete>>> {
   return valueStep(requestAutocomplete, options);
 }
 
