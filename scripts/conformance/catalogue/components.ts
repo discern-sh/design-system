@@ -1,3 +1,4 @@
+import type { Progress } from "../../progress.ts";
 import {
   conformanceUrl,
   loadConformancePage,
@@ -983,9 +984,15 @@ async function scanAccessibility(
   theme: CatalogueTheme,
   components: readonly string[],
   failures: string[],
+  progress?: Progress,
 ): Promise<number> {
   let scans = 0;
-  for (const component of components) {
+  for (const [index, component] of components.entries()) {
+    progress?.active(
+      `Accessibility ${theme}: ${component} (${
+        index + 1
+      }/${components.length})`,
+    );
     const selector =
       `[data-discern-component="${component}"] .discern-catalogue-component__canvas`;
     try {
@@ -1020,6 +1027,7 @@ async function runInteractionScenarios(
   origin: string,
   components: readonly string[],
   failures: string[],
+  progress?: Progress,
 ): Promise<number> {
   let scenariosRun = 0;
   await loadConformancePage(page, conformanceUrl(origin, "light"));
@@ -1039,6 +1047,7 @@ async function runInteractionScenarios(
 
   for (const component of components) {
     for (const scenario of manifests.get(component) ?? []) {
+      progress?.active(`Interaction: ${component}/${scenario.name}`);
       try {
         await withViewport(
           page,
@@ -1184,6 +1193,7 @@ export async function runComponentContractConformance(
   origin: string,
   expectedComponents: readonly string[],
   failures: string[],
+  progress?: Progress,
 ): Promise<ComponentContractEvidence> {
   await loadConformancePage(page, conformanceUrl(origin, "light"));
   await assertAutoEnrollment(page, expectedComponents);
@@ -1234,6 +1244,7 @@ export async function runComponentContractConformance(
       theme,
       expectedComponents,
       failures,
+      progress,
     );
   }
   const scenarios = await runInteractionScenarios(
@@ -1241,6 +1252,7 @@ export async function runComponentContractConformance(
     origin,
     expectedComponents,
     failures,
+    progress,
   );
   const screenshots = await captureReviewSheets(page, origin);
   const forcedColorFocusChecks = await verifyForcedColors(

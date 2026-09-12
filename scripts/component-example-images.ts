@@ -1,3 +1,4 @@
+import { Progress } from "./progress.ts";
 import { encodeHex } from "@std/encoding/hex";
 import { fromFileUrl } from "@std/path";
 import { chromium } from "playwright-core";
@@ -1194,6 +1195,7 @@ async function imageFiles(): Promise<string[]> {
 async function verifyArtifacts(
   plan: readonly PlannedComponentExampleImage[],
   sourceHashes: ComponentExampleCaptureSourceHashes,
+  progress?: Progress,
 ): Promise<void> {
   if (
     componentExampleImageManifest.captureContractVersion !==
@@ -1215,6 +1217,7 @@ async function verifyArtifacts(
     );
   }
   for (const entry of componentExampleImageManifest.entries) {
+    progress?.active(`${entry.slug}/${entry.exampleId}/${entry.theme}`);
     const key = captureSourceKey(entry);
     if (
       entry.captureContractVersion !==
@@ -1248,6 +1251,7 @@ async function verifyArtifacts(
     if (await componentExampleContentHash(bytes) !== entry.contentHash) {
       throw new Error(`${entry.assetPath} content hash is stale`);
     }
+    progress?.advance();
   }
 }
 
@@ -1273,26 +1277,39 @@ async function verifyImages(): Promise<void> {
   const started = performance.now();
   await assertGeneratedExampleRegistryCurrent();
   const plan = planComponentExampleImages(imageSources());
-  const buildStarted = performance.now();
-  await buildDesignSystem();
-  const buildMs = performance.now() - buildStarted;
-  const sourceHashes = await componentExampleCaptureSourceHashes(
-    plan,
-    await loadComponentSources(),
+  const progress = new Progress(
+    "images",
+    "deno task catalogue:images --verify",
+    plan.length,
   );
-  await verifyArtifacts(plan, sourceHashes);
-  const actualBytes = await Promise.all(
-    componentExampleImageManifest.entries.map(async (entry) =>
-      (await Deno.stat(new URL(entry.assetUrl.slice(1), ROOT))).size
-    ),
-  );
-  console.log(
-    `Verified ${plan.length} Component example images (${
-      actualBytes.reduce((sum, bytes) => sum + bytes, 0)
-    } bytes) from source fingerprints and committed artifacts in ${
-      ((performance.now() - started) / 1000).toFixed(2)
-    }s (build ${(buildMs / 1000).toFixed(2)}s; Chromium not launched).`,
-  );
+  try {
+    progress.active("Build capture projection");
+    const buildStarted = performance.now();
+    await buildDesignSystem();
+    const buildMs = performance.now() - buildStarted;
+    progress.active("Resolve rendering source fingerprints");
+    const sourceHashes = await componentExampleCaptureSourceHashes(
+      plan,
+      await loadComponentSources(),
+    );
+    await verifyArtifacts(plan, sourceHashes, progress);
+    const actualBytes = await Promise.all(
+      componentExampleImageManifest.entries.map(async (entry) =>
+        (await Deno.stat(new URL(entry.assetUrl.slice(1), ROOT))).size
+      ),
+    );
+    console.log(
+      `Verified ${plan.length} Component example images (${
+        actualBytes.reduce((sum, bytes) => sum + bytes, 0)
+      } bytes) from source fingerprints and committed artifacts in ${
+        ((performance.now() - started) / 1000).toFixed(2)
+      }s (build ${(buildMs / 1000).toFixed(2)}s; Chromium not launched).`,
+    );
+    progress.finish();
+  } catch (error) {
+    progress.failure("Image verification", error);
+    throw error;
+  }
 }
 
 export function componentExampleImagePostureEffects(

@@ -1,3 +1,4 @@
+import { Progress, progressStep } from "./progress.ts";
 import { generateGlyphs } from "./glyphs.ts";
 import type { EmbeddedRuntimeAsset } from "../src/runtime-assets.ts";
 import {
@@ -1396,13 +1397,25 @@ async function withCodegenLock<T>(run: () => Promise<T>): Promise<T> {
 }
 
 /** Refresh generated modules after component metadata, CSS, or assets change. */
-export async function writeGeneratedSources(): Promise<void> {
+export async function writeGeneratedSources(
+  progress?: Progress,
+): Promise<void> {
+  progress?.active("Waiting for codegen lock");
   await withCodegenLock(async () => {
-    await reconcileGeneratedOutputs(
-      GENERATED_OUTPUT_ROOTS,
-      await generateOutputPlan(),
+    const outputs = await progressStep(
+      progress,
+      "Generate source plan",
+      generateOutputPlan,
+    );
+    await progressStep(
+      progress,
+      `Reconcile ${outputs.length} generated artifacts`,
+      () => reconcileGeneratedOutputs(GENERATED_OUTPUT_ROOTS, outputs),
     );
   });
+  progress?.finish();
 }
 
-if (import.meta.main) await writeGeneratedSources();
+if (import.meta.main) {
+  await writeGeneratedSources(new Progress("phases", "deno task codegen"));
+}

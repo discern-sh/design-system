@@ -1,3 +1,4 @@
+import { Progress, progressStep } from "./progress.ts";
 import type { BuildSummary } from "../src/runtime.ts";
 import type { ComponentMeta } from "../src/types/component-meta.ts";
 import type { ComponentExampleDefinition } from "../src/types/component-examples.ts";
@@ -1188,31 +1189,73 @@ async function writeCatalogueAppearanceScopes(
 }
 
 /** Build the React catalogue, its all-component runtime, and the landing page. */
-export async function buildDesignSystem(): Promise<BuildSummary> {
-  await writeGeneratedSources();
-  const { sources, shared } = await discoverComponents();
-  const version = await packageVersion();
-  await generateRegistry(sources, shared, version);
-  await writeCatalogueMarkdownAssets();
+export async function buildDesignSystem(
+  progress?: Progress,
+): Promise<BuildSummary> {
+  await progressStep(
+    progress,
+    "Generate package sources",
+    () => writeGeneratedSources(),
+  );
+  const { sources, shared } = await progressStep(
+    progress,
+    "Discover Component metadata",
+    () => discoverComponents(),
+  );
+  const version = await progressStep(
+    progress,
+    "Read package version",
+    () => packageVersion(),
+  );
+  await progressStep(
+    progress,
+    "Generate Catalogue registry",
+    () => generateRegistry(sources, shared, version),
+  );
+  await progressStep(
+    progress,
+    "Write Catalogue Markdown",
+    () => writeCatalogueMarkdownAssets(),
+  );
   const { emitDesignSystemRuntime, runtimeCssSurfaceRegistry } = await import(
     "../src/runtime.ts"
   );
-  const summary = await emitDesignSystemRuntime({
-    outputRoot: DIST_ROOT,
-    all: true,
-    assets: ["fonts", "grain"],
-  });
-  await writeCatalogueAppearanceScopes(runtimeCssSurfaceRegistry);
+  const summary = await progressStep(
+    progress,
+    "Emit CSS runtime and assets",
+    () =>
+      emitDesignSystemRuntime({
+        outputRoot: DIST_ROOT,
+        all: true,
+        assets: ["fonts", "grain"],
+      }),
+  );
+  await progressStep(
+    progress,
+    "Write appearance scopes",
+    () => writeCatalogueAppearanceScopes(runtimeCssSurfaceRegistry),
+  );
   if (summary.components !== sources.length) {
     throw new Error("Catalogue and runtime component discovery disagree");
   }
-  await bundleCatalogue();
-  await buildLandingPage(version);
+  await progressStep(
+    progress,
+    "Bundle Catalogue entry points",
+    () => bundleCatalogue(),
+  );
+  await progressStep(
+    progress,
+    "Build landing page",
+    () => buildLandingPage(version),
+  );
+  progress?.finish();
   return summary;
 }
 
 if (import.meta.main) {
-  const summary = await buildDesignSystem();
+  const summary = await buildDesignSystem(
+    new Progress("phases", "deno task build"),
+  );
   console.log(
     `Built ${summary.components} components and ${summary.tokens} tokens.`,
   );

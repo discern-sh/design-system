@@ -6,7 +6,7 @@ The `test` capability in `discern.toml` is what `discern done` runs; this doc ex
 
 ## How tests run
 
-The gate's `test` capability is `deno task test`:
+`deno task test` is the sequential local entry point for the complete test stage:
 
 ```sh
 deno task test
@@ -55,6 +55,16 @@ Run only the browser harness while iterating:
 ```sh
 deno task conformance
 ```
+
+## Live progress and reconnect
+
+Gate commands emit `DISCERN_PROGRESS` lines through [`scripts/progress.ts`](../../scripts/progress.ts). Each command owns its reporter; imported build and codegen helpers stay silent unless their caller supplies one. This keeps a nested build from replacing its caller's counts. Codegen and build report completed phases, image verification counts its existing image plan, and browser conformance reports phases and active Component checks. These counts describe work, not a percentage of elapsed time or an assertion count.
+
+The gate declares separate test producers in [`discern.toml`](../../discern.toml), ordered by `needs` in the same sequence as `deno task test`. Each retains the test command's 1500-second budget independently. [`scripts/test-unit.ts`](../../scripts/test-unit.ts) forwards Deno's TAP transcript and derives results from top-level tests, excluding nested steps. Totals stay unknown until Deno supplies its plan. Interrupted or incomplete runs retain their observed counts as partial. Signal forwarding and child exit status preserve cancellation and failure behavior; a progress line cannot make a failing command pass.
+
+A long discern operation announces a progress handle. Read that handle with `discern_progress` (`handle` and this worktree's `path`), or `discern progress <handle>` from the worktree. The read returns the producer counts, failures, current phase, and retained result without restarting work. MCP notifications depend on the client supplying a progress token; the journal is the reconnect authority. See `discern_docs` target `30-reference/mcp-and-results` for the protocol and retention contract.
+
+[`tests/producer_progress_test.ts`](../../tests/producer_progress_test.ts) exercises bounded lines, future work enrollment, live failure collection, real Deno pass/fail/skip and filtered runs, and cancellation. Add reporting at the existing plan or loop that owns the population; do not maintain a separate total or reinterpret completed phases as passing tests.
 
 ## How tests are written
 

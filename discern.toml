@@ -220,9 +220,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
 
 [jobs]
-  # The unit suites plus the complete browser conformance pass legitimately
-  # outgrow the default 600s budget; the run is single-shot and always exits.
-  test = { run = "deno task test", timeout = 1500 }
+  test = { run = "deno task test:unit", timeout = 1500 }
   build = "deno task build && deno task check:catalogue"
   typecheck = "deno task typecheck"
   lint = "deno task lint"
@@ -240,6 +238,19 @@
     # stage    = "check"
     # run      = "./scripts/check-licenses.sh"
     # provides = "license-audit"
+
+  # Separate producers retain distinct counts; dependencies preserve test order.
+  [jobs.example-images]
+    stage = "test"
+    run = "deno task catalogue:images --verify"
+    needs = ["jobs.test"]
+    timeout = 1500
+
+  [jobs.conformance]
+    stage = "test"
+    run = "deno task conformance"
+    needs = ["jobs.example-images"]
+    timeout = 1500
 
 # ─────────────────────────────────────────────────────────────────────────────
 # [scopes.<name>]

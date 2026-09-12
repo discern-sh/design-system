@@ -1,3 +1,4 @@
+import { Progress, progressStep, reportingFailures } from "./progress.ts";
 import type { Browser } from "playwright-core";
 import { catalogueNavigation } from "../catalogue/routes.ts";
 import { packageManifest } from "../src/manifest.ts";
@@ -137,8 +138,8 @@ const emptyAppearanceProjectionEvidence: AppearanceProjectionEvidence = {
 };
 
 /** Build and exercise every Component and Catalogue family in Chromium. */
-export async function runConformance(): Promise<void> {
-  await buildDesignSystem();
+export async function runConformance(progress?: Progress): Promise<void> {
+  await progressStep(progress, "Build Catalogue", () => buildDesignSystem());
   const server = Deno.serve({
     hostname: "127.0.0.1",
     port: 0,
@@ -148,7 +149,7 @@ export async function runConformance(): Promise<void> {
   invariant(address.transport === "tcp", "Catalogue server is not using TCP");
   const origin = `http://127.0.0.1:${address.port}`;
   const expectedComponents = packageManifest.components.map(({ id }) => id);
-  const failures: string[] = [];
+  const failures = reportingFailures(progress);
   let browser: Browser | undefined;
 
   try {
@@ -164,7 +165,11 @@ export async function runConformance(): Promise<void> {
 
     let appearanceProjection = emptyAppearanceProjectionEvidence;
     try {
-      appearanceProjection = await verifyAppearanceProjection(page);
+      appearanceProjection = await progressStep(
+        progress,
+        "Appearance projection",
+        () => verifyAppearanceProjection(page),
+      );
     } catch (error) {
       failures.push(
         `Appearance projection: ${
@@ -193,6 +198,7 @@ export async function runConformance(): Promise<void> {
           origin,
           expectedComponents,
           failures,
+          progress,
         );
       },
       components: async () => {
@@ -235,7 +241,11 @@ export async function runConformance(): Promise<void> {
     );
     for (const check of catalogueBrowserCheckPlan) {
       try {
-        await catalogueCheckRunners[check.id]();
+        await progressStep(
+          progress,
+          check.failureLabel,
+          catalogueCheckRunners[check.id],
+        );
       } catch (error) {
         failures.push(
           `${check.failureLabel}: ${
@@ -244,25 +254,29 @@ export async function runConformance(): Promise<void> {
         );
       }
     }
-    const review = await verifyComponentReviewInstrument(
-      activeBrowser,
-      origin,
-      failures,
+    const review = await progressStep(
+      progress,
+      "Component review",
+      () => verifyComponentReviewInstrument(activeBrowser, origin, failures),
     );
 
-    const resilience = await runResilienceConformance(
-      activeBrowser,
-      page,
-      origin,
-      failures,
+    const resilience = await progressStep(
+      progress,
+      "Journey resilience",
+      () => runResilienceConformance(activeBrowser, page, origin, failures),
     );
-    const builder = await runBuilderConformance({
-      browser: activeBrowser,
-      page,
-      origin,
-      failures,
-      outputRoot: OUTPUT_ROOT,
-    });
+    const builder = await progressStep(
+      progress,
+      "Builder journeys",
+      () =>
+        runBuilderConformance({
+          browser: activeBrowser,
+          page,
+          origin,
+          failures,
+          outputRoot: OUTPUT_ROOT,
+        }),
+    );
     await context.close();
 
     const failureCounts = failures.reduce<Record<string, number>>(
@@ -387,10 +401,13 @@ export async function runConformance(): Promise<void> {
         `${builder.forcedColourFocusChecks} forced-colour focus checks, and ` +
         `${builder.screenshots.length} review screenshots.`,
     );
+    progress?.finish();
   } finally {
     await browser?.close();
     await server.shutdown();
   }
 }
 
-if (import.meta.main) await runConformance();
+if (import.meta.main) {
+  await runConformance(new Progress("phases", "deno task conformance"));
+}
