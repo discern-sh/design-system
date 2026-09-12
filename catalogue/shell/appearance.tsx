@@ -1,3 +1,5 @@
+import { AppearancePresets } from "./appearance-presets.tsx";
+import { useAppearanceDisclosure } from "./appearance-disclosure.ts";
 import { useEffect, useId, useState } from "react";
 import type { CSSProperties } from "react";
 import { Button } from "../../src/components/core/button/button.tsx";
@@ -229,11 +231,10 @@ export function AppearanceControl(
   const appearanceLabel = scopeLabel === undefined
     ? "appearance"
     : `${scopeLabel} appearance`;
+  const disclosureRef = useAppearanceDisclosure();
   const hueGuidanceId = useId();
   const axesId = useId();
   const tintId = useId();
-  const tintStrengthId = useId();
-  const tintHueId = useId();
   const tintGuidanceId = useId();
   const [axesOpen, setAxesOpen] = useState(false);
   const [tintOpen, setTintOpen] = useState(false);
@@ -286,6 +287,7 @@ export function AppearanceControl(
 
   return (
     <details
+      ref={disclosureRef}
       className="discern-catalogue-appearance"
       data-discern-accent={accent === undefined ? undefined : ""}
       style={catalogueAppearanceRootStyle(
@@ -300,9 +302,11 @@ export function AppearanceControl(
       </summary>
       <div
         className="discern-catalogue-appearance__panel"
+        data-discern-floating-surface="surface"
         role="group"
         aria-label={`${appearanceLabel} settings`}
       >
+        <AppearancePresets field={field} onChange={onFieldChange} />
         <ThemeSwitcher
           className="discern-catalogue-appearance__theme"
           mode={theme}
@@ -423,54 +427,19 @@ export function AppearanceControl(
                   )
                   : (
                     <>
-                      <div
-                        className="discern-catalogue-axis"
-                        data-discern-tint="strength"
-                      >
-                        <div>
-                          <label htmlFor={tintStrengthId}>Tint</label>
-                          <output htmlFor={tintStrengthId}>
-                            {formatCatalogueAxisNumber(field.paperTint)}
-                          </output>
-                        </div>
-                        <Input
-                          id={tintStrengthId}
-                          type="range"
-                          min={appearanceAxes.paperTint.minimum}
-                          max={appearanceAxes.paperTint.maximum}
-                          step="0.01"
-                          value={field.paperTint}
-                          aria-describedby={tintGuidanceId}
-                          onInput={(event) =>
-                            setSharedTint({
-                              paperTint: event.currentTarget.valueAsNumber,
-                            })}
-                        />
-                      </div>
-                      <div
-                        className="discern-catalogue-axis"
-                        data-discern-tint="hue"
-                      >
-                        <div>
-                          <label htmlFor={tintHueId}>Tint hue</label>
-                          <output htmlFor={tintHueId}>
-                            {formatCatalogueAxisNumber(field.paperTintHue)}
-                          </output>
-                        </div>
-                        <Input
-                          id={tintHueId}
-                          type="range"
-                          min={appearanceAxes.paperTintHue.minimum}
-                          max={appearanceAxes.paperTintHue.maximum}
-                          step="1"
-                          value={field.paperTintHue}
-                          aria-describedby={tintGuidanceId}
-                          onInput={(event) =>
-                            setSharedTint({
-                              paperTintHue: event.currentTarget.valueAsNumber,
-                            })}
-                        />
-                      </div>
+                      <AxisControl
+                        axis="paperTint"
+                        label="Tint"
+                        value={field.paperTint}
+                        onChange={(paperTint) => setSharedTint({ paperTint })}
+                      />
+                      <AxisControl
+                        axis="paperTintHue"
+                        label="Tint hue"
+                        value={field.paperTintHue}
+                        onChange={(paperTintHue) =>
+                          setSharedTint({ paperTintHue })}
+                      />
                       <small id={tintGuidanceId}>
                         Tints paper and ink together: a whisper of stock on the
                         light pigment, a coloured black on the dark one,

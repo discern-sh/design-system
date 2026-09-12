@@ -95,7 +95,7 @@ The machine-only `?conformance=1` route remains exhaustive. Ordinary indexes sta
 
 ## Where to start
 
-For independent page, style, and test work, use the [Catalogue ownership seams](ownership-seams.md) before editing shared consumers.
+For independent page, style, and test work, use the [Catalogue ownership seams](ownership-seams.md) before editing shared consumers. [Shell controls](shell-controls.md) records preset, exact-entry, search-history, and responsive focus boundaries.
 
 | Concern                                                       | Authority                                                                                                                                                                                                                                     |
 | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

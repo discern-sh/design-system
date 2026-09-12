@@ -114,6 +114,7 @@ export function CatalogueShell(
         <button
           className="discern-catalogue-search"
           type="button"
+          aria-label="Search the Catalogue"
           aria-haspopup="dialog"
           onClick={() => {
             setMobileNavOpen(false);
@@ -121,13 +122,18 @@ export function CatalogueShell(
           }}
         >
           <span aria-hidden="true">⌕</span>
-          <span>Find in the Catalogue</span>
+          <span>
+            Search<span className="discern-catalogue-search__desktop-copy">
+              {" "}the Catalogue
+            </span>
+          </span>
           <Kbd>/</Kbd>
         </button>
         <AppearanceControl {...appearance} />
       </header>
 
       <GlobalSearch
+        theme={appearance.resolvedTheme}
         open={searchOpen}
         query={searchQuery}
         onOpenChange={setSearchOpen}

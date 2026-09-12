@@ -34,7 +34,7 @@ Relative sizes are planning judgments, not elapsed-time promises: S is a bounded
 | 2K  | [Make component discovery faster and preserve context](2k-component-discovery.md)            | J1, J2, J3, J5         | 1A, 1C          | M    | Prepared |
 | 2L  | [Make component details useful for adoption](2l-component-detail-playground.md)              | K1, K2, K3, K4, K5     | 1A, 1B, 1C      | L    | Prepared |
 | 2M  | [Make comparison genuinely side by side](2m-side-by-side-comparison.md)                      | L1                     | 1C              | S    | Prepared |
-| 2N  | [Polish the shell, search, and Appearance controls](2n-shell-search-and-appearance.md)       | M1, M3, M4, P1, P2, P3 | 1C              | L    | Prepared |
+| 2N  | [Polish the shell, search, and Appearance controls](_done/2n-shell-search-and-appearance.md) | M1, M3, M4, P1, P2, P3 | 1C              | L    | Complete |
 | 2O  | [Make glyph discovery useful for adoption](2o-glyph-adoption-and-size-comparison.md)         | N1, N2, N3             | None            | M    | Prepared |
 | 2P  | [Polish terminal previews and guided flows](2p-terminal-capabilities-and-guided-flows.md)    | O1, O2, O3, O5         | 1A, 1C          | L    | Prepared |
 | 2Q  | [Fit compositions to their available space](2q-composition-fit-and-width-controls.md)        | P5                     | None            | S    | Prepared |
