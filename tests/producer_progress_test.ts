@@ -258,7 +258,7 @@ Deno.test("gate test producers preserve the local task's complete sequential pip
   const config = await Deno.readTextFile(new URL("discern.toml", root));
   const tables = [
     ...config.matchAll(
-      /^\[(jobs(?:\.[^\]]+)?)\]\s*([\s\S]*?)(?=^\[|(?![\s\S]))/gm,
+      /^[ \t]*\[(jobs(?:\.[^\]]+)?)\]\s*([\s\S]*?)(?=^[ \t]*\[|(?![\s\S]))/gm,
     ),
   ];
   const known = tables.find((x) => x[1] === "jobs")![2]!;
