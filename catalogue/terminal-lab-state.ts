@@ -1,4 +1,7 @@
-import type { TerminalColorDepth } from "../src/cli/capabilities.ts";
+import type {
+  TerminalCapabilities,
+  TerminalColorDepth,
+} from "../src/cli/capabilities.ts";
 
 /** Reproducible terminal viewport fixtures, not supported-terminal limits. */
 export const terminalViewportPresets = [
@@ -28,6 +31,7 @@ export interface TerminalLabState {
   readonly colorDepth: TerminalColorDepth;
   readonly hyperlinks: boolean;
   readonly showGrid: boolean;
+  readonly view: "clean" | "inspect";
 }
 
 /** Validated URL state plus accessible recovery explanations. */
@@ -46,6 +50,7 @@ const LAB_QUERY_KEYS = [
   "color",
   "hyperlinks",
   "grid",
+  "view",
 ] as const;
 
 /** Resolve a preset from the one ordered fixture authority. */
@@ -177,6 +182,11 @@ export function parseTerminalLabState(
     "Cell grid must be 1 or 0; the grid stayed hidden.",
     notices,
   );
+  const requestedView = params.get("view");
+  if (
+    requestedView !== null && requestedView !== "clean" &&
+    requestedView !== "inspect"
+  ) notices.push("View must be clean or inspect; the clean frame was used.");
   return {
     state: {
       presetId: preset.id,
@@ -187,6 +197,7 @@ export function parseTerminalLabState(
       colorDepth,
       hyperlinks,
       showGrid,
+      view: requestedView === "inspect" ? "inspect" : "clean",
     },
     notices,
   };
@@ -243,5 +254,26 @@ export function terminalLabStateUrl(
     url.searchParams.set("hyperlinks", state.hyperlinks ? "1" : "0");
   }
   url.searchParams.set("grid", state.showGrid ? "1" : "0");
+  url.searchParams.set("view", state.view);
   return url;
+}
+
+/** Resolve real renderer capabilities from the shared normalized state. */
+export function terminalLabCapabilities(
+  state: TerminalLabState,
+  controls: readonly TerminalLabCapability[] = [
+    "unicode",
+    "colorDepth",
+    "hyperlinks",
+  ],
+): TerminalCapabilities {
+  return {
+    ansiControl: true,
+    colorDepth: state.colorDepth,
+    columns: state.columns,
+    unicode: state.unicode,
+    ...(controls.includes("hyperlinks")
+      ? { hyperlinks: state.hyperlinks }
+      : {}),
+  };
 }

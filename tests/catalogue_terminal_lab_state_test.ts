@@ -9,6 +9,37 @@ import {
 
 const allControls = ["unicode", "colorDepth", "hyperlinks"] as const;
 
+Deno.test("clean is the default and inspect is an explicit round-tripped viewing choice", () => {
+  assertEquals(
+    parseTerminalLabState(new URLSearchParams("grid=1"), allControls).state
+      .view,
+    "clean",
+  );
+  const invalid = parseTerminalLabState(
+    new URLSearchParams("view=unknown"),
+    allControls,
+  );
+  assertEquals(invalid.state.view, "clean");
+  assertEquals(invalid.notices, [
+    "View must be clean or inspect; the clean frame was used.",
+  ]);
+  const selected = parseTerminalLabState(
+    new URLSearchParams("view=inspect&grid=1"),
+    allControls,
+  );
+  assertEquals(
+    parseTerminalLabState(
+      terminalLabStateUrl(
+        new URL("https://catalogue.example/"),
+        selected.state,
+        allControls,
+      ).searchParams,
+      allControls,
+    ),
+    selected,
+  );
+});
+
 Deno.test("terminal presets and capabilities round-trip through canonical URL state", () => {
   assertEquals(
     terminalViewportPresets.map(({ id, columns, rows }) => ({
@@ -40,6 +71,7 @@ Deno.test("terminal presets and capabilities round-trip through canonical URL st
     colorDepth: "ansi256",
     hyperlinks: false,
     showGrid: true,
+    view: "clean",
   });
 
   const url = terminalLabStateUrl(
@@ -49,7 +81,7 @@ Deno.test("terminal presets and capabilities round-trip through canonical URL st
   );
   assertEquals(
     url.href,
-    "https://catalogue.example/catalogue/terminal/future-layout/?preset=wide&unicode=0&color=ansi256&hyperlinks=0&grid=1",
+    "https://catalogue.example/catalogue/terminal/future-layout/?preset=wide&unicode=0&color=ansi256&hyperlinks=0&grid=1&view=clean",
   );
   assertEquals(
     parseTerminalLabState(url.searchParams, allControls).state,
@@ -103,6 +135,7 @@ Deno.test("invalid, extreme, and unsupported URL values fail to bounded defaults
     colorDepth: "truecolor",
     hyperlinks: true,
     showGrid: false,
+    view: "clean",
   });
   assertEquals(parsed.notices, [
     "Unknown viewport preset; Standard 80×24 was used.",

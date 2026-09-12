@@ -1,4 +1,31 @@
 @layer catalogue {
+  .discern-catalogue-cli-inspection,
+  .discern-catalogue-terminal-replay {
+    display: grid;
+    min-inline-size: 0;
+    gap: var(--discern-space-4);
+  }
+  .discern-catalogue-cli-inspection > p,
+  .discern-catalogue-terminal-replay > p {
+    margin: 0;
+    color: var(--discern-color-ink-muted);
+    font: var(--discern-font-size-sm) / 1.55 var(--discern-font-ui);
+  }
+  .discern-catalogue-terminal-replay__navigation {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--discern-space-3);
+  }
+  .discern-catalogue-cli-inspection > .discern-segmented-control,
+  .discern-catalogue-terminal-lab > .discern-segmented-control,
+  .discern-catalogue-terminal-replay > .discern-segmented-control {
+    inline-size: min(100%, 24rem);
+  }
+  .discern-catalogue-cli-output:focus-visible {
+    outline: 2px solid var(--discern-color-accent-600);
+    outline-offset: 2px;
+  }
   .discern-catalogue-cli-preview {
     padding: clamp(22px, 4vw, 42px);
     background: var(--discern-color-canvas);
@@ -8,6 +35,7 @@
     margin: 0;
     padding: 0;
     overflow: auto;
+    max-block-size: min(62vh, 32rem);
     background: transparent;
     color: var(--discern-color-ink);
     font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;

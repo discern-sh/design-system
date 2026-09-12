@@ -87,3 +87,25 @@ Authored feature files stay with their owner. Shared derived files and the narro
 - **Landing rule chosen by the owner:** After green `discern_done`, report the exact Proof, branch, worktree, preview URL, and any owner decision, then stop and wait for the owner to confirm acceptance.
 - Return the branch/worktree identity for an adversarial review against this brief. The planning agent will inspect the diff and reproduce the important journeys; gate success alone is not a visual review.
 - In the final implementation commit, before the final prepare → commit → done sequence, move `map/_private/planning/design-polish/2p-terminal-capabilities-and-guided-flows.md` to `map/_private/planning/design-polish/_done/2p-terminal-capabilities-and-guided-flows.md`, repair any moved relative links, and update **only this stream's row** in the programme README to the `_done/` path and completed state, preserving every sibling row.
+
+## Implementation evidence
+
+The Component CLI view and Terminal lab share capability parsing, controls, presets, and URL updates. Clean frames lead; Inspect adds the existing public geometry projector. Native SegmentedControl choices select the view and replay outcome. Authored example props and capability overrides retain precedence, with overrides named beside the inspector; the canonical capture profile remains fixed.
+
+Typed request constructors seed text, textarea, autocomplete, confirmation, single selection, and multiple selection from submitted answers. Submitted values override configured defaults, including empty values and false. Disabled conditional steps lose their answers immediately; still-applicable steps retain theirs and revalidate on revisit. Selection IDs retain identity when upstream choices rebuild payload objects. The general closure remains available for provider-controlled or transformed results. Back deliberately discards the current unsubmitted edit; it retains prior submitted answers. No new request kind or renderer palette is introduced.
+
+The Catalogue offers an explicitly simulated, ordered walkthrough using pure Component frames. Its shared request facts also drive the live public-adapter playground. Focused guards compare exact replay frames, in order, with completion and cancellation runs at 40/80/120 columns, 16/24/40 rows, all four colour depths, and Unicode/ASCII. Related guards cover invalid URL normalization, authored example constraints, canonical stability, type errors, explicit initial precedence, changed choices, and skipped/re-enabled steps.
+
+Visual review used the existing Catalogue on port 17391 at desktop and 390px browser widths, in Light and Dark. It covered clean and inspected frames, 40/80/120-column allocations, ASCII/Unicode, ANSI 16/256, authored Markdown's 24-column override under a requested 120-column viewport, retained values, validation, completion, cancellation, and keyboard-reachable overflow. Browser Back restored the cancellation checkpoint. Automated coverage extends the existing CLI preview and Terminal conformance modules; final machine evidence belongs to the exact committed HEAD's discern Proof.
+
+Review URLs:
+
+- Component CLI: `http://localhost:17391/catalogue/components/command/?surface=cli#component-command`
+- Authored constraint: `http://localhost:17391/catalogue/components/markdown/?surface=cli&example=narrow-layout&view=inspect&preset=wide#component-markdown`
+- Clean flow: `http://localhost:17391/catalogue/terminal/guided-setup/?view=clean&step=7&replay=completion`
+- Inspect retained answer: `http://localhost:17391/catalogue/terminal/guided-setup/?view=inspect&step=5&preset=compact&unicode=0&color=ansi16`
+- Cancellation: `http://localhost:17391/catalogue/terminal/guided-setup/?view=clean&step=7&replay=cancellation`
+
+Live review: `deno task playground:cli form`. Submit an empty name, correct it to Maple, accept Email, enter team@example.test, then press Ctrl+U at Review and Enter on the retained address. Enter completes with all four answers; Escape cancels with Dismissed and terminal restoration. Both paths were exercised manually (80-column Unicode completion and 40-column ASCII cancellation). Choose Local file to skip the address. The playground performs no setup effects.
+
+Review identity: branch `agent/refine-2p-d81053`, worktree `/Users/jack/Sites/discern-design-system.worktrees/refine-2p-d81053`. Acceptance requires the owner's confirmation after green Proof; the preview is stopped before the final gate.

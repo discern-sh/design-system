@@ -16,13 +16,78 @@ import {
   catalogueCliExampleProps,
   CliComponentPreview,
   CliExamplePreview,
+  projectCliExample,
 } from "../catalogue/cli-preview.tsx";
+import { parseTerminalLabState } from "../catalogue/terminal-lab-state.ts";
+import { projectTerminalLayoutRecipe } from "../catalogue/terminal-layout-inspector.tsx";
 import { registry } from "../catalogue/generated/registry.ts";
 import { resolveCatalogueTerminalPresentation } from "../catalogue/terminal-theme.ts";
 
 const fieldLight = resolveCatalogueTerminalPresentation("light", undefined);
 const fieldDark = resolveCatalogueTerminalPresentation("dark", undefined);
 const fractionalAccent = resolveCatalogueTerminalPresentation("dark", 137.5);
+
+Deno.test("Component inspection and recipe projection share capability state without rewriting example facts", () => {
+  for (const slug of ["command", "markdown", "select"]) {
+    const entry = registry.find(({ meta }) => meta.slug === slug)!;
+    assert(entry.cli.stance === "rendered");
+    for (const example of entry.cli.examples) {
+      const facts = JSON.stringify(example);
+      const canonical = projectCliExample(entry, example.id, fieldLight).output;
+      for (const columns of [40, 80, 120]) {
+        for (const unicode of [true, false]) {
+          for (const color of ["none", "ansi16", "ansi256", "truecolor"]) {
+            const controls = ["unicode", "colorDepth"] as const;
+            const { state } = parseTerminalLabState(
+              new URLSearchParams(
+                `columns=${columns}&unicode=${unicode ? 1 : 0}&color=${color}`,
+              ),
+              controls,
+            );
+            const inspected = projectCliExample(
+              entry,
+              example.id,
+              fieldLight,
+              state,
+            );
+            const cli = entry.cli;
+            const recipe = {
+              id: "future-specimen",
+              title: "Future specimen",
+              description: "Same authored example",
+              components: [slug],
+              capabilityControls: controls,
+              source: "",
+              render: (capabilities: Parameters<typeof cli.render>[1]) =>
+                cli.render(
+                  catalogueCliExampleProps(slug, example.props, fieldLight),
+                  resolveCliExampleCapabilities(example, capabilities),
+                ),
+            };
+            assertEquals(
+              inspected.output,
+              projectTerminalLayoutRecipe(recipe, state, fieldLight).output,
+            );
+            for (
+              const [key, value] of Object.entries(example.capabilities ?? {})
+            ) {
+              assertEquals(
+                inspected
+                  .capabilities[key as keyof typeof inspected.capabilities],
+                value,
+              );
+            }
+          }
+        }
+      }
+      assertEquals(JSON.stringify(example), facts);
+      assertEquals(
+        projectCliExample(entry, example.id, fieldLight).output,
+        canonical,
+      );
+    }
+  }
+});
 
 Deno.test("one named CLI specimen uses the bare shared projection", () => {
   const entry = registry.find(({ cli }) => cli.stance === "rendered");

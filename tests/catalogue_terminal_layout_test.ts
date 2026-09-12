@@ -55,20 +55,24 @@ Deno.test("Catalogue terminal compositions form one source-backed inventory", ()
       "failure-report",
       "command-reference",
       "guided-choice",
+      "guided-setup",
       "markdown-browser",
     ],
   );
 
   const componentSlugs = new Set(registry.map(({ meta }) => meta.slug));
   for (const recipe of cliCompositionRecipes) {
-    if (recipe.id === "markdown-browser") {
+    if (recipe.replay) {
+      assertStringIncludes(recipe.source, "sequentialTextStep");
+      assertStringIncludes(recipe.source, "/cli/interactive");
+    } else if (recipe.id === "markdown-browser") {
       assertStringIncludes(recipe.source, "renderMarkdownBrowser");
       assertStringIncludes(recipe.source, "/cli/interactive");
     } else {
       assertStringIncludes(recipe.source, "composeCliBlocks");
       assertStringIncludes(recipe.source, "createCliPresenter");
     }
-    assertStringIncludes(recipe.source, "const output =");
+    if (!recipe.replay) assertStringIncludes(recipe.source, "const output =");
     for (const slug of recipe.components) {
       assert(componentSlugs.has(slug), `${recipe.id} names unknown ${slug}`);
     }
@@ -94,7 +98,7 @@ Deno.test("Terminal index remains light and detail renders one focused URL-backe
   const currentUrl = new URL(
     `${
       catalogueTerminalLayoutPath(recipe.id)
-    }?preset=wide&columns=96&rows=31&unicode=0&color=ansi16&grid=1`,
+    }?preset=wide&columns=96&rows=31&unicode=0&color=ansi16&grid=1&view=inspect`,
     "https://catalogue.example",
   );
   const detail = renderToStaticMarkup(createElement(TerminalDetailPage, {

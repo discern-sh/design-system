@@ -575,14 +575,14 @@ Deno.test("textarea journey submits its multiline value", async () => {
 
 Deno.test("form journey retains answers across Ctrl+U back-navigation", async () => {
   const io = new FakeTerminalIO(
-    [`Ada${ENTER}`, CTRL_U, ENTER, ENTER, ENTER],
+    [`Ada${ENTER}`, CTRL_U, ENTER, ENTER, `team@example.test${ENTER}`, ENTER],
     { columns: 60 },
   );
   assertEquals(await runJourney(journey("form"), testRuntime(io)), "completed");
   assertStringIncludes(io.output(), "Back.");
   assertStringIncludes(
     io.output(),
-    'Result: object {"name":"Ada","terminal":true,"confirmed":true}',
+    'Result: object {"name":"Ada","delivery":"email","address":"team@example.test","confirmed":true}',
   );
   assertEquals(io.rawTransitions.at(-1), false);
 });

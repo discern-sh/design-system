@@ -1,3 +1,4 @@
+import { replayGuidedSetup } from "./guided-flow.ts";
 import type { TerminalCapabilities } from "../src/cli/capabilities.ts";
 import type { TerminalLabCapability } from "./terminal-lab-state.ts";
 import {
@@ -23,6 +24,8 @@ import { renderMarkdownBrowserCatalogueFrame } from "./markdown-browser-example.
 
 /** A complete Catalogue-only CLI recipe built from public package renderers. */
 export interface CliCompositionRecipe {
+  /** Supplied semantic frames verified against real completion and cancellation runs. */
+  readonly replay?: typeof replayGuidedSetup;
   readonly id: string;
   readonly title: string;
   readonly description: string;
@@ -582,5 +585,38 @@ export const cliCompositionRecipes: readonly CliCompositionRecipe[] = [
   failureReportRecipe,
   commandReferenceRecipe,
   guidedChoiceRecipe,
+  {
+    id: "guided-setup",
+    title: "Guided workspace setup",
+    description:
+      "Replay the public interactive adapter from entry through validation, correction and back navigation to completion or cancellation.",
+    components: ["input", "select", "switch", "process-steps"],
+    capabilityControls: ["unicode", "colorDepth"],
+    replay: replayGuidedSetup,
+    render: (
+      capabilities,
+      presentation = defaultCatalogueTerminalPresentation,
+      rows = 24,
+    ) =>
+      replayGuidedSetup(capabilities, presentation, rows, "completion")
+        .frames[0]!.output,
+    source:
+      `import { createSequentialForm, sequentialTextStep, sequentialConfirmationStep } from "@discern-sh/design-system/cli/interactive";
+
+await createSequentialForm({ label: "Workspace setup" })
+  .add(sequentialTextStep({
+    id: "name", label: "Workspace name",
+    request: { label: "Workspace name", required: true },
+    summarize: (value) => value,
+  }))
+  .add(sequentialConfirmationStep({
+    id: "confirmed", label: "Review",
+    request: { label: "Complete setup?", validate: (value) => value ? undefined : "Choose Yes, or Escape to cancel." },
+  }))
+  .submit();
+
+// Full live journey: deno task playground:cli form
+// Source and replay actions: catalogue/guided-flow.ts`,
+  },
   markdownBrowserRecipe,
 ];

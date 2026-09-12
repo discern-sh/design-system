@@ -1,18 +1,24 @@
-import { useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
+import { Button } from "../src/components/core/button/button.tsx";
 import { CopyButton } from "../src/components/docs/copy-button/copy-button.tsx";
+import {
+  TerminalCapabilityControls,
+  TerminalViewControl,
+  useTerminalLabState,
+} from "./terminal-capability-controls.tsx";
 import { Select } from "../src/components/forms/select/select.tsx";
+import { SegmentedControl } from "../src/components/forms/segmented-control/segmented-control.tsx";
+
+import { CliOutputPreview } from "./cli-preview.tsx";
 import { OverflowCue } from "../src/components/layout/overflow-cue/overflow-cue.tsx";
 import type { TerminalCapabilities } from "../src/cli/capabilities.ts";
 import { projectTerminalInspectorHtml } from "../src/cli/projection.ts";
 import type { CliCompositionRecipe } from "./cli-compositions.ts";
 import {
-  parseTerminalLabState,
+  terminalLabCapabilities,
   type TerminalLabState,
   terminalLabStateUrl,
   terminalViewportPreset,
-  terminalViewportPresets,
-  withTerminalCustomGeometry,
-  withTerminalViewportPreset,
 } from "./terminal-lab-state.ts";
 import { appearanceProjection } from "../src/tokens/appearance.ts";
 import type { CatalogueTerminalPresentation } from "./terminal-theme.ts";
@@ -29,15 +35,13 @@ export function projectTerminalLayoutRecipe(
   recipe: CliCompositionRecipe,
   state: TerminalLabState,
   presentation: CatalogueTerminalPresentation,
+  frame?: string,
 ): TerminalLayoutProjection {
-  const capabilities: TerminalCapabilities = {
-    ansiControl: true,
-    colorDepth: state.colorDepth,
-    columns: state.columns,
-    hyperlinks: state.hyperlinks,
-    unicode: state.unicode,
-  };
-  const output = recipe.render(capabilities, presentation, state.rows);
+  const capabilities = terminalLabCapabilities(
+    state,
+    recipe.capabilityControls,
+  );
+  const output = frame ?? recipe.render(capabilities, presentation, state.rows);
   const profile = terminalViewportPreset(state.presetId);
   const title = `${recipe.title} · ${state.custom ? "Custom" : profile.label}`;
   return {
@@ -53,19 +57,6 @@ export function projectTerminalLayoutRecipe(
   };
 }
 
-function validCustomGeometry(
-  state: TerminalLabState,
-  field: "columns" | "rows",
-  value: number,
-): TerminalLabState | undefined {
-  const minimum = field === "columns" ? 20 : 8;
-  const maximum = field === "columns" ? 240 : 100;
-  if (!Number.isSafeInteger(value) || value < minimum || value > maximum) {
-    return undefined;
-  }
-  return withTerminalCustomGeometry(state, { ...state, [field]: value });
-}
-
 /** Focused capability lab for one complete CLI recipe. */
 export function TerminalLayoutLab(
   { recipe, presentation, initialUrl }: {
@@ -74,38 +65,99 @@ export function TerminalLayoutLab(
     readonly initialUrl: URL;
   },
 ) {
-  const initial = useMemo(
-    () =>
-      parseTerminalLabState(
-        initialUrl.searchParams,
-        recipe.capabilityControls,
-      ),
-    [initialUrl, recipe],
+  const { state, notices, update } = useTerminalLabState(
+    recipe.capabilityControls,
+    initialUrl,
   );
-  const [state, setState] = useState<TerminalLabState>(initial.state);
-  const [notices, setNotices] = useState(initial.notices);
+  const replayName = useId();
+  const [outcome, setOutcome] = useState<"completion" | "cancellation">(
+    initialUrl.searchParams.get("replay") === "cancellation"
+      ? "cancellation"
+      : "completion",
+  );
+  const [requestedFrame, setRequestedFrame] = useState(
+    Number(initialUrl.searchParams.get("step") ?? 0),
+  );
+  useEffect(() => {
+    const restore = (url: URL) => {
+      setOutcome(
+        url.searchParams.get("replay") === "cancellation"
+          ? "cancellation"
+          : "completion",
+      );
+      setRequestedFrame(Number(url.searchParams.get("step") ?? 0));
+    };
+    restore(initialUrl);
+    const onPopState = () => restore(new URL(globalThis.location.href));
+    globalThis.addEventListener?.("popstate", onPopState);
+    return () => globalThis.removeEventListener?.("popstate", onPopState);
+  }, [initialUrl.href]);
+  const replay = useMemo(() => {
+    try {
+      return {
+        result: recipe.replay?.(
+          terminalLabCapabilities(state, recipe.capabilityControls),
+          presentation,
+          state.rows,
+          outcome,
+        ),
+      };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : "Replay could not run.",
+      };
+    }
+  }, [
+    recipe,
+    presentation,
+    state.columns,
+    state.rows,
+    state.unicode,
+    state.colorDepth,
+    state.hyperlinks,
+    outcome,
+  ]);
+  const frames = replay.result?.frames ?? [];
+  const frameIndex =
+    Number.isSafeInteger(requestedFrame) && requestedFrame >= 0 &&
+      requestedFrame < frames.length
+      ? requestedFrame
+      : 0;
+  const selectReplay = (nextOutcome: typeof outcome, nextFrame: number) => {
+    setOutcome(nextOutcome);
+    setRequestedFrame(nextFrame);
+    if (globalThis.location !== undefined) {
+      const url = new URL(globalThis.location.href);
+      url.searchParams.set("replay", nextOutcome);
+      url.searchParams.set("step", String(nextFrame));
+      globalThis.history?.replaceState(null, "", url);
+    }
+  };
   const projection = useMemo(
-    () => projectTerminalLayoutRecipe(recipe, state, presentation),
-    [presentation, recipe, state],
+    () =>
+      projectTerminalLayoutRecipe(
+        recipe,
+        state,
+        presentation,
+        frames[frameIndex]?.output ?? (recipe.replay ? "" : undefined),
+      ),
+    [presentation, recipe, state, frames, frameIndex],
   );
   const shareUrl = useMemo(
-    () => terminalLabStateUrl(initialUrl, state, recipe.capabilityControls),
-    [initialUrl, recipe, state],
+    () => {
+      const url = terminalLabStateUrl(
+        initialUrl,
+        state,
+        recipe.capabilityControls,
+      );
+      if (recipe.replay) {
+        url.searchParams.set("replay", outcome);
+        url.searchParams.set("step", String(frameIndex));
+      }
+      return url;
+    },
+    [initialUrl, recipe, state, outcome, frameIndex],
   );
-
-  const update = (next: TerminalLabState): void => {
-    setState(next);
-    setNotices([]);
-    const url = terminalLabStateUrl(
-      initialUrl,
-      next,
-      recipe.capabilityControls,
-    );
-    globalThis.history?.replaceState(null, "", url);
-  };
-  const activePreset = terminalViewportPreset(state.presetId);
-  const hasCapability = (capability: string): boolean =>
-    recipe.capabilityControls.some((candidate) => candidate === capability);
 
   return (
     <article
@@ -117,171 +169,124 @@ export function TerminalLayoutLab(
       )}
       data-discern-terminal-accent-hue={presentation.appearance.accent}
     >
-      <OverflowCue
-        axis="both"
-        scrollContainer="descendant"
-        className="discern-catalogue-terminal-lab__frame"
-      >
-        <div
-          dangerouslySetInnerHTML={{ __html: projection.inspectorHtml }}
-        />
-      </OverflowCue>
-
-      <section
-        className="discern-catalogue-terminal-lab__controls"
-        aria-labelledby="terminal-capability-heading"
-      >
-        <div className="discern-catalogue-terminal-lab__control-heading">
-          <div>
-            <h2 id="terminal-capability-heading">Capability controls</h2>
-            <p>
-              These viewport examples are reproducible; they do not limit
-              supported terminal sizes.
-            </p>
-          </div>
-          <strong data-discern-terminal-lab-mode>
-            {state.custom ? "Custom" : activePreset.label}
-          </strong>
-        </div>
-
-        {notices.length > 0 && (
-          <div
-            className="discern-catalogue-terminal-lab__notice"
-            role="status"
-            aria-live="polite"
+      <TerminalViewControl state={state} update={update} />
+      {recipe.replay && (
+        <p data-discern-replay-step>
+          Simulated replay · {frames[frameIndex]?.label}
+        </p>
+      )}
+      {state.view === "clean"
+        ? (
+          <CliOutputPreview
+            value={projection.output}
+            label={`${recipe.title} terminal frame`}
+            presentation={presentation}
+            viewport={state}
+          />
+        )
+        : (
+          <OverflowCue
+            axis="both"
+            scrollContainer="descendant"
+            className="discern-catalogue-terminal-lab__frame"
           >
-            <strong>Some shared settings were adjusted.</strong>
-            <ul>
-              {notices.map((notice) => <li key={notice}>{notice}</li>)}
-            </ul>
-          </div>
+            <div
+              dangerouslySetInnerHTML={{ __html: projection.inspectorHtml }}
+            />
+          </OverflowCue>
         )}
 
-        <fieldset className="discern-catalogue-terminal-lab__presets">
-          <legend>Viewport preset</legend>
-          <div>
-            {terminalViewportPresets.map((preset) => (
-              <button
-                type="button"
-                aria-pressed={!state.custom && state.presetId === preset.id}
-                onClick={() =>
-                  update(withTerminalViewportPreset(state, preset.id))}
-                key={preset.id}
-              >
-                <span>{preset.label}</span>
-                <small>{preset.columns} × {preset.rows}</small>
-              </button>
-            ))}
-          </div>
-        </fieldset>
-
-        <div className="discern-catalogue-terminal-lab__fields">
-          <label>
-            <span>Columns</span>
-            <input
-              type="number"
-              min="20"
-              max="240"
-              step="1"
-              value={state.columns}
-              onChange={(event) => {
-                const next = validCustomGeometry(
-                  state,
-                  "columns",
-                  event.currentTarget.valueAsNumber,
-                );
-                if (next !== undefined) update(next);
-              }}
-            />
-          </label>
-          <label>
-            <span>Rows</span>
-            <input
-              type="number"
-              min="8"
-              max="100"
-              step="1"
-              value={state.rows}
-              onChange={(event) => {
-                const next = validCustomGeometry(
-                  state,
-                  "rows",
-                  event.currentTarget.valueAsNumber,
-                );
-                if (next !== undefined) update(next);
-              }}
-            />
-          </label>
-          {hasCapability("unicode") && (
-            <label>
-              <span>Character set</span>
-              <Select
-                value={state.unicode ? "unicode" : "ascii"}
-                onChange={(event) =>
-                  update({
-                    ...state,
-                    unicode: event.currentTarget.value === "unicode",
-                  })}
-              >
-                <option value="unicode">Unicode</option>
-                <option value="ascii">ASCII</option>
-              </Select>
-            </label>
-          )}
-          {hasCapability("colorDepth") && (
-            <label>
-              <span>Colour depth</span>
-              <Select
-                value={state.colorDepth}
-                onChange={(event) =>
-                  update({
-                    ...state,
-                    colorDepth: event.currentTarget
-                      .value as TerminalLabState["colorDepth"],
-                  })}
-              >
-                <option value="truecolor">Truecolour</option>
-                <option value="ansi256">ANSI 256</option>
-                <option value="ansi16">ANSI 16</option>
-                <option value="none">No colour</option>
-              </Select>
-            </label>
-          )}
-        </div>
-
-        <div className="discern-catalogue-terminal-lab__options">
-          {hasCapability("hyperlinks") && (
-            <label>
-              <input
-                type="checkbox"
-                checked={state.hyperlinks}
-                onChange={(event) =>
-                  update({
-                    ...state,
-                    hyperlinks: event.currentTarget.checked,
-                  })}
-              />
-              <span>Hyperlink support</span>
-            </label>
-          )}
-          <label>
-            <input
-              type="checkbox"
-              checked={state.showGrid}
-              onChange={(event) =>
-                update({ ...state, showGrid: event.currentTarget.checked })}
-            />
-            <span>Show cell grid</span>
-          </label>
-          <button
-            type="button"
-            onClick={() =>
-              update(withTerminalViewportPreset(state, state.presetId))}
-          >
-            Reset to {activePreset.label} preset
-          </button>
-        </div>
-      </section>
+      {recipe.replay && (
+        <section
+          className="discern-catalogue-terminal-replay"
+          aria-label="Scripted guided flow replay"
+        >
+          <p>
+            <strong>Simulated walkthrough.</strong>{" "}
+            No setup is applied. Run the same journey live in your terminal.
+          </p>
+          <SegmentedControl
+            name={`replay-${replayName}`}
+            label="Replay outcome"
+            value={outcome}
+            items={[{ value: "completion", label: "Completion" }, {
+              value: "cancellation",
+              label: "Cancellation",
+            }]}
+            onValueChange={(value) =>
+              selectReplay(
+                value === "cancellation" ? "cancellation" : "completion",
+                0,
+              )}
+          />
+          {replay.error
+            ? <p role="alert">{replay.error}</p>
+            : frames.length === 0
+            ? <p role="status">Preparing scripted frames...</p>
+            : (
+              <>
+                <label>
+                  <span>Replay frame</span>
+                  <Select
+                    value={String(frameIndex)}
+                    onChange={(event) =>
+                      selectReplay(outcome, Number(event.currentTarget.value))}
+                  >
+                    {frames.map((frame, index) => (
+                      <option value={index} key={index}>
+                        {index + 1}. {frame.label}
+                      </option>
+                    ))}
+                  </Select>
+                </label>
+                <div className="discern-catalogue-terminal-replay__navigation">
+                  <Button
+                    type="button"
+                    disabled={frameIndex === 0}
+                    onClick={() => selectReplay(outcome, frameIndex - 1)}
+                  >
+                    Previous frame
+                  </Button>
+                  <span aria-live="polite">
+                    Frame {frameIndex + 1} of {frames.length}
+                  </span>
+                  <Button
+                    type="button"
+                    disabled={frameIndex === frames.length - 1}
+                    onClick={() => selectReplay(outcome, frameIndex + 1)}
+                  >
+                    Next frame
+                  </Button>
+                </div>
+              </>
+            )}
+          <p>
+            Live:{" "}
+            <code>deno task playground:cli form</code>. Enter an empty name to
+            see validation, enter Maple, choose Email, enter team@example.test,
+            then Ctrl+U and Enter to revisit the retained address. Enter
+            completes; Escape cancels.
+          </p>
+          <p>
+            Back navigation keeps submitted answers. It discards edits in the
+            field you leave. Local file delivery skips the email step and
+            removes its answer.
+          </p>
+        </section>
+      )}
+      {state.view === "inspect" && (
+        <p>
+          Allocation: {state.columns} columns × {state.rows}{" "}
+          rows. The browser uses a fixed font size; scroll to inspect cells
+          beyond the displayed area.
+        </p>
+      )}
+      <TerminalCapabilityControls
+        state={state}
+        notices={notices}
+        controls={recipe.capabilityControls}
+        update={update}
+      />
 
       <div className="discern-catalogue-terminal-lab__actions">
         <CopyButton

@@ -6,6 +6,7 @@ import {
 } from "../../../catalogue/routes.ts";
 import {
   parseTerminalLabState,
+  terminalLabCapabilities,
   terminalViewportPresets,
 } from "../../../catalogue/terminal-lab-state.ts";
 import { projectTerminalLayoutRecipe } from "../../../catalogue/terminal-layout-inspector.tsx";
@@ -102,6 +103,7 @@ export async function verifyTerminalCatalogue(
           origin,
         );
         detailUrl.searchParams.set("preset", preset.id);
+        detailUrl.searchParams.set("view", "inspect");
         detailUrl.searchParams.set("theme", "light");
         detailUrl.searchParams.set("grid", presetIndex % 2 === 0 ? "1" : "0");
         if (recipe.capabilityControls.includes("unicode")) {
@@ -140,10 +142,29 @@ export async function verifyTerminalCatalogue(
           detailUrl.searchParams,
           recipe.capabilityControls,
         );
+        const replay = recipe.replay
+          ? await recipe.replay(
+            terminalLabCapabilities(parsed.state, recipe.capabilityControls),
+            fieldPresentation("light"),
+            parsed.state.rows,
+            "completion",
+          )
+          : undefined;
+        if (replay) {
+          await eventually(
+            async () =>
+              (await page.locator("[data-discern-replay-step]")
+                .textContent())?.includes(
+                  replay.frames[0]?.label ?? "missing",
+                ) === true,
+            "Scripted replay did not reach its entry frame",
+          );
+        }
         const expected = projectTerminalLayoutRecipe(
           recipe,
           parsed.state,
           fieldPresentation("light"),
+          replay?.frames[0]?.output,
         );
         const expectedInspection = inspectTerminalLayout(expected.output, {
           columns: preset.columns,
@@ -189,7 +210,7 @@ export async function verifyTerminalCatalogue(
       origin,
     );
     customUrl.search =
-      "?preset=wide&columns=97&rows=33&unicode=0&color=ansi256&grid=1&theme=light";
+      "?view=inspect&preset=wide&columns=97&rows=33&unicode=0&color=ansi256&grid=1&theme=light";
     await loadCataloguePage(page, customUrl.href);
     invariant(
       await page.locator("[data-discern-terminal-lab-mode]").textContent() ===
@@ -280,7 +301,8 @@ export async function verifyTerminalCatalogue(
     );
 
     const invalidUrl = new URL(customUrl.href);
-    invalidUrl.search = "?preset=unknown&columns=9999&rows=-2&theme=light";
+    invalidUrl.search =
+      "?view=inspect&preset=unknown&columns=9999&rows=-2&theme=light";
     await loadCataloguePage(page, invalidUrl.href);
     const recoveryNotice = page.locator(
       ".discern-catalogue-terminal-lab__notice[role=status]",
@@ -314,7 +336,7 @@ export async function verifyTerminalCatalogue(
       origin,
     );
     edgeUrl.search =
-      "?preset=tall&unicode=1&color=truecolor&grid=0&theme=light";
+      "?view=inspect&preset=tall&unicode=1&color=truecolor&grid=0&theme=light";
     await loadCataloguePage(page, edgeUrl.href);
     const cue = page.locator(".discern-catalogue-terminal-lab__frame");
     const viewport = cue.locator("[data-discern-terminal-viewport]");
@@ -364,6 +386,92 @@ export async function verifyTerminalCatalogue(
         `Narrow Terminal lab overflowed its document by ${documentOverflow}px`,
       );
     });
+
+    const cleanUrl = new URL(
+      catalogueTerminalLayoutPath(activeRecipe.id),
+      origin,
+    );
+    cleanUrl.search = "?theme=light";
+    await loadCataloguePage(page, cleanUrl.href);
+    invariant(
+      await page.locator("[data-discern-terminal-inspector]").count() === 0,
+      "Terminal default is not a clean frame",
+    );
+    const cleanText = await page.locator(".discern-catalogue-cli-output")
+      .textContent();
+    await page.getByRole("radio", { name: "Inspect", exact: true }).check();
+    invariant(
+      await page.locator("[data-discern-terminal-inspector]").count() === 1,
+      "Inspect selection did not reveal geometry",
+    );
+    await page.getByRole("radio", { name: "Clean", exact: true }).check();
+    invariant(
+      await page.locator(".discern-catalogue-cli-output").textContent() ===
+        cleanText,
+      "View switching changed the terminal frame",
+    );
+
+    const replayUrl = new URL(
+      catalogueTerminalLayoutPath("guided-setup"),
+      origin,
+    );
+    await loadCataloguePage(page, replayUrl.href);
+    await eventually(
+      async () =>
+        await page.getByRole("combobox", { name: "Replay frame" }).count() ===
+          1,
+      "Guided replay did not load",
+    );
+    await page.getByRole("button", { name: "Next frame" }).click();
+    invariant(
+      (await page.locator(".discern-catalogue-cli-output").textContent())
+        ?.includes("Enter a workspace name.") === true,
+      "Replay omitted validation correction",
+    );
+    await page.getByRole("combobox", { name: "Replay frame" }).selectOption(
+      "5",
+    );
+    invariant(
+      (await page.locator(".discern-catalogue-cli-output").textContent())
+        ?.includes("team@example.test") === true,
+      "Back navigation lost the address",
+    );
+    await page.getByRole("combobox", { name: "Replay frame" }).selectOption(
+      "7",
+    );
+    invariant(
+      (await page.locator(".discern-catalogue-cli-output").textContent())
+        ?.includes("Confirmed") === true,
+      "Replay omitted completion",
+    );
+    await page.getByRole("radio", { name: "Cancellation", exact: true })
+      .check();
+    await eventually(
+      async () =>
+        await page.getByRole("combobox", { name: "Replay frame" }).count() ===
+          1,
+      "Cancellation replay did not load",
+    );
+    await page.getByRole("combobox", { name: "Replay frame" }).selectOption(
+      "7",
+    );
+    invariant(
+      (await page.locator(".discern-catalogue-cli-output").textContent())
+        ?.includes("Dismissed.") === true,
+      "Replay omitted cancellation",
+    );
+    await page.getByRole("link", { name: "Markdown browser →" }).click();
+    await page.goBack();
+    await eventually(
+      async () =>
+        await page.getByRole("combobox", { name: "Replay frame" })
+            .inputValue() === "7" &&
+        await page.getByRole("radio", { name: "Cancellation", exact: true })
+          .isChecked() &&
+        (await page.locator(".discern-catalogue-cli-output").textContent())
+            ?.includes("Dismissed.") === true,
+      "Browser Back did not restore the shared replay checkpoint",
+    );
 
     await verifyOverflowCueCatalogue(page, origin);
 

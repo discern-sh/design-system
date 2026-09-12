@@ -1,3 +1,5 @@
+import { guidedSetupActions } from "../../catalogue/guided-flow.ts";
+import { guidedSetupForm } from "./guided-flow.ts";
 import { applicationDemoOptions } from "./application.ts";
 /**
  * The playground's journey inventory: focused live journeys for every
@@ -10,7 +12,6 @@ import { applicationDemoOptions } from "./application.ts";
  */
 
 import {
-  createSequentialForm,
   InteractionCancelled,
   MarkdownBrowserRefusalError,
   type MarkdownBrowserResult,
@@ -506,60 +507,17 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
   },
   {
     id: "form",
-    title: "Sequential form",
+    title: "Guided workspace setup",
     section: "Interactive APIs",
     description:
-      "Conditional steps, retained answers, summaries, and Ctrl+U back-navigation.",
+      "Complete entry, validation correction, retained-answer back navigation, and completion or cancellation.",
     run: async (runtime) => {
-      runtime.print("Ctrl+U returns to the previous applicable step.");
-      const values = await createSequentialForm({
-        label: "Component proposal",
-        io: runtime.io,
-      })
-        .add({
-          id: "name",
-          label: "Name",
-          run: (_values, previous, formRuntime) =>
-            requestText({
-              label: "Component name",
-              initialValue: typeof previous === "string" ? previous : "",
-              required: "A component name is required.",
-            }, formRuntime),
-          summarize: (value) => String(value),
-        })
-        .add({
-          id: "terminal",
-          label: "Terminal stance",
-          run: (_values, previous, formRuntime) =>
-            requestConfirmation({
-              label: "Render in terminals?",
-              initialValue: typeof previous === "boolean" ? previous : true,
-            }, formRuntime),
-          summarize: (value) => value === true ? "Rendered" : "Exempt",
-        })
-        .add({
-          id: "reason",
-          label: "Exemption reason",
-          when: (answers) => answers.terminal === false,
-          run: (_values, previous, formRuntime) =>
-            requestText({
-              label: "Exemption reason",
-              initialValue: typeof previous === "string" ? previous : "",
-              required: "Exempt stances record a reason.",
-            }, formRuntime),
-          summarize: (value) => String(value),
-        })
-        .add({
-          id: "confirmed",
-          label: "Confirm",
-          run: (_values, previous, formRuntime) =>
-            requestConfirmation({
-              label: "Submit proposal?",
-              initialValue: typeof previous === "boolean" ? previous : true,
-            }, formRuntime),
-          summarize: (value) => value === true ? "Yes" : "No",
-        })
-        .submit();
+      runtime.print("Follow the Catalogue replay, or enter your own answers:");
+      for (const action of guidedSetupActions) runtime.print(action.label);
+      runtime.print(
+        "At Review, Enter completes; Escape cancels. Ctrl+U discards the current unsubmitted edit and restores the prior submitted answer.",
+      );
+      const values = await guidedSetupForm({ io: runtime.io }).submit();
       report(runtime, values);
     },
   },
@@ -1183,6 +1141,21 @@ export const interactiveExportCoverage: Readonly<
   requestAutocomplete: { journey: "autocomplete" },
   requestMarkdownBrowser: { journey: "markdown-browser" },
   requestTextarea: { journey: "textarea" },
+  sequentialTextStep: { journey: "form" },
+  sequentialConfirmationStep: { journey: "form" },
+  sequentialSelectionStep: { journey: "form" },
+  sequentialSelectionsStep: {
+    excluded:
+      "Typed retention constructor covered by the sequential request suite; the form journey demonstrates the shared retention contract.",
+  },
+  sequentialTextareaStep: {
+    excluded:
+      "Typed retention constructor covered by the sequential request suite; the form journey demonstrates the shared retention contract.",
+  },
+  sequentialAutocompleteStep: {
+    excluded:
+      "Typed retention constructor covered by the sequential request suite; the form journey demonstrates the shared retention contract.",
+  },
   createSequentialForm: { journey: "form" },
   withSpinner: { journey: "spinner" },
   withDeterminateProgress: { journey: "progress" },

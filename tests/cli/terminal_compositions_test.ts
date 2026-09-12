@@ -11,7 +11,7 @@ const viewports = [
 ] as const;
 
 Deno.test("complete CLI compositions stay deterministic and width-safe", () => {
-  assertEquals(cliCompositionRecipes.length, 5);
+  assertEquals(cliCompositionRecipes.length, 6);
   assertEquals(
     new Set(cliCompositionRecipes.map((recipe) => recipe.id)).size,
     cliCompositionRecipes.length,
