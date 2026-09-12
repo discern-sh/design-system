@@ -1,4 +1,8 @@
 import {
+  type ComponentBehavior,
+  componentBehaviors,
+} from "../../../src/types/component-meta.ts";
+import {
   catalogueGroupFromSlug,
   catalogueGroupSlug,
   catalogueRoutePaths,
@@ -14,13 +18,23 @@ export interface ComponentExplorerState {
   readonly group?: ComponentGroup;
   readonly purpose?: CataloguePurpose;
   readonly showAll: boolean;
+  readonly availability?: "web" | "cli";
+  readonly behavior?: ComponentBehavior;
 }
 
 /** Parse only valid, reproducible discovery controls from one Components URL. */
 export function parseComponentExplorerState(url: URL): ComponentExplorerState {
   const group = catalogueGroupFromSlug(url.searchParams.get("group"));
   const purpose = cataloguePurpose(url.searchParams.get("purpose"));
+  const availability = url.searchParams.get("availability");
+  const behavior = componentBehaviors.find((value) =>
+    value === url.searchParams.get("behavior")
+  );
   return {
+    ...(availability === "web" || availability === "cli"
+      ? { availability }
+      : {}),
+    ...(behavior === undefined ? {} : { behavior }),
     query: url.searchParams.get("q") ?? "",
     ...(group === undefined ? {} : { group }),
     ...(purpose === undefined ? {} : { purpose }),
@@ -37,5 +51,7 @@ export function componentExplorerHref(state: ComponentExplorerState): string {
       : catalogueGroupSlug(state.group),
     purpose: state.purpose,
     all: state.showAll ? "1" : undefined,
+    availability: state.availability,
+    behavior: state.behavior,
   });
 }

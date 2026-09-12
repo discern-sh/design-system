@@ -95,6 +95,8 @@ The machine-only `?conformance=1` route remains exhaustive. Ordinary indexes sta
 
 ## Where to start
 
+[Component discovery](component-discovery.md) explains capability filtering, representative framing, and shareable return navigation.
+
 For independent page, style, and test work, use the [Catalogue ownership seams](ownership-seams.md) before editing shared consumers.
 
 | Concern                                                       | Authority                                                                                                                                                                                                                                     |

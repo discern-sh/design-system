@@ -2,8 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import {
   cataloguePurposeDetails,
   cataloguePurposes,
+  componentBehaviors,
   componentGroups,
 } from "../../../src/types/component-meta.ts";
+import { SegmentedControl } from "../../../src/components/forms/segmented-control/segmented-control.tsx";
+import { componentResultId } from "./return-context.ts";
 import { Select } from "../../../src/components/forms/select/select.tsx";
 import type { RegistryEntry } from "../../generated/registry.ts";
 import {
@@ -15,7 +18,11 @@ import { explanatoryMatchReason, searchRecords } from "../../search/mod.ts";
 import { announceCatalogueLocationChange } from "../../shell/location.ts";
 import { preserveCatalogueAppearanceHref } from "../../shell/appearance-state.ts";
 import { CataloguePageHeader, cataloguePurpose } from "../shared.tsx";
-import { componentDirectory } from "./collections.ts";
+import {
+  componentDirectory,
+  componentSupportsSurface,
+  matchesComponentCapabilities,
+} from "./collections.ts";
 import {
   ComponentCollectionCard,
   ComponentResultCard,
@@ -58,9 +65,11 @@ export function ComponentIndexPage(
     setState(next);
     announceCatalogueLocationChange();
   };
-  const eligible = directory.components.filter(({ meta }) =>
-    (state.group === undefined || meta.group === state.group) &&
-    (state.purpose === undefined || meta.purposes?.includes(state.purpose))
+  const eligible = directory.components.filter((entry) =>
+    matchesComponentCapabilities(entry, state) &&
+    (state.group === undefined || entry.meta.group === state.group) &&
+    (state.purpose === undefined ||
+      entry.meta.purposes?.includes(state.purpose))
   );
   const matches: readonly ComponentMatch[] = state.query.trim() === ""
     ? eligible.map((entry) => ({ entry }))
@@ -78,18 +87,37 @@ export function ComponentIndexPage(
       },
     );
   const resultsVisible = state.showAll || state.group !== undefined ||
-    state.purpose !== undefined || state.query.trim() !== "";
+    state.purpose !== undefined || state.query.trim() !== "" ||
+    state.availability !== undefined || state.behavior !== undefined;
   const mixedGroups =
     new Set(matches.map(({ entry }) => entry.meta.group)).size > 1;
+
+  useEffect(() => {
+    const hash = globalThis.location.hash.slice(1);
+    const entry = matches.find(({ entry }) =>
+      componentResultId(entry.meta.slug) === hash
+    )?.entry;
+    if (entry === undefined) return;
+    const result = document.getElementById(componentResultId(entry.meta.slug));
+    const link = result?.querySelector<HTMLAnchorElement>(
+      ".discern-catalogue-component-card__inspect",
+    );
+    result?.scrollIntoView({ block: "center" });
+    link?.focus({ preventScroll: true });
+  }, [state]);
+
   const reset = () => navigate({ query: "", showAll: false });
 
   return (
-    <div className="discern-catalogue-page" id="components">
+    <div
+      className="discern-catalogue-page discern-catalogue-discovery"
+      id="components"
+    >
       <CataloguePageHeader
         index="02"
         eyebrow="Components"
-        title="Find a Component by sight or intent."
-        description="Recognise a collection, search the shared vocabulary, or open the complete directory."
+        title="Find a Component."
+        description="Browse by sight, search by intent, or filter by capability."
       />
       <div
         className="discern-catalogue-explorer-controls"
@@ -105,56 +133,123 @@ export function ComponentIndexPage(
             placeholder="Name, alias, or purpose"
           />
         </label>
-        <label>
-          <span>Group</span>
-          <Select
-            value={state.group === undefined
-              ? ""
-              : catalogueGroupSlug(state.group)}
-            onChange={(event) => {
-              const group = catalogueGroupFromSlug(
-                event.currentTarget.value,
-              );
-              navigate({
-                query: state.query,
-                showAll: true,
-                ...(group === undefined ? {} : { group }),
-                ...(state.purpose === undefined
-                  ? {}
-                  : { purpose: state.purpose }),
-              });
-            }}
-          >
-            <option value="">All Groups</option>
-            {componentGroups.map((group) => (
-              <option value={catalogueGroupSlug(group)} key={group}>
-                {group}
-              </option>
-            ))}
-          </Select>
-        </label>
-        <label>
-          <span>Purpose</span>
-          <Select
-            value={state.purpose ?? ""}
-            onChange={(event) => {
-              const purpose = cataloguePurpose(event.currentTarget.value);
-              navigate({
-                query: state.query,
-                showAll: true,
-                ...(state.group === undefined ? {} : { group: state.group }),
-                ...(purpose === undefined ? {} : { purpose }),
-              });
-            }}
-          >
-            <option value="">All purposes</option>
-            {cataloguePurposes.map((purpose) => (
-              <option value={purpose} key={purpose}>
-                {cataloguePurposeDetails[purpose].label}
-              </option>
-            ))}
-          </Select>
-        </label>
+        <SegmentedControl
+          label={`Surface · ${
+            directory.components.filter((entry) =>
+              state.availability === undefined ||
+              componentSupportsSurface(entry, state.availability)
+            ).length
+          } available`}
+          name="discern-discovery-surface"
+          value={state.availability ?? "all"}
+          items={[
+            { value: "all", label: "Any" },
+            ...(["web", "cli"] as const).map((surface) => ({
+              value: surface,
+              label: surface === "web" ? "Web" : "CLI",
+            })),
+          ]}
+          onValueChange={(value) => {
+            const { availability: _availability, ...rest } = state;
+            navigate({
+              ...rest,
+              ...(value === "web" || value === "cli"
+                ? { availability: value }
+                : {}),
+            });
+          }}
+        />
+        <details
+          className="discern-catalogue-discovery__filters"
+          open={state.group !== undefined || state.purpose !== undefined ||
+            state.behavior !== undefined}
+        >
+          <summary>
+            More filters{state.group || state.purpose || state.behavior
+              ? " (active)"
+              : ""}
+          </summary>
+          <div className="discern-catalogue-discovery__filter-fields">
+            <label>
+              <span>Group</span>
+              <Select
+                value={state.group === undefined
+                  ? ""
+                  : catalogueGroupSlug(state.group)}
+                onChange={(event) => {
+                  const group = catalogueGroupFromSlug(
+                    event.currentTarget.value,
+                  );
+                  const { group: _group, ...rest } = state;
+                  navigate({
+                    ...rest,
+                    showAll: true,
+                    ...(group === undefined ? {} : { group }),
+                  });
+                }}
+              >
+                <option value="">All Groups</option>
+                {componentGroups.map((group) => (
+                  <option value={catalogueGroupSlug(group)} key={group}>
+                    {group}
+                  </option>
+                ))}
+              </Select>
+            </label>
+            <label>
+              <span>Purpose</span>
+              <Select
+                value={state.purpose ?? ""}
+                onChange={(event) => {
+                  const purpose = cataloguePurpose(event.currentTarget.value);
+                  const { purpose: _purpose, ...rest } = state;
+                  navigate({
+                    ...rest,
+                    showAll: true,
+                    ...(purpose === undefined ? {} : { purpose }),
+                  });
+                }}
+              >
+                <option value="">All purposes</option>
+                {cataloguePurposes.map((purpose) => (
+                  <option value={purpose} key={purpose}>
+                    {cataloguePurposeDetails[purpose].label}
+                  </option>
+                ))}
+              </Select>
+            </label>
+            <label>
+              <span>Package behaviour</span>
+              <Select
+                value={state.behavior ?? ""}
+                onChange={(event) => {
+                  const { behavior: _behavior, ...rest } = state;
+                  const behavior = componentBehaviors.find((value) =>
+                    value === event.currentTarget.value
+                  );
+                  navigate({
+                    ...rest,
+                    ...(behavior === undefined ? {} : { behavior }),
+                  });
+                }}
+              >
+                <option value="">Any behaviour</option>
+                {componentBehaviors.map((behavior) => (
+                  <option key={behavior} value={behavior}>
+                    {behavior.replaceAll("-", " ")}{" "}
+                    ({directory.components.filter((entry) =>
+                      entry.meta.behaviors?.includes(behavior)
+                    ).length})
+                  </option>
+                ))}
+              </Select>
+            </label>
+            <p>
+              Declared optional browser behaviours. Native controls and
+              interactive examples may work without one.
+            </p>
+          </div>
+        </details>
         {resultsVisible
           ? <button type="button" onClick={reset}>Reset directory</button>
           : (
@@ -194,6 +289,7 @@ export function ComponentIndexPage(
                   {matches.map(({ entry, matchReason }) => (
                     <ComponentResultCard
                       entry={entry}
+                      discoveryUrl={new URL(globalThis.location.href)}
                       showGroup={mixedGroups}
                       {...(matchReason === undefined ? {} : { matchReason })}
                       key={entry.meta.slug}
