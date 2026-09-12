@@ -2,6 +2,8 @@
   .discern-callout {
     --discern-callout-fill: var(--discern-color-accent-100);
     --discern-callout-text: var(--discern-color-accent-700);
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
     gap: var(--discern-space-4);
@@ -55,8 +57,25 @@
     font-weight: var(--discern-font-weight-strong);
   }
   .discern-callout h3 {
+    margin-block-start: 0;
     margin-block-end: var(--discern-space-2);
     font-size: var(--discern-font-size-sm);
+  }
+  .discern-callout__content {
+    min-inline-size: 0;
+  }
+  .discern-callout__icon > :where(svg, img) {
+    max-inline-size: 100%;
+    max-block-size: 100%;
+  }
+  .discern-callout__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--discern-space-3);
+    margin-block-start: var(--discern-space-3);
+  }
+  .discern-callout__body > :first-child {
+    margin-block-start: 0;
   }
   .discern-callout__body {
     color: var(--discern-color-ink-muted);

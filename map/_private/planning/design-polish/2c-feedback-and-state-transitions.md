@@ -73,3 +73,26 @@ Authored feature files stay with their owner. Shared derived files and the narro
 - **Landing rule chosen by the owner:** After green `discern_done`, report the exact Proof, branch, worktree, preview URL, and any owner decision, then stop and wait for the owner to confirm acceptance.
 - Return the branch/worktree identity for an adversarial review against this brief. The planning agent will inspect the diff and reproduce the important journeys; gate success alone is not a visual review.
 - In the final implementation commit, before the final prepare → commit → done sequence, move `map/_private/planning/design-polish/2c-feedback-and-state-transitions.md` to `map/_private/planning/design-polish/_done/2c-feedback-and-state-transitions.md`, repair any moved relative links, and update **only this stream's row** in the programme README to the `_done/` path and completed state, preserving every sibling row.
+
+## Implementation and review evidence
+
+Implementation is in `agent/refine-2c-18c76a` at `/Users/jack/Sites/discern-design-system.worktrees/refine-2c-18c76a`, based on landed main `c24fe8db6a793fea1d77de1fc83a7e81f96af14b`. The landed 1A brief and public Web/CLI Progress and SegmentedControl contracts were verified before starting.
+
+Banner gains optional heading and action slots without repurposing the native title attribute. Callout always supplies a named tone witness and puts optional actions after its body. Local wrapping covers long headings, explanations, unbroken references and controls. EmptyState keeps its public API and canonical identities, adds the three missing situations beside first use, and mirrors their meaningful text/actions on CLI.
+
+The file-review fixtures keep one named region, persistent context, a persistent polite Banner, and the initiating button across waiting and either outcome. Progress occupies a reserved slot outside the live region. Repeated activation during the 1.8-second wait has no effect; retry is available afterwards. No imperative focus restoration occurs. The allocation-dependent status reserve keeps the next action in place at tested widths; this is an example-level consumer choice, not a new package layout or state-machine contract.
+
+Four focused tests pass. Browser geometry was tested at 260, 390 and 720 pixels in light/dark and forced colours. Keyboard-driven transitions and retries were tested at all three widths with normal and reduced motion, including a reader moving focus elsewhere during the wait. The tests verify persistent DOM identity, unchanged context, one outcome mutation in one live region and a maximum one-pixel height tolerance. They do not substitute for speech testing with a consumer's screen reader. The Callout guard first failed on omitted artwork and then passed for every tone with omitted and independently named custom content; it guards that Component boundary, not every possible consumer-authored notice. The co-change suggestion for Tag was incidental: Tag owns an inline removable label and shares no notice content-grid invariant.
+
+Contact sheets and the live production/reduced-motion Reels were visually reviewed at the deterministic port `19218`. The 390-pixel Reel review exposed an intermediate-width height change; that width is now in the browser guard and the final frames retain their allocation. Exact review routes:
+
+- `http://127.0.0.1:19218/catalogue/reviews/components/?group=Feedback&component=banner&category=default&mode=contact`
+- `http://127.0.0.1:19218/catalogue/reviews/components/?group=Editorial&component=callout&mode=contact&width=narrow&theme=dark`
+- `http://127.0.0.1:19218/catalogue/reviews/components/?group=Feedback&component=empty-state&mode=contact&width=narrow`
+- `http://127.0.0.1:19218/catalogue/reviews/components/?group=Feedback&component=banner&example=loading-success&posture=success-production&mode=reel`
+- `http://127.0.0.1:19218/catalogue/reviews/components/?group=Feedback&component=banner&example=loading-success&posture=success-reduced&mode=reel`
+- `http://127.0.0.1:19218/catalogue/reviews/components/?group=Feedback&component=banner&example=loading-failure&posture=failure-production&mode=reel&theme=dark`
+- `http://127.0.0.1:19218/catalogue/reviews/components/?group=Feedback&component=banner&example=loading-failure&posture=failure-reduced&mode=reel&theme=dark`
+- CLI examples: `http://127.0.0.1:19218/catalogue/components/empty-state/?surface=cli#component-empty-state`
+
+Completion is blocked on canonical image generation. `deno task catalogue:images --update` refuses this host's `darwin/aarch64/27.0.0`; the capture contract requires `darwin/aarch64/25.6.0`. No contract, guard, manifest or image was hand-edited to bypass this. The owner must provide the pinned capture environment or arrange a separate platform migration. After that prerequisite, regenerate from this authored tree, finish prepare → commit → done, move this brief to `_done/`, mark only 2C completed, and wait for the owner's acceptance. The current planning state remains blocked rather than claiming completed image evidence.

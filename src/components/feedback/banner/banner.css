@@ -12,7 +12,9 @@
     background: var(--discern-banner-bg);
     color: var(--discern-banner-text);
     font-size: var(--discern-font-size-sm);
-    line-height: 1.5;
+    line-height: var(--discern-leading-body);
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
   }
   .discern-banner--accent {
     --discern-banner-bg: var(--discern-color-accent-100);
@@ -33,6 +35,29 @@
     --discern-banner-bg: var(--discern-color-danger-soft);
     --discern-color-banner-border: var(--discern-color-danger);
     --discern-banner-text: var(--discern-color-danger);
+  }
+  .discern-banner__content {
+    flex: 1;
+    min-inline-size: 0;
+  }
+  .discern-banner__heading {
+    margin: 0 0 var(--discern-space-2);
+    font-family: var(--discern-font-ui);
+    font-size: var(--discern-font-size-sm);
+    font-weight: var(--discern-font-weight-strong);
+    line-height: var(--discern-leading-snug);
+  }
+  .discern-banner__body > :first-child {
+    margin-block-start: 0;
+  }
+  .discern-banner__body > :last-child {
+    margin-block-end: 0;
+  }
+  .discern-banner__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--discern-space-3);
+    margin-block-start: var(--discern-space-3);
   }
   .discern-banner__icon {
     display: grid;

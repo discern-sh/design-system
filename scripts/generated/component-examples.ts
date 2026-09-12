@@ -1351,6 +1351,24 @@ export const componentExampleRegistry = {
         "cli",
       ],
     },
+    {
+      "id": "loading-success",
+      "label": "Loading to success",
+      "surfaces": [
+        "web",
+      ],
+      "reason":
+        "The CLI renderer supplies static text frames and cannot retain DOM focus or a browser live region through timed updates.",
+    },
+    {
+      "id": "loading-failure",
+      "label": "Loading to failure",
+      "surfaces": [
+        "web",
+      ],
+      "reason":
+        "The CLI renderer supplies static text frames and cannot retain DOM focus or a browser live region through timed updates.",
+    },
   ],
   "toast": [
     {
@@ -1549,6 +1567,30 @@ export const componentExampleRegistry = {
     {
       "id": "compact",
       "label": "Compact",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
+    {
+      "id": "no-results",
+      "label": "No search results",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
+    {
+      "id": "unavailable",
+      "label": "Unavailable content",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
+    {
+      "id": "recoverable-failure",
+      "label": "Recoverable failure",
       "surfaces": [
         "web",
         "cli",

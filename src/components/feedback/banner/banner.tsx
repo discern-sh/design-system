@@ -9,6 +9,10 @@ export type { BannerTone } from "./banner.types.ts";
 export interface BannerProps extends HTMLAttributes<HTMLDivElement> {
   readonly tone?: BannerTone;
   readonly icon?: ReactNode;
+  /** Optional visible heading; the native title attribute remains available. */
+  readonly heading?: ReactNode;
+  /** Follow-up controls rendered after the message. */
+  readonly actions?: ReactNode;
   readonly children: ReactNode;
 }
 
@@ -25,7 +29,16 @@ export const Banner: DiscernComponent<HTMLDivElement, BannerProps> = forwardRef<
   HTMLDivElement,
   BannerProps
 >(function Banner(
-  { tone = "neutral", icon, children, className, role, ...props },
+  {
+    tone = "neutral",
+    icon,
+    heading,
+    actions,
+    children,
+    className,
+    role,
+    ...props
+  },
   ref,
 ) {
   const semanticRole = role ?? (tone === "danger" ? "alert" : "status");
@@ -49,7 +62,15 @@ export const Banner: DiscernComponent<HTMLDivElement, BannerProps> = forwardRef<
       >
         {icon ?? toneGlyphs[tone]}
       </span>
-      <div>{children}</div>
+      <div className="discern-banner__content">
+        {heading !== undefined && (
+          <h3 className="discern-banner__heading">{heading}</h3>
+        )}
+        <div className="discern-banner__body">{children}</div>
+        {actions !== undefined && (
+          <div className="discern-banner__actions">{actions}</div>
+        )}
+      </div>
     </div>
   );
 });
