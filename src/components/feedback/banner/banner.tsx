@@ -1,3 +1,5 @@
+import { Cluster } from "../../layout/cluster/cluster.tsx";
+import { Stack } from "../../layout/stack/stack.tsx";
 import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
@@ -62,15 +64,13 @@ export const Banner: DiscernComponent<HTMLDivElement, BannerProps> = forwardRef<
       >
         {icon ?? toneGlyphs[tone]}
       </span>
-      <div className="discern-banner__content">
+      <Stack gap={3} className="discern-banner__content">
         {heading !== undefined && (
           <h3 className="discern-banner__heading">{heading}</h3>
         )}
         <div className="discern-banner__body">{children}</div>
-        {actions !== undefined && (
-          <div className="discern-banner__actions">{actions}</div>
-        )}
-      </div>
+        {actions !== undefined && <Cluster>{actions}</Cluster>}
+      </Stack>
     </div>
   );
 });

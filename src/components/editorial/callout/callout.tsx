@@ -1,3 +1,5 @@
+import { Cluster } from "../../layout/cluster/cluster.tsx";
+import { Stack } from "../../layout/stack/stack.tsx";
 import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
@@ -60,16 +62,14 @@ export const Callout: DiscernComponent<HTMLElement, CalloutProps> = forwardRef<
       >
         {icon ?? toneWitnesses[tone].glyph}
       </span>
-      <div className="discern-callout__content">
+      <Stack gap={2}>
         {eyebrow
           ? <span className="discern-callout__eyebrow">{eyebrow}</span>
           : null}
         <h3>{title}</h3>
         <div className="discern-callout__body">{children}</div>
-        {actions !== undefined && (
-          <div className="discern-callout__actions">{actions}</div>
-        )}
-      </div>
+        {actions !== undefined && <Cluster>{actions}</Cluster>}
+      </Stack>
     </aside>
   );
 });

@@ -116,7 +116,7 @@ export function FeedbackTransitionExample(
           ? "danger"
           : "neutral"}
         heading={message.heading}
-        style={{ minBlockSize: "clamp(8rem, calc(29rem - 100cqi), 12rem)" }}
+        style={{ minBlockSize: "clamp(8.5rem, calc(29rem - 100cqi), 12rem)" }}
       >
         {message.body}
       </Banner>

@@ -29,11 +29,7 @@
     font-size: var(--discern-font-size-sm);
   }
   .discern-empty-state__actions {
-    display: inline-flex;
-    flex-wrap: wrap;
-    justify-content: center;
     max-inline-size: 100%;
-    gap: var(--discern-space-3);
     margin-block-start: var(--discern-space-3);
   }
 }
