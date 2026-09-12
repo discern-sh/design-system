@@ -1,4 +1,4 @@
-import type { Progress } from "../../progress.ts";
+import { type Progress, progressActivity } from "../../progress.ts";
 import {
   conformanceUrl,
   loadConformancePage,
@@ -1239,27 +1239,35 @@ export async function runComponentContractConformance(
   let accessibilityScans = 0;
   for (const theme of ["light", "dark"] as const) {
     await loadConformancePage(page, conformanceUrl(origin, theme));
-    accessibilityScans += await scanAccessibility(
-      page,
-      theme,
-      expectedComponents,
-      failures,
+    accessibilityScans += await progressActivity(
       progress,
+      `Accessibility ${theme}`,
+      () =>
+        scanAccessibility(page, theme, expectedComponents, failures, progress),
     );
   }
-  const scenarios = await runInteractionScenarios(
-    page,
-    origin,
-    expectedComponents,
-    failures,
+  const scenarios = await progressActivity(
     progress,
+    "Component interactions",
+    () =>
+      runInteractionScenarios(
+        page,
+        origin,
+        expectedComponents,
+        failures,
+        progress,
+      ),
   );
-  const screenshots = await captureReviewSheets(page, origin);
-  const forcedColorFocusChecks = await verifyForcedColors(
-    browser,
-    origin,
-    expectedComponents.length,
-    failures,
+  const screenshots = await progressActivity(
+    progress,
+    "Component review screenshots",
+    () => captureReviewSheets(page, origin),
+  );
+  const forcedColorFocusChecks = await progressActivity(
+    progress,
+    "Forced-colour focus checks",
+    () =>
+      verifyForcedColors(browser, origin, expectedComponents.length, failures),
   );
   return {
     floatingSurfaces,

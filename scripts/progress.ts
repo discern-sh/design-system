@@ -121,10 +121,20 @@ export class Progress {
     });
   }
 
-  async run<T>(label: string, work: () => Promise<T>): Promise<T> {
+  async activity<T>(label: string, work: () => Promise<T>): Promise<T> {
+    const previous = this.#active;
     this.active(label);
     try {
-      const result = await work();
+      return await work();
+    } finally {
+      this.#active = previous;
+      this.report();
+    }
+  }
+
+  async run<T>(label: string, work: () => Promise<T>): Promise<T> {
+    try {
+      const result = await this.activity(label, work);
       this.advance();
       return result;
     } catch (error) {
@@ -155,4 +165,13 @@ export function progressStep<T>(
   work: () => Promise<T>,
 ): Promise<T> {
   return progress ? progress.run(label, work) : work();
+}
+
+/** Restore the enclosing activity when a nested check finishes or throws. */
+export function progressActivity<T>(
+  progress: Progress | undefined,
+  label: string,
+  work: () => Promise<T>,
+): Promise<T> {
+  return progress ? progress.activity(label, work) : work();
 }

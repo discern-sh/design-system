@@ -283,3 +283,21 @@ Deno.test("gate test producers preserve the local task's complete sequential pip
     tasks.test.split("&&").map((command: string) => command.trim()),
   );
 });
+
+Deno.test("nested progress restores the enclosing activity after success and failure", async () => {
+  const { progress, reports } = capture();
+  progress.active("Component contracts");
+  await progress.activity("Interactions", async () => {
+    progress.active("last scenario");
+    await Promise.resolve();
+  });
+  assertEquals(reports.at(-1)?.active, ["Component contracts"]);
+  await assertRejects(() =>
+    progress.activity(
+      "Screenshot capture",
+      () => Promise.reject(new Error("capture failed")),
+    )
+  );
+  assertEquals(reports.at(-1)?.active, ["Component contracts"]);
+  assertEquals(reports.at(-1)?.units?.completed, 0);
+});
