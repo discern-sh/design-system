@@ -434,49 +434,6 @@
     ensure = [] # e.g. ["ready-worktree-resource"]
 
 # ─────────────────────────────────────────────────────────────────────────────
-# [completion]
-#
-# What:    Complete evidence and repository queue capacity.
-# Why:     Completion requires every declared obligation in its required
-#          contexts for an immutable candidate. Queue capacity and speculative
-#          depth bound active execution; an environment declaration and
-#          source-owner release establish eligibility independently.
-#
-# Help:    `discern config explain completion`
-# ─────────────────────────────────────────────────────────────────────────────
-
-[completion]
-  # Execution contexts required for each obligation unless it declares its own
-  # contexts.
-  required_contexts = ["local"]
-
-  # Maximum live candidate executions across the repository queue.
-  # Keep a slot for approved head work while the next candidate executes.
-  concurrency = 2
-
-  # Maximum speculative positions beyond the next authorized source; requires
-  # an eligible released environment.
-  lookahead = 1
-
-# The source owner stops preview/watch processes before releasing the checkout.
-# Preparation and return share the ordinary checkout convergence procedure.
-[execution.local]
-  kind = "borrowed"
-  prepare = "sh discern/scripts/prepare-checkout"
-  restore = "sh discern/scripts/prepare-checkout"
-  reusable = true
-  resources = []
-  ignored = [
-    "node_modules/**",
-    "dist/**",
-    "catalogue/generated/**",
-    ".agents/skills/**",
-    ".claude/skills/**",
-  ]
-  inputs = ["**"]
-  capacity = 2
-
-# ─────────────────────────────────────────────────────────────────────────────
 # [standards.<name>]
 #
 # What:    Quality numbers that can never get worse.
