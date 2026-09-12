@@ -820,7 +820,7 @@
   # Cap on test-stage runs in flight at once across every checkout of this
   # repository; a run past it waits for a slot. 0 means no cap. Wrap the
   # project's test task in `discern queue -- <command>` to share it.
-  concurrent_test_runs = 2
+  concurrent_test_runs = 1
 
 # ─────────────────────────────────────────────────────────────────────────────
 # [coupling]
