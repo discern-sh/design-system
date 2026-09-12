@@ -27,17 +27,17 @@ import type { InteractionRuntime } from "./types.ts";
 export type SequentialFormValues = Record<string, unknown>;
 
 /** One conditional value-producing step in a sequential form. */
-export interface SequentialFormStep {
+export interface SequentialFormStep<Value = unknown> {
   readonly id: string;
   readonly label: string;
   readonly run: (
     values: Readonly<SequentialFormValues>,
-    previous: unknown,
+    previous: Value | undefined,
     runtime: InteractionRuntime,
-  ) => unknown | Promise<unknown>;
+  ) => Value | Promise<Value>;
   readonly when?: (values: Readonly<SequentialFormValues>) => boolean;
   /** Optional non-sensitive summary shown after this step completes. */
-  readonly summarize?: (value: unknown) => string;
+  readonly summarize?: (value: Value) => string;
 }
 
 /** Construction options for a sequential form. */
@@ -72,7 +72,7 @@ export class SequentialFormBuilder {
   }
 
   /** Append one uniquely named step in execution order. */
-  add(step: SequentialFormStep): this {
+  add<Value>(step: SequentialFormStep<Value>): this {
     if (!validLabel(step.id)) {
       throw new TypeError(
         "sequential form step id must be non-empty and control-free",
@@ -89,7 +89,8 @@ export class SequentialFormBuilder {
       );
     }
     this.#ids.add(step.id);
-    this.#steps.push(step);
+    // Each ID owns one value type; heterogeneous storage is erased only here.
+    this.#steps.push(step as SequentialFormStep);
     return this;
   }
 
@@ -124,6 +125,7 @@ export class SequentialFormBuilder {
           hasValue(values, step.id) ? values[step.id] : undefined,
           runtime,
         );
+        this.#removeInapplicableValues(values);
         index += 1;
       } catch (error) {
         if (error instanceof InteractionBackNavigation) {

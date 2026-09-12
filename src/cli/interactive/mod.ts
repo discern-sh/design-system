@@ -33,6 +33,15 @@ export type {
   InlineFrameRefusalReason,
 } from "./painter.ts";
 export * from "./sequential-form.ts";
+export {
+  sequentialAutocompleteStep,
+  sequentialConfirmationStep,
+  sequentialSelectionsStep,
+  sequentialSelectionStep,
+  sequentialTextareaStep,
+  sequentialTextStep,
+} from "./sequential-steps.ts";
+export type { SequentialRequestStepOptions } from "./sequential-steps.ts";
 export * from "./signals.ts";
 export * from "./textarea-request.ts";
 export * from "./types.ts";
