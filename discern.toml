@@ -208,11 +208,14 @@
 #
 # A value is one command, a list run in order, or a table giving the job
 # its own time budget: test = { run = "npm test", timeout = 1200 }.
+# A long-running command may report its own progress while it runs: print
+# DISCERN_PROGRESS {"units":{"kind":"files","completed":3,"total":8}}
+# lines and discern presents the counts, and any reported failures, live.
 # Leave a known job unwired until its command exists; `discern setup` has
 # your coding agent fill these from repository evidence.
 #
 # Custom:  stage, run, inputs, needs, artifacts, environment, toolchain,
-#          contexts, provides, timeout
+#          provides, timeout
 # Help:    `discern config explain jobs`
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -247,7 +250,7 @@
 #          runs every stage.
 #
 # Params:  paths, neutral, preview, inputs, needs, artifacts, environment,
-#          toolchain, contexts, gate, timeout
+#          toolchain, gate, timeout
 # Help:    `discern config explain scopes`
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -440,10 +443,9 @@
 # Why:     Every `discern done` requires current readings for each standard and
 #          refuses a limit looser than the trunk's. Producers run once for
 #          their consumers, and reusable evidence must match the declared
-#          inputs, policy, toolchain, environment, and execution context. Hold
-#          a raw count for an invariant, a rate through `per` for a quality
-#          that scales, and give a total that grows with the product a
-#          `margin`.
+#          inputs, policy, toolchain, and environment. Hold a raw count for an
+#          invariant, a rate through `per` for a quality that scales, and give
+#          a total that grows with the product a `margin`.
 #
 # A producer or extractor reports a number: DISCERN_METRIC <name> <number>
 # Set run for an inline producer, or producer for an existing selector.
@@ -452,8 +454,8 @@
 # tell a gain from a loosening.
 #
 # Params:  metric, direction, limit, run, producer, extract, artifact, inputs,
-#          needs, artifacts, environment, toolchain, contexts, per, scale,
-#          margin, timeout
+#          needs, artifacts, environment, toolchain, per, scale, margin,
+#          timeout
 # Help:    `discern config explain standards`
 # ─────────────────────────────────────────────────────────────────────────────
 
