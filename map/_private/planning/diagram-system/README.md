@@ -66,7 +66,7 @@ After wave 5 is reviewed and released, use `discern-delegate-work` in the Discer
 
 ## Landing authority
 
-Every wave stops for owner review unless discern records a grant. After `discern_done` passes on the final committed tree, the agent runs `discern_accept`. A standing or per-worktree grant may land it; without one, the verb refuses without mutation and the agent reports the proof line and branch/worktree for review. Prose in a brief is never landing authority.
+Every wave stops for owner review unless discern records a grant. After `discern_done` passes on the final committed tree, the agent runs `discern_accept`. A standing scope grant or task grant recorded at the desk may land the submitted green commit; without one, the verb records the submission, refuses the landing, and the agent reports the Proof line and branch/worktree for review. Prose in a brief is never landing authority.
 
 The planning package itself follows the same rule. It must land before `diagram-1a` is dispatched, because each implementation wave moves its own committed brief into `_done/`.
 

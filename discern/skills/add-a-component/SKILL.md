@@ -3,7 +3,7 @@ name: add-a-component
 description: Add a new component to the design system — scaffold the fixed five-file anatomy, let codegen auto-enrol every surface, and ship it with conformance coverage, a changelog entry, and a Catalogue preview URL. Use when adding any component, block, or element to the catalogue, or when porting a site-local pattern into the package.
 metadata:
   author: "discern-design-system"
-  version: "1.6"
+  version: "1.7"
 ---
 
 # Add a component
@@ -50,14 +50,14 @@ Rules that bite:
 
 1. `deno task codegen` — validates the complete Web/CLI example parity contract, then regenerates the committed registries, React and CLI surfaces, review-tool example facts, and base styles. The build regenerates the ignored Catalogue registry from the same authored sources; never edit either generated surface directly.
 2. `deno task catalogue:images --update` — renders the complete canonical Web population through the pinned local browser and replaces its typed manifest and generated PNGs. The normal gate runs `deno task catalogue:images --verify`; run that task directly to diagnose a named capture, crop, font, animation, console, stale, or orphan failure.
-3. `deno task catalogue:review` — writes the timestamp-free tiered manifest under `dist/conformance/component-review/`. Run `deno task serve`, then focus the Component at `http://127.0.0.1:<discern identity --port>/catalogue/reviews/components/?component=<slug>&mode=contact`; select Reel for a real-speed or diagnostic replay. This route is local-only and screenshots remain evidence, not approvals.
+3. `deno task catalogue:review` — writes the timestamp-free tiered manifest under `dist/conformance/component-review/`. Run `deno task serve`, then focus the Component at `http://127.0.0.1:<discern identity --port>/catalogue/reviews/components/?component=<slug>&mode=contact`; select Reel for a real-speed or diagnostic replay. Complete the required visual review while this local route is running, then stop the preview before the final `discern done` and keep it stopped through `discern accept`; a landing may remove the worktree. Screenshots remain evidence, not approvals.
 4. `discern prepare` while iterating; `discern done` before calling it done. The Catalogue build type-checks every bounded example. Every Web-capable entry auto-enrols in light and dark accessibility scans, generated imagery, settled review, accent and axis checks, opaque floating/identity-surface checks, and status-witness checks. Every rendered CLI example auto-enrols in the generated cross-surface population at both grounds, representative arbitrary accent hues, every colour depth, and Unicode/ASCII; a future renderer that drops appearance fails the population guard. Add `export const conformance = [...]` scenarios (see `catalogue/conformance.ts`) when the component has keyboard or focus behaviour worth pinning.
 5. Watch the css standards in the gate output: `css_density` holds emitted bytes per component stylesheet, so a heavy component raises the rate it is judged by, and `docs_selection` budgets the documentation selection. A heavy component is a design smell before it is a budget problem.
 
 ## 4. Ship it
 
 - A new public component is a contract change: record it in `CHANGELOG.md` under the upcoming version.
-- Leave the Catalogue running on the worktree's deterministic port and include the exact URL in your handoff: `deno task serve` then `http://127.0.0.1:<discern identity --port>/`.
+- Include the reviewed Catalogue URL and visual evidence in your handoff: `deno task serve` then `http://127.0.0.1:<discern identity --port>/`. Stop the server before the final gate and acceptance.
 - Update `map/20-components/` if the change alters what the map describes.
 
 ## Recovery

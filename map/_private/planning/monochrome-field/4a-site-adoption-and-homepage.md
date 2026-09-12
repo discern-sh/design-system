@@ -56,5 +56,5 @@ Update that repository's map and changelog as its instructions require, and note
 - The brand record names monochrome as the identity and is regenerated, not hand-edited.
 - The site pins the release, selects the achromatic default, and passes its crawl, SEO, and accessibility checks at both poles.
 - The homepage drives darkness from scroll with a truthful reduced-motion posture and artifact-first content, and reads as discern's rather than as a generic editorial page.
-- That repository's gate is green on the clean committed HEAD, and its landing rule is followed: report the proof line and the `field-4a` branch and worktree and stop for owner review unless a recorded grant lands it.
+- That repository's gate is green on the clean committed HEAD, and its landing rule is followed: run `discern_accept`; a task grant recorded at that repository's desk may land the submitted green commit. Without one, report the Proof line and the `field-4a` branch and worktree, then stop for owner review.
 - In the final commit, move this brief from `/Users/jack/Sites/discern-design-system/map/_private/planning/monochrome-field/4a-site-adoption-and-homepage.md` to that folder's `_done/`; because the brief lives in the design-system repository, land that move as a small separate worktree there, or ask the maintainer to move it.

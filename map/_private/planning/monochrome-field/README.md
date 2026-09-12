@@ -87,7 +87,7 @@ That topology describes this programme itself. The four intervening field-appear
 
 ## Landing authority
 
-`[acceptance].pre_authorized` is empty. Every landing stream calls `discern_accept` only after `discern_done` is green on the clean committed HEAD; without a recorded grant the verb refuses without mutation, and the agent reports the proof line plus its branch and worktree for owner review. Prose in these briefs is never landing consent. Wave 0A never calls `discern_accept` at all.
+`[acceptance].pre_authorized` is empty. Every landing stream calls `discern_accept` only after `discern_done` is green on the clean committed HEAD. A task grant recorded at the desk covers later green commits the assigned agent submits for that task. Without a grant, `discern_accept` records the submission, refuses the landing, and the agent reports the Proof line plus its branch and worktree for owner review. Prose in these briefs is never landing consent. Wave 0A never calls `discern_accept` at all.
 
 This planning package must land before any brief is dispatched. Each landing stream moves its own brief into `_done/` in its final commit; 1A also copies the 0A findings into `_done/` so the record survives the throwaway worktree.
 

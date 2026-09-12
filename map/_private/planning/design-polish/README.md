@@ -124,11 +124,11 @@ If two chosen briefs actually need the same new authored behaviour, amend their 
 
 ## Landing policy
 
-The owner chose **per-worktree discern grants**: agents may land after the full gate if the owner grants their worktrees permission in the desk. No standing scope grant is added by this plan.
+The owner chose **task grants recorded at the desk**. A grant covers its brief and any later green commit the assigned agent submits for that task. No standing scope grant is added by this plan.
 
-Every brief finishes its edits, regeneration, image evidence, and archival/index changes; runs `discern_prepare`; commits; then runs `discern_done` on the clean HEAD. It calls `discern_accept` using the recorded authority. A missing grant causes a refusal and a Proof handoff, not repeated permission questions or fabricated consent. A grant never approves an unmet checkpoint variance, a standards increase, a push, or a release.
+Every brief finishes its edits, regeneration, image evidence, and archival/index changes; runs `discern_prepare`; commits; then runs `discern_done` on the clean HEAD. It calls `discern_accept`, which checks the recorded authority at the landing boundary. A missing grant records the submission, refuses the landing, and requires a Proof handoff. A grant never approves an unmet checkpoint variance, a standards increase, a push, or a release.
 
-Planning-file acceptance also requires the current planning worktree's own grant or explicit consent. Implementation grants are not retroactive authority for unrelated worktrees.
+Planning-file acceptance also requires a grant for the current planning task or explicit consent. Implementation grants do not authorize unrelated tasks.
 
 ## Review and completion
 

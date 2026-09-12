@@ -94,7 +94,7 @@ The final integrated experience must let a person do these tasks without learnin
 
 ## Landing authority
 
-Every stream stops for owner review unless discern records a grant. After `discern_done` passes on the final committed tree, the agent runs `discern_accept`. A standing or per-worktree grant may land it; without one, the verb refuses without mutation and the agent reports the proof line plus branch/worktree for review. Prose in these briefs is never landing authority.
+Every stream stops for owner review unless discern records a grant. After `discern_done` passes on the final committed tree, the agent runs `discern_accept`. A standing scope grant or task grant recorded at the desk may land the submitted green commit; without one, the verb records the submission, refuses the landing, and the agent reports the Proof line plus branch/worktree for review. Prose in these briefs is never landing authority.
 
 The planning package follows the same rule and must land before `catalogue-1a` is dispatched, because each implementation stream moves its own committed brief into `_done/` as part of its final commit.
 
