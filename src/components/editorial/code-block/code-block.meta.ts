@@ -20,6 +20,7 @@ const meta = {
   ],
   accessibility: [
     "The React adapter renders native preformatted code, preserves the literal source as text content, and fixes non-ASCII fallback glyphs to their measured terminal cells.",
+    "The optional browser wrap prop preserves source text and needs no script. The default scrolls horizontally; terminal widthPolicy remains independent.",
     "Language and parser information are exposed through discern-namespaced data hooks without assuming a syntax highlighter.",
     "The terminal renderer expands tabs to four-cell tab stops, makes unsafe control and format characters visible, and marks lossless continuations in its specimen frame without relying on colour.",
   ],
