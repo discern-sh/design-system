@@ -62,14 +62,14 @@ The Component review instrument accepts the same complete state and links both p
 
 Family state uses stable parameters and omits comfort defaults:
 
-| Family                  | Consequential URL state                                                               |
-| ----------------------- | ------------------------------------------------------------------------------------- |
-| Components index        | query, Group, purpose, explicit All, shared Appearance state                          |
-| Component detail        | surface, canonical example, deliberate View all, shared Appearance state              |
-| Compare                 | scope, global surface, overrides, examples, membership, jump target, Appearance state |
-| Foundations Appearance  | optional accent hue, Darkness, Structure, Emphasis, Density, and the pigment tints    |
-| Tokens and Compositions | query/category and responsive width, plus shared Appearance state                     |
-| Terminal layouts        | preset/custom capabilities and grid, plus the shared Web/CLI Appearance projection    |
+| Family                  | Consequential URL state                                                                                             |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Components index        | [Discovery controls, result anchor, and Appearance](component-discovery.md)                                         |
+| Component detail        | surface, canonical example, deliberate View all, Appearance, and [discovery return context](component-discovery.md) |
+| Compare                 | scope, global surface, overrides, examples, membership, jump target, Appearance state                               |
+| Foundations Appearance  | optional accent hue, Darkness, Structure, Emphasis, Density, and the pigment tints                                  |
+| Tokens and Compositions | query/category and responsive width, plus shared Appearance state                                                   |
+| Terminal layouts        | preset/custom capabilities and grid, plus the shared Web/CLI Appearance projection                                  |
 
 Invalid values fall back to bounded canonical defaults. Components and Compare use native history for consequential selection changes; the filter-style Token, Composition width, Terminal capability, and Appearance controls replace their current entry. Reload and Back/Forward reconstruct visible controls from the URL rather than hidden component state.
 
