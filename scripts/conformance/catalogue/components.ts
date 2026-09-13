@@ -979,7 +979,8 @@ async function verifyStatusWitnesses(page: Page): Promise<number> {
   });
 }
 
-async function scanAccessibility(
+/** Scan the complete requested Component population and retain target diagnostics. */
+export async function scanComponentAccessibility(
   page: Page,
   theme: CatalogueTheme,
   components: readonly string[],
@@ -987,16 +988,20 @@ async function scanAccessibility(
   progress?: Progress,
 ): Promise<number> {
   let scans = 0;
-  for (const [index, component] of components.entries()) {
+  // Bound each axe invocation while sharing its whole-document setup across
+  // components in the same painted posture. Every manifest member still joins.
+  const batchSize = 24;
+  for (let index = 0; index < components.length; index += batchSize) {
+    const batch = components.slice(index, index + batchSize);
+    const label = `${theme}/components ${index + 1}–${index + batch.length}`;
     progress?.active(
-      `Accessibility ${theme}: ${component} (${
-        index + 1
-      }/${components.length})`,
+      `Accessibility ${label} of ${components.length}`,
     );
-    const selector =
-      `[data-discern-component="${component}"] .discern-catalogue-component__canvas`;
+    const selectors = batch.map((component) =>
+      `[data-discern-component="${component}"] .discern-catalogue-component__canvas`
+    );
     try {
-      const results = await scanBrowserAccessibility(page, selector);
+      const results = await scanBrowserAccessibility(page, selectors);
       scans += 1;
       for (const violation of results.violations) {
         const targets = violation.nodes.map((node) => {
@@ -1006,14 +1011,14 @@ async function scanAccessibility(
           }`;
         }).join("; ");
         failures.push(
-          `${theme}/${component}: ${violation.id} (${
+          `${label}: ${violation.id} (${
             violation.impact ?? "unknown impact"
           }) at ${targets}`,
         );
       }
     } catch (error) {
       failures.push(
-        `${theme}/${component}: accessibility scan failed: ${
+        `${label}: accessibility scan failed: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );
@@ -1243,7 +1248,13 @@ export async function runComponentContractConformance(
       progress,
       `Accessibility ${theme}`,
       () =>
-        scanAccessibility(page, theme, expectedComponents, failures, progress),
+        scanComponentAccessibility(
+          page,
+          theme,
+          expectedComponents,
+          failures,
+          progress,
+        ),
     );
   }
   const scenarios = await progressActivity(
