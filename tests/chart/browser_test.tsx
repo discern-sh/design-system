@@ -50,6 +50,7 @@ interface ChartBrowserInspection {
   readonly localOverflowReachable: boolean;
   readonly markCount: number;
   readonly axisCount: number;
+  readonly gridCount: number;
   readonly canvasFill: string;
   readonly markFill: string;
   readonly labelFill: string;
@@ -137,6 +138,7 @@ async function inspectBrowserCharts(
           ".discern-chart__mark, .discern-chart__path, .discern-chart__points, .discern-chart__area",
         ).length,
         axisCount: svg.querySelectorAll(".discern-chart__axis").length,
+        gridCount: svg.querySelectorAll(".discern-chart__grid").length,
         canvasFill: canvas === null ? "" : getComputedStyle(canvas).fill,
         markFill: filled !== null
           ? getComputedStyle(filled).fill
@@ -170,6 +172,30 @@ const AXIS_POPULATION: Readonly<Record<string, number>> = {
   slope: 2,
 };
 
+/**
+ * Subordinate gridline stance each kind's calm canvas declares: continuous
+ * scales anchor their ticks beneath the data, while direct-labelled and
+ * band-only canvases stay bare. The box summary is the one distribution
+ * variant without a continuous count scale.
+ */
+const GRID_STANCE: Readonly<
+  Record<string, "always" | "never" | "continuous-variants">
+> = {
+  bar: "always",
+  line: "always",
+  distribution: "continuous-variants",
+  heatmap: "never",
+  scatter: "always",
+  slope: "never",
+};
+
+function expectsGrid(kind: string, label: string): boolean {
+  const stance = GRID_STANCE[kind];
+  if (stance === "always") return true;
+  if (stance === "continuous-variants") return !label.includes("box-summary");
+  return false;
+}
+
 function assertBrowserGeometry(
   inspection: ChartPageInspection,
   expected: number,
@@ -195,6 +221,11 @@ function assertBrowserGeometry(
       chart.axisCount,
       AXIS_POPULATION[chart.kind],
       `${label} axis population`,
+    );
+    assertEquals(
+      chart.gridCount > 0,
+      expectsGrid(chart.kind, chart.label),
+      `${label} gridline stance`,
     );
     assert(
       chart.canvasFill !== "" && chart.canvasFill !== "none",

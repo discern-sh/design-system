@@ -266,6 +266,64 @@ Deno.test("the sequential chart ramp is the ordered ink-alpha ladder", () => {
   }
 });
 
+/** Neutral ink literal shape every support paint role must resolve to. */
+const SUPPORT_OKLCH = /^oklch\((0|100)%\s+0\s+0(?:\s*\/\s*([\d.]+))?\)$/u;
+
+Deno.test("support paints keep the data-first hierarchy at every sampled darkness", () => {
+  // The deliberate ladder beneath the data marks: background grid quietest,
+  // then the hairline axis, then reference lines and axis tick labels, and
+  // direct data annotations strongest — data text must never read quieter
+  // than the frame that supports it.
+  for (const darkness of APPEARANCE_CONTRAST_SAMPLE_DARKNESSES) {
+    const palette = resolveChartPaletteAtDarkness(darkness);
+    const supports = (
+      ["grid", "axis", "reference", "axis-label", "annotation"] as const
+    ).map((role) => {
+      const match = palette[role].match(SUPPORT_OKLCH);
+      assert(
+        match !== null,
+        `field ${darkness} ${role} ${palette[role]} must stay neutral ink`,
+      );
+      return {
+        role,
+        pole: match[1],
+        alpha: match[2] === undefined ? 1 : Number(match[2]),
+      };
+    });
+    assertEquals(
+      new Set(supports.map(({ pole }) => pole)).size,
+      1,
+      `field ${darkness} support inks must ride one pole`,
+    );
+    const [grid, axis, reference, axisLabel, annotation] = supports;
+    assert(
+      grid !== undefined && axis !== undefined && reference !== undefined &&
+        axisLabel !== undefined && annotation !== undefined,
+    );
+    const ladder: readonly (readonly [
+      typeof grid,
+      typeof grid,
+      "below" | "at-most",
+    ])[] = [
+      [grid, axis, "below"],
+      [axis, reference, "below"],
+      [reference, axisLabel, "at-most"],
+      [axisLabel, annotation, "below"],
+    ];
+    for (const [quieter, louder, relation] of ladder) {
+      const holds = relation === "below"
+        ? quieter.alpha < louder.alpha
+        : quieter.alpha <= louder.alpha;
+      assert(
+        holds,
+        `field ${darkness}: ${quieter.role} (${quieter.alpha}) must stay ${
+          relation === "below" ? "quieter than" : "no louder than"
+        } ${louder.role} (${louder.alpha})`,
+      );
+    }
+  }
+});
+
 Deno.test("adjacent slots stay separated under severe protan and deutan simulation", () => {
   for (const variant of VARIANTS) {
     for (

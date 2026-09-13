@@ -8,20 +8,26 @@ export const minimumBarLightSvg =
   .discern-chart--standalone.discern-chart--theme-light .discern-chart__label { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
   .discern-chart--standalone.discern-chart--theme-light .discern-chart__label.discern-chart__label--mono { font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
   .discern-chart--standalone.discern-chart--theme-light .discern-chart__axis { vector-effect: non-scaling-stroke; }
+  .discern-chart--standalone.discern-chart--theme-light .discern-chart__grid { vector-effect: non-scaling-stroke; }
   .discern-chart--standalone.discern-chart--theme-light .discern-chart__mark { stroke-width: 1; vector-effect: non-scaling-stroke; }
   .discern-chart--standalone.discern-chart--theme-light .discern-chart__canvas { fill: oklch(100% 0 0); }
   .discern-chart--standalone.discern-chart--theme-light .discern-chart__mark--series-1 { fill: oklch(66.76% 0.0939 249.4); stroke: oklch(100% 0 0); }
   .discern-chart--standalone.discern-chart--theme-light .discern-chart__axis { stroke: oklch(0% 0 0 / 0.55); }
+  .discern-chart--standalone.discern-chart--theme-light .discern-chart__grid { stroke: oklch(0% 0 0 / 0.12); }
   .discern-chart--standalone.discern-chart--theme-light .discern-chart__label--axis-label { fill: oklch(0% 0 0 / 0.68); }
   @media (forced-colors: active) {
     .discern-chart--standalone.discern-chart--theme-light { forced-color-adjust: none; }
     .discern-chart--standalone.discern-chart--theme-light .discern-chart__canvas { fill: Canvas; }
     .discern-chart--standalone.discern-chart--theme-light .discern-chart__mark { fill: Canvas; stroke: CanvasText; stroke-width: 1; vector-effect: non-scaling-stroke; }
-    .discern-chart--standalone.discern-chart--theme-light .discern-chart__axis { stroke: CanvasText; }
+    .discern-chart--standalone.discern-chart--theme-light .discern-chart__axis, .discern-chart--standalone.discern-chart--theme-light .discern-chart__grid { stroke: CanvasText; }
     .discern-chart--standalone.discern-chart--theme-light .discern-chart__label { fill: CanvasText; }
   }
   </style>
   <rect class="discern-chart__canvas" x="-24" y="-32.5" width="194.97" height="321.5" />
+  <line class="discern-chart__grid" x1="24.64" y1="180" x2="146.22" y2="180" stroke-width="1" />
+  <line class="discern-chart__grid" x1="24.64" y1="120" x2="146.22" y2="120" stroke-width="1" />
+  <line class="discern-chart__grid" x1="24.64" y1="60" x2="146.22" y2="60" stroke-width="1" />
+  <line class="discern-chart__grid" x1="24.64" y1="0" x2="146.22" y2="0" stroke-width="1" />
   <rect class="discern-chart__mark discern-chart__mark--series-1" data-discern-chart-series="total" data-discern-chart-category="before" x="33.76" y="96" width="42.55" height="144" />
   <rect class="discern-chart__mark discern-chart__mark--series-1" data-discern-chart-series="total" data-discern-chart-category="after" x="94.55" y="24" width="42.55" height="216" />
   <line class="discern-chart__axis" x1="24.64" y1="240" x2="146.22" y2="240" stroke-width="1.5" />
