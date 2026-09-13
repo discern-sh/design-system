@@ -22,7 +22,7 @@ Relative sizes are planning judgments, not elapsed-time promises: S is a bounded
 | 1B  | [Make published copy actions work in static output](_done/1b-static-copy-contract.md)        | Q1                     | None            | M    | Complete |
 | 1C  | [Separate the Catalogue ownership seams](_done/1c-catalogue-ownership-seams.md)              | Enabling work only     | None            | M    | Complete |
 | 2A  | [Polish buttons and action states](_done/2a-buttons-and-action-states.md)                    | B1, B2, B3, B4, B5     | None            | M    | Complete |
-| 2B  | [Polish form alignment and validation](2b-form-alignment-and-validation.md)                  | C1, C2, C4             | None            | M    | Prepared |
+| 2B  | [Polish form alignment and validation](_done/2b-form-alignment-and-validation.md)            | C1, C2, C4             | None            | M    | Complete |
 | 2C  | [Clarify feedback and state transitions](2c-feedback-and-state-transitions.md)               | D3, D4, D5             | 1A              | M    | Prepared |
 | 2D  | [Polish cards, navigation, and identities](_done/2d-cards-navigation-and-identities.md)      | E3, E4, E5             | None            | M    | Complete |
 | 2E  | [Polish sustained reading and article navigation](_done/2e-reading-rhythm-and-navigation.md) | F1, F2, F4             | None            | M    | Complete |
