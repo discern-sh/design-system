@@ -15,7 +15,8 @@ export interface GlyphExplorerState {
   readonly query: string;
   readonly category?: DiscernGlyphCategory;
   readonly recommendation?: DiscernGlyphRecommendationState;
-  readonly collection?: "interface" | "reference";
+  /** Absent means the adoption default: the published Discern vocabulary. */
+  readonly collection?: "reference" | "all";
   readonly terminal?: "one-cell" | "ascii" | "unicode-only";
   readonly presentation?: "text" | "emoji";
 }
@@ -38,6 +39,7 @@ export function parseGlyphExplorerState(url: URL): GlyphExplorerState {
   const recommendation = glyphRecommendation(
     url.searchParams.get("recommendation"),
   );
+  // "interface" deep links keep meaning: they name the adoption default.
   const collection = url.searchParams.get("collection");
   const terminal = url.searchParams.get("terminal");
   const presentation = url.searchParams.get("presentation");
@@ -45,7 +47,7 @@ export function parseGlyphExplorerState(url: URL): GlyphExplorerState {
     query: url.searchParams.get("q") ?? "",
     ...(category === undefined ? {} : { category }),
     ...(recommendation === undefined ? {} : { recommendation }),
-    ...(collection === "interface" || collection === "reference"
+    ...(collection === "all" || collection === "reference"
       ? { collection }
       : {}),
     ...(terminal === "one-cell" || terminal === "ascii" ||
@@ -105,13 +107,15 @@ export function glyphExplorerResults(
   readonly reason?: string;
   readonly referenceMatch?: boolean;
 }[] {
+  const adoption = state.collection === undefined;
+  const searching = state.query.trim() !== "";
   const filtered = entries.filter((entry) => {
     const published = entry.aliases.filter(({ publication }) =>
       publication === "candidate"
     );
-    if (state.collection === "interface" && published.length === 0) {
-      return false;
-    }
+    // The adoption default browses published names only, while a typed query
+    // still reaches the whole source-backed Atlas so lookups never dead-end.
+    if (adoption && !searching && published.length === 0) return false;
     if (state.collection === "reference" && published.length > 0) return false;
     if (
       state.presentation !== undefined &&
@@ -124,9 +128,7 @@ export function glyphExplorerResults(
       state.category === undefined && state.recommendation === undefined &&
       state.terminal !== "ascii" && state.terminal !== "unicode-only"
     ) return true;
-    const aliases = state.collection === "interface"
-      ? published
-      : entry.aliases;
+    const aliases = adoption ? published : entry.aliases;
     return aliases.some((alias) =>
       (state.category === undefined || alias.category === state.category) &&
       (state.recommendation === undefined ||

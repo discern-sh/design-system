@@ -37,6 +37,8 @@ import {
   glyphAtlasData,
   glyphSequenceId,
 } from "../src/glyphs/atlas.ts";
+import { getGlyph, isGlyphName } from "../src/glyphs/mod.ts";
+import { glyphMeaningSets } from "../catalogue/pages/glyphs/meaning-sets.ts";
 import type { DesignToken } from "../src/tokens/tokens.ts";
 
 function syntheticFutureData(): GlyphCatalogueData {
@@ -136,12 +138,11 @@ Deno.test("glyph capability filters compose on one alias and keep reference matc
   const states: readonly GlyphExplorerState[] = [
     {
       query: "",
-      collection: "interface",
       terminal: "ascii",
       presentation: "text",
     },
     { query: "", collection: "reference", presentation: "emoji" },
-    { query: "", terminal: "unicode-only" },
+    { query: "", collection: "all", terminal: "unicode-only" },
   ];
   for (const state of states) {
     const url = glyphExplorerUrl(
@@ -152,7 +153,7 @@ Deno.test("glyph capability filters compose on one alias and keep reference matc
     const matches = matchingGlyphCatalogueEntries(entries, state);
     assert(matches.length > 0);
     for (const entry of matches) {
-      if (state.collection === "interface") {
+      if (state.collection === undefined) {
         assert(
           entry.aliases.some((alias) =>
             alias.publication === "candidate" &&
@@ -214,6 +215,9 @@ Deno.test("Atlas and alias authorities project one canonical card, route, and se
     );
   }
 
+  const publishedEntries = entries.filter((entry) =>
+    entry.aliases.some(({ publication }) => publication === "candidate")
+  );
   const markup = renderToStaticMarkup(createElement(GlyphIndexPage, {
     data: glyphAtlasData,
     currentUrl: new URL(
@@ -223,10 +227,26 @@ Deno.test("Atlas and alias authorities project one canonical card, route, and se
   }));
   assertEquals(
     (markup.match(/data-discern-glyph-card=/g) ?? []).length,
-    glyphAtlasData.canonical.length,
+    publishedEntries.length,
   );
   assertEquals(
     (markup.match(/data-discern-catalogue-index-card-primary=/g) ?? []).length,
+    publishedEntries.length,
+  );
+  const everything = renderToStaticMarkup(createElement(GlyphIndexPage, {
+    data: glyphAtlasData,
+    currentUrl: new URL(
+      "/catalogue/glyphs/?collection=all",
+      "https://catalogue.example",
+    ),
+  }));
+  assertEquals(
+    (everything.match(/data-discern-glyph-card=/g) ?? []).length,
+    glyphAtlasData.canonical.length,
+  );
+  assertEquals(
+    (everything.match(/data-discern-catalogue-index-card-primary=/g) ?? [])
+      .length,
     glyphAtlasData.canonical.length,
   );
   const overview = renderToStaticMarkup(createElement(OverviewPage));
@@ -304,6 +324,21 @@ Deno.test("Glyph explorer URL state validates filters, preserves Appearance, and
     "https://catalogue.example/catalogue/glyphs/?q=check&category=invented&recommendation=unknown&theme=dark",
   );
   assertEquals(parseGlyphExplorerState(invalid), { query: "check" });
+  assertEquals(
+    parseGlyphExplorerState(
+      new URL(
+        "https://catalogue.example/catalogue/glyphs/?collection=interface",
+      ),
+    ),
+    { query: "" },
+    "A legacy interface deep link keeps naming the adoption default",
+  );
+  assertEquals(
+    parseGlyphExplorerState(
+      new URL("https://catalogue.example/catalogue/glyphs/?collection=all"),
+    ),
+    { query: "", collection: "all" },
+  );
 
   const current = new URL(
     "https://catalogue.example/catalogue/glyphs/?theme=dark&appearance=accent&accent=300&field=1,1,1,1",
@@ -331,6 +366,65 @@ Deno.test("Glyph explorer URL state validates filters, preserves Appearance, and
     matches.map(({ canonical }) => canonical.id),
     [glyphSequenceId(0x26A0, 0xFE0E)],
   );
+});
+
+Deno.test("Glyph discovery defaults to the published vocabulary and keeps the Atlas reachable", () => {
+  const entries = glyphCatalogueEntries(glyphAtlasData);
+  const isPublished = (entry: (typeof entries)[number]): boolean =>
+    entry.aliases.some(({ publication }) => publication === "candidate");
+  const publishedEntries = entries.filter(isPublished);
+  assert(publishedEntries.length > 0);
+  assert(publishedEntries.length < entries.length);
+
+  const defaults = glyphExplorerResults(entries, { query: "" });
+  assertEquals(defaults.length, publishedEntries.length);
+  assert(defaults.every(({ entry }) => isPublished(entry)));
+
+  const reference = glyphExplorerResults(entries, {
+    query: "",
+    collection: "reference",
+  });
+  assertEquals(reference.length, entries.length - publishedEntries.length);
+  assert(reference.every(({ entry }) => !isPublished(entry)));
+
+  const all = glyphExplorerResults(entries, { query: "", collection: "all" });
+  assertEquals(all.length, entries.length);
+  assert(
+    all.slice(0, publishedEntries.length).every(({ entry }) =>
+      isPublished(entry)
+    ),
+    "Published names lead the complete collection",
+  );
+
+  const atlasOnly = entries.find((entry) => entry.aliases.length === 0);
+  assert(atlasOnly !== undefined);
+  const lookup = glyphExplorerResults(entries, {
+    query: atlasOnly.canonical.officialLabel,
+  });
+  assert(
+    lookup.some(({ entry }) => entry.canonical.id === atlasOnly.canonical.id),
+    "A default-view query still reaches research-only Atlas identities",
+  );
+
+  const grouped = renderToStaticMarkup(createElement(GlyphIndexPage, {
+    data: glyphAtlasData,
+    currentUrl: new URL(
+      "/catalogue/glyphs/?q=arrow",
+      "https://catalogue.example",
+    ),
+  }));
+  assertStringIncludes(grouped, "<h3>Ready to use</h3>");
+  assertStringIncludes(grouped, "<h3>From the Unicode Atlas</h3>");
+
+  const empty = renderToStaticMarkup(createElement(GlyphIndexPage, {
+    data: glyphAtlasData,
+    currentUrl: new URL(
+      "/catalogue/glyphs/?category=shape",
+      "https://catalogue.example",
+    ),
+  }));
+  assertStringIncludes(empty, "No glyphs match this combination.");
+  assertStringIncludes(empty, "Search everything");
 });
 
 Deno.test("future canonical and alias members auto-enrol every Catalogue projection", () => {
@@ -382,6 +476,121 @@ Deno.test("future canonical and alias members auto-enrol every Catalogue project
   assertStringIncludes(detail, 'data-discern-glyph-alias="future-circle"');
   assertStringIncludes(detail, "Future enrollment fixture");
   assertStringIncludes(detail, "Available in ./glyphs");
+});
+
+Deno.test("the detail size strip shows four honest simultaneous specimens", () => {
+  const entries = glyphCatalogueEntries(glyphAtlasData);
+  const check = entries.find(({ canonical }) =>
+    canonical.id === glyphSequenceId(0x2713)
+  );
+  assert(check !== undefined);
+  const markup = renderToStaticMarkup(createElement(GlyphDetailPage, {
+    entry: check,
+    entries,
+    currentUrl: new URL(
+      catalogueGlyphPath(check.canonical),
+      "https://catalogue.example",
+    ),
+  }));
+  for (const size of [16, 20, 24, 32]) {
+    assertStringIncludes(markup, `data-discern-glyph-size="${size}"`);
+    assertStringIncludes(markup, `font-size:${size}px`);
+  }
+  const context = check.aliases.find(({ publication }) =>
+    publication === "candidate"
+  )?.discoveryTitle;
+  assert(context !== undefined);
+  assert(
+    markup.split(context).length - 1 >= 4,
+    "Every size row repeats the same stable context label",
+  );
+});
+
+Deno.test("meaning sets group only resolvable published aliases with distinct identities", () => {
+  const aliasByName = new Map(
+    glyphAtlasData.aliases.map((alias) => [alias.name, alias]),
+  );
+  for (const set of glyphMeaningSets) {
+    assert(set.members.length >= 2, set.id);
+    assertEquals(
+      new Set(set.members.map(({ name }) => name)).size,
+      set.members.length,
+      set.id,
+    );
+    assertEquals(
+      new Set(set.members.map(({ role }) => role)).size,
+      set.members.length,
+      set.id,
+    );
+    const bases = new Set<string>();
+    for (const member of set.members) {
+      assert(isGlyphName(member.name), member.name);
+      assert(getGlyph(member.name).unicode.length > 0, member.name);
+      const alias = aliasByName.get(member.name);
+      assert(
+        alias !== undefined && alias.publication === "candidate",
+        member.name,
+      );
+      const canonical = glyphAtlasData.canonical.find(({ id }) =>
+        id === alias.canonicalId
+      );
+      assert(canonical !== undefined, member.name);
+      const base = canonical.codePoints.filter((point) =>
+        point !== 0xFE0E && point !== 0xFE0F
+      ).join("-");
+      assert(
+        !bases.has(base),
+        `${set.id} confuses a presentation pair with a semantic pair: ${base}`,
+      );
+      bases.add(base);
+    }
+  }
+});
+
+Deno.test("a glyph detail presents its interaction sets with roles and live constraints", () => {
+  const entries = glyphCatalogueEntries(glyphAtlasData);
+  const check = entries.find(({ canonical }) =>
+    canonical.id === glyphSequenceId(0x2713)
+  );
+  assert(check !== undefined);
+  const markup = renderToStaticMarkup(createElement(GlyphDetailPage, {
+    entry: check,
+    entries,
+    currentUrl: new URL(
+      catalogueGlyphPath(check.canonical),
+      "https://catalogue.example",
+    ),
+  }));
+  assertStringIncludes(markup, 'data-discern-glyph-set="selection-state"');
+  for (const role of ["Selected", "Unselected", "Mixed"]) {
+    assertStringIncludes(markup, `<strong>${role}</strong>`);
+  }
+  assertStringIncludes(
+    markup,
+    `${catalogueGlyphPath({ codePoints: [0x2610] })}?use=selection-unselected`,
+  );
+  assertStringIncludes(
+    markup,
+    `${catalogueGlyphPath({ codePoints: [0x2212] })}?use=selection-mixed`,
+  );
+  assertStringIncludes(markup, 'aria-current="page"');
+
+  const help = entries.find(({ canonical }) =>
+    canonical.id === glyphSequenceId(0x3F)
+  );
+  assert(help !== undefined);
+  const helpMarkup = renderToStaticMarkup(createElement(GlyphDetailPage, {
+    entry: help,
+    entries,
+    currentUrl: new URL(
+      catalogueGlyphPath(help.canonical),
+      "https://catalogue.example",
+    ),
+  }));
+  assert(
+    !helpMarkup.includes("data-discern-glyph-set"),
+    "An identity outside every set stays quiet",
+  );
 });
 
 Deno.test("unknown canonical Glyph slugs render Not Found and exact sequences remain copyable", () => {
