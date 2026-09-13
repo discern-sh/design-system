@@ -1,10 +1,10 @@
-# 2B — Polish form alignment and validation
+# 2O — Make glyph discovery useful for adoption
 
-Mixed forms read as one coherent system and users can correct invalid input without losing context or values.
+A consumer finds publishable glyphs first and can judge their size and related interaction meanings without repeatedly changing controls.
 
-**Proposal coverage:** C1, C2, C4. **Worktree name:** `refine-2b`. **Relative size:** M. **Programme:** design-polish.
+**Proposal coverage:** N1, N2, N3. **Worktree name:** `refine-2o`. **Relative size:** M. **Programme:** design-polish.
 
-Other streams are in flight. You own `2B` only; do not launch, dispatch, or supervise the sibling briefs.
+Other streams are in flight. You own `2O` only; do not launch, dispatch, or supervise the sibling briefs.
 
 ## Orient, satisfy prerequisites, then re-root
 
@@ -14,41 +14,43 @@ No feature prerequisite. This planning package must be committed on main before 
 
 This is an independently landed workstream, not a below-trunk stack. The numbers in this programme are dependency tiers: only the prerequisites above block you. Do not wait for unrelated lower-key briefs. These prompts are ready for dispatch after their named prerequisites land. If dispatched early, use the `discern-await-the-fleet` skill and the predecessor's **exact returned identity and branch**, captured by the dispatching session, to await its landing. Never guess a suffixed branch from `refine-1a` or another requested name. If that identity is missing or ambiguous, report the missing dispatch record and do not start dependent implementation.
 
-Once ready, call `discern_start` from the main checkout with the literal name `refine-2b`, then re-root all reads, edits, commands, and discern calls to its returned absolute path. Follow the await tool's start/update hint if applicable. Read the worktree's `AGENTS.md`, `map/00-orientation/design-principles.md`, and this brief there before source work. Verify every anchor against the live tree; 1C intentionally moves some Catalogue anchors.
+Once ready, call `discern_start` from the main checkout with the literal name `refine-2o`, then re-root all reads, edits, commands, and discern calls to its returned absolute path. Follow the await tool's start/update hint if applicable. Read the worktree's `AGENTS.md`, `map/00-orientation/design-principles.md`, and this brief there before source work. Verify every anchor against the live tree; 1C intentionally moves some Catalogue anchors.
 
 ## Background and outcome
 
-A fixed the basic control-height mismatch. The remaining work is the relationship among labels, fields, helper/error text, and choices in real forms.
+Glyph discovery already has interface/reference collections, source-backed search, published aliases, a workbench, and text/emoji presentation links. The default still shows the whole Atlas; build on the actual current vocabulary rather than repeating an older glyph inventory count.
 
 The owner completed A1–A5 on main, with baseline commit `a1bd80f3886e`: shared control sizes, rhythm/type roles, quieter elevation, tonal hierarchy, and composed Foundation review. Preserve that work and judge current behaviour before repeating a correction. This repository is the public library and its Catalogue; the discern tool and sibling consumer projects are outside this brief.
 
 ## Read the authorities
 
-- `src/components/forms/field/`
-- `src/components/forms/input/`
-- `src/components/forms/select/`
-- `src/components/forms/textarea/`
-- `src/components/forms/checkbox/`
-- `src/components/forms/radio/`
-- `src/components/forms/switch/`
-- `tests/cli/forms_test.ts`
+- `catalogue/pages/glyphs/index-page.tsx`
+- `catalogue/pages/glyphs/detail-page.tsx`
+- `catalogue/pages/glyphs/state.ts`
+- `catalogue/pages/glyphs/workbench.tsx`
+- `catalogue/pages/glyphs/presentation.ts`
+- `catalogue/styles/glyphs.css`
+- `src/glyphs/atlas.ts`
+- `src/glyphs/mod.ts`
+- `tests/catalogue_glyphs_test.tsx`
+- `scripts/conformance/catalogue/glyphs.ts`
 
 ## Deliverables
 
-- **C1.** Build a bounded mixed-form example and align label rows, native controls, helper text, and a neighbouring action using the shared control-size/rhythm roles. Give absent labels/helpers an intentional layout rather than hard-coded offsets. Test both stacked mobile fields and a genuinely useful inline form.
+- **N1.** Make ready-to-use published glyphs the first adoption path while keeping Atlas reference browsing and explicit All available. Preserve deep links and source-backed search; clearly distinguish exported aliases from research-only characters.
 
-- **C2.** Make invalid state explicit, connect descriptions/errors programmatically, preserve the user's value, and use correction-oriented messages. Keep transitions local and avoid preventable layout jumps; don't reserve a large blank error area everywhere. Verify error removal and resubmission as well as the initial failure.
+- **N2.** Show simultaneous 16, 20, 24, and 32 CSS-pixel specimens with honest size labels and a stable baseline/context. Keep exact Unicode sequences and font/presentation facts visible; this complements the existing single-size workbench rather than replacing it.
 
-- **C4.** Align Checkbox, Radio, and Switch indicators with multiline labels and descriptions. Make the labelled region an appropriately generous target, preserve native keyboard/form semantics, and contain long text at high zoom and narrow allocations.
+- **N3.** Present meaningful interaction sets—selected/unselected, expanded/collapsed, and directional relationships—together with their roles and actual fallback/presentation constraints. Reuse aliases, resolver outputs, and existing presentation relations; do not confuse a text/emoji pair with a semantic state pair or invent public glyph names.
 
 ## Ownership and exclusions
 
 You own:
 
-- The seven existing Forms Component folders named above, excluding the new segmented-control folder.
-- A new tests/form_alignment_validation_test.tsx plus these Components' examples, postures, and conformance.
+- Glyph Catalogue pages/state/workbench/presentation modules, glyphs.css, and their tests/checks.
+- A local, explicitly editorial grouping of existing public aliases only if existing source relations cannot express N3; no copied glyph facts.
 
-Out of scope: C3 read-only differentiation and C5 a complete production form journey, Button internals, SegmentedControl, a new form-validation framework, and global tokens. All proposals deferred to `discern/TODO.md` stay deferred. Do not opportunistically implement a sibling brief.
+Out of scope: N4 multi-glyph collection/export, N5 full workbench URL state, new glyph curation/publication, global search/shell changes, and generic CatalogueIndexCard changes. All proposals deferred to `discern/TODO.md` stay deferred. Do not opportunistically implement a sibling brief.
 
 Required companion edits are allocated to this stream: its own Unreleased changelog bullet for public contract/byte changes; its own map leaf and exact index link when needed; its own brief and programme-index row; exact enrollments in existing guards for paths/capabilities already declared above; and generated output from the owning commands. Preserve sibling entries. These routine enrollments, regenerations, conflict resolutions, and moved-link repairs need no second permission exchange. Keep new shared behaviour and contract decisions with their assigned owner; the deliverables in this brief are already authorised.
 
@@ -65,14 +67,14 @@ Authored feature files stay with their owner. Shared derived files and the narro
 
 ## Verification and definition of done
 
-- Geometry assertions cover a realistic mix of fields with/without labels/helpers at narrow/wide local widths and density bounds.
-- Validation preserves entered values and correctly updates invalid/described-by/error relationships without stealing focus.
-- Multiline choice labels remain aligned and wholly usable by label click, keyboard, coarse pointer, and forced colours.
+- Default adoption results and explicit Atlas/All filters reflect the live published vocabulary and retain valid URLs/history.
+- The four size specimens are measured at their labelled CSS sizes and remain distinct/readable on a narrow page.
+- Every grouped alias resolves through the public authority; accessibility names, exact Unicode, terminal capability/fallback, and existing workbench features remain correct.
 
 - The semantic bar is the goal at the top of this brief: demonstrate the real user task, not only isolated snapshots or passing selectors. Record what changed, why, tested widths/states, and any remaining limitation.
 - Extend focused tests in the allocated area and authored conformance/postures where meaningful. Run direct tests through `discern queue -- <command>`; the repository admits one complete test run at a time. Avoid a redundant full test preflight before `discern_done`.
 - After all edits and any integration update, run `discern_prepare`, commit logical changes atomically, then run `discern_done` on the clean final HEAD. Re-run on a changed HEAD; an earlier Proof does not cover new edits.
-- Run the Catalogue at the worktree's deterministic `discern identity --port` port and complete the required visual review at the exact localhost URLs. Stop the preview before the final `discern_done` and keep it stopped through `discern_accept`; a landing may remove the worktree. Preview evidence: Field and choice-control examples, including the mixed form and invalid→corrected review postures. Include `?surface=cli#component-<slug>` links for changed CLI renderers, and the live playground when an interactive adapter flow changes.
+- Run the Catalogue at the worktree's deterministic `discern identity --port` port and complete the required visual review at the exact localhost URLs. Leave the preview running after `discern_done` so the project owner can review your changes. Stop the preview before running `discern_accept`, as acceptance will remove the worktree. Preview evidence: Glyph index and selected glyph detail URLs showing the size strip and meaningful state/direction sets. Include `?surface=cli#component-<slug>` links for changed CLI renderers, and the live playground when an interactive adapter flow changes.
 - **Landing rule chosen by the owner:** After green `discern_done`, report the exact Proof, branch, worktree, preview URL, and any owner decision, then stop and wait for the owner to confirm acceptance.
 - Return the branch/worktree identity for an adversarial review against this brief. The planning agent will inspect the diff and reproduce the important journeys; gate success alone is not a visual review.
-- In the final implementation commit, before the final prepare → commit → done sequence, move `map/_private/planning/design-polish/2b-form-alignment-and-validation.md` to `map/_private/planning/design-polish/_done/2b-form-alignment-and-validation.md`, repair any moved relative links, and update **only this stream's row** in the programme README to the `_done/` path and completed state, preserving every sibling row.
+- In the final implementation commit, before the final prepare → commit → done sequence, move `map/_private/planning/design-polish/2o-glyph-adoption-and-size-comparison.md` to `map/_private/planning/design-polish/_done/2o-glyph-adoption-and-size-comparison.md`, repair any moved relative links, and update **only this stream's row** in the programme README to the `_done/` path and completed state, preserving every sibling row.

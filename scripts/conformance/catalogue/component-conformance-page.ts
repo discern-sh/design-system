@@ -1,5 +1,6 @@
 import type { Page } from "playwright-core";
 import type { CatalogueTheme } from "./support.ts";
+import { loadReadyBrowserPage } from "../../browser-conformance-support.ts";
 
 export function conformanceUrl(
   origin: string,
@@ -17,7 +18,9 @@ export async function loadConformancePage(
   page: Page,
   url: string,
 ): Promise<void> {
-  await page.goto(url, { waitUntil: "networkidle" });
-  await page.locator('[data-discern-conformance-ready="true"]').waitFor();
-  await page.evaluate(() => document.fonts.ready.then(() => undefined));
+  await loadReadyBrowserPage(
+    page,
+    url,
+    '[data-discern-conformance-ready="true"]',
+  );
 }

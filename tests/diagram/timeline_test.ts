@@ -5,6 +5,7 @@ import {
   assertThrows,
 } from "@std/assert";
 import { conformDiagramScene } from "../../src/diagram/conformance.ts";
+import { sceneSegmentIntersectsRect } from "../../src/internal/geometry.ts";
 import {
   DiagramBudgetError,
   DiagramValidationError,
@@ -14,6 +15,7 @@ import {
   diagramRectsOverlap,
 } from "../../src/diagram/geometry.ts";
 import type {
+  DiagramGuide,
   DiagramRegion,
   DiagramScene,
   DiagramShape,
@@ -365,4 +367,65 @@ Deno.test("timeline range refusal names the dimension and shorter-range action",
   assertEquals(error.dimension, "rangeDays");
   assertEquals(error.authorAction, "shorten-range");
   assert(error.message.includes("received 731"));
+});
+
+Deno.test("timeline row separators clear every bar, gate, and label", () => {
+  for (const spec of fixtures) {
+    const scene = sceneFor(spec);
+    const rowIds = new Set(spec.rows.map((row) => row.id));
+    const rowGuides = scene.elements.filter((
+      element,
+    ): element is DiagramGuide =>
+      element.kind === "guide" && rowIds.has(element.semanticId)
+    );
+    assertEquals(rowGuides.length, spec.rows.length);
+    const texts = scene.elements.filter((element): element is DiagramText =>
+      element.kind === "text"
+    );
+    for (const guide of rowGuides) {
+      for (let index = 1; index < guide.points.length; index += 1) {
+        const start = guide.points[index - 1];
+        const end = guide.points[index];
+        if (start === undefined || end === undefined) continue;
+        for (const shape of shapes(scene)) {
+          assert(
+            !sceneSegmentIntersectsRect(start, end, shape.bounds, 0.02),
+            `row separator ${guide.semanticId} crosses ${shape.semanticId} in ${spec.title}`,
+          );
+        }
+        for (const text of texts) {
+          assert(
+            !sceneSegmentIntersectsRect(start, end, text.bounds, 0.02),
+            `row separator ${guide.semanticId} crosses ${text.id} in ${spec.title}`,
+          );
+        }
+      }
+    }
+  }
+});
+
+Deno.test("timeline lanes grow with wrapped labels instead of squeezing items", () => {
+  const wrappedLanes = fixtures[4];
+  if (wrappedLanes === undefined) throw new TypeError("Missing dense fixture");
+  const scene = sceneFor(wrappedLanes);
+  const wrapped = scene.elements.find((element): element is DiagramText =>
+    element.kind === "text" && element.id === "task-freeze-label"
+  );
+  assert(wrapped !== undefined && wrapped.lines.length >= 2);
+  const gate = scene.elements.find((element): element is DiagramShape =>
+    element.kind === "shape" && element.semanticId === "go"
+  );
+  const gateLabel = scene.elements.find((element): element is DiagramText =>
+    element.kind === "text" && element.id === "milestone-go-label"
+  );
+  assert(gate !== undefined && gateLabel !== undefined);
+  assert(gateLabel.lines.length >= 2, "the gate label exercises wrapping");
+  for (const text of scene.elements) {
+    if (text.kind !== "text" || text.ownerId === gate.semanticId) continue;
+    const gap = text.bounds.y - (gate.bounds.y + gate.bounds.height);
+    assert(
+      gap < 0 || gap >= 4,
+      `${text.id} presses the gate diamond at ${gap} units`,
+    );
+  }
 });

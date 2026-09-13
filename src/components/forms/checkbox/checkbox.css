@@ -1,12 +1,17 @@
 @layer discern.components {
   .discern-choice {
+    --discern-choice-control: 1.125rem;
     display: grid;
-    gap: var(--discern-space-1);
+    grid-template-columns: var(--discern-choice-control) minmax(0, 1fr);
+    column-gap: var(--discern-space-3);
+    row-gap: var(--discern-space-1);
+    overflow-wrap: anywhere;
   }
   .discern-choice__label {
-    display: inline-flex;
-    align-items: flex-start;
-    gap: var(--discern-space-3);
+    display: grid;
+    grid-template-columns: subgrid;
+    grid-column: 1 / -1;
+    align-items: start;
     min-block-size: 1.5rem;
     color: var(--discern-color-ink);
     cursor: pointer;
@@ -22,34 +27,30 @@
   .discern-choice__control {
     --discern-focus-proxy: 1;
     display: grid;
-    flex: none;
     place-items: center;
     pointer-events: none;
-    inline-size: 1.125rem;
-    block-size: 1.125rem;
-    margin-block-start: calc(var(--discern-space-1) / 4);
+    inline-size: var(--discern-choice-control);
+    block-size: var(--discern-choice-control);
+    margin-block-start: calc((1lh - var(--discern-choice-control)) / 2);
     border: 0.09375rem solid var(--discern-color-border-strong);
     border-radius: var(--discern-radius-xs);
     background: var(--discern-color-surface);
-    transition-property: background, border-color, box-shadow, transform;
+    transition-property: background, border-color, transform;
     transition-duration: var(--discern-duration-fast);
   }
-  .discern-choice__control > span {
-    inline-size: 0.5rem;
-    block-size: 0.25rem;
-    border: 0;
-    rotate: -45deg;
-    translate: 0 -1px;
-  }
-  .discern-choice input:checked + .discern-choice__control {
+  input:checked + .discern-choice__control {
     border-color: var(--discern-color-action);
     background: var(--discern-color-action);
   }
   .discern-choice:not(.discern-choice--radio) input:checked + .discern-choice__control > span {
+    inline-size: 0.5rem;
+    block-size: 0.25rem;
     border-inline-start: 0.125rem solid var(--discern-color-on-action);
     border-block-end: 0.125rem solid var(--discern-color-on-action);
+    rotate: -45deg;
+    translate: 0 -1px;
   }
-  .discern-choice input:focus-visible + .discern-choice__control {
+  input:focus-visible + .discern-choice__control {
     outline: 0.125rem solid var(--discern-color-accent-500);
     outline-offset: calc(var(--discern-space-1) / 2);
   }
@@ -61,16 +62,17 @@
   .discern-choice__label:active input:not(:disabled) + .discern-choice__control {
     transform: scale(0.92);
   }
-  .discern-choice input[aria-invalid="true"]:not(:disabled) + .discern-choice__control,
-  fieldset[aria-invalid="true"] .discern-choice input:not(:disabled) + .discern-choice__control {
+  input[aria-invalid="true"]:not(:disabled) + .discern-choice__control,
+  input:user-invalid:not(:disabled) + .discern-choice__control,
+  fieldset[aria-invalid="true"] input:not(:disabled) + .discern-choice__control {
     border-width: 0.125rem;
     border-color: var(--discern-color-danger);
   }
-  .discern-choice input:disabled + .discern-choice__control {
+  input:disabled + .discern-choice__control {
     border-color: var(--discern-color-border);
     background: var(--discern-color-surface-sunken);
   }
-  .discern-choice input:disabled:checked + .discern-choice__control {
+  input:disabled:checked + .discern-choice__control {
     background: var(--discern-color-ink-faint);
   }
   .discern-choice__label:has(input:disabled) {
@@ -78,7 +80,7 @@
     color: var(--discern-color-ink-muted);
   }
   .discern-choice__description {
-    padding-inline-start: calc(var(--discern-space-6) + var(--discern-space-1));
+    grid-column: 2;
     color: var(--discern-color-ink-muted);
     font-size: var(--discern-font-size-xs);
     line-height: var(--discern-leading-snug);

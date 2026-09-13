@@ -108,7 +108,6 @@
   }
   .discern-catalogue-pattern__viewport {
     box-sizing: border-box;
-    inline-size: 720px;
     min-width: 0;
     margin-inline: auto;
     background: var(--discern-color-surface);
@@ -121,6 +120,9 @@
   }
   .discern-catalogue-pattern__demonstration[data-discern-pattern-width="narrow"] .discern-catalogue-pattern__viewport {
     inline-size: 360px;
+  }
+  .discern-catalogue-pattern__demonstration[data-discern-pattern-width="standard"] .discern-catalogue-pattern__viewport {
+    inline-size: 720px;
   }
   .discern-catalogue-pattern__demonstration[data-discern-pattern-width="wide"] .discern-catalogue-pattern__viewport {
     inline-size: 1000px;

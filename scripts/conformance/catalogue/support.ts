@@ -1,4 +1,5 @@
 import type { Page } from "playwright-core";
+import { loadReadyBrowserPage } from "../../browser-conformance-support.ts";
 
 export const CATALOGUE_WIDE_VIEWPORT = { width: 1440, height: 1000 } as const;
 export const CATALOGUE_TERMINAL_VIEWPORT = {
@@ -28,9 +29,7 @@ export async function loadCataloguePage(
   page: Page,
   url: string,
 ): Promise<void> {
-  await page.goto(url, { waitUntil: "networkidle" });
-  await page.locator(".discern-catalogue-shell").waitFor();
-  await page.evaluate(() => document.fonts.ready.then(() => undefined));
+  await loadReadyBrowserPage(page, url, ".discern-catalogue-shell");
 }
 
 /** Select one global Catalogue theme policy through the shared public control. */

@@ -70,6 +70,21 @@ export async function waitForPaintedFrames(page: Page): Promise<void> {
   );
 }
 
+/** Wait for loaded assets, application readiness, fonts, and a painted layout. */
+export async function loadReadyBrowserPage(
+  page: Page,
+  url: string,
+  readySelector: string,
+  timeout?: number,
+): Promise<void> {
+  await page.goto(url, { waitUntil: "load" });
+  await page.locator(readySelector).waitFor(
+    timeout === undefined ? {} : { timeout },
+  );
+  await page.evaluate(() => document.fonts.ready.then(() => undefined));
+  await waitForPaintedFrames(page);
+}
+
 /** Wait until a browsing context's scroll position is unchanged for two frames. */
 export async function waitForStableWindowScroll(
   target: Locator,
@@ -108,13 +123,26 @@ export function clampedScrollPosition(
 /** Run one WCAG scan only after theme and layout paint caches have settled. */
 export async function scanBrowserAccessibility(
   page: Page,
-  selector: string,
+  selector: string | readonly string[],
 ): Promise<AxeResults> {
+  const selectors = typeof selector === "string" ? [selector] : selector;
+  if (selectors.length === 0) {
+    throw new Error("Accessibility scan has no targets");
+  }
+  // Axe accepts a union when includes are added separately. Check each member:
+  // a missing include must not disappear inside an otherwise nonempty union.
+  const missing = await page.evaluate(
+    (selectors) =>
+      selectors.filter((selector) => !document.querySelector(selector)),
+    [...selectors],
+  );
+  if (missing.length > 0) {
+    throw new Error(`Accessibility targets missing: ${missing.join(", ")}`);
+  }
   await waitForPaintedFrames(page);
-  return await new AxeBuilder({ page })
-    .include(selector)
-    .withTags([...WCAG_TAGS])
-    .analyze();
+  const scan = new AxeBuilder({ page }).withTags([...WCAG_TAGS]);
+  for (const selector of selectors) scan.include(selector);
+  return await scan.analyze();
 }
 
 /** Collect every uncaught browser, console, and HTTP failure into one gate. */

@@ -11,10 +11,11 @@ import {
 } from "../catalogue/compositions.tsx";
 import { CompositionsNavigation } from "../catalogue/pages/compositions/navigation.tsx";
 import {
+  compositionFitWidth,
   compositionGalleryItems,
   compositionRecipeNeighbours,
   CompositionsPage,
-  compositionWidthPreset,
+  compositionWidthChoice,
   compositionWidthPresets,
   compositionWidthUrl,
 } from "../catalogue/pages/compositions/page.tsx";
@@ -270,7 +271,10 @@ Deno.test("responsive width state round-trips through the URL and real container
     );
     const url = compositionWidthUrl(current, preset.id);
     assertEquals(url.searchParams.get("theme"), "dark");
-    assertEquals(compositionWidthPreset(url.searchParams.get("width")), preset);
+    assertEquals(
+      compositionWidthChoice(url.searchParams.get("width")),
+      preset.id,
+    );
 
     const html = renderToStaticMarkup(
       createElement(CompositionsPage, {
@@ -288,7 +292,31 @@ Deno.test("responsive width state round-trips through the URL and real container
     );
     assertEquals((html.match(/checked=""/g) ?? []).length, 1);
   }
-  assertEquals(compositionWidthPreset("invented").id, "standard");
+  assertEquals(compositionWidthChoice("invented"), compositionFitWidth);
+});
+
+Deno.test("the preview fits its allocated canvas until an exact width is requested", () => {
+  const recipe = futureRecipe();
+  const detailUrl = new URL(
+    `${compositionRecipePath(recipe.id)}?theme=dark`,
+    "https://catalogue.example",
+  );
+  const html = renderToStaticMarkup(
+    createElement(CompositionsPage, {
+      recipes: [recipe],
+      currentUrl: detailUrl,
+    }),
+  );
+  assertEquals(compositionWidthChoice(null), compositionFitWidth);
+  assertStringIncludes(html, 'data-discern-pattern-width="fit"');
+  assertStringIncludes(html, 'checked="" value="fit"');
+  assertEquals((html.match(/checked=""/g) ?? []).length, 1);
+
+  const exact = compositionWidthUrl(detailUrl, "narrow");
+  assertEquals(exact.searchParams.get("width"), "narrow");
+  const reset = compositionWidthUrl(exact, compositionFitWidth);
+  assertEquals(reset.searchParams.get("width"), null);
+  assertEquals(reset.searchParams.get("theme"), "dark");
 });
 
 Deno.test("detail keeps Components secondary and adaptable source closed and copyable", () => {

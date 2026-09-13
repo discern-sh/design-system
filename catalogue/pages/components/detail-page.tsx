@@ -7,7 +7,7 @@ import type { RegistryEntry } from "../../generated/registry.ts";
 import { catalogueDecisionCopyProps } from "../../metadata-copy.ts";
 import type { CatalogueTerminalPresentation } from "../../terminal-theme.ts";
 import { announceCatalogueLocationChange } from "../../shell/location.ts";
-import { preserveCatalogueAppearanceHref } from "../../shell/appearance-state.ts";
+import { preserveComponentReturnHref } from "./return-context.ts";
 import type { CatalogueSurface } from "../shared.tsx";
 import {
   ComponentEvidence,
@@ -51,7 +51,7 @@ export function ComponentDetailPage(
     globalThis.history.pushState(
       null,
       "",
-      preserveCatalogueAppearanceHref(
+      preserveComponentReturnHref(
         new URL(globalThis.location.href),
         componentDetailHref(entry, next, { anchor }),
       ),

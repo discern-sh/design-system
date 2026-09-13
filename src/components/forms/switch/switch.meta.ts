@@ -13,6 +13,13 @@ const meta = {
 
 export const componentExampleVocabulary = [
   { id: "default", label: "Off" },
+  {
+    id: "multiline",
+    label: "Multiline label",
+    only: "web",
+    reason:
+      "A long label wraps beside the browser track; the terminal Switch heading is a single truncated frame row.",
+  },
   { id: "active", label: "Active" },
   { id: "filled", label: "On" },
   { id: "validation-error", label: "Validation error" },

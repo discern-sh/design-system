@@ -13,6 +13,7 @@ import { registry } from "../../../catalogue/generated/registry.ts";
 import { componentGroups } from "../../../src/types/component-meta.ts";
 import {
   addPageFailureListeners,
+  loadReadyBrowserPage,
   scanBrowserAccessibility,
 } from "../../browser-conformance-support.ts";
 import { writeComponentReviewManifest } from "../../component-review.ts";
@@ -187,11 +188,11 @@ function reviewUrl(
 }
 
 async function loadReview(page: Page, url: string): Promise<void> {
-  await page.goto(url, { waitUntil: "networkidle" });
-  await page.locator(
+  await loadReadyBrowserPage(
+    page,
+    url,
     'html[data-discern-review-status="ready"], html[data-discern-review-status="error"]',
-  ).waitFor();
-  await page.evaluate(() => document.fonts.ready.then(() => undefined));
+  );
   const error = await page.locator("html").getAttribute(
     "data-discern-review-error",
   );

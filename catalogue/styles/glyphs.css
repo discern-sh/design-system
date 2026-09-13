@@ -88,6 +88,27 @@
     grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr));
     gap: 16px;
   }
+  .discern-catalogue-glyph-results-group + .discern-catalogue-glyph-results-group {
+    margin-block-start: 40px;
+  }
+  .discern-catalogue-glyph-results-group > h3 {
+    margin: 0 0 4px;
+    font: 650 var(--discern-font-size-sm) var(--discern-font-ui);
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--discern-color-ink-muted);
+  }
+  .discern-catalogue-glyph-results-group > p {
+    margin: 0 0 16px;
+    font-size: var(--discern-font-size-sm);
+    color: var(--discern-color-ink-muted);
+  }
+  .discern-catalogue-glyph-results-group > h3 + .discern-catalogue-glyph-grid {
+    margin-block-start: 16px;
+  }
+  .discern-catalogue-glyph-results-group > p + .discern-catalogue-glyph-grid {
+    margin-block-start: 0;
+  }
   .discern-catalogue-glyph-tile {
     position: relative;
     min-inline-size: 0;
@@ -470,6 +491,51 @@
 }
 
 @layer catalogue {
+  .discern-catalogue-glyph-sizes {
+    margin-block: 48px 64px;
+  }
+  .discern-catalogue-glyph-sizes__rows {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    list-style: none;
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-md);
+    background: var(--discern-color-surface);
+  }
+  .discern-catalogue-glyph-sizes__rows > li {
+    display: flex;
+    gap: 20px;
+    align-items: baseline;
+    min-inline-size: 0;
+    padding: 14px 18px;
+  }
+  .discern-catalogue-glyph-sizes__rows > li + li {
+    border-block-start: 1px solid var(--discern-color-border);
+  }
+  .discern-catalogue-glyph-sizes__label {
+    flex: none;
+    min-inline-size: 44px;
+    color: var(--discern-color-ink-faint);
+    font: 650 var(--discern-font-size-xs) var(--discern-font-ui);
+    font-variant-numeric: tabular-nums;
+  }
+  .discern-catalogue-glyph-sizes__line {
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+    font-family: var(--discern-font-ui);
+    line-height: 1.4;
+  }
+  .discern-catalogue-glyph-sizes__line > span {
+    padding-inline-end: .35em;
+  }
+  .discern-catalogue-glyph-sizes__note {
+    margin-block-start: 12px;
+    color: var(--discern-color-ink-muted);
+    font-size: var(--discern-font-size-sm);
+    line-height: 1.6;
+  }
   .discern-catalogue-glyph-workbench {
     margin-block: 48px 64px;
   }
@@ -544,7 +610,8 @@
   .discern-catalogue-glyph-workbench__terminal pre:focus-visible,
   .discern-catalogue-glyph-reference > summary:focus-visible,
   .discern-catalogue-glyphs__extra > summary:focus-visible,
-  .discern-catalogue-glyph-variants a:focus-visible {
+  .discern-catalogue-glyph-variants a:focus-visible,
+  .discern-catalogue-glyph-set__members a:focus-visible {
     outline: 2px solid var(--discern-color-accent-ink);
     outline-offset: 3px;
   }
@@ -583,12 +650,14 @@
   .discern-catalogue-glyph-reference > section {
     margin-block: 32px;
   }
-  .discern-catalogue-glyph-variants {
+  .discern-catalogue-glyph-variants,
+  .discern-catalogue-glyph-set__members {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
     gap: 12px;
   }
-  .discern-catalogue-glyph-variants a {
+  .discern-catalogue-glyph-variants a,
+  .discern-catalogue-glyph-set__members a {
     display: grid;
     gap: 10px;
     padding: 20px;
@@ -597,17 +666,34 @@
     text-decoration: none;
     color: var(--discern-color-ink);
   }
-  .discern-catalogue-glyph-variants a[aria-current] {
+  .discern-catalogue-glyph-variants a[aria-current],
+  .discern-catalogue-glyph-set__members a[aria-current] {
     border-color: var(--discern-color-ink);
     background: var(--discern-color-surface-sunken);
   }
   .discern-catalogue-glyph-variants a > span {
     font: 56px/1.5 var(--discern-font-ui);
   }
-  .discern-catalogue-glyph-variants :is(code, small) {
+  .discern-catalogue-glyph-variants :is(code, small),
+  .discern-catalogue-glyph-set__members :is(code, small) {
     color: var(--discern-color-ink-muted);
     font-size: var(--discern-font-size-xs);
     overflow-wrap: anywhere;
+  }
+  .discern-catalogue-glyph-set {
+    margin-block-start: 32px;
+  }
+  .discern-catalogue-glyph-set > h3 {
+    margin: 0;
+  }
+  .discern-catalogue-glyph-set > p {
+    margin-block: 6px 14px;
+    max-inline-size: 78ch;
+    color: var(--discern-color-ink-muted);
+    line-height: 1.55;
+  }
+  .discern-catalogue-glyph-set__members a > span {
+    font: 40px/1.4 var(--discern-font-ui);
   }
   @media (max-width: 980px) {
     .discern-catalogue-glyphs__controls {

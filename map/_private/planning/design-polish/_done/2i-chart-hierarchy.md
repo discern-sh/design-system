@@ -1,10 +1,10 @@
-# 2O — Make glyph discovery useful for adoption
+# 2I — Improve chart axis and data hierarchy
 
-A consumer finds publishable glyphs first and can judge their size and related interaction meanings without repeatedly changing controls.
+Chart data leads visually while ticks, grids, and reference marks remain readable and useful at small and large allocations.
 
-**Proposal coverage:** N1, N2, N3. **Worktree name:** `refine-2o`. **Relative size:** M. **Programme:** design-polish.
+**Proposal coverage:** I2. **Worktree name:** `refine-2i`. **Relative size:** M. **Programme:** design-polish.
 
-Other streams are in flight. You own `2O` only; do not launch, dispatch, or supervise the sibling briefs.
+Other streams are in flight. You own `2I` only; do not launch, dispatch, or supervise the sibling briefs.
 
 ## Orient, satisfy prerequisites, then re-root
 
@@ -14,43 +14,43 @@ No feature prerequisite. This planning package must be committed on main before 
 
 This is an independently landed workstream, not a below-trunk stack. The numbers in this programme are dependency tiers: only the prerequisites above block you. Do not wait for unrelated lower-key briefs. These prompts are ready for dispatch after their named prerequisites land. If dispatched early, use the `discern-await-the-fleet` skill and the predecessor's **exact returned identity and branch**, captured by the dispatching session, to await its landing. Never guess a suffixed branch from `refine-1a` or another requested name. If that identity is missing or ambiguous, report the missing dispatch record and do not start dependent implementation.
 
-Once ready, call `discern_start` from the main checkout with the literal name `refine-2o`, then re-root all reads, edits, commands, and discern calls to its returned absolute path. Follow the await tool's start/update hint if applicable. Read the worktree's `AGENTS.md`, `map/00-orientation/design-principles.md`, and this brief there before source work. Verify every anchor against the live tree; 1C intentionally moves some Catalogue anchors.
+Once ready, call `discern_start` from the main checkout with the literal name `refine-2i`, then re-root all reads, edits, commands, and discern calls to its returned absolute path. Follow the await tool's start/update hint if applicable. Read the worktree's `AGENTS.md`, `map/00-orientation/design-principles.md`, and this brief there before source work. Verify every anchor against the live tree; 1C intentionally moves some Catalogue anchors.
 
 ## Background and outcome
 
-Glyph discovery already has interface/reference collections, source-backed search, published aliases, a workbench, and text/emoji presentation links. The default still shows the whole Atlas; build on the actual current vocabulary rather than repeating an older glyph inventory count.
+Charts already have a strict static grammar, shared numeric/layout authorities, accessible descriptions, non-colour series identity, and terminal honesty tiers. This is a hierarchy and legibility pass across existing kinds.
 
 The owner completed A1–A5 on main, with baseline commit `a1bd80f3886e`: shared control sizes, rhythm/type roles, quieter elevation, tonal hierarchy, and composed Foundation review. Preserve that work and judge current behaviour before repeating a correction. This repository is the public library and its Catalogue; the discern tool and sibling consumer projects are outside this brief.
 
 ## Read the authorities
 
-- `catalogue/pages/glyphs/index-page.tsx`
-- `catalogue/pages/glyphs/detail-page.tsx`
-- `catalogue/pages/glyphs/state.ts`
-- `catalogue/pages/glyphs/workbench.tsx`
-- `catalogue/pages/glyphs/presentation.ts`
-- `catalogue/styles/glyphs.css`
-- `src/glyphs/atlas.ts`
-- `src/glyphs/mod.ts`
-- `tests/catalogue_glyphs_test.tsx`
-- `scripts/conformance/catalogue/glyphs.ts`
+- `src/chart/scene.ts`
+- `src/chart/svg.ts`
+- `src/chart/svg-geometry.ts`
+- `src/chart/palette.ts`
+- `src/chart/kind-layout.ts`
+- `src/chart/kinds/`
+- `src/components/editorial/chart/`
+- `tests/chart/browser_test.tsx`
+- `tests/chart/palette_test.ts`
+- `tests/chart/formatter_identity_test.ts`
 
 ## Deliverables
 
-- **N1.** Make ready-to-use published glyphs the first adoption path while keeping Atlas reference browsing and explicit All available. Preserve deep links and source-backed search; clearly distinguish exported aliases from research-only characters.
+- **I2.** Inspect every current chart kind at its admitted small and large sizes. Establish a deliberate hierarchy among data marks, ticks and labels, baseline, reference lines, and background grid. Reuse existing semantic paint/type roles and non-colour treatment; avoid locally hard-coded theme colours.
 
-- **N2.** Show simultaneous 16, 20, 24, and 32 CSS-pixel specimens with honest size labels and a stable baseline/context. Keep exact Unicode sequences and font/presentation facts visible; this complements the existing single-size workbench rather than replacing it.
+- **Information preservation.** Keep units, formatted numerals, domain meaning, series distinctions, and reference meaning intact. Thin or quiet support marks only when they remain perceivable where necessary. Do not solve crowding by silently dropping authored values or changing quantitative scale.
 
-- **N3.** Present meaningful interaction sets—selected/unselected, expanded/collapsed, and directional relationships—together with their roles and actual fallback/presentation constraints. Reuse aliases, resolver outputs, and existing presentation relations; do not confuse a text/emoji pair with a semantic state pair or invent public glyph names.
+- **Cross-surface review.** Verify live SVG, exported SVG, reduced-colour/forced-colour presentation, and terminal descriptions still agree. Extend geometry and perceptual evidence on the existing corpus rather than selecting only easy bar charts.
 
 ## Ownership and exclusions
 
 You own:
 
-- Glyph Catalogue pages/state/workbench/presentation modules, glyphs.css, and their tests/checks.
-- A local, explicitly editorial grouping of existing public aliases only if existing source relations cannot express N3; no copied glyph facts.
+- src/chart/ rendering/layout-role decisions needed for axis/grid/data hierarchy and the editorial Chart wrapper.
+- Existing Chart fixtures/tests and canonical Chart review examples; no new chart kind or encoding.
 
-Out of scope: N4 multi-glyph collection/export, N5 full workbench URL state, new glyph curation/publication, global search/shell changes, and generic CatalogueIndexCard changes. All proposals deferred to `discern/TODO.md` stay deferred. Do not opportunistically implement a sibling brief.
+Out of scope: I1 full DataFigure compositions, I3 Stat/Sparkline context, I4 new table presentation, R4 signed/diverging grammar, interaction, numeric authority rewrites, and global palette Tokens. All proposals deferred to `discern/TODO.md` stay deferred. Do not opportunistically implement a sibling brief.
 
 Required companion edits are allocated to this stream: its own Unreleased changelog bullet for public contract/byte changes; its own map leaf and exact index link when needed; its own brief and programme-index row; exact enrollments in existing guards for paths/capabilities already declared above; and generated output from the owning commands. Preserve sibling entries. These routine enrollments, regenerations, conflict resolutions, and moved-link repairs need no second permission exchange. Keep new shared behaviour and contract decisions with their assigned owner; the deliverables in this brief are already authorised.
 
@@ -67,14 +67,14 @@ Authored feature files stay with their owner. Shared derived files and the narro
 
 ## Verification and definition of done
 
-- Default adoption results and explicit Atlas/All filters reflect the live published vocabulary and retain valid URLs/history.
-- The four size specimens are measured at their labelled CSS sizes and remain distinct/readable on a narrow page.
-- Every grouped alias resolves through the public authority; accessibility names, exact Unicode, terminal capability/fallback, and existing workbench features remain correct.
+- Every existing kind has evidence at admitted small/large sizes showing readable ticks and clear data hierarchy without clipping or label collisions.
+- Numeric formatter identity, deterministic scene/SVG output, terminal honesty, forced colours, and colour-vision/ANSI palette proofs pass.
+- No title, value, series distinction, unit, reference, or accessible description is lost.
 
 - The semantic bar is the goal at the top of this brief: demonstrate the real user task, not only isolated snapshots or passing selectors. Record what changed, why, tested widths/states, and any remaining limitation.
 - Extend focused tests in the allocated area and authored conformance/postures where meaningful. Run direct tests through `discern queue -- <command>`; the repository admits one complete test run at a time. Avoid a redundant full test preflight before `discern_done`.
 - After all edits and any integration update, run `discern_prepare`, commit logical changes atomically, then run `discern_done` on the clean final HEAD. Re-run on a changed HEAD; an earlier Proof does not cover new edits.
-- Run the Catalogue at the worktree's deterministic `discern identity --port` port and complete the required visual review at the exact localhost URLs. Stop the preview before the final `discern_done` and keep it stopped through `discern_accept`; a landing may remove the worktree. Preview evidence: Glyph index and selected glyph detail URLs showing the size strip and meaningful state/direction sets. Include `?surface=cli#component-<slug>` links for changed CLI renderers, and the live playground when an interactive adapter flow changes.
+- Run the Catalogue at the worktree's deterministic `discern identity --port` port and complete the required visual review at the exact localhost URLs. Leave the preview running after `discern_done` so the project owner can review your changes. Stop the preview before running `discern_accept`, as acceptance will remove the worktree. Preview evidence: Chart kind corpus review at small and large allocations, including exported SVG comparisons. Include `?surface=cli#component-<slug>` links for changed CLI renderers, and the live playground when an interactive adapter flow changes.
 - **Landing rule chosen by the owner:** After green `discern_done`, report the exact Proof, branch, worktree, preview URL, and any owner decision, then stop and wait for the owner to confirm acceptance.
 - Return the branch/worktree identity for an adversarial review against this brief. The planning agent will inspect the diff and reproduce the important journeys; gate success alone is not a visual review.
-- In the final implementation commit, before the final prepare → commit → done sequence, move `map/_private/planning/design-polish/2o-glyph-adoption-and-size-comparison.md` to `map/_private/planning/design-polish/_done/2o-glyph-adoption-and-size-comparison.md`, repair any moved relative links, and update **only this stream's row** in the programme README to the `_done/` path and completed state, preserving every sibling row.
+- In the final implementation commit, before the final prepare → commit → done sequence, move `map/_private/planning/design-polish/2i-chart-hierarchy.md` to `map/_private/planning/design-polish/_done/2i-chart-hierarchy.md`, repair any moved relative links, and update **only this stream's row** in the programme README to the `_done/` path and completed state, preserving every sibling row.
