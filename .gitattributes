@@ -1,3 +1,5 @@
+/CHANGELOG.md merge=union diff=markdown
+
 # --- discern ---
 # Generated automatically by discern via discern.toml, the source-path registry, and the provider registry | https://discern.sh
 src/generated/** merge=discern-generated linguist-generated
