@@ -18,6 +18,7 @@ import {
   documentToTsx,
 } from "../../builder/export.ts";
 import { assertBuilderDocument } from "../../builder/policy.ts";
+import { newBuilderStructuredRow } from "../../builder/defaults.ts";
 import type { BuilderRegistryCoreEntry } from "../../builder/registry-core.ts";
 import {
   documentPolicy,
@@ -25,7 +26,6 @@ import {
   instantiateComponent,
   registryCoreBySlug,
 } from "../../builder/registry-core.ts";
-import { rendersFromDefaults } from "../../builder/render.tsx";
 
 /** A ready starter: the accepted node plus its registry core facts. */
 export interface DetailStarter {
@@ -41,15 +41,83 @@ export interface DetailStarterUnavailable {
   readonly reason: string;
 }
 
+function emptyJsonValue(value: BuilderPropValue | undefined): boolean {
+  if (value?.kind !== "json") return true;
+  try {
+    const parsed: unknown = JSON.parse(value.source);
+    if (Array.isArray(parsed)) return parsed.length === 0;
+    if (typeof parsed === "object" && parsed !== null) {
+      return Object.keys(parsed).length === 0;
+    }
+    return false;
+  } catch {
+    return true;
+  }
+}
+
+/**
+ * Required values the seeded starter cannot supply truthfully: structural
+ * JSON that stayed an empty placeholder, or an element-only slot no curated
+ * seed filled. Judged against the actual instantiated node so authored
+ * `catalogueBuilderDefaults` and the Builder's curated creation seeds both
+ * count.
+ */
 function blockingControls(
   core: BuilderRegistryCoreEntry,
+  node: BuilderNode,
 ): readonly PropControl[] {
-  const defaults = core.registry.builderDefaults;
-  return core.controls.filter((control) =>
-    control.required &&
-    ((control.control === "json" && !Object.hasOwn(defaults, control.name)) ||
-      (control.control === "slot" && control.elementOnly))
-  );
+  return core.controls.filter((control) => {
+    if (!control.required) return false;
+    const value = node.props[control.name];
+    if (control.control === "json") return emptyJsonValue(value);
+    if (control.control === "slot" && control.elementOnly) {
+      return value?.kind !== "slot" || value.children.length === 0;
+    }
+    return false;
+  });
+}
+
+/**
+ * Fill a required shaped list the creation defaults left empty with two rows
+ * from the Builder's own row-seeding authority — the same generic content a
+ * person gets from the inspector's add-row action, visible in both the
+ * render and the exported code. Shapes whose rows would be empty stay empty
+ * and therefore stay honestly blocked.
+ */
+function seedRequiredShapedLists(
+  core: BuilderRegistryCoreEntry,
+  node: BuilderNode,
+): BuilderNode {
+  let props = node.props;
+  for (const control of core.controls) {
+    if (
+      !control.required || control.control !== "json" ||
+      control.shape === undefined || !control.shape.list ||
+      !emptyJsonValue(props[control.name])
+    ) continue;
+    const firstText = control.shape.members.find(({ control: member }) =>
+      member === "text"
+    );
+    const rows: Record<string, unknown>[] = [];
+    for (let count = 0; count < 2; count += 1) {
+      const seeded = newBuilderStructuredRow(control.shape, rows);
+      if (Object.keys(seeded.row).length > 0) {
+        rows.push({ ...seeded.row });
+        continue;
+      }
+      // A shape without required members still gets one visible text value.
+      if (firstText === undefined) break;
+      rows.push({
+        [firstText.name]: `${firstText.label} ${String(count + 1)}`,
+      });
+    }
+    if (rows.length === 0) continue;
+    props = {
+      ...props,
+      [control.name]: { kind: "json", source: JSON.stringify(rows) },
+    };
+  }
+  return props === node.props ? node : { ...node, props };
 }
 
 /** One fresh policy-accepted starter, or the honest reason there is none. */
@@ -60,17 +128,18 @@ export function createDetailStarter(
   if (core === undefined) {
     throw new Error(`Unknown component slug "${slug}".`);
   }
-  if (!rendersFromDefaults(slug)) {
-    const blocking = blockingControls(core);
+  const node = seedRequiredShapedLists(core, instantiateComponent(slug));
+  const blocking = blockingControls(core, node);
+  if (blocking.length > 0) {
     return {
       status: "unavailable",
       core,
       reason: `${
-        blocking.map(({ label }) => label).join(", ") || "Required content"
+        blocking.map(({ label }) => label).join(", ")
       } must hold real consumer values that source data cannot synthesize. Compose ${core.registry.meta.name} with those values in the Builder instead.`,
     };
   }
-  return { status: "ready", core, node: instantiateComponent(slug) };
+  return { status: "ready", core, node };
 }
 
 /** The starter's single-node document, shared by render and export. */

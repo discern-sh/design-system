@@ -197,6 +197,20 @@ Deno.test("Catalogue prop evidence is source-derived and complete", async () => 
     assert(href !== undefined && !href.required && href.type === "string");
   }
 
+  // Object types flatten plain interface inheritance across the component
+  // and its framework-neutral vocabulary sibling, so referencing props keep
+  // their inherited required members (structured controls depend on them).
+  const segmentedItem = catalogueEntry(registry, "segmented-control")
+    .objectTypes.find(({ typeName }) => typeName === "SegmentedControlItem");
+  assert(segmentedItem !== undefined);
+  for (const inherited of ["value", "label"]) {
+    const member = segmentedItem.props.find(({ name }) => name === inherited);
+    assert(
+      member !== undefined && member.required,
+      `SegmentedControlItem lost inherited required member ${inherited}`,
+    );
+  }
+
   const buildSource = await Deno.readTextFile(
     join(PACKAGE_ROOT, "scripts", "build.ts"),
   );

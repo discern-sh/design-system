@@ -133,7 +133,7 @@ export function ComponentDetailPage(
         </header>
         <div className="discern-catalogue-detail__controls">
           <SegmentedControl
-            className="discern-catalogue-detail__control"
+            className="discern-catalogue-detail__control discern-catalogue-detail__control--surface"
             label="Surface"
             name={`detail-surface-${entry.meta.slug}`}
             value={state.surface}
@@ -150,7 +150,7 @@ export function ComponentDetailPage(
             ]}
           />
           <SegmentedControl
-            className="discern-catalogue-detail__control"
+            className="discern-catalogue-detail__control discern-catalogue-detail__control--view"
             label="View"
             name={`detail-view-${entry.meta.slug}`}
             value={view}

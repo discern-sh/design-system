@@ -284,6 +284,17 @@
     flex: 1 1 220px;
     min-width: 0;
   }
+  /* SegmentedControl is an inline-size container and cannot size itself from
+     its content; the route supplies each control's allocation. */
+  .discern-catalogue-detail__control--surface {
+    flex: 0 1 170px;
+  }
+  .discern-catalogue-detail__control--view {
+    flex: 0 1 430px;
+  }
+  .discern-catalogue-detail__stage-widths {
+    flex: 0 1 320px;
+  }
   .discern-catalogue-detail__control .discern-segmented-control__legend,
   .discern-catalogue-detail__stage-widths .discern-segmented-control__legend {
     margin-block-end: 5px;
