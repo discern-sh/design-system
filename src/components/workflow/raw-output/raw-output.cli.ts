@@ -1,3 +1,4 @@
+import { completeResponse } from "./raw-output.examples-data.ts";
 /**
  * Pure terminal renderer and deterministic example states for Raw output.
  *
@@ -11,12 +12,13 @@ import type {
 } from "../../../cli/contracts.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
 import { triangleGlyph, TRIANGLES } from "../../../cli/triangles.ts";
+import { outputExtent } from "./raw-output.types.ts";
+import { wrapTextPreservingIndent } from "../../../cli/text.ts";
 import meta, { componentExampleVocabulary } from "./raw-output.meta.ts";
 import {
   assertWorkflowCliText,
   styleWorkflowHeading,
   workflowCliWidth,
-  workflowIndentedLines,
   workflowPrefixedLines,
 } from "../workflow-cli.ts";
 
@@ -25,6 +27,8 @@ export interface RawOutputCliProps extends CliPresentationOptions {
   readonly output: string;
   readonly label?: string;
   readonly expanded?: boolean;
+  /** Caller-reported outcome shown in both closed and expanded frames. */
+  readonly outcome?: string;
   readonly maxWidth?: number;
 }
 
@@ -34,13 +38,16 @@ const cliExampleImplementations = [
     props: {
       output: "error: expected a string\nat src/example.ts:18:7",
       expanded: false,
+      label: "Parser output",
+      outcome: "Failed",
     },
   },
   {
     name: "expanded",
     props: {
-      label: "Complete response",
-      output: '{\n  "ok": false,\n  "reason": "invalid input"\n}',
+      label: "Checkout fixture response",
+      outcome: "2 failures",
+      output: completeResponse,
     },
   },
 ] as const satisfies readonly CliExample<RawOutputCliProps>[];
@@ -58,6 +65,9 @@ const renderRawOutputCli: CliRenderer<RawOutputCliProps> = (
   assertWorkflowCliText(props.output, "raw output", true);
   const label = props.label ?? "Raw output";
   assertWorkflowCliText(label, "raw output label");
+  if (props.outcome !== undefined) {
+    assertWorkflowCliText(props.outcome, "raw output outcome");
+  }
   const width = workflowCliWidth(props.maxWidth, capabilities);
   const expanded = props.expanded ?? true;
   const marker = triangleGlyph(
@@ -65,13 +75,24 @@ const renderRawOutputCli: CliRenderer<RawOutputCliProps> = (
     capabilities.unicode,
   );
   const heading = styleWorkflowHeading(
-    workflowPrefixedLines(`${marker} `, label, width).join("\n"),
+    workflowPrefixedLines(
+      `${marker} `,
+      `${label} · ${outputExtent(props.output)}${
+        props.outcome === undefined ? "" : ` · ${props.outcome}`
+      }`.replaceAll(" · ", capabilities.unicode ? " · " : " - "),
+      width,
+    ).join("\n"),
     "neutral",
     capabilities,
     props,
   );
   return expanded
-    ? [heading, ...workflowIndentedLines(props.output, width)].join("\n")
+    ? [
+      heading,
+      ...wrapTextPreservingIndent(props.output, width - 2).map((line) =>
+        `  ${line}`
+      ),
+    ].join("\n")
     : heading;
 };
 

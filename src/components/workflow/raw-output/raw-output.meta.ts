@@ -8,7 +8,7 @@ const meta = {
   order: 230,
   cli: { stance: "rendered" },
   description:
-    "Native disclosure for machine-oriented detail, with a visible collapsed or expanded label and faithful horizontal overflow.",
+    "Native disclosure for machine-oriented detail, with subject, line count or authored extent, optional reported outcome, and precise browser content.",
   purposes: ["building-documentation", "displaying-tool-output"],
   useWhen: [
     "Machine-oriented detail should remain available without competing with the human-readable result or diagnostic.",
@@ -17,6 +17,7 @@ const meta = {
     "The output is the primary content readers need to compare or act on; show it directly with Terminal, Table, or Diagnostic.",
   ],
   accessibility: [
+    "String content derives its line count; rich content can supply extent. Outcome is caller-authored, never inferred from output text.",
     "Native details and summary semantics keep the disclosure operable without client JavaScript.",
     "Collapsed and expanded are visible text labels that change with the native open state.",
     "Machine output remains semantic preformatted code and scrolls in both axes instead of forcing the page wider.",

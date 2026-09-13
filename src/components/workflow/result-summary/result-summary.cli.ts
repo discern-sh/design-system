@@ -108,6 +108,18 @@ const cliExampleProps = {
       { label: "Failed", value: "2" },
     ],
     nextAction: "Open the first diagnostic and reproduce the failure.",
+    machineReadable: JSON.stringify(
+      {
+        ok: false,
+        passed: 10,
+        failures: [
+          "fixtures/checkout/alpha/expected.json",
+          "fixtures/checkout/beta/expected.json",
+        ],
+      },
+      null,
+      2,
+    ),
   },
   blocked: {
     state: "blocked",
@@ -166,6 +178,10 @@ export function renderResultSummaryCliWithPrefixWidth(
       props,
     ),
   ];
+  if (props.nextAction !== undefined) {
+    assertWorkflowCliText(props.nextAction, "result next action", true);
+    lines.push(...workflowFactLines("Next", props.nextAction, width));
+  }
   const readings: string[] = [];
   for (const [index, count] of props.counts?.entries() ?? []) {
     assertWorkflowCliText(count.label, `result count ${index + 1} label`);
@@ -178,10 +194,6 @@ export function renderResultSummaryCliWithPrefixWidth(
   }
   if (readings.length > 0) {
     lines.push(wrapInlineCluster(readings, { columns: width, gap: 3 }));
-  }
-  if (props.nextAction !== undefined) {
-    assertWorkflowCliText(props.nextAction, "result next action", true);
-    lines.push(...workflowFactLines("Next", props.nextAction, width));
   }
   if (props.machineReadable !== undefined) {
     assertWorkflowCliText(

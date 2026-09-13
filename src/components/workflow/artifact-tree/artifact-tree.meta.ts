@@ -8,7 +8,7 @@ const meta = {
   order: 310,
   cli: { stance: "rendered" },
   description:
-    "Semantic nested-list project tree with explicit file and directory kinds, middle-truncated names, full-path titles, and an optional annotation slot per node.",
+    "Semantic nested-list project tree with explicit file and directory kinds, complete wrapping names, full-path titles, and an optional annotation slot per node.",
   purposes: ["building-documentation", "displaying-tool-output"],
   useWhen: [
     "A project or output structure must show nested files and directories with full paths and annotations.",
@@ -19,7 +19,7 @@ const meta = {
   accessibility: [
     "Files and directories are nested list items, not an ASCII-art approximation.",
     "Each node exposes its kind and full path as text while visual glyphs remain decorative.",
-    "Long names preserve both ends under truncation, and narrow layouts move annotations below the name without page overflow.",
+    "Long names wrap without removing their distinguishing characters; narrow layouts move annotations below the name.",
   ],
 } satisfies ComponentMeta;
 

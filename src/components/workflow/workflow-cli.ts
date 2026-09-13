@@ -87,7 +87,7 @@ export function workflowPrefixedLines(
 ): readonly string[] {
   const prefixWidth = measureText(prefix);
   if (prefixWidth >= width) {
-    return [truncateText(`${prefix}${value}`, width)];
+    return wrapText(`${prefix}${value}`, width);
   }
   const available = width - prefixWidth;
   const lines = value.split("\n").flatMap((line) => wrapText(line, available));
@@ -125,20 +125,11 @@ export function workflowIndentedLines(
   );
 }
 
-/** Preserve a path's terminal segment when a terminal frame narrows. */
+/** Wrap the complete path so differences at any position remain inspectable. */
 export function workflowPathText(
   path: string,
   width: number,
-  capabilities: TerminalCapabilities,
+  _capabilities: TerminalCapabilities,
 ): string {
-  if (measureText(path) <= width) return path;
-  const separator = Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\"));
-  const suffix = separator < 0 ? path : path.slice(separator + 1);
-  const prefix = separator < 0 ? "" : path.slice(0, separator + 1);
-  const marker = capabilities.unicode ? "…/" : ".../";
-  if (measureText(marker) + measureText(suffix) <= width) {
-    const prefixWidth = width - measureText(marker) - measureText(suffix);
-    return `${truncateText(prefix, prefixWidth, "")}${marker}${suffix}`;
-  }
-  return truncateText(suffix, width, capabilities.unicode ? "…" : ".");
+  return wrapText(path, width).join("\n");
 }

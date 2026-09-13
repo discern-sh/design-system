@@ -8,7 +8,7 @@ const meta = {
   order: 430,
   cli: { stance: "rendered" },
   description:
-    "Self-contained prose instructions for an agent session, with one visible string serving as the exact adapter-only clipboard payload.",
+    "Self-contained prose instructions for an agent session, with one visible string serving as the exact clipboard payload through the selected static CopyButton behaviour.",
   purposes: ["building-documentation", "procedural-workflow"],
   useWhen: [
     "A task page must provide complete plain-text instructions that a reader can inspect and paste into an agent session unchanged.",

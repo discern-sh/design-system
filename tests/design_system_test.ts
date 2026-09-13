@@ -11,6 +11,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { cssAtRuleBlocks, cssAtRuleNames } from "../scripts/css-syntax.ts";
 import { launchBrowser } from "../scripts/browser.ts";
+import { statusWitnessNames } from "../scripts/measure-missing-witnesses.ts";
 import { fontMetricCssomSnapshot } from "../scripts/font-metric-cssom.ts";
 import {
   auditBundledFontMetricAssets,
@@ -2561,12 +2562,14 @@ Deno.test("monospace is reserved for brand names and code-bearing surfaces", asy
     "src/components/workflow/command/command.css::.discern-command__context code",
     "src/components/workflow/command/command.css::.discern-command__text",
     "src/components/workflow/diagnostic/diagnostic.css::.discern-diagnostic__coordinates",
-    "src/components/workflow/diagnostic/diagnostic.css::.discern-diagnostic__evidence pre",
     "src/components/workflow/expected-result/expected-result.css::.discern-expected-result__output",
     "src/components/workflow/path-reference/path-reference.css::.discern-path-reference__path",
     "src/components/workflow/raw-output/raw-output.css::.discern-raw-output__content",
     "src/styles/utilities.css::.discern-mono",
     "catalogue/styles/component-detail.css::.discern-catalogue-api code",
+    "catalogue/styles/component-detail.css::.discern-catalogue-playground__tsx",
+    "catalogue/styles/control-fields.css::.discern-builder-control code",
+    "catalogue/styles/control-fields.css::.discern-builder-control textarea",
     "catalogue/styles/foundations.css::.discern-catalogue-appearance-page__export pre",
     "catalogue/styles/foundations.css::.discern-catalogue-appearance-page__role-grid code, .discern-catalogue-appearance-page__role-grid small, .discern-catalogue-appearance-page__pair code",
     "catalogue/styles/foundations.css::.discern-catalogue-token code",
@@ -2762,10 +2765,11 @@ Deno.test("Raw output leaves disclosure state to native CSS-free semantics", () 
 
   const cases = [false, true].map((open) => ({
     name: open ? "open" : "closed",
-    label: "Validator output",
+    label: "Validator output 1 line Failed",
     html: renderToStaticMarkup(
       createElement(RawOutput, {
         label: "Validator output",
+        outcome: "Failed",
         open,
         children: "ValidationError",
       }),
@@ -3043,7 +3047,10 @@ Deno.test("every stateful marker joins the accessible text in its example", asyn
     const spoken = accessibleText(html).toLowerCase();
     for (const state of states) {
       assert(
-        spoken.includes(state.toLowerCase()),
+        statusWitnessNames(
+          relative(COMPONENT_ROOT, path).split(/[\\/]/u).at(-2) ?? "",
+          state,
+        ).some((name) => spoken.includes(name.toLowerCase())),
         `${
           relative(PACKAGE_ROOT, path)
         } renders state "${state}" without speaking it: the state word (or a label carrying it) must appear outside aria-hidden subtrees`,
