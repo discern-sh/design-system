@@ -178,6 +178,10 @@ export const conformance = (["success", "failure"] as const).map((outcome) => ({
       target: { role: "progressbar", name: "Review selected files" },
     },
     {
+      expect: "hidden",
+      target: { role: "progressbar", name: "Review selected files" },
+    },
+    {
       expect: "visible",
       target: {
         role: "heading",
