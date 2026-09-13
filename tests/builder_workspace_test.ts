@@ -43,7 +43,15 @@ Deno.test("builder bootstrap and styles expose concrete feature ownership", asyn
     [...entrypoint.matchAll(/styles\/([a-z-]+)\.css/g)].map((match) =>
       match[1]
     ),
-    ["shell", "discovery", "preview", "inspector", "layers", "workspace"],
+    [
+      "shell",
+      "control-fields",
+      "discovery",
+      "preview",
+      "inspector",
+      "layers",
+      "workspace",
+    ],
     "workspace responsive rules must follow every feature's base rules",
   );
   for (
