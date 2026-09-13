@@ -30,7 +30,7 @@ Relative sizes are planning judgments, not elapsed-time promises: S is a bounded
 | 2G  | [Clarify operational status and evidence](2g-operational-hierarchy-and-evidence.md)          | G1, G2, G3, G4, G5     | 1B              | L    | Prepared |
 | 2H  | [Polish marketing composition and content](_done/2h-marketing-composition-and-content.md)    | H1, H2, H3, H5         | None            | M–L  | Complete |
 | 2I  | [Improve chart axis and data hierarchy](_done/2i-chart-hierarchy.md)                         | I2                     | None            | M    | Complete |
-| 2J  | [Improve dense diagram legibility](2j-dense-diagram-legibility.md)                           | I5                     | None            | M    | Prepared |
+| 2J  | [Improve dense diagram legibility](_done/2j-dense-diagram-legibility.md)                     | I5                     | None            | M    | Complete |
 | 2K  | [Make component discovery faster and preserve context](_done/2k-component-discovery.md)      | J1, J2, J3, J5         | 1A, 1C          | M    | Complete |
 | 2L  | [Make component details useful for adoption](2l-component-detail-playground.md)              | K1, K2, K3, K4, K5     | 1A, 1B, 1C      | L    | Prepared |
 | 2M  | [Make comparison genuinely side by side](2m-side-by-side-comparison.md)                      | L1                     | 1C              | S    | Prepared |
