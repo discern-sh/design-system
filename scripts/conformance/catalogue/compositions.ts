@@ -24,10 +24,60 @@ import type { CatalogueTheme } from "./support.ts";
 export interface CompositionsCatalogueEvidence {
   readonly patterns: number;
   readonly widthChecks: number;
+  readonly fitChecks: number;
   readonly themeChecks: number;
   readonly accessibilityScans: number;
   readonly copyChecks: number;
   readonly keyboardChecks: number;
+}
+
+async function fitGeometry(
+  detail: Locator,
+): Promise<{ viewport: number; allocated: number }> {
+  return await detail.locator(".discern-catalogue-pattern__viewport").evaluate(
+    (node) => {
+      const canvas = node.closest(".discern-catalogue-pattern__canvas");
+      if (canvas === null) throw new Error("The preview lost its canvas");
+      const style = getComputedStyle(canvas);
+      return {
+        viewport: node.getBoundingClientRect().width,
+        allocated: canvas.getBoundingClientRect().width -
+          Number.parseFloat(style.borderInlineStartWidth) -
+          Number.parseFloat(style.borderInlineEndWidth) -
+          Number.parseFloat(style.paddingInlineStart) -
+          Number.parseFloat(style.paddingInlineEnd),
+      };
+    },
+  );
+}
+
+async function verifyFitPreview(
+  page: Page,
+  detail: Locator,
+  subject: string,
+): Promise<void> {
+  invariant(
+    await detail.locator(".discern-catalogue-pattern__demonstration")
+      .getAttribute("data-discern-pattern-width") === "fit",
+    `${subject} did not present the fit width state`,
+  );
+  invariant(
+    await detail.locator('input[value="fit"]').isChecked(),
+    `${subject} did not select the Fit control`,
+  );
+  const geometry = await fitGeometry(detail);
+  invariant(
+    Math.abs(geometry.viewport - geometry.allocated) < 0.5,
+    `${subject} allocated ${geometry.viewport}px instead of the ${geometry.allocated}px fit canvas`,
+  );
+  const documentWidth = await page.evaluate(() => ({
+    client: document.documentElement.clientWidth,
+    scroll: document.documentElement.scrollWidth,
+  }));
+  invariant(
+    documentWidth.scroll <= documentWidth.client,
+    `${subject} overflowed the document at fit`,
+  );
 }
 
 async function verifyGallery(page: Page, origin: string): Promise<void> {
@@ -136,6 +186,7 @@ export async function verifyCompositionsCatalogue(
     await verifyLegacyUpgrade(page, origin);
 
     let widthChecks = 0;
+    let fitChecks = 0;
     let themeChecks = 0;
     let accessibilityScans = 0;
     let copyChecks = 0;
@@ -270,6 +321,16 @@ export async function verifyCompositionsCatalogue(
         }
       }
 
+      const fitUrl = new URL(compositionRecipePath(recipe.id), origin);
+      fitUrl.searchParams.set("theme", "light");
+      await loadCataloguePage(page, fitUrl.href);
+      await verifyFitPreview(
+        page,
+        page.locator(`[data-discern-composition-detail="${recipe.id}"]`),
+        `${recipe.title} without a requested width`,
+      );
+      fitChecks += 1;
+
       const narrowUrl = new URL(compositionRecipePath(recipe.id), origin);
       narrowUrl.searchParams.set("theme", "light");
       narrowUrl.searchParams.set("width", "narrow");
@@ -295,6 +356,64 @@ export async function verifyCompositionsCatalogue(
         `${recipe.title} lost responsive width state on refresh`,
       );
     }
+
+    const fitWitness = compositionRecipes[0];
+    invariant(fitWitness !== undefined, "Fit review needs one pattern");
+    const witnessDetail = page.locator(
+      `[data-discern-composition-detail="${fitWitness.id}"]`,
+    );
+    const wideUrl = new URL(compositionRecipePath(fitWitness.id), origin);
+    wideUrl.searchParams.set("theme", "light");
+    wideUrl.searchParams.set("width", "wide");
+    await loadCataloguePage(page, wideUrl.href);
+    await witnessDetail.locator(".discern-catalogue-pattern__widths label")
+      .filter({ hasText: "Fit" }).click();
+    await eventually(
+      () => new URL(page.url()).searchParams.get("width") === null,
+      `${fitWitness.title} Fit reset did not clear the width parameter`,
+    );
+    invariant(
+      new URL(page.url()).searchParams.get("theme") === "light",
+      `${fitWitness.title} Fit reset lost unrelated state`,
+    );
+    await verifyFitPreview(
+      page,
+      witnessDetail,
+      `${fitWitness.title} after the Fit reset`,
+    );
+    fitChecks += 1;
+
+    await witnessDetail.locator('input[value="fit"]').focus();
+    await page.keyboard.press("ArrowRight");
+    await eventually(
+      () => new URL(page.url()).searchParams.get("width") === "narrow",
+      `${fitWitness.title} Fit was not keyboard-adjacent to exact widths`,
+    );
+    await page.keyboard.press("ArrowLeft");
+    await eventually(
+      () => new URL(page.url()).searchParams.get("width") === null,
+      `${fitWitness.title} keyboard reset to Fit kept the width parameter`,
+    );
+    fitChecks += 1;
+
+    const settledFit = await fitGeometry(witnessDetail);
+    await withViewport(page, { width: 960, height: 1000 }, async () => {
+      const resized = await fitGeometry(witnessDetail);
+      invariant(
+        resized.allocated < settledFit.allocated &&
+          Math.abs(resized.viewport - resized.allocated) < 0.5,
+        `${fitWitness.title} fit preview did not follow its resized container`,
+      );
+    });
+    fitChecks += 1;
+
+    await page.reload({ waitUntil: "networkidle" });
+    await verifyFitPreview(
+      page,
+      witnessDetail,
+      `${fitWitness.title} after a fit reload`,
+    );
+    fitChecks += 1;
 
     await withViewport(page, CATALOGUE_NARROW_VIEWPORT, async () => {
       const url = new URL(compositionsRouteFamily.descriptor.path, origin);
@@ -332,11 +451,22 @@ export async function verifyCompositionsCatalogue(
         detailWidth.scroll <= detailWidth.client,
         "Composition cues escaped the narrow document",
       );
+
+      const narrowFitUrl = new URL(compositionRecipePath(witness.id), origin);
+      narrowFitUrl.searchParams.set("theme", "dark");
+      await loadCataloguePage(page, narrowFitUrl.href);
+      await verifyFitPreview(
+        page,
+        page.locator(`[data-discern-composition-detail="${witness.id}"]`),
+        `The narrow-viewport ${witness.title}`,
+      );
+      fitChecks += 1;
     });
 
     return {
       patterns: compositionRecipes.length,
       widthChecks,
+      fitChecks,
       themeChecks,
       accessibilityScans,
       copyChecks,
