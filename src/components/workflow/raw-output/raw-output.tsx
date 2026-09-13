@@ -1,6 +1,7 @@
 import { forwardRef } from "react";
 import type { DetailsHTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
+import { outputExtent } from "./raw-output.types.ts";
 import { classNames } from "../../class-names.ts";
 
 /** Props for the {@linkcode RawOutput} component. */
@@ -8,6 +9,10 @@ export interface RawOutputProps
   extends Omit<DetailsHTMLAttributes<HTMLDetailsElement>, "children"> {
   readonly label?: ReactNode;
   readonly children: ReactNode;
+  /** Caller-reported outcome; never inferred from raw content. */
+  readonly outcome?: ReactNode;
+  /** Authored extent for rich content; plain strings derive their line count. */
+  readonly extent?: ReactNode;
 }
 
 /** Native disclosure for machine-oriented detail with a visible open or closed state. */
@@ -16,6 +21,8 @@ export const RawOutput: DiscernComponent<HTMLDetailsElement, RawOutputProps> =
     {
       label = "Raw output",
       children,
+      outcome,
+      extent,
       className,
       ...props
     },
@@ -31,7 +38,16 @@ export const RawOutput: DiscernComponent<HTMLDetailsElement, RawOutputProps> =
           <span className="discern-raw-output__marker" aria-hidden="true">
             ›
           </span>
-          <span>{label}</span>
+          <span className="discern-raw-output__subject">{label}</span>{" "}
+          <span className="discern-raw-output__extent">
+            {extent ??
+              (typeof children === "string"
+                ? outputExtent(children)
+                : undefined)}
+          </span>{" "}
+          {outcome !== undefined && (
+            <span className="discern-raw-output__outcome">{outcome}</span>
+          )}
           <span
             className="discern-raw-output__state"
             aria-hidden="true"

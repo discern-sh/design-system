@@ -61,6 +61,18 @@ export const catalogueExamples = defineCatalogueExamples(
     { id: "default", Example: StreamingActivityState },
     { id: "complete", Example: CompletedActivityState },
     { id: "cancelled", Example: CancelledActivityState },
+    ...(["waiting", "blocked"] as const).map((status) => ({
+      id: status,
+      Example: () => (
+        <ActivityLog
+          label="Checkout verification"
+          status={status}
+          hint={status === "blocked"
+            ? "Restore the missing beta fixture, then retry."
+            : "Review requested; waiting for the recorded decision."}
+        />
+      ),
+    })),
   ],
 );
 

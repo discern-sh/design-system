@@ -19,6 +19,7 @@ const meta = {
     "Only step statuses matter and no detail streams; Worklog is the compact statused feed.",
   ],
   accessibility: [
+    "Working, waiting, blocked, complete and cancelled have visible state words. Caller-authored hints explain blocked work without inferring missing state.",
     "The streamed tail is a native log role, so assistive technology can treat newly added lines as a polite live region.",
     "Stable-line tones pair a distinct visible marker glyph and accessible name with their colour, so severity survives without colour perception.",
     "The headline pairs its active, complete, or cancelled state with a visible glyph carrying that accessible name.",
@@ -30,6 +31,8 @@ export const componentExampleVocabulary = [
   { id: "default", label: "Streaming activity" },
   { id: "complete", label: "Completed activity" },
   { id: "cancelled", label: "Cancelled activity" },
+  { id: "waiting", label: "Waiting for a decision" },
+  { id: "blocked", label: "Blocked with next action" },
 ] as const;
 defineComponentExampleVocabulary(meta, componentExampleVocabulary);
 

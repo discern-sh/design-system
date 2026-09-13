@@ -1904,11 +1904,27 @@ export const componentExampleRegistry = {
         "cli",
       ],
     },
+    {
+      "id": "dense",
+      "label": "Dense operational evidence",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
   ],
   "transcript": [
     {
       "id": "default",
       "label": "Review handoff",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
+    {
+      "id": "dense",
+      "label": "Routine turns and decisions",
       "surfaces": [
         "web",
         "cli",
@@ -1932,6 +1948,14 @@ export const componentExampleRegistry = {
         "cli",
       ],
     },
+    {
+      "id": "dense",
+      "label": "Dense operational evidence",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
   ],
   "fleet": [
     {
@@ -1945,6 +1969,14 @@ export const componentExampleRegistry = {
     {
       "id": "lossless-identities",
       "label": "Long identities",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
+    {
+      "id": "dense",
+      "label": "Dense operational evidence",
       "surfaces": [
         "web",
         "cli",
@@ -2271,6 +2303,22 @@ export const componentExampleRegistry = {
     {
       "id": "cancelled",
       "label": "Cancelled activity",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
+    {
+      "id": "waiting",
+      "label": "Waiting for a decision",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
+    {
+      "id": "blocked",
+      "label": "Blocked with next action",
       "surfaces": [
         "web",
         "cli",

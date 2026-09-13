@@ -21,6 +21,7 @@ import {
   styleWorkflowHeading,
   workflowCliTheme,
   workflowCliWidth,
+  workflowPrefixedLines,
 } from "../workflow-cli.ts";
 
 /** One framework-neutral node accepted by the terminal Artifact tree renderer. */
@@ -158,10 +159,10 @@ function treeLines(
     const annotation = node.annotation === undefined
       ? ""
       : `${capabilities.unicode ? " — " : " - "}${node.annotation}`;
-    lines.push(truncateText(
-      `${ancestorPrefix}${branch}${marker} ${node.name}${annotation}`,
+    lines.push(...workflowPrefixedLines(
+      `${ancestorPrefix}${branch}${marker} `,
+      `${node.name}${annotation}`,
       width,
-      capabilities.unicode ? "…" : ".",
     ));
     if (node.children !== undefined && node.children.length > 0) {
       const continuation = capabilities.unicode

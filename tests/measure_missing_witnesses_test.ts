@@ -25,3 +25,19 @@ Deno.test("missing witnesses count a planted colour-only state and accept named 
     occurrence: 1,
   }]);
 });
+
+Deno.test("operational status aliases are exact, source-owned and confined to their Components", () => {
+  assertEquals(
+    missingWitnessesInHtml(`
+    <section class="discern-activity-log" data-discern-status="active">Working</section>
+    <li class="discern-fleet__row" data-discern-status="done">Complete</li>
+  `),
+    [],
+  );
+  const hits = missingWitnessesInHtml(`
+    <section class="discern-future-operation" data-discern-status="active">Working</section>
+    <li class="discern-fleet__row" data-discern-status="blocked">Complete</li>
+    <section class="discern-activity-log" data-discern-status="active"><span aria-hidden="true">Working</span></section>
+  `);
+  assertEquals(hits.map(({ state }) => state), ["active", "blocked", "active"]);
+});

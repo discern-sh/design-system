@@ -1,3 +1,4 @@
+import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
 import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
 import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { ResultSummary, type ResultSummaryProps } from "./result-summary.tsx";
@@ -57,6 +58,18 @@ const resultSummaryExamples = {
       { label: "Failed", value: "2" },
     ],
     nextAction: "Open the first diagnostic and reproduce the failure.",
+    machineReadable: JSON.stringify(
+      {
+        ok: false,
+        passed: 10,
+        failures: [
+          "fixtures/checkout/alpha/expected.json",
+          "fixtures/checkout/beta/expected.json",
+        ],
+      },
+      null,
+      2,
+    ),
   },
   blocked: {
     state: "blocked",
@@ -113,3 +126,42 @@ export default function ResultSummaryExamples() {
     </div>
   );
 }
+
+export const reviewPostures = defineComponentReviewPostures(
+  meta,
+  componentExampleVocabulary,
+  [
+    ...(["narrow", "wide"] as const).map((inlineSize) => ({
+      id: `failed-${inlineSize}`,
+      label: `Failed result at ${inlineSize} width`,
+      example: "failed",
+      category: "responsive" as const,
+      requirements: { inlineSize },
+      sequence: [{
+        checkpoint: {
+          id: `failed-${inlineSize}-reading`,
+          label: "Outcome and next action before readings",
+        },
+      }],
+    })),
+    {
+      id: "result-evidence",
+      label: "Result data inspection",
+      example: "failed",
+      category: "interaction",
+      requirements: { inlineSize: "narrow" },
+      sequence: [
+        {
+          action: "click",
+          target: { selector: ".discern-raw-output > summary" },
+        },
+        {
+          checkpoint: {
+            id: "result-data-open",
+            label: "Exact failed artifact identities",
+          },
+        },
+      ],
+    },
+  ],
+);
