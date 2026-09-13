@@ -137,6 +137,18 @@ export function GlyphIndexPage({ data, currentUrl }: {
     navigate(parseGlyphExplorerState(next));
   };
   const matches = glyphExplorerResults(entries, state);
+  const published = ({ entry }: { readonly entry: GlyphCatalogueEntry }) =>
+    entry.aliases.some(({ publication }) => publication === "candidate");
+  const grouped = state.collection === undefined && state.query.trim() !== "";
+  const atlasMatches = grouped
+    ? matches.filter((match) => !published(match))
+    : [];
+  const readyMatches = grouped && atlasMatches.length > 0
+    ? matches.filter(published)
+    : matches;
+  const widerMatches = matches.length === 0 && state.collection !== "all"
+    ? glyphExplorerResults(entries, { ...state, collection: "all" })
+    : [];
   const candidates = data.aliases.filter(({ publication }) =>
     publication === "candidate"
   );
@@ -193,9 +205,9 @@ export function GlyphIndexPage({ data, currentUrl }: {
           role="group"
           aria-label="Glyph collection"
         >
-          {([["", "All glyphs"], ["interface", "Ready to use"], [
-            "reference",
-            "Atlas reference",
+          {([["", "Ready to use"], ["reference", "Atlas reference"], [
+            "all",
+            "All glyphs",
           ]] as const).map(([value, label]) => (
             <Button
               key={value}
@@ -272,11 +284,13 @@ export function GlyphIndexPage({ data, currentUrl }: {
       <section aria-labelledby="glyph-results-title">
         <div className="discern-catalogue-results-header">
           <h2 id="glyph-results-title">
-            {state.collection === "interface"
-              ? "Ready for your interface"
-              : state.collection === "reference"
+            {state.collection === "reference"
               ? "The Unicode Atlas"
-              : "Explore the collection"}
+              : state.collection === "all"
+              ? "The complete collection"
+              : state.query.trim() === ""
+              ? "Ready for your interface"
+              : "Across the collection"}
           </h2>
           <p aria-live="polite">
             {matches.length} glyph{matches.length === 1 ? "" : "s"}
@@ -294,28 +308,68 @@ export function GlyphIndexPage({ data, currentUrl }: {
             <div className="discern-catalogue-empty">
               <h3>No glyphs match this combination.</h3>
               <p>
-                Try a different word, paste a character, or open the full
+                Try a different word, paste a character, or search the complete
                 collection.
               </p>
-              <Button variant="secondary" onClick={reset}>
-                Show all Glyphs
+              {widerMatches.length === 0 ? null : (
+                <Button
+                  variant="secondary"
+                  onClick={() => navigate({ ...state, collection: "all" })}
+                >
+                  Search everything ({widerMatches.length}{" "}
+                  match{widerMatches.length === 1 ? "" : "es"})
+                </Button>
+              )}
+              <Button variant="ghost" onClick={reset}>
+                Clear search and filters
               </Button>
             </div>
           )
           : (
             <div
-              className="discern-catalogue-glyph-grid"
               style={{
                 "--discern-glyph-preview-size": `${size}px`,
               } as CSSProperties}
             >
-              {matches.map((match) => (
-                <GlyphCard
-                  {...match}
-                  currentUrl={locationUrl}
-                  key={match.entry.canonical.id}
-                />
-              ))}
+              {readyMatches.length === 0
+                ? null
+                : (
+                  <div className="discern-catalogue-glyph-results-group">
+                    {grouped && atlasMatches.length > 0
+                      ? <h3>Ready to use</h3>
+                      : null}
+                    <div className="discern-catalogue-glyph-grid">
+                      {readyMatches.map((match) => (
+                        <GlyphCard
+                          {...match}
+                          currentUrl={locationUrl}
+                          key={match.entry.canonical.id}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              {atlasMatches.length === 0
+                ? null
+                : (
+                  <div className="discern-catalogue-glyph-results-group">
+                    <h3>From the Unicode Atlas</h3>
+                    <p>
+                      Research reference — these characters are not exported as
+                      {" "}
+                      <code>./glyphs</code> names.
+                    </p>
+                    <div className="discern-catalogue-glyph-grid">
+                      {atlasMatches.map((match) => (
+                        <GlyphCard
+                          {...match}
+                          currentUrl={locationUrl}
+                          key={match.entry.canonical.id}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
             </div>
           )}
       </section>
