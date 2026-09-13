@@ -715,7 +715,7 @@ Deno.test("Radio selection carries the shared Choice grammar deterministically",
     assertStringIncludes(firstCss, ".discern-choice {");
     assertStringIncludes(
       firstCss,
-      'fieldset[aria-invalid="true"] .discern-choice input:not(:disabled) + .discern-choice__control',
+      'fieldset[aria-invalid="true"] input:not(:disabled) + .discern-choice__control',
     );
     assertStringIncludes(firstCss, ".discern-choice--radio");
     assert(!firstCss.includes(".discern-switch__track"));

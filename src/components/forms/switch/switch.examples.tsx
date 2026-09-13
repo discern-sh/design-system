@@ -7,6 +7,16 @@ function DefaultSwitchState() {
   return <Switch label="Automatic updates" />;
 }
 
+function MultilineSwitchState() {
+  return (
+    <Switch
+      label="Pause non-essential background work while a presentation is being recorded"
+      description="Scheduled maintenance keeps running and resumes anything paused afterwards."
+      defaultChecked
+    />
+  );
+}
+
 function ActiveSwitchState() {
   return <Switch label="Automatic updates" autoFocus />;
 }
@@ -55,6 +65,7 @@ export const catalogueExamples = defineCatalogueExamples(
   componentExampleVocabulary,
   [
     { id: "default", Example: DefaultSwitchState },
+    { id: "multiline", Example: MultilineSwitchState },
     { id: "active", Example: ActiveSwitchState },
     { id: "filled", Example: FilledSwitchState },
     { id: "validation-error", Example: ValidationErrorSwitchState },

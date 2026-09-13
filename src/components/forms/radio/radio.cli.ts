@@ -82,6 +82,25 @@ const cliExampleImplementations = [
     },
   },
   {
+    name: "multiline",
+    props: {
+      kind: "select",
+      label: "Delivery",
+      options: [
+        {
+          id: "bundle",
+          label:
+            "Bundle every artefact into one downloadable archive at the end of the run",
+          description: "Slower to appear, but a single file to fetch.",
+        },
+        { id: "stream", label: "Stream artefacts as they finish" },
+      ],
+      highlightedIndex: 0,
+      selectedId: "bundle",
+      lifecycle: { status: "active" },
+    },
+  },
+  {
     name: "active",
     props: {
       ...base,

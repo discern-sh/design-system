@@ -14,6 +14,7 @@ const meta = {
 export const componentExampleVocabulary = [
   { id: "default", label: "Unchecked" },
   { id: "grouped", label: "Grouped choices" },
+  { id: "multiline", label: "Multiline label" },
   { id: "active", label: "Active" },
   { id: "filled", label: "Checked" },
   { id: "validation-error", label: "Validation error" },

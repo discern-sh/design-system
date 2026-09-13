@@ -12,6 +12,8 @@ Compact icon slots accept both graphics and text glyphs. Center the grid row as 
 
 See [Selection and task progress](selection-and-progress.md) for the native form boundary, controlled adapter usage, and task completion versus measurement.
 
+See [Form alignment and validation](form-alignment-and-validation.md) for the shared field-row contract, error/hint relationships, and choice-control alignment.
+
 See [Cards, navigation, and identity at local width](content-structures.md) for content order, wrapping, and image fallback ownership.
 
 See [Article reading and navigation](article-reading.md) for parent-owned rhythm, allocated reading columns, and native heading/footnote journeys.
