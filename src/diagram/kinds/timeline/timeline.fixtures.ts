@@ -180,6 +180,64 @@ const maximumDensity = {
   milestones: [],
 } satisfies TimelineDiagramSpec;
 
+const wrappedLanes = {
+  kind: "timeline",
+  title: "Rehearse a bounded cutover",
+  summary:
+    "Wrapped task and gate labels share one crowded row without collisions.",
+  range: { start: "2030-03-01", end: "2030-04-12" },
+  groups: [{ id: "train", label: "Release train" }],
+  rows: [
+    { id: "cutover", groupId: "train", label: "Cutover work" },
+    { id: "checks", groupId: "train", label: "Checks" },
+  ],
+  tasks: [
+    {
+      id: "freeze",
+      rowId: "cutover",
+      label: "Freeze the branch and stage the configuration",
+      start: "2030-03-02",
+      end: "2030-03-09",
+    },
+    {
+      id: "rehearse",
+      rowId: "cutover",
+      label: "Rehearse the complete cutover end to end",
+      start: "2030-03-09",
+      end: "2030-03-23",
+    },
+    {
+      id: "cut",
+      rowId: "cutover",
+      label: "Cut over production",
+      start: "2030-03-23",
+      end: "2030-03-30",
+    },
+    {
+      id: "smoke",
+      rowId: "checks",
+      label: "Verify the smoke suite against the staged stack",
+      start: "2030-03-09",
+      end: "2030-03-13",
+    },
+  ],
+  milestones: [
+    {
+      id: "go",
+      rowId: "cutover",
+      label: "Rehearsal accepted for cutover",
+      date: "2030-03-23",
+      emphasis: "critical",
+    },
+    {
+      id: "green",
+      rowId: "checks",
+      label: "Smoke suite green",
+      date: "2030-03-13",
+    },
+  ],
+} as const satisfies TimelineDiagramSpec;
+
 /** Package-owned Timeline corpus; every projection derives from it. */
 export const releaseCorpus = defineDiagramKindReleaseCorpus(
   {
@@ -196,6 +254,11 @@ export const releaseCorpus = defineDiagramKindReleaseCorpus(
         name: "maximum-density",
         postures: ["maximum-density"],
         spec: maximumDensity,
+      },
+      {
+        name: "wrapped-lanes",
+        postures: ["maximum-density"],
+        spec: wrappedLanes,
       },
     ],
     overBudget: {
