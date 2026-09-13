@@ -158,6 +158,7 @@ Deno.test("Form frame balances padding and reserves default status for searching
 const checkboxFrames = [
   "Include examples\n┌──────────────────────────┐\n│ [ ] Not included         │\n└──────────────────────────┘\n",
   "Notifications\n┌──────────────────────────┐\n│                          │\n│ ━━ ▲ REGULAR ━━━━━━━━━━━ │\n│ › [✓] Email updates      │\n│   [ ] Weekly summary     │\n│       (disabled)         │\n│                          │\n│ ━━ ▲ OPTIONAL ━━━━━━━━━━ │\n│   [ ] Announcements      │\n└──────────────────────────┘\n",
+  "Report retention\n┌──────────────────────────┐\n│ › [✓] Keep a local copy  │\n│       of every generated │\n│       report so reviews  │\n│       stay available     │\n│       offline            │\n│       Copies are removed │\n│       after thirty days  │\n│       of inactivity.     │\n│   [ ] Share a link       │\n│       instead            │\n└──────────────────────────┘\n",
   "Include examples\n┌──────────────────────────┐\n│ › [ ] Not included       │\n└──────────────────────────┘\n",
   "Include examples\n┌──────────────────────────┐\n│ [✓] Included             │\n└──────────────────────────┘\n",
   "Include examples\n┌──────────────────────────┐\n│ › [ ] Not included       │\n└──────────────────────────┘\n! Choose before continuing",
@@ -176,10 +177,10 @@ Deno.test("Checkbox covers narrow, standard, wide, colour, and ASCII frames", ()
     renderCheckboxCli,
     [
       "Include examples\n┌──────────────┐\n│ [✓] Included │\n└──────────────┘\n",
-      checkboxFrames[3],
+      checkboxFrames[4],
       "Include examples\n┌──────────────────────────────────────────────┐\n│ [✓] Included                                 │\n└──────────────────────────────────────────────┘\n",
     ],
-    checkboxFrames[2],
+    checkboxFrames[3],
     "Include examples\n+--------------------------+\n| > [ ] Not included       |\n+--------------------------+\n",
   );
 });
@@ -302,6 +303,7 @@ const radioFrames = [
   } │\n│   ○ Alpha                │\n│ › ◉ Bravo                │\n│                          │\n│ ${
     sectionRule("Preview", 24)
   } │\n│   ○ Charlie (disabled)   │\n└──────────────────────────┘\n`,
+  "Delivery\n┌──────────────────────────┐\n│ › ◉ Bundle every         │\n│     artefact into one    │\n│     downloadable archive │\n│     at the end of the    │\n│     run                  │\n│     Slower to appear,    │\n│     but a single file to │\n│     fetch.               │\n│   ○ Stream artefacts as  │\n│     they finish          │\n└──────────────────────────┘\n",
   "Channel\n┌──────────────────────────┐\n│   ○ Alpha                │\n│ › ○ Bravo                │\n│   ○ Charlie (disabled)   │\n└──────────────────────────┘\n",
   "Channel\n┌──────────────────────────┐\n│   ○ Alpha                │\n│   ◉ Bravo                │\n│   ○ Charlie (disabled)   │\n└──────────────────────────┘\n",
   "Channel\n┌──────────────────────────┐\n│ › ○ Alpha                │\n│   ○ Bravo                │\n│   ○ Charlie (disabled)   │\n└──────────────────────────┘\n! Choose a channel",
@@ -422,10 +424,10 @@ Deno.test("Radio covers narrow, standard, wide, colour, and ASCII frames", () =>
     renderRadioCli,
     [
       "Channel\n┌──────────────┐\n│   ○ Alpha    │\n│   ◉ Bravo    │\n│   ○ Charlie  │\n│     (disable │\n│     d)       │\n└──────────────┘\n",
-      radioFrames[3],
+      radioFrames[4],
       "Channel\n┌──────────────────────────────────────────────┐\n│   ○ Alpha                                    │\n│   ◉ Bravo                                    │\n│   ○ Charlie (disabled)                       │\n└──────────────────────────────────────────────┘\n",
     ],
-    radioFrames[2],
+    radioFrames[3],
     "Channel\n+--------------------------+\n|   ( ) Alpha              |\n| > ( ) Bravo              |\n|   ( ) Charlie (disabled) |\n+--------------------------+\n",
   );
 });

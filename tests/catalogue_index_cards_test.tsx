@@ -178,7 +178,7 @@ Deno.test("every source-backed Catalogue index population uses the shared card a
   const glyphs = renderToStaticMarkup(createElement(GlyphIndexPage, {
     data: glyphAtlasData,
     currentUrl: new URL(
-      catalogueRoutePaths.glyphs,
+      `${catalogueRoutePaths.glyphs}?collection=all`,
       "https://catalogue.example",
     ),
   }));

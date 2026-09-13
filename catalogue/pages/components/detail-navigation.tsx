@@ -1,3 +1,8 @@
+import { preserveCatalogueAppearanceHref } from "../../shell/appearance-state.ts";
+import {
+  componentReturnHref,
+  preserveComponentReturnHref,
+} from "./return-context.ts";
 import { registry, type RegistryEntry } from "../../generated/registry.ts";
 import { catalogueRoutePaths } from "../../routes.ts";
 import { catalogueHref, componentGroupHref } from "../shared.tsx";
@@ -10,11 +15,37 @@ import {
 export function ComponentDetailBreadcrumb(
   { entry }: { readonly entry: RegistryEntry },
 ) {
+  const url = typeof location === "undefined"
+    ? undefined
+    : new URL(location.href);
+  const returnHref = url === undefined ? undefined : componentReturnHref(url);
   return (
     <nav className="discern-catalogue-breadcrumb" aria-label="Breadcrumb">
-      <a href={catalogueRoutePaths.components}>Components</a>
+      <a
+        href={returnHref ?? (url === undefined
+          ? catalogueRoutePaths.components
+          : preserveCatalogueAppearanceHref(
+            url,
+            catalogueRoutePaths.components,
+          ))}
+      >
+        {returnHref === undefined ? "Components" : "Back to results"}
+      </a>
       <span aria-hidden="true">/</span>
-      <a href={componentGroupHref(entry.meta.group)}>{entry.meta.group}</a>
+      {returnHref === undefined
+        ? (
+          <a
+            href={url === undefined
+              ? componentGroupHref(entry.meta.group)
+              : preserveCatalogueAppearanceHref(
+                url,
+                componentGroupHref(entry.meta.group),
+              )}
+          >
+            {entry.meta.group}
+          </a>
+        )
+        : <span>{entry.meta.group}</span>}
       <span aria-hidden="true">/</span>
       <span aria-current="page">{entry.meta.name}</span>
     </nav>
@@ -35,8 +66,8 @@ export function ComponentDetailNavigation(
   const next = index >= 0 && index < grouped.length - 1
     ? grouped[index + 1]
     : undefined;
-  const neighbourHref = (candidate: RegistryEntry) =>
-    componentDetailHref(candidate, {
+  const neighbourHref = (candidate: RegistryEntry) => {
+    const href = componentDetailHref(candidate, {
       ...state,
       exampleId: candidate.canonicalExamples.some(({ id }) =>
           id === state.exampleId
@@ -44,6 +75,10 @@ export function ComponentDetailNavigation(
         ? state.exampleId
         : candidate.canonicalExamples[0]?.id ?? "default",
     });
+    return typeof location === "undefined"
+      ? href
+      : preserveComponentReturnHref(new URL(location.href), href);
+  };
   const compareHref = catalogueHref(catalogueRoutePaths.compare, {
     components: entry.meta.slug,
     surface: state.surface === "cli" ? "cli" : undefined,

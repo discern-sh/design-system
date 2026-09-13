@@ -14,9 +14,10 @@ import type { ChartPoint, ChartRect } from "./scene.ts";
 
 /**
  * Chart visual grammar. The four-pixel rhythm matches the design system's
- * authored spacing input without importing CSS presentation; the sparse-tick
- * and single-hairline-axis posture is the editorial character the family
- * commits to.
+ * authored spacing input without importing CSS presentation; the editorial
+ * character the family commits to is sparse ticks, hairline axes, and
+ * subordinate gridlines anchoring the ticks of every continuous scale
+ * beneath the data.
  */
 export const CHART_GEOMETRY = Object.freeze({
   rhythm: 4,
@@ -40,6 +41,10 @@ export const CHART_GEOMETRY = Object.freeze({
     labelGap: 8,
     /** Tick count the value scale is sized toward. */
     valueTickTarget: 5,
+  }),
+  grid: Object.freeze({
+    /** Subordinate gridline hairline width, thinner than any axis. */
+    lineWidth: 1,
   }),
   text: Object.freeze({
     labelSize: 13,

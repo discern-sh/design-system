@@ -878,6 +878,24 @@ export const componentExampleRegistry = {
         "cli",
       ],
     },
+    {
+      "id": "mixed-form",
+      "label": "Mixed form",
+      "surfaces": [
+        "web",
+      ],
+      "reason":
+        "A simultaneous multi-field layout with shared alignment rows has no CLI equivalent; the terminal presents one sequential form frame at a time.",
+    },
+    {
+      "id": "inline-form",
+      "label": "Inline form",
+      "surfaces": [
+        "web",
+      ],
+      "reason":
+        "Browser grid columns seat fields beside a neighbouring action; the terminal renders one full-width frame per interaction.",
+    },
   ],
   "input": [
     {
@@ -1104,6 +1122,14 @@ export const componentExampleRegistry = {
       ],
     },
     {
+      "id": "multiline",
+      "label": "Multiline label",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
+    {
       "id": "active",
       "label": "Active",
       "surfaces": [
@@ -1164,6 +1190,14 @@ export const componentExampleRegistry = {
     {
       "id": "grouped",
       "label": "Grouped choices",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
+    {
+      "id": "multiline",
+      "label": "Multiline label",
       "surfaces": [
         "web",
         "cli",
@@ -1260,6 +1294,15 @@ export const componentExampleRegistry = {
         "web",
         "cli",
       ],
+    },
+    {
+      "id": "multiline",
+      "label": "Multiline label",
+      "surfaces": [
+        "web",
+      ],
+      "reason":
+        "A long label wraps beside the browser track; the terminal Switch heading is a single truncated frame row.",
     },
     {
       "id": "active",

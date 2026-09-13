@@ -1,10 +1,10 @@
-# 2J — Improve dense diagram legibility
+# 2B — Polish form alignment and validation
 
-Dense diagrams preserve readable node and edge labels, meaningful routing, and unambiguous arrowheads within an honest size budget.
+Mixed forms read as one coherent system and users can correct invalid input without losing context or values.
 
-**Proposal coverage:** I5. **Worktree name:** `refine-2j`. **Relative size:** M. **Programme:** design-polish.
+**Proposal coverage:** C1, C2, C4. **Worktree name:** `refine-2b`. **Relative size:** M. **Programme:** design-polish.
 
-Other streams are in flight. You own `2J` only; do not launch, dispatch, or supervise the sibling briefs.
+Other streams are in flight. You own `2B` only; do not launch, dispatch, or supervise the sibling briefs.
 
 ## Orient, satisfy prerequisites, then re-root
 
@@ -14,41 +14,41 @@ No feature prerequisite. This planning package must be committed on main before 
 
 This is an independently landed workstream, not a below-trunk stack. The numbers in this programme are dependency tiers: only the prerequisites above block you. Do not wait for unrelated lower-key briefs. These prompts are ready for dispatch after their named prerequisites land. If dispatched early, use the `discern-await-the-fleet` skill and the predecessor's **exact returned identity and branch**, captured by the dispatching session, to await its landing. Never guess a suffixed branch from `refine-1a` or another requested name. If that identity is missing or ambiguous, report the missing dispatch record and do not start dependent implementation.
 
-Once ready, call `discern_start` from the main checkout with the literal name `refine-2j`, then re-root all reads, edits, commands, and discern calls to its returned absolute path. Follow the await tool's start/update hint if applicable. Read the worktree's `AGENTS.md`, `map/00-orientation/design-principles.md`, and this brief there before source work. Verify every anchor against the live tree; 1C intentionally moves some Catalogue anchors.
+Once ready, call `discern_start` from the main checkout with the literal name `refine-2b`, then re-root all reads, edits, commands, and discern calls to its returned absolute path. Follow the await tool's start/update hint if applicable. Read the worktree's `AGENTS.md`, `map/00-orientation/design-principles.md`, and this brief there before source work. Verify every anchor against the live tree; 1C intentionally moves some Catalogue anchors.
 
 ## Background and outcome
 
-The Diagram kind family has deterministic layout and declared budgets. The requested improvement concerns dense valid input, not shrinking everything until it technically fits.
+A fixed the basic control-height mismatch. The remaining work is the relationship among labels, fields, helper/error text, and choices in real forms.
 
 The owner completed A1–A5 on main, with baseline commit `a1bd80f3886e`: shared control sizes, rhythm/type roles, quieter elevation, tonal hierarchy, and composed Foundation review. Preserve that work and judge current behaviour before repeating a correction. This repository is the public library and its Catalogue; the discern tool and sibling consumer projects are outside this brief.
 
 ## Read the authorities
 
-- `src/diagram/layout-authority.ts`
-- `src/diagram/font-metrics.ts`
-- `src/diagram/svg-geometry.ts`
-- `src/diagram/svg.ts`
-- `src/diagram/kinds/`
-- `src/components/editorial/diagram/`
-- `tests/diagram/layout_test.ts`
-- `tests/diagram/browser_test.tsx`
+- `src/components/forms/field/`
+- `src/components/forms/input/`
+- `src/components/forms/select/`
+- `src/components/forms/textarea/`
+- `src/components/forms/checkbox/`
+- `src/components/forms/radio/`
+- `src/components/forms/switch/`
+- `tests/cli/forms_test.ts`
 
 ## Deliverables
 
-- **I5.** Review dense valid fixtures across flow, sequence, timeline, and cycle. Correct node-label/edge-label collisions, ambiguous crossings, routing proximity, arrowhead clearance, and fit calculations at their shared authorities. Test long labels and narrow allocations as well as large diagrams.
+- **C1.** Build a bounded mixed-form example and align label rows, native controls, helper text, and a neighbouring action using the shared control-size/rhythm roles. Give absent labels/helpers an intentional layout rather than hard-coded offsets. Test both stacked mobile fields and a genuinely useful inline form.
 
-- **Honest bounds.** Preserve node/edge identity, direction, chronology, and group relationships. Prefer a clear minimum size, local scrolling, or a typed budget refusal with a practical remedy over tiny text or silent graph alteration. Keep font measurement and rendered geometry consistent.
+- **C2.** Make invalid state explicit, connect descriptions/errors programmatically, preserve the user's value, and use correction-oriented messages. Keep transitions local and avoid preventable layout jumps; don't reserve a large blank error area everywhere. Verify error removal and resubmission as well as the initial failure.
 
-- **Evidence.** Add realistic dense fixtures to the existing family corpus and inspect live/exported SVG and available terminal projection. Guard structural collisions and bounds, not exact raster pixels.
+- **C4.** Align Checkbox, Radio, and Switch indicators with multiline labels and descriptions. Make the labelled region an appropriately generous target, preserve native keyboard/form semantics, and contain long text at high zoom and narrow allocations.
 
 ## Ownership and exclusions
 
 You own:
 
-- src/diagram/ geometry/layout/rendering relevant to dense legibility and the editorial Diagram wrapper.
-- Existing diagram fixtures and tests, including canonical review examples.
+- The seven existing Forms Component folders named above, excluding the new segmented-control folder.
+- A new tests/form_alignment_validation_test.tsx plus these Components' examples, postures, and conformance.
 
-Out of scope: New diagram kinds, editing/dragging/zoom application features, Chart internals, global font tokens, and expanded diagram budgets without evidence. All proposals deferred to `discern/TODO.md` stay deferred. Do not opportunistically implement a sibling brief.
+Out of scope: C3 read-only differentiation and C5 a complete production form journey, Button internals, SegmentedControl, a new form-validation framework, and global tokens. All proposals deferred to `discern/TODO.md` stay deferred. Do not opportunistically implement a sibling brief.
 
 Required companion edits are allocated to this stream: its own Unreleased changelog bullet for public contract/byte changes; its own map leaf and exact index link when needed; its own brief and programme-index row; exact enrollments in existing guards for paths/capabilities already declared above; and generated output from the owning commands. Preserve sibling entries. These routine enrollments, regenerations, conflict resolutions, and moved-link repairs need no second permission exchange. Keep new shared behaviour and contract decisions with their assigned owner; the deliverables in this brief are already authorised.
 
@@ -65,14 +65,14 @@ Authored feature files stay with their owner. Shared derived files and the narro
 
 ## Verification and definition of done
 
-- Every current kind has long-label/dense evidence with readable nodes and edge labels, non-overlapping arrowheads, and contained output at admitted sizes.
-- Graph identity and direction survive layout; overflow/refusal semantics remain explicit and deterministic.
-- Existing browser accessibility, exported SVG, font-metric, CLI, and layout tests pass without weakening limits.
+- Geometry assertions cover a realistic mix of fields with/without labels/helpers at narrow/wide local widths and density bounds.
+- Validation preserves entered values and correctly updates invalid/described-by/error relationships without stealing focus.
+- Multiline choice labels remain aligned and wholly usable by label click, keyboard, coarse pointer, and forced colours.
 
 - The semantic bar is the goal at the top of this brief: demonstrate the real user task, not only isolated snapshots or passing selectors. Record what changed, why, tested widths/states, and any remaining limitation.
 - Extend focused tests in the allocated area and authored conformance/postures where meaningful. Run direct tests through `discern queue -- <command>`; the repository admits one complete test run at a time. Avoid a redundant full test preflight before `discern_done`.
 - After all edits and any integration update, run `discern_prepare`, commit logical changes atomically, then run `discern_done` on the clean final HEAD. Re-run on a changed HEAD; an earlier Proof does not cover new edits.
-- Run the Catalogue at the worktree's deterministic `discern identity --port` port and complete the required visual review at the exact localhost URLs. Stop the preview before the final `discern_done` and keep it stopped through `discern_accept`; a landing may remove the worktree. Preview evidence: Dense Diagram corpus pages at the admitted minimum and generous allocations, plus CLI links where rendered. Include `?surface=cli#component-<slug>` links for changed CLI renderers, and the live playground when an interactive adapter flow changes.
+- Run the Catalogue at the worktree's deterministic `discern identity --port` port and complete the required visual review at the exact localhost URLs. Leave the preview running after `discern_done` so the project owner can review your changes. Stop the preview before running `discern_accept`, as acceptance will remove the worktree. Preview evidence: Field and choice-control examples, including the mixed form and invalid→corrected review postures. Include `?surface=cli#component-<slug>` links for changed CLI renderers, and the live playground when an interactive adapter flow changes.
 - **Landing rule chosen by the owner:** After green `discern_done`, report the exact Proof, branch, worktree, preview URL, and any owner decision, then stop and wait for the owner to confirm acceptance.
 - Return the branch/worktree identity for an adversarial review against this brief. The planning agent will inspect the diff and reproduce the important journeys; gate success alone is not a visual review.
-- In the final implementation commit, before the final prepare → commit → done sequence, move `map/_private/planning/design-polish/2j-dense-diagram-legibility.md` to `map/_private/planning/design-polish/_done/2j-dense-diagram-legibility.md`, repair any moved relative links, and update **only this stream's row** in the programme README to the `_done/` path and completed state, preserving every sibling row.
+- In the final implementation commit, before the final prepare → commit → done sequence, move `map/_private/planning/design-polish/2b-form-alignment-and-validation.md` to `map/_private/planning/design-polish/_done/2b-form-alignment-and-validation.md`, repair any moved relative links, and update **only this stream's row** in the programme README to the `_done/` path and completed state, preserving every sibling row.

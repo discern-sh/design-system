@@ -50,6 +50,16 @@ function CancelledCheckboxState() {
   );
 }
 
+function MultilineCheckboxState() {
+  return (
+    <Checkbox
+      label="Keep a local copy of every generated report so reviews stay available offline"
+      description="Copies stay on this device and are removed after thirty days of inactivity."
+      defaultChecked
+    />
+  );
+}
+
 function GroupedCheckboxState() {
   return (
     <fieldset className="discern-example-stack">
@@ -69,6 +79,7 @@ export const catalogueExamples = defineCatalogueExamples(
   [
     { id: "default", Example: DefaultCheckboxState },
     { id: "grouped", Example: GroupedCheckboxState },
+    { id: "multiline", Example: MultilineCheckboxState },
     { id: "active", Example: ActiveCheckboxState },
     { id: "filled", Example: FilledCheckboxState },
     { id: "validation-error", Example: ValidationErrorCheckboxState },

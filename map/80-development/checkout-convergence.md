@@ -10,7 +10,7 @@ Each task stays in its assigned worktree through implementation, review, Proof, 
 
 ## Review visible changes
 
-Run the Catalogue on the worktree's deterministic `discern identity --port` port and complete the required visual review there. Stop preview and watch processes before the final `discern done`, and keep them stopped through `discern accept`; a landing may remove the worktree. Browser conformance owns and stops its ephemeral server and automation browser within the gate run.
+Run the Catalogue on the worktree's deterministic `discern identity --port` port and complete the required visual review there. Leave the preview running after `discern done` so the project owner can review your changes. Stop preview and watch processes before running `discern accept`, as acceptance will remove the worktree. Browser conformance owns and stops its ephemeral server and automation browser within the gate run.
 
 ## Finish and land
 

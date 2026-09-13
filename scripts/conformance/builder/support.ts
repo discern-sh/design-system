@@ -7,6 +7,7 @@ import { catalogueAppearanceStorageKey } from "../../../catalogue/shell/appearan
 import {
   addPageFailureListeners,
   FOCUSABLE_SELECTOR,
+  loadReadyBrowserPage,
   scanBrowserAccessibility,
   visibleEnabledTargets,
 } from "../../browser-conformance-support.ts";
@@ -116,9 +117,12 @@ export async function loadBuilderPage(
   page: Page,
   origin: string,
 ): Promise<void> {
-  await page.goto(builderUrl(origin), { waitUntil: "networkidle" });
-  await page.locator(BUILDER_READY).waitFor({ timeout: ACTION_TIMEOUT });
-  await page.evaluate(() => document.fonts.ready.then(() => undefined));
+  await loadReadyBrowserPage(
+    page,
+    builderUrl(origin),
+    BUILDER_READY,
+    ACTION_TIMEOUT,
+  );
   invariant(
     await page.getByText("Beta", { exact: true }).isVisible(),
     "builder chrome must identify the interface builder as Beta",

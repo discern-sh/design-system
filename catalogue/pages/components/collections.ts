@@ -82,3 +82,23 @@ export function componentDirectory(
     }),
   };
 }
+
+/** Availability needs both the public stance and a canonical applicable example. */
+export function componentSupportsSurface(
+  entry: RegistryEntry,
+  surface: "web" | "cli",
+): boolean {
+  return (surface === "web" || entry.cli.stance === "rendered") &&
+    entry.canonicalExamples.some(({ surfaces }) => surfaces.includes(surface));
+}
+
+/** Declared package behaviours; interactive Catalogue specimens are not evidence. */
+export function matchesComponentCapabilities(
+  entry: RegistryEntry,
+  state: import("./explorer-state.ts").ComponentExplorerState,
+): boolean {
+  return (state.availability === undefined ||
+    componentSupportsSurface(entry, state.availability)) &&
+    (state.behavior === undefined ||
+      entry.meta.behaviors?.includes(state.behavior) === true);
+}
