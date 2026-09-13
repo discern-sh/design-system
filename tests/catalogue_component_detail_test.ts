@@ -249,9 +249,8 @@ Deno.test("detail evidence stays closed and source labels describe their destina
 });
 
 interface DetailPlaygroundModules {
-  readonly playground: typeof import(
-    "../catalogue/pages/components/detail-playground.ts"
-  );
+  readonly playground:
+    typeof import("../catalogue/pages/components/detail-playground.ts");
   readonly render: typeof import("../catalogue/builder/render.tsx");
 }
 
@@ -324,7 +323,9 @@ Deno.test("playground adjustments feed the render and the export from one model"
     starter.node,
   );
   const variant = controls.fields.find(({ name }) => name === "variant");
-  assert(variant?.control === "select" && variant.options.includes("secondary"));
+  assert(
+    variant?.control === "select" && variant.options.includes("secondary"),
+  );
   const withVariant = playground.changeDetailProp(starter.node, "variant", {
     kind: "string",
     value: "secondary",
@@ -338,7 +339,10 @@ Deno.test("playground adjustments feed the render and the export from one model"
     "Ship the change",
   );
   assert("node" in withLabel);
-  assertEquals(playground.detailSlotText(withLabel.node, label), "Ship the change");
+  assertEquals(
+    playground.detailSlotText(withLabel.node, label),
+    "Ship the change",
+  );
 
   const adjusted = renderToStaticMarkup(
     createElement(Fragment, null, render.renderBuilderChild(withLabel.node)),

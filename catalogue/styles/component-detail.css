@@ -390,8 +390,7 @@
   .discern-catalogue-detail__stage-canvas {
     min-width: 0;
   }
-  .discern-catalogue-detail__stage-scroll:not([data-discern-detail-width="fit"])
-    .discern-catalogue-detail__stage-canvas {
+  .discern-catalogue-detail__stage-scroll:not([data-discern-detail-width="fit"]) .discern-catalogue-detail__stage-canvas {
     outline: 1px dashed var(--discern-color-border-strong);
     outline-offset: -1px;
   }

@@ -41,8 +41,8 @@ function ViewUnavailable(
     >
       <strong>The Playground edits the Web adapter.</strong>
       <p {...catalogueDecisionCopyProps}>
-        Switch to the Web surface to adjust the starter; the CLI surface
-        renders canonical example frames.
+        Switch to the Web surface to adjust the starter; the CLI surface renders
+        canonical example frames.
       </p>
     </div>
   );
@@ -97,8 +97,7 @@ export function ComponentDetailPage(
       expanded={expanded}
       widthApplies={state.surface === "web"}
       onWidthChange={(next) => navigate({ ...state, width: next }, false)}
-      onExpandedChange={(next) =>
-        navigate({ ...state, expanded: next }, false)}
+      onExpandedChange={(next) => navigate({ ...state, expanded: next }, false)}
     >
       {canvas}
     </DetailStage>
@@ -146,8 +145,10 @@ export function ComponentDetailPage(
             name={`detail-view-${entry.meta.slug}`}
             value={view}
             onValueChange={(candidate) =>
-              navigate({ ...state, view: componentDetailView(candidate) },
-                false)}
+              navigate(
+                { ...state, view: componentDetailView(candidate) },
+                false,
+              )}
             items={[
               { value: "single", label: "One example" },
               {

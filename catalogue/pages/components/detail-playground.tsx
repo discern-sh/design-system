@@ -140,7 +140,9 @@ export function ComponentDetailPlayground(
           <div className="discern-builder-control" key={control.name}>
             <div className="discern-builder-control__heading">
               <div>
-                <label htmlFor={`detail-slot-${entry.meta.slug}-${control.name}`}>
+                <label
+                  htmlFor={`detail-slot-${entry.meta.slug}-${control.name}`}
+                >
                   {control.label}
                   {control.required
                     ? (
@@ -169,7 +171,9 @@ export function ComponentDetailPlayground(
                   control,
                   event.currentTarget.value,
                 );
-                if ("node" in change) setEdited(change.node);
+                if ("node" in change) {
+                  setEdited(change.node);
+                }
               }}
             />
           </div>
@@ -204,7 +208,8 @@ export function ComponentDetailPlayground(
               className="discern-catalogue-playground__note"
               {...catalogueDecisionCopyProps}
             >
-              {String(controls.advanced.length)} advanced passthrough prop{controls
+              {String(controls.advanced.length)}{" "}
+              advanced passthrough prop{controls
                   .advanced.length === 1
                 ? ""
                 : "s"} — {controls.advanced.map(({ name }) => name).join(", ")}

@@ -123,9 +123,11 @@ export function ComponentStateStrip(
                               {posture.label}
                             </a>
                           )
-                          : <span title={posture.unavailableReason}>
-                            {posture.label} — unavailable
-                          </span>}
+                          : (
+                            <span title={posture.unavailableReason}>
+                              {posture.label} — unavailable
+                            </span>
+                          )}
                         <small>{posture.category}</small>
                       </li>
                     ))}

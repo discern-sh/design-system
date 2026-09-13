@@ -59,7 +59,8 @@ async function verifyDetailPlaygroundJourney(
   }).first();
   await variantField.locator("select").selectOption({ label: "Secondary" });
   await eventually(
-    async () => ((await tsx.textContent()) ?? "").includes('variant="secondary"'),
+    async () =>
+      ((await tsx.textContent()) ?? "").includes('variant="secondary"'),
     "A select adjustment did not reach the exported code",
   );
   await page.getByRole("button", { name: "Reset starter" }).click();
@@ -78,7 +79,7 @@ async function verifyDetailPlaygroundJourney(
   await loadCataloguePage(page, cliUrl.href);
   invariant(
     await page.locator('[data-discern-view-unavailable="playground"]')
-        .count() === 1,
+      .count() === 1,
     "CLI playground must state its Web-only contract",
   );
 }
@@ -101,8 +102,8 @@ async function verifyDetailStatesJourney(
   );
   invariant(
     await page.locator(
-        `[data-discern-detail-states] img[src*="/catalogue/generated/example-images/${slug}--"]`,
-      ).count() === count,
+      `[data-discern-detail-states] img[src*="/catalogue/generated/example-images/${slug}--"]`,
+    ).count() === count,
     "State strip must reuse committed generated snapshots",
   );
   invariant(
@@ -112,7 +113,8 @@ async function verifyDetailStatesJourney(
   await cards.first().getByRole("link", { name: "Open live" }).click();
   await page.waitForLoadState();
   await eventually(
-    async () => await page.locator("[data-discern-example-state]").count() === 1,
+    async () =>
+      await page.locator("[data-discern-example-state]").count() === 1,
     "Opening a live example from the strip did not restore the single specimen",
   );
 }
