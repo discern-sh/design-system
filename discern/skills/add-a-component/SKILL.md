@@ -57,7 +57,7 @@ Rules that bite:
 ## 4. Ship it
 
 - A new public component is a contract change: record it in `CHANGELOG.md` under the upcoming version.
-- Include the reviewed Catalogue URL and visual evidence in your handoff: `deno task serve` then `http://127.0.0.1:<discern identity --port>/`. Stop the server before the final gate and acceptance.
+- Include the reviewed Catalogue URL and visual evidence in your handoff: `deno task serve` then `http://127.0.0.1:<discern identity --port>/`. Leave the server running for owner review after the final gate; stop it before acceptance.
 - Update `map/20-components/` if the change alters what the map describes.
 
 ## Recovery
