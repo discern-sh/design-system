@@ -37,7 +37,7 @@ Relative sizes are planning judgments, not elapsed-time promises: S is a bounded
 | 2N  | [Polish the shell, search, and Appearance controls](2n-shell-search-and-appearance.md)       | M1, M3, M4, P1, P2, P3 | 1C              | L    | Prepared |
 | 2O  | [Make glyph discovery useful for adoption](_done/2o-glyph-adoption-and-size-comparison.md)   | N1, N2, N3             | None            | M    | Complete |
 | 2P  | [Polish terminal previews and guided flows](2p-terminal-capabilities-and-guided-flows.md)    | O1, O2, O3, O5         | 1A, 1C          | L    | Prepared |
-| 2Q  | [Fit compositions to their available space](2q-composition-fit-and-width-controls.md)        | P5                     | None            | S    | Prepared |
+| 2Q  | [Fit compositions to their available space](_done/2q-composition-fit-and-width-controls.md)  | P5                     | None            | S    | Complete |
 
 The original next-up list contains 54 items; approved additions R1 and R3 bring the implementation total to 56. Each ID has exactly one owning brief. 1C is the only additional infrastructure brief and does not claim any proposal complete.
 
