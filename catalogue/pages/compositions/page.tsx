@@ -27,6 +27,13 @@ export interface CompositionGalleryItem {
 
 export type CompositionWidthPresetId = "narrow" | "standard" | "wide";
 
+/** The default review width: fill the canvas actually allocated to the preview. */
+export const compositionFitWidth = "fit";
+
+export type CompositionWidthChoice =
+  | typeof compositionFitWidth
+  | CompositionWidthPresetId;
+
 /** Reproducible real CSS widths for reviewing responsive pattern behaviour. */
 export const compositionWidthPresets = Object.freeze(
   [
@@ -36,20 +43,22 @@ export const compositionWidthPresets = Object.freeze(
   ] as const,
 );
 
-export function compositionWidthPreset(
+/** Resolve requested review width; anything but an exact preset fits the canvas. */
+export function compositionWidthChoice(
   value: string | null,
-): (typeof compositionWidthPresets)[number] {
-  return compositionWidthPresets.find(({ id }) => id === value) ??
-    compositionWidthPresets[1];
+): CompositionWidthChoice {
+  return compositionWidthPresets.find(({ id }) => id === value)?.id ??
+    compositionFitWidth;
 }
 
 /** Change only responsive review state while preserving the detail destination. */
 export function compositionWidthUrl(
   current: URL,
-  width: CompositionWidthPresetId,
+  width: CompositionWidthChoice,
 ): URL {
   const url = canonicalCompositionUrl(current);
-  url.searchParams.set("width", width);
+  if (width === compositionFitWidth) url.searchParams.delete("width");
+  else url.searchParams.set("width", width);
   return url;
 }
 
@@ -166,8 +175,8 @@ function CompositionDetail(
   },
 ) {
   const { id, title, description, journey, Example, source } = recipe;
-  const [width, setWidth] = useState<CompositionWidthPresetId>(
-    () => compositionWidthPreset(currentUrl.searchParams.get("width")).id,
+  const [width, setWidth] = useState<CompositionWidthChoice>(
+    () => compositionWidthChoice(currentUrl.searchParams.get("width")),
   );
   const constituents = compositionConstituents(recipe);
   const neighbours = compositionRecipeNeighbours(recipes, id);
@@ -184,7 +193,7 @@ function CompositionDetail(
     }
   }, [currentUrl]);
 
-  const changeWidth = (next: CompositionWidthPresetId): void => {
+  const changeWidth = (next: CompositionWidthChoice): void => {
     setWidth(next);
     if (typeof globalThis.history === "undefined") return;
     const url = compositionWidthUrl(liveCatalogueUrl(), next);
@@ -220,6 +229,17 @@ function CompositionDetail(
       >
         <fieldset className="discern-catalogue-pattern__widths">
           <legend>Preview width</legend>
+          <label>
+            <input
+              type="radio"
+              name="composition-width"
+              value={compositionFitWidth}
+              checked={width === compositionFitWidth}
+              onChange={() => changeWidth(compositionFitWidth)}
+            />
+            <span>Fit</span>
+            <small>available</small>
+          </label>
           {compositionWidthPresets.map((preset) => (
             <label key={preset.id}>
               <input
