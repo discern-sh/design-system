@@ -103,7 +103,7 @@
     font-family: var(--discern-font-ui);
   }
   .discern-chart__label--annotation {
-    fill: var(--discern-color-ink-faint);
+    fill: var(--discern-color-ink);
   }
   .discern-chart__label--mono {
     font-family: var(--discern-font-mono);

@@ -20,7 +20,7 @@ export const CHART_PAINT_TOKEN_NAMES = {
   grid: "--discern-color-border",
   reference: "--discern-color-ink-muted",
   "axis-label": "--discern-color-ink-muted",
-  annotation: "--discern-color-ink-faint",
+  annotation: "--discern-color-ink",
   "series-1": "--discern-color-series-1",
   "series-2": "--discern-color-series-2",
   "series-3": "--discern-color-series-3",
