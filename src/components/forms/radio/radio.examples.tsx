@@ -37,6 +37,26 @@ function DefaultRadioState() {
   return <RadioGroup name="radio-default" />;
 }
 
+function MultilineRadioState() {
+  return (
+    <fieldset className="discern-example-stack">
+      <legend>Delivery</legend>
+      <Radio
+        name="radio-multiline"
+        value="bundle"
+        label="Bundle every artefact into one downloadable archive at the end of the run"
+        description="Slower to appear, but a single file to fetch and keep."
+        defaultChecked
+      />
+      <Radio
+        name="radio-multiline"
+        value="stream"
+        label="Stream artefacts as they finish"
+      />
+    </fieldset>
+  );
+}
+
 function ActiveRadioState() {
   return <RadioGroup name="radio-active" focused="bravo" />;
 }
@@ -98,6 +118,7 @@ export const catalogueExamples = defineCatalogueExamples(
   [
     { id: "default", Example: DefaultRadioState },
     { id: "grouped", Example: GroupedRadioState },
+    { id: "multiline", Example: MultilineRadioState },
     { id: "active", Example: ActiveRadioState },
     { id: "filled", Example: FilledRadioState },
     { id: "validation-error", Example: ValidationErrorRadioState },
