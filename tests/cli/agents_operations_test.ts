@@ -19,6 +19,12 @@ import {
   testTerminalCapabilities,
 } from "../../src/cli/interactive/testing.ts";
 import { TEST_TERMINAL_MOTIF } from "./motif_fixture.ts";
+import {
+  denseFleetRows,
+  denseTranscriptTurns,
+  denseVerificationReport,
+  denseWorklogEntries,
+} from "../../src/components/agents/operational-examples.ts";
 
 function assertCapabilityLevels(
   columns: number,
@@ -266,17 +272,17 @@ Deno.test("Verification report renders exact narrow, standard, wide, and capabil
     summary: "All required checks passed",
   } as const;
   const standard =
-    "┌ [✓] Gate proof ──────────────────────────────────┐\n│ Branch: agent/cli-2b                             │\n│ Commit: abc1234                                  │\n│                                                  │\n│ Typecheck ............................... ✓ pass │\n│ Tests ............................... 310 ✓ pass │\n│ Publish ................................. – skip │\n│                                                  │\n│ All required checks passed                       │\n└──────────────────────────────────────────────────┘";
+    "┌ [✓] Gate proof ──────────────────────────────────┐\n│ All required checks passed                       │\n│                                                  │\n│ Branch: agent/cli-2b                             │\n│ Commit: abc1234                                  │\n│                                                  │\n│ Typecheck ............................... ✓ pass │\n│ Tests ............................... 310 ✓ pass │\n│ Publish ................................. – skip │\n└──────────────────────────────────────────────────┘";
   for (
     const [columns, expected] of [
       [
         24,
-        "┌ [✓] Gate proof ──────┐\n│ Branch: agent/cli-2b │\n│ Commit: abc1234      │\n│                      │\n│ Typecheck ... ✓ pass │\n│ Tests ... 310 ✓ pass │\n│ Publish ..... – skip │\n│                      │\n│ All required checks  │\n│ passed               │\n└──────────────────────┘",
+        "┌ [✓] Gate proof ──────┐\n│ All required checks  │\n│ passed               │\n│                      │\n│ Branch: agent/cli-2b │\n│ Commit: abc1234      │\n│                      │\n│ Typecheck ... ✓ pass │\n│ Tests ... 310 ✓ pass │\n│ Publish ..... – skip │\n└──────────────────────┘",
       ],
       [52, standard],
       [
         80,
-        "┌ [✓] Gate proof ──────────────────────────────────────────────────────────────┐\n│ Branch: agent/cli-2b                                                         │\n│ Commit: abc1234                                                              │\n│                                                                              │\n│ Typecheck ........................................................... ✓ pass │\n│ Tests ........................................................... 310 ✓ pass │\n│ Publish ............................................................. – skip │\n│                                                                              │\n│ All required checks passed                                                   │\n└──────────────────────────────────────────────────────────────────────────────┘",
+        "┌ [✓] Gate proof ──────────────────────────────────────────────────────────────┐\n│ All required checks passed                                                   │\n│                                                                              │\n│ Branch: agent/cli-2b                                                         │\n│ Commit: abc1234                                                              │\n│                                                                              │\n│ Typecheck ........................................................... ✓ pass │\n│ Tests ........................................................... 310 ✓ pass │\n│ Publish ............................................................. – skip │\n└──────────────────────────────────────────────────────────────────────────────┘",
       ],
     ] as const
   ) {
@@ -291,7 +297,7 @@ Deno.test("Verification report renders exact narrow, standard, wide, and capabil
     52,
     (capabilities) => renderVerificationReportCli(props, capabilities),
     standard,
-    "+ [+] Gate proof ----------------------------------+\n| Branch: agent/cli-2b                             |\n| Commit: abc1234                                  |\n|                                                  |\n| Typecheck ............................... + pass |\n| Tests ............................... 310 + pass |\n| Publish ................................. - skip |\n|                                                  |\n| All required checks passed                       |\n+--------------------------------------------------+",
+    "+ [+] Gate proof ----------------------------------+\n| All required checks passed                       |\n|                                                  |\n| Branch: agent/cli-2b                             |\n| Commit: abc1234                                  |\n|                                                  |\n| Typecheck ............................... + pass |\n| Tests ............................... 310 + pass |\n| Publish ................................. - skip |\n+--------------------------------------------------+",
   );
 });
 
@@ -448,4 +454,93 @@ Deno.test("Fleet and Worklog keep fixed beacon geometry under a consumer motif",
     }, capabilities),
     "▴─────── Active [active]",
   );
+});
+
+Deno.test("dense operations retain actions, exact identities and routine boundaries at every capability level", () => {
+  for (const columns of [24, 60, 100]) {
+    for (const unicode of [true, false]) {
+      for (
+        const colorDepth of ["none", "ansi16", "ansi256", "truecolor"] as const
+      ) {
+        const capabilities = testTerminalCapabilities({
+          columns,
+          unicode,
+          colorDepth,
+        });
+        const fleet = stripAnsi(
+          renderFleetCli(
+            { rows: denseFleetRows, identityMode: "lossless" },
+            capabilities,
+          ),
+        );
+        for (const row of denseFleetRows) {
+          assertStringIncludes(fleet, row.branch);
+          assertStringIncludes(fleet, row.status);
+        }
+        assertStringIncludes(fleet, "Next:");
+        const report = stripAnsi(
+          renderVerificationReportCli({
+            ...denseVerificationReport,
+            expanded: false,
+          }, capabilities),
+        );
+        assert(report.indexOf("Next:") < report.indexOf("24 checks"));
+        assertStringIncludes(report, "2 failed");
+        assertStringIncludes(report, "Evidence collapsed");
+        assert(!report.includes("Compatibility check"));
+        const transcript = stripAnsi(
+          renderTranscriptCli({ turns: denseTranscriptTurns }, capabilities),
+        );
+        assertEquals((transcript.match(/^Agent(?:\s|$)/gm) ?? []).length, 2);
+        assertStringIncludes(transcript, "09:14");
+        assertStringIncludes(transcript, "09:15");
+        assertStringIncludes(transcript, "Decision");
+        const worklog = stripAnsi(
+          renderWorklogCli({ entries: denseWorklogEntries }, capabilities),
+        );
+        assertStringIncludes(worklog, "Fixture inspection");
+        assertStringIncludes(worklog, "Decision:");
+        assertStringIncludes(worklog, "[failed]");
+        for (const frame of [report, transcript, worklog]) {
+          assert(
+            frame.split("\n").every((line) => measureText(line) <= columns),
+          );
+        }
+      }
+    }
+  }
+});
+
+Deno.test("Fleet compact identity collisions disclose complete distinct branches", () => {
+  const branches = [
+    "agent/a-long-shared-prefix-alpha",
+    "agent/a-long-shared-prefix-beta",
+  ];
+  const frame = renderFleetCli({
+    rows: branches.map((branch) => ({
+      persona: "Agent",
+      branch,
+      status: "blocked",
+      statusLabel: "Needs a fixture",
+      nextAction: "Restore the fixture.",
+    })),
+  }, testTerminalCapabilities({ columns: 60 }));
+  for (const branch of branches) assertStringIncludes(frame, branch);
+  assertStringIncludes(frame, "blocked");
+  assertStringIncludes(frame, "Needs a fixture");
+});
+
+Deno.test("long verification check labels remain complete when dot leaders cannot fit", () => {
+  const label = "fixtures/checkout/alpha/expected-output.json";
+  const frame = stripAnsi(
+    renderVerificationReportCli({
+      title: "Check",
+      checks: [{ label, state: "fail", value: "Missing field" }],
+    }, testTerminalCapabilities({ columns: 24 })),
+  );
+  const body = frame.split("\n").slice(1, -1).map((line) =>
+    line.slice(2, -2).trim()
+  ).join("");
+  assertStringIncludes(body, label);
+  assertStringIncludes(body, "fail");
 });

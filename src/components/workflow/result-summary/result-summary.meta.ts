@@ -25,6 +25,7 @@ const meta = {
     "You need a durable report recording several checks and branch or commit metadata; use Verification report.",
   ],
   accessibility: [
+    "The next action precedes counts and duration; result data remains inspectable through native disclosure and uses the selected static copy runtime.",
     "Every state appears as a visible word; semantic colour and markers only reinforce it.",
     "The primary fact and optional next action remain complete text in source order without relying on layout or terminal conventions.",
     "Supporting figures use a definition list, keeping each label programmatically bound to its value.",

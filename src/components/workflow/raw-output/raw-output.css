@@ -12,7 +12,9 @@
   .discern-raw-output__summary {
     display: flex;
     gap: var(--discern-space-2);
-    align-items: center;
+    align-items: baseline;
+    flex-wrap: wrap;
+    min-block-size: 2.5rem;
     padding: var(--discern-space-3) var(--discern-space-4);
     color: var(--discern-color-ink);
     cursor: pointer;
@@ -47,6 +49,13 @@
   }
   .discern-raw-output[open] .discern-raw-output__marker {
     transform: rotate(90deg);
+  }
+  .discern-raw-output__subject {
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+  }
+  .discern-raw-output__extent {
+    color: var(--discern-color-ink-muted);
   }
   .discern-raw-output__state {
     margin-inline-start: auto;

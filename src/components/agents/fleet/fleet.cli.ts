@@ -1,3 +1,4 @@
+import { denseFleetRows } from "../operational-examples.ts";
 /**
  * Pure terminal renderer and deterministic example states for Fleet.
  *
@@ -42,6 +43,8 @@ export interface FleetCliRow {
   readonly ahead?: number;
   readonly behind?: number;
   readonly meta?: string;
+  /** Caller-authored explanation or next action for work needing attention. */
+  readonly nextAction?: string;
   /** Semantic phase consumed by the package activity beacon. */
   readonly beaconPhase?: number;
 }
@@ -97,6 +100,7 @@ const cliExampleImplementations = [
       ],
     },
   },
+  { name: "dense", props: { rows: denseFleetRows, identityMode: "lossless" } },
 ] as const satisfies readonly CliExample<FleetCliProps>[];
 defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
 
@@ -149,6 +153,13 @@ const renderFleetCli: CliRenderer<FleetCliProps> = (props, capabilities) => {
     if (row.meta !== undefined) {
       assertAgentsCliText(row.meta, `fleet row ${index + 1} metadata`, true);
     }
+    if (row.nextAction !== undefined) {
+      assertAgentsCliText(
+        row.nextAction,
+        `fleet row ${index + 1} next action`,
+        true,
+      );
+    }
     assertCount(row.ahead, `fleet row ${index + 1} ahead`);
     assertCount(row.behind, `fleet row ${index + 1} behind`);
   }
@@ -158,9 +169,10 @@ const renderFleetCli: CliRenderer<FleetCliProps> = (props, capabilities) => {
   if (width < 52) {
     for (const [index, row] of props.rows.entries()) {
       if (index > 0) lines.push("");
-      const state = row.status === undefined
-        ? "idle"
-        : row.statusLabel ?? row.status;
+      const state = row.status === undefined ? "idle" : row.status;
+      if (row.statusLabel !== undefined) {
+        lines.push(...agentsFactLines("State detail", row.statusLabel, width));
+      }
       const identity = agentsPrefixedLines(
         "",
         `${row.persona}${capabilities.unicode ? " · " : " - "}${state}`,
@@ -186,6 +198,9 @@ const renderFleetCli: CliRenderer<FleetCliProps> = (props, capabilities) => {
       lines.push(
         ...agentsFactLines("Drift", drift(row, capabilities.unicode), width),
       );
+      if (row.nextAction !== undefined) {
+        lines.push(...agentsFactLines("Next", row.nextAction, width));
+      }
       if (row.meta !== undefined) {
         lines.push(...agentsFactLines("Meta", row.meta, width));
       }
@@ -224,9 +239,7 @@ const renderFleetCli: CliRenderer<FleetCliProps> = (props, capabilities) => {
     props,
   ));
   for (const row of props.rows) {
-    const state = row.status === undefined
-      ? "idle"
-      : row.statusLabel ?? row.status;
+    const state = row.status === undefined ? "idle" : row.status;
     const stateCell = styleAgentsHeading(
       padText(truncateText(state, stateWidth), stateWidth),
       row.status === undefined ? "neutral" : statusTones[row.status],
@@ -246,12 +259,20 @@ const renderFleetCli: CliRenderer<FleetCliProps> = (props, capabilities) => {
         truncateText(drift(row, capabilities.unicode), driftWidth)
       }`,
     );
+    if (row.statusLabel !== undefined) {
+      lines.push(...agentsFactLines("State detail", row.statusLabel, width));
+    }
     if (lossless && measureText(row.persona) > agentWidth) {
       lines.push(`  Persona: ${row.persona}`);
     }
     if (
-      lossless && row.branch !== undefined &&
-      measureText(row.branch) > branchWidth
+      row.branch !== undefined && measureText(row.branch) > branchWidth &&
+      (lossless ||
+        props.rows.some((peer) =>
+          peer.branch !== undefined && peer.branch !== row.branch &&
+          truncateText(peer.branch, branchWidth) ===
+            truncateText(row.branch!, branchWidth)
+        ))
     ) {
       lines.push(`  Branch: ${row.branch}`);
     }
@@ -271,6 +292,9 @@ const renderFleetCli: CliRenderer<FleetCliProps> = (props, capabilities) => {
           { ...capabilities, columns: 8 },
         )
       }`);
+    }
+    if (row.nextAction !== undefined) {
+      lines.push(...agentsFactLines("Next", row.nextAction, width));
     }
     if (row.meta !== undefined) {
       lines.push(...agentsPrefixedLines("  ", row.meta, width));

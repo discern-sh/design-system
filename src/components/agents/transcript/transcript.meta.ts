@@ -13,14 +13,14 @@ const meta = {
   accessibility: [
     "Renders an ordered list, so assistive technology announces the conversation's length and each turn's place in it.",
     "Each turn's speaker slot carries the identity; compose Persona or Agent persona so the printed name stays the single announced source.",
-    "Wrap timestamps in the aside slot in time elements so machines read them as machines and people read them as prose.",
+    "Wrap timestamps in the aside slot in time elements. Explicit routineGroup runs keep every aside and original list item; rich speaker slots use speakerId to establish identity before grouping.",
   ],
 } satisfies ComponentMeta;
 
 export const componentExampleVocabulary = [{
   id: "default",
   label: "Review handoff",
-}] as const;
+}, { id: "dense", label: "Routine entries and decision boundaries" }] as const;
 defineComponentExampleVocabulary(meta, componentExampleVocabulary);
 
 export default meta;

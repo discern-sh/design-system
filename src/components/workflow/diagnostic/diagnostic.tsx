@@ -79,6 +79,10 @@ export const Diagnostic: DiscernComponent<HTMLElement, DiagnosticProps> =
           <span className="discern-diagnostic__label">Why it matters</span>
           <div>{impact}</div>
         </div>
+        <div className="discern-diagnostic__correction">
+          <strong>Suggested correction</strong>
+          <div>{correction}</div>
+        </div>
         {path !== undefined
           ? (
             <div className="discern-diagnostic__location">
@@ -100,18 +104,15 @@ export const Diagnostic: DiscernComponent<HTMLElement, DiagnosticProps> =
           : null}
         {evidence !== undefined
           ? (
-            <div className="discern-diagnostic__evidence">
-              <span className="discern-diagnostic__label">Evidence</span>
-              <pre
-                role="group"
-                aria-label={typeof title === "string"
-                  ? `Scrollable diagnostic evidence: ${title}`
-                  : "Scrollable diagnostic evidence"}
-                tabIndex={0}
-              >
-                <code>{evidence}</code>
-              </pre>
-            </div>
+            <RawOutput
+              className="discern-diagnostic__evidence"
+              label={typeof title === "string"
+                ? `Evidence: ${title}`
+                : "Diagnostic evidence"}
+              outcome={severityLabels[severity]}
+            >
+              {evidence}
+            </RawOutput>
           )
           : null}
         {reproductionCommand !== undefined || retryCommand !== undefined
@@ -146,13 +147,10 @@ export const Diagnostic: DiscernComponent<HTMLElement, DiagnosticProps> =
             </div>
           )
           : null}
-        <div className="discern-diagnostic__correction">
-          <strong>Suggested correction</strong>
-          <div>{correction}</div>
-        </div>
         {rawDetail !== undefined
           ? (
             <RawOutput
+              outcome={severityLabels[severity]}
               {...(rawLabel === undefined ? {} : { label: rawLabel })}
             >
               {rawDetail}

@@ -1,3 +1,4 @@
+import { denseTranscriptTurns } from "../operational-examples.ts";
 /**
  * Pure terminal renderer and deterministic example states for Transcript.
  *
@@ -10,6 +11,7 @@ import type {
   CliRenderer,
 } from "../../../cli/contracts.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
+import { transcriptPositions } from "./transcript.types.ts";
 import meta, { componentExampleVocabulary } from "./transcript.meta.ts";
 import {
   agentsCliWidth,
@@ -24,6 +26,10 @@ export interface TranscriptCliTurn {
   readonly speaker: string;
   readonly body: string;
   readonly aside?: string;
+  /** Explicit routine group; omission separates turns. */
+  readonly routineGroup?: string;
+  /** Stable caller-owned speaker identity. */
+  readonly speakerId?: string;
 }
 
 /** Inputs accepted by the terminal Transcript renderer. */
@@ -46,6 +52,7 @@ const cliExampleImplementations = [
       ],
     },
   },
+  { name: "dense", props: { turns: denseTranscriptTurns } },
 ] as const satisfies readonly CliExample<TranscriptCliProps>[];
 defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
 
@@ -63,11 +70,23 @@ const renderTranscriptCli: CliRenderer<TranscriptCliProps> = (
   }
   const width = agentsCliWidth(props.maxWidth, capabilities);
   const lines: string[] = [];
+  const positions = transcriptPositions(props.turns);
   for (const [index, turn] of props.turns.entries()) {
+    if (turn.routineGroup !== undefined) {
+      assertAgentsCliText(turn.routineGroup, "transcript routine group");
+    }
     assertAgentsCliText(turn.speaker, `transcript turn ${index + 1} speaker`);
     assertAgentsCliText(turn.body, `transcript turn ${index + 1} body`, true);
     if (turn.aside !== undefined) {
       assertAgentsCliText(turn.aside, `transcript turn ${index + 1} aside`);
+    }
+    const position = positions[index];
+    if (position?.continued) {
+      if (turn.aside !== undefined) {
+        lines.push(...agentsPrefixedLines("  ", turn.aside, width));
+      }
+      lines.push(...agentsIndentedLines(turn.body, width));
+      continue;
     }
     if (index > 0) lines.push("");
     const label = `${turn.speaker}${
@@ -81,6 +100,15 @@ const renderTranscriptCli: CliRenderer<TranscriptCliProps> = (
       capabilities,
       props,
     ));
+    if (position !== undefined) {
+      lines.push(
+        ...agentsPrefixedLines(
+          "  ",
+          `${position.label} (${position.size} entries)`,
+          width,
+        ),
+      );
+    }
     lines.push(...agentsIndentedLines(turn.body, width));
   }
   return lines.join("\n");

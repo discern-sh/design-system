@@ -1,3 +1,4 @@
+import { activityStatusLabels } from "./activity-log.types.ts";
 /**
  * Pure terminal renderer and deterministic example states for Activity log.
  *
@@ -43,6 +44,8 @@ import meta, { componentExampleVocabulary } from "./activity-log.meta.ts";
 export interface ActivityLogCliProps
   extends ActivityLogFrameState, CliPresentationOptions {
   readonly width?: number;
+  /** Explicit waiting or blocked snapshot of an otherwise active lifecycle. */
+  readonly status?: "waiting" | "blocked";
 }
 
 /** The pinned stable severities map one-to-one onto the narration verbs. */
@@ -118,6 +121,22 @@ const cliExampleImplementations = [
       tailRows: 0,
     },
   },
+  ...(["waiting", "blocked"] as const).map((status) => ({
+    name: status,
+    props: {
+      kind: "activity-log" as const,
+      label: "Checkout verification",
+      lifecycle: { status: "active" as const },
+      status,
+      phase: 0,
+      stable: [],
+      tail: [],
+      tailRows: 0,
+      hint: status === "blocked"
+        ? "Restore the missing beta fixture, then retry."
+        : "Review requested; waiting for the recorded decision.",
+    },
+  })),
 ] as const satisfies readonly CliExample<ActivityLogCliProps>[];
 defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
 
@@ -160,7 +179,28 @@ const renderActivityLogCli: CliRenderer<ActivityLogCliProps> = (
   const gap = " ".repeat(theme.spacing["--discern-space-2"] ?? 1);
   const ellipsis = capabilities.unicode ? "…" : ".";
 
-  const marker = props.lifecycle.status === "active"
+  if (props.status !== undefined && props.lifecycle.status !== "active") {
+    throw new TypeError("activity status applies only to an active lifecycle");
+  }
+  const status = props.lifecycle.status === "active"
+    ? props.status ?? "active"
+    : props.lifecycle.status === "submitted"
+    ? "complete"
+    : props.lifecycle.status === "cancelled"
+    ? "cancelled"
+    : "blocked";
+  const marker = status === "waiting" || status === "blocked"
+    ? styleText(
+      status === "blocked" ? "!" : (capabilities.unicode ? "◷" : "o"),
+      {
+        color: terminalToneColor(
+          theme,
+          status === "blocked" ? "danger" : "warning",
+        ),
+      },
+      capabilities,
+    )
+    : props.lifecycle.status === "active"
     ? renderMotifSpinnerFrame(props.phase, capabilities, presentation)
     : props.lifecycle.status === "submitted"
     ? styleText(
@@ -181,9 +221,10 @@ const renderActivityLogCli: CliRenderer<ActivityLogCliProps> = (
     }, capabilities);
   const labelWidth = Math.max(
     1,
-    width - measureText(marker) - gap.length,
+    width - measureText(marker) - gap.length -
+      activityStatusLabels[status].length - 2,
   );
-  const headline = `${marker}${gap}${
+  const headline = `${marker}${gap}${activityStatusLabels[status]}: ${
     styleText(truncateText(props.label, labelWidth, ellipsis), {
       ...theme.typography.strong,
       color: terminalThemeColor(theme, "--discern-color-ink"),

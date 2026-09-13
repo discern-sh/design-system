@@ -1,3 +1,4 @@
+import { denseVerificationReport } from "../operational-examples.ts";
 /**
  * Pure terminal renderer and deterministic example states for Verification report.
  *
@@ -11,11 +12,12 @@ import type {
   CliRenderer,
 } from "../../../cli/contracts.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import { measureText, truncateText } from "../../../cli/text.ts";
+import { measureText } from "../../../cli/text.ts";
 import { terminalToneColor } from "../../../cli/theme.ts";
-import type {
-  VerificationReportCheckState,
-  VerificationReportStamp,
+import {
+  verificationExtent,
+  type VerificationReportCheckState,
+  type VerificationReportStamp,
 } from "./verification-report.types.ts";
 import meta, {
   componentExampleVocabulary,
@@ -23,6 +25,7 @@ import meta, {
 import {
   agentsCliTheme,
   agentsCliWidth,
+  agentsFactLines,
   assertAgentsCliText,
 } from "../agents-cli.ts";
 
@@ -48,6 +51,10 @@ export interface VerificationReportCliProps extends CliPresentationOptions {
   readonly checks?: readonly VerificationReportCliCheck[];
   readonly summary?: string;
   readonly footer?: string;
+  /** Useful next action before supporting metadata and check evidence. */
+  readonly nextAction?: string;
+  /** Include full evidence; defaults to true for static terminal reports. */
+  readonly expanded?: boolean;
   readonly maxWidth?: number;
 }
 
@@ -80,9 +87,10 @@ const cliExampleImplementations = [
         { label: "Tests", state: "fail", value: "2 of 184 failing" },
         { label: "Preview", state: "skip" },
       ],
-      footer: "Fix the failing cases before handing off.",
+      nextAction: "Fix the failing cases before handing off.",
     },
   },
+  { name: "dense", props: { ...denseVerificationReport } },
 ] as const satisfies readonly CliExample<VerificationReportCliProps>[];
 defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
 
@@ -110,8 +118,10 @@ function checkLine(
     glyph,
     check.stateLabel ?? check.state,
   ].filter((value): value is string => value !== undefined).join(" ");
-  const labelWidth = Math.max(1, innerWidth - measureText(suffix) - 3);
-  const label = truncateText(check.label, labelWidth, unicode ? "…" : ".");
+  const label = check.label;
+  if (measureText(label) + measureText(suffix) + 3 > innerWidth) {
+    return `${label}\n${suffix}`;
+  }
   const leaders = ".".repeat(
     Math.max(1, innerWidth - measureText(label) - measureText(suffix) - 2),
   );
@@ -127,6 +137,19 @@ const renderVerificationReportCli: CliRenderer<VerificationReportCliProps> = (
   const width = agentsCliWidth(props.maxWidth, capabilities, 20);
   const innerWidth = width - 4;
   const body: string[] = [];
+  if (props.summary !== undefined) {
+    assertAgentsCliText(props.summary, "verification report summary", true);
+    body.push(props.summary, "");
+  }
+  if (props.nextAction !== undefined) {
+    assertAgentsCliText(
+      props.nextAction,
+      "verification report next action",
+      true,
+    );
+    body.push(...agentsFactLines("Next", props.nextAction, innerWidth), "");
+  }
+  const evidenceStart = body.length;
   for (const [index, row] of props.meta?.entries() ?? []) {
     assertAgentsCliText(
       row.label,
@@ -161,9 +184,17 @@ const renderVerificationReportCli: CliRenderer<VerificationReportCliProps> = (
     }
     body.push(checkLine(check, innerWidth, capabilities.unicode));
   }
-  if (props.summary !== undefined) {
-    assertAgentsCliText(props.summary, "verification report summary", true);
-    body.push("", props.summary);
+  if (props.expanded === false) {
+    body.splice(evidenceStart);
+    body.push(
+      (props.checks?.length
+        ? verificationExtent(props.checks)
+        : `${props.meta?.length ?? 0} metadata fields`).replaceAll(
+          " · ",
+          capabilities.unicode ? " · " : " - ",
+        ),
+    );
+    body.push("Evidence collapsed");
   }
   if (props.footer !== undefined) {
     assertAgentsCliText(props.footer, "verification report footer", true);

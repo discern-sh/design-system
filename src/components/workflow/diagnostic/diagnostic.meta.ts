@@ -24,7 +24,7 @@ const meta = {
     "Failure severity derives role=alert while attention derives role=status, unless a consumer supplies an explicit role.",
     "Failure and attention appear as visible words; danger and warning colour only reinforce the actionable marker.",
     "Locations compose Path reference, commands compose Command, and raw detail composes Raw output, preserving each component's accessible contract.",
-    "Evidence remains semantic preformatted code and scrolls horizontally instead of forcing the page wider.",
+    "Evidence follows the required correction in native disclosure. Its subject, extent and severity remain visible; expanded preformatted code is keyboard reachable and scrolls locally.",
     "Suggested correction is required, so a diagnostic never leaves the next action implicit.",
   ],
 } satisfies ComponentMeta;

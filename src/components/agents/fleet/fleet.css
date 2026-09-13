@@ -10,10 +10,11 @@
   }
   .discern-fleet__row {
     display: grid;
-    grid-template-columns: minmax(8rem, max-content) minmax(8ch, 1fr)
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr)
       max-content
-      max-content max-content;
-    grid-template-areas: "persona branch state drift meta";
+      max-content minmax(0, 1fr);
+    grid-template-areas: "persona branch state drift meta"
+      "next next next next next";
     align-items: center;
     gap: var(--discern-space-2) var(--discern-space-4);
     min-inline-size: 0;
@@ -34,15 +35,18 @@
   }
   .discern-fleet__branch {
     grid-area: branch;
-    overflow: hidden;
-    min-inline-size: 8ch;
+    min-inline-size: 0;
+    min-inline-size: 0;
     font-family: var(--discern-font-mono);
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
   }
   .discern-fleet__state {
     grid-area: state;
     justify-self: end;
+    display: grid;
+    gap: var(--discern-space-1);
+    font-size: var(--discern-font-size-xs);
   }
   .discern-fleet__drift {
     grid-area: drift;
@@ -50,16 +54,30 @@
     white-space: nowrap;
   }
   .discern-fleet__meta {
+    overflow-wrap: anywhere;
     grid-area: meta;
     justify-self: end;
     text-align: end;
+  }
+  .discern-fleet__next {
+    grid-area: next;
+    font-size: var(--discern-font-size-sm);
+    overflow-wrap: anywhere;
+  }
+  .discern-fleet__row[data-discern-status="blocked"] .discern-fleet__state strong {
+    color: var(--discern-color-danger);
+  }
+  .discern-fleet__row[data-discern-status="done"] .discern-fleet__state strong {
+    color: var(--discern-color-success-deep);
   }
   @container discern-fleet (width < 40rem) {
     .discern-fleet__row {
       grid-template-columns: minmax(0, 1fr) max-content max-content;
       grid-template-areas:
         "persona persona state"
-        "branch drift meta";
+        "branch branch branch"
+        "meta meta drift"
+        "next next next";
       gap: var(--discern-space-2) var(--discern-space-3);
       padding-block: var(--discern-space-4);
     }

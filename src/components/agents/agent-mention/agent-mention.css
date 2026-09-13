@@ -20,7 +20,7 @@
     line-height: 1.45;
     text-decoration: none;
     vertical-align: baseline;
-    white-space: nowrap;
+    white-space: pre-wrap;
   }
   a.discern-agent-mention:hover {
     border-color: var(--discern-color-border-strong);
@@ -47,8 +47,8 @@
     font-weight: var(--discern-font-weight-body);
   }
   .discern-agent-mention__name {
-    overflow: hidden;
-    text-overflow: ellipsis;
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
   }
   .discern-agent-mention .discern-agent-avatar {
     --discern-avatar-size: 1.3em;

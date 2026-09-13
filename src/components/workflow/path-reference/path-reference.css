@@ -8,10 +8,9 @@
     vertical-align: middle;
   }
   .discern-path-reference__path {
-    display: inline-flex;
+    display: block;
     min-inline-size: 0;
     max-inline-size: 100%;
-    overflow: hidden;
     padding: var(--discern-space-1) var(--discern-space-2);
     border: 1px solid var(--discern-color-border);
     border-radius: var(--discern-radius-xs);
@@ -22,14 +21,13 @@
     line-height: var(--discern-leading-snug);
   }
   .discern-path-reference__prefix {
-    min-inline-size: 1ch;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
   }
   .discern-path-reference__suffix {
-    flex: none;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
   }
   .discern-path-reference__copy {
     flex: none;

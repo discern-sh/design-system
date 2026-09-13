@@ -76,6 +76,8 @@ Hero block's optional `backdrop` slot places any decorative node behind its comp
 
 ## Workflow and Agents
 
+[Operational status and evidence](operational-evidence.md) explains outcome/action ordering, native evidence disclosure, complete identities, and explicit routine record boundaries.
+
 The Workflow Group is the operational vocabulary: command and path primitives, procedures and recovery, results and diagnostics, artifacts, standards, task orientation, and handoffs. All 23 Workflow Components have pure terminal renderers beside their web implementations. Commands keep run context and proof visible; Artifact tree uses capability-aware connectors; Procedure and Procedure step pass semantic statuses and phases to the package motif stepper; Standard meter passes scale values to the package progress primitive rather than owning another glyph cycle. Activity log presents long-running work as one calm frame — pinned narration-toned results above a bounded, indented streamed tail whose first row attaches through an angled connector, plus an in-progress partial line — and its terminal form accepts the interactive activity-log frame state directly ([ADR-0016](../_adr/0016-stream-activity-through-a-component-backed-log-frame.md)).
 
 The Agents Group is the identity and parallel-work vocabulary. All seven Agents Components have terminal renderers: initials chips and mentions, persona lockups, Fleet's width-adaptive status table, boxed Verification reports whose title carries the pass/fail glyph once, ordered Transcript turns, and Worklog's status feed. Fleet and Worklog accept beacon phases as state and render one frame through the package activity-beacon primitive; neither reads a clock nor advances itself.

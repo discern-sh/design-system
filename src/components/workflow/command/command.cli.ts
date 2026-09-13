@@ -17,7 +17,6 @@ import {
   styleWorkflowHeading,
   workflowCliWidth,
   workflowFactLines,
-  workflowPathText,
   workflowPrefixedLines,
 } from "../workflow-cli.ts";
 
@@ -86,11 +85,7 @@ const renderCommandCli: CliRenderer<CommandCliProps> = (
     assertWorkflowCliText(props.workingDirectory, "command working directory");
     lines.push(...workflowFactLines(
       "Run in",
-      workflowPathText(
-        props.workingDirectory,
-        Math.max(1, width - "Run in: ".length),
-        capabilities,
-      ),
+      props.workingDirectory,
       width,
     ));
   }

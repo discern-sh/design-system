@@ -45,7 +45,7 @@ Deno.test("Command renders exact narrow, standard, wide, and capability frames",
     const [columns, expected] of [
       [
         20,
-        "Run in: design-syst…\nRun: deno task\n     verify\n✓ Expect: All\n          configured\n          checks\n          pass\n! If this fails:\n  Fix the first\n  diagnostic",
+        "Run in: /workspace/d\n        esign-system\nRun: deno task\n     verify\n✓ Expect: All\n          configured\n          checks\n          pass\n! If this fails:\n  Fix the first\n  diagnostic",
       ],
       [
         48,
@@ -156,12 +156,12 @@ Deno.test("Diagnostic renders exact narrow, standard, wide, and capability frame
     reproductionCommand: "deno task typecheck",
   } as const;
   const standard =
-    "FAILURE: Type check failed\nWhy: The public CLI export cannot be consumed\nAt: src/generated/cli-renderers.ts:12:4\nReproduce: $ deno task typecheck\nFix: Export the missing renderer type";
+    "FAILURE: Type check failed\nWhy: The public CLI export cannot be consumed\nFix: Export the missing renderer type\nAt: src/generated/cli-renderers.ts:12:4\nReproduce: $ deno task typecheck";
   for (
     const [columns, expected] of [
       [
         20,
-        "FAILURE: Type check\n         failed\nWhy: The public CLI\n     export cannot\n     be consumed\nAt: cli-render…:12:4\nReproduce:\n  $ deno task\n  typecheck\nFix: Export the\n     missing\n     renderer type",
+        "FAILURE: Type check\n         failed\nWhy: The public CLI\n     export cannot\n     be consumed\nFix: Export the\n     missing\n     renderer type\nAt: src/generated/cl\n    i-renderers.ts:1\n    2:4\nReproduce:\n  $ deno task\n  typecheck",
       ],
       [48, standard],
       [80, standard],

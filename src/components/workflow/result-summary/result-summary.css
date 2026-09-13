@@ -65,8 +65,6 @@
     flex-wrap: wrap;
     gap: var(--discern-space-3) var(--discern-space-6);
     margin: 0;
-    padding-block: var(--discern-space-3);
-    border-block: 1px dashed var(--discern-color-border);
   }
   .discern-result-summary__readings > div {
     display: flex;
@@ -85,7 +83,7 @@
     display: grid;
     grid-template-columns: max-content minmax(0, 1fr);
     gap: var(--discern-space-3);
-    color: var(--discern-color-ink-muted);
+    color: var(--discern-color-ink);
     font-size: var(--discern-font-size-sm);
     line-height: var(--discern-leading-body);
   }
@@ -93,11 +91,12 @@
     color: var(--discern-color-ink);
   }
   .discern-result-summary__machine {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
     flex-wrap: wrap;
     gap: var(--discern-space-3);
     align-items: center;
-    justify-content: space-between;
+    justify-items: start;
     color: var(--discern-color-ink-muted);
   }
   @container discern-result-summary (max-width: 30rem) {
