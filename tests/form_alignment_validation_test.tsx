@@ -234,9 +234,11 @@ Deno.test("validation keeps values, focus, and geometry through failure, correct
     const page = await browser.newPage({
       viewport: { width: 720, height: 900 },
     });
-    // Deterministic colours: never read a border mid-transition, and prove
-    // the journey holds with motion reduced.
+    // Deterministic colours: reduced motion still leaves a 0.01ms
+    // transition a same-frame read can catch, so this page removes
+    // transitions entirely.
     await page.emulateMedia({ reducedMotion: "reduce" });
+    const settled = `${css} [data-discern-root] *{transition:none!important}`;
     const form = (error?: string, email = "") =>
       renderToStaticMarkup(
         <form action="https://example.test/submit" method="get">
@@ -253,7 +255,7 @@ Deno.test("validation keeps values, focus, and geometry through failure, correct
           <Button type="submit">Save profile</Button>
         </form>,
       );
-    await page.setContent(pageHtml(css, form(), { width: 640 }));
+    await page.setContent(pageHtml(settled, form(), { width: 640 }));
     const email = page.locator('input[name="email"]');
     const before = await box(page, 'input[name="email"]');
     const dangerBorder = await page.evaluate(() => {
@@ -290,7 +292,7 @@ Deno.test("validation keeps values, focus, and geometry through failure, correct
     // A server-rendered error message connects programmatically, keeps the
     // hint readable, preserves the value, and never moves the control.
     await page.setContent(
-      pageHtml(css, form("Enter an address with an @", "casey"), {
+      pageHtml(settled, form("Enter an address with an @", "casey"), {
         width: 640,
       }),
     );
@@ -311,7 +313,7 @@ Deno.test("validation keeps values, focus, and geometry through failure, correct
     );
     // Error removal restores the hint-only relationship.
     await page.setContent(
-      pageHtml(css, form(undefined, "casey@example.test"), { width: 640 }),
+      pageHtml(settled, form(undefined, "casey@example.test"), { width: 640 }),
     );
     assertEquals(await email.getAttribute("aria-invalid"), null);
     assert((await email.getAttribute("aria-describedby"))?.endsWith("-hint"));
