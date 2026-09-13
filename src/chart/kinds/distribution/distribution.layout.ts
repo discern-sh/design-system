@@ -12,12 +12,14 @@ import {
 } from "../../geometry.ts";
 import {
   chartAxisLine,
+  chartGridLine,
   chartReferenceLine,
   chartTickLabel,
 } from "../../kind-layout.ts";
 import { chartLinearPosition, createChartLinearScale } from "../../scale.ts";
 import type {
   ChartAxisLine,
+  ChartGridLine,
   ChartMark,
   ChartPoint,
   ChartRect,
@@ -264,6 +266,19 @@ function layoutHistogram(
     { x: plotRight, y: plotBottom },
   );
 
+  // The zero-count tick already reads as the baseline hairline, so
+  // gridlines anchor only the remaining count ticks across the bins.
+  const gridLines: ChartGridLine[] = countTicks.slice(1).map((tick, index) => {
+    const position = roundChartNumber(
+      chartLinearPosition(countScale, tick.number),
+    );
+    return chartGridLine(
+      `grid-count-${index + 1}`,
+      { x: plot.x, y: position },
+      { x: plotRight, y: position },
+    );
+  });
+
   const countLabels = countTicks.map((tick, index) =>
     tickLabel({
       id: `count-tick-${index}`,
@@ -299,6 +314,7 @@ function layoutHistogram(
   assertClearLabels(labels);
 
   return sceneFromElements("distribution", plot, [
+    ...gridLines,
     ...marks,
     baseline,
     ...labels,
