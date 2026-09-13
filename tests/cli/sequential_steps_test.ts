@@ -244,23 +244,29 @@ Deno.test("typed step callbacks reject request/value mismatches", () => {
     summarize: (values) =>
       String(values.reduce((sum, value) => sum + value, 0)),
   });
-  sequentialTextStep({
+  const badText = {
     id: "bad",
     label: "Bad",
-    // @ts-expect-error Text requests cannot seed booleans.
     request: { label: "Bad", initialValue: false },
-  });
-  sequentialConfirmationStep({
+  } as const;
+  const badSummary = {
     id: "bad",
     label: "Bad",
     request: { label: "Bad" },
-    // @ts-expect-error Confirmation summaries receive booleans.
     summarize: (value: string) => value,
-  });
-  sequentialSelectionStep({
-    id: "bad",
-    label: "Bad",
-    // @ts-expect-error Single selections seed one stable ID, not a list.
-    request: { label: "Bad", choices: [], initialIds: ["one"] },
-  });
+  };
+  type SingleRequest = Exclude<
+    Parameters<typeof sequentialSelectionStep>[0]["request"],
+    (...args: never[]) => unknown
+  >;
+  // Each false literal is checked by TypeScript against the public contract.
+  const rejected: [
+    typeof badText extends Parameters<typeof sequentialTextStep>[0] ? true
+      : false,
+    typeof badSummary extends Parameters<typeof sequentialConfirmationStep>[0]
+      ? true
+      : false,
+    "initialIds" extends keyof SingleRequest ? true : false,
+  ] = [false, false, false];
+  assertEquals(rejected, [false, false, false]);
 });
