@@ -51,12 +51,7 @@
     min-inline-size: 0;
     max-inline-size: 100%;
   }
-  .discern-artifact-tree__name-prefix {
-    min-inline-size: 0;
-
-    overflow-wrap: anywhere;
-    white-space: pre-wrap;
-  }
+  .discern-artifact-tree__name-prefix,
   .discern-artifact-tree__name-suffix {
     overflow-wrap: anywhere;
     white-space: pre-wrap;

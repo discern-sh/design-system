@@ -71,12 +71,8 @@
     margin-inline-start: auto;
     text-align: end;
   }
-  .discern-verification-report__meta dd {
-    overflow-wrap: anywhere;
-  }
   .discern-verification-report__checks dd {
     min-inline-size: 0;
-    overflow-wrap: anywhere;
     white-space: pre-wrap;
   }
   .discern-verification-report__meta dd code {

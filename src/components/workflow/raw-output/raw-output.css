@@ -54,12 +54,12 @@
     min-inline-size: 0;
     overflow-wrap: anywhere;
   }
-  .discern-raw-output__extent {
+  .discern-raw-output__extent,
+  .discern-raw-output__state {
     color: var(--discern-color-ink-muted);
   }
   .discern-raw-output__state {
     margin-inline-start: auto;
-    color: var(--discern-color-ink-muted);
   }
   .discern-raw-output__state::after {
     content: "Collapsed";

@@ -36,7 +36,6 @@
   .discern-fleet__branch {
     grid-area: branch;
     min-inline-size: 0;
-    min-inline-size: 0;
     font-family: var(--discern-font-mono);
     overflow-wrap: anywhere;
     white-space: pre-wrap;

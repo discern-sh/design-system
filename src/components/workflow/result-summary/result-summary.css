@@ -93,7 +93,6 @@
   .discern-result-summary__machine {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    flex-wrap: wrap;
     gap: var(--discern-space-3);
     align-items: center;
     justify-items: start;

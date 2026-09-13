@@ -20,11 +20,7 @@
     font-size: var(--discern-font-size-xs);
     line-height: var(--discern-leading-snug);
   }
-  .discern-path-reference__prefix {
-    min-inline-size: 0;
-    overflow-wrap: anywhere;
-    white-space: pre-wrap;
-  }
+  .discern-path-reference__prefix,
   .discern-path-reference__suffix {
     overflow-wrap: anywhere;
     white-space: pre-wrap;
