@@ -7,12 +7,51 @@ import {
   stateFragmentId,
 } from "../shared.tsx";
 
-export type ComponentDetailView = "single" | "all";
+export type ComponentDetailView = "single" | "all" | "states" | "playground";
+
+/** Exact, URL-reproducible specimen inspection widths beside the fitted default. */
+export const componentDetailWidthPresets = Object.freeze(
+  [
+    { id: "narrow", label: "Narrow", pixels: 360 },
+    { id: "standard", label: "Standard", pixels: 720 },
+    { id: "wide", label: "Wide", pixels: 1000 },
+  ] as const,
+);
+
+export type ComponentDetailWidthPresetId =
+  (typeof componentDetailWidthPresets)[number]["id"];
+
+/** The default specimen width: fill the canvas actually allocated to it. */
+export const componentDetailFitWidth = "fit";
+
+export type ComponentDetailWidth =
+  | typeof componentDetailFitWidth
+  | ComponentDetailWidthPresetId;
 
 export interface ComponentDetailState {
   readonly surface: CatalogueSurface;
   readonly exampleId: string;
   readonly view: ComponentDetailView;
+  /** Optional so callers outside the detail route can omit the defaults. */
+  readonly width?: ComponentDetailWidth;
+  readonly expanded?: boolean;
+}
+
+/** Resolve a requested view; unknown values fall back to the single example. */
+export function componentDetailView(
+  value: string | null,
+): ComponentDetailView {
+  return value === "all" || value === "states" || value === "playground"
+    ? value
+    : "single";
+}
+
+/** Resolve a requested width; anything but an exact preset fits the canvas. */
+export function componentDetailWidth(
+  value: string | null,
+): ComponentDetailWidth {
+  return componentDetailWidthPresets.find(({ id }) => id === value)?.id ??
+    componentDetailFitWidth;
 }
 
 function fragmentSelection(
@@ -64,7 +103,9 @@ export function parseComponentDetailState(
   return {
     surface,
     exampleId,
-    view: url.searchParams.get("view") === "all" ? "all" : "single",
+    view: componentDetailView(url.searchParams.get("view")),
+    width: componentDetailWidth(url.searchParams.get("width")),
+    expanded: url.searchParams.get("expanded") === "1",
   };
 }
 
@@ -87,12 +128,17 @@ export function componentDetailHref(
   const definition = entry.canonicalExamples.find(({ id }) =>
     id === state.exampleId
   );
+  const width = state.width ?? componentDetailFitWidth;
   const href = catalogueHref(catalogueComponentPath(entry.meta.slug), {
     surface: state.surface === "cli" ? "cli" : undefined,
     example: state.exampleId,
-    view: state.view === "all" ? "all" : undefined,
+    view: state.view === "single" ? undefined : state.view,
+    width: width === componentDetailFitWidth ? undefined : width,
+    expanded: state.expanded === true ? "1" : undefined,
   });
-  return options.anchor && definition?.surfaces.includes(state.surface)
+  return options.anchor &&
+      (state.view === "single" || state.view === "all") &&
+      definition?.surfaces.includes(state.surface)
     ? `${href}#${
       componentExampleFragmentId(
         entry.meta.slug,

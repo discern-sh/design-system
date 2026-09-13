@@ -413,167 +413,200 @@ export function ComponentSpecimen(
   );
 }
 
+export type ComponentEvidenceSection = "guidance" | "selection" | "api";
+
+const COMPLETE_EVIDENCE: readonly ComponentEvidenceSection[] = [
+  "guidance",
+  "selection",
+  "api",
+];
+
 /** Closed supporting evidence, ordered from usage to implementation detail. */
 export function ComponentEvidence(
-  { entry }: { readonly entry: RegistryEntry },
+  { entry, sections = COMPLETE_EVIDENCE }: {
+    readonly entry: RegistryEntry;
+    /** Surfaces that present a fact elsewhere omit its disclosure here. */
+    readonly sections?: readonly ComponentEvidenceSection[];
+  },
 ) {
   const { meta, selection, propDocumentation, variants } = entry;
   return (
     <div className="discern-catalogue-component__evidence">
-      <details className="discern-catalogue-guidance">
-        <summary>Usage guidance</summary>
-        <div>
-          {meta.useWhen?.length
-            ? (
-              <div>
-                <strong>Use when</strong>
-                <ul>
-                  {meta.useWhen.map((note) => (
-                    <li key={note} {...catalogueDecisionCopyProps}>{note}</li>
-                  ))}
-                </ul>
-              </div>
-            )
-            : null}
-          {meta.notWhen?.length
-            ? (
-              <div>
-                <strong>Not when</strong>
-                <ul>
-                  {meta.notWhen.map((note) => (
-                    <li key={note} {...catalogueDecisionCopyProps}>{note}</li>
-                  ))}
-                </ul>
-              </div>
-            )
-            : null}
-          {meta.accessibility?.length
-            ? (
-              <div>
-                <strong>Author responsibilities</strong>
-                <ul>
-                  {meta.accessibility.map((note) => (
-                    <li key={note} {...catalogueDecisionCopyProps}>{note}</li>
-                  ))}
-                </ul>
-              </div>
-            )
-            : null}
-          {!meta.useWhen?.length && !meta.notWhen?.length &&
-              !meta.accessibility?.length
-            ? (
-              <p {...catalogueDecisionCopyProps}>
-                No additional usage guidance is recorded.
-              </p>
-            )
-            : null}
-        </div>
-      </details>
-      <details className="discern-catalogue-instrument">
-        <summary>Selection and import</summary>
-        <div>
-          <CopyableCode
-            label="Component selection"
-            value={selection.component}
-          />
-          <CopyableCode label="Group selection" value={selection.group} />
-          <CopyableCode label="React import" value={selection.reactImport} />
-        </div>
-      </details>
-      <details className="discern-catalogue-api">
-        <summary>Props and variants</summary>
-        <div>
-          <h5>{propDocumentation.typeName}</h5>
-          {propDocumentation.status === "available"
-            ? (
-              <>
-                {propDocumentation.inheritedTypes.length
-                  ? (
-                    <p {...catalogueDecisionCopyProps}>
-                      Also accepts{" "}
-                      <code>{propDocumentation.inheritedTypes.join(", ")}
-                      </code>.
-                    </p>
-                  )
-                  : null}
-                {propDocumentation.props.length
-                  ? (
-                    <OverflowCue
-                      axis="inline"
-                      scrollContainer="descendant"
-                      className="discern-catalogue-api__cue"
-                    >
-                      <div
-                        className="discern-catalogue-api__table"
-                        role="region"
-                        aria-label={`${meta.name} props`}
-                        tabIndex={0}
-                        data-discern-overflow-cue-target=""
-                      >
-                        <table>
-                          <thead>
-                            <tr>
-                              <th scope="col">Prop</th>
-                              <th scope="col">Type</th>
-                              <th scope="col">Requirement</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {propDocumentation.props.map((prop) => (
-                              <tr key={prop.name}>
-                                <th scope="row">
-                                  <code>{prop.name}</code>
-                                  {prop.description
-                                    ? (
-                                      <small {...catalogueDecisionCopyProps}>
-                                        {prop.description}
-                                      </small>
-                                    )
-                                    : null}
-                                </th>
-                                <td>
-                                  <code>{prop.type}</code>
-                                </td>
-                                <td>
-                                  {prop.required ? "Required" : "Optional"}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </OverflowCue>
-                  )
-                  : (
-                    <p {...catalogueDecisionCopyProps}>
-                      No Component-specific props.
-                    </p>
-                  )}
-              </>
-            )
-            : (
-              <p {...catalogueDecisionCopyProps}>
-                {propDocumentation.reason}
-              </p>
-            )}
-          {variants.length
-            ? (
-              <div className="discern-catalogue-variants">
-                {variants.map((variant) => (
-                  <div key={variant.typeName}>
-                    <strong>{variant.typeName}</strong>
-                    <span>
-                      {variant.values.map((value) => (
-                        <code key={value}>{value}</code>
+      {sections.includes("guidance") &&
+        (
+          <details className="discern-catalogue-guidance">
+            <summary>Usage guidance</summary>
+            <div>
+              {meta.useWhen?.length
+                ? (
+                  <div>
+                    <strong>Use when</strong>
+                    <ul>
+                      {meta.useWhen.map((note) => (
+                        <li key={note} {...catalogueDecisionCopyProps}>
+                          {note}
+                        </li>
                       ))}
-                    </span>
+                    </ul>
                   </div>
-                ))}
-              </div>
-            )
-            : null}
-        </div>
-      </details>
+                )
+                : null}
+              {meta.notWhen?.length
+                ? (
+                  <div>
+                    <strong>Not when</strong>
+                    <ul>
+                      {meta.notWhen.map((note) => (
+                        <li key={note} {...catalogueDecisionCopyProps}>
+                          {note}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )
+                : null}
+              {meta.accessibility?.length
+                ? (
+                  <div>
+                    <strong>Author responsibilities</strong>
+                    <ul>
+                      {meta.accessibility.map((note) => (
+                        <li key={note} {...catalogueDecisionCopyProps}>
+                          {note}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )
+                : null}
+              {!meta.useWhen?.length && !meta.notWhen?.length &&
+                  !meta.accessibility?.length
+                ? (
+                  <p {...catalogueDecisionCopyProps}>
+                    No additional usage guidance is recorded.
+                  </p>
+                )
+                : null}
+            </div>
+          </details>
+        )}
+      {sections.includes("selection") &&
+        (
+          <details className="discern-catalogue-instrument">
+            <summary>Selection and import</summary>
+            <div>
+              <CopyableCode
+                label="Component selection"
+                value={selection.component}
+              />
+              <CopyableCode label="Group selection" value={selection.group} />
+              <CopyableCode
+                label="React import"
+                value={selection.reactImport}
+              />
+            </div>
+          </details>
+        )}
+      {sections.includes("api") &&
+        (
+          <details className="discern-catalogue-api">
+            <summary>Props and variants</summary>
+            <div>
+              <h5>{propDocumentation.typeName}</h5>
+              {propDocumentation.status === "available"
+                ? (
+                  <>
+                    {propDocumentation.inheritedTypes.length
+                      ? (
+                        <p {...catalogueDecisionCopyProps}>
+                          Also accepts{" "}
+                          <code>
+                            {propDocumentation.inheritedTypes.join(", ")}
+                          </code>.
+                        </p>
+                      )
+                      : null}
+                    {propDocumentation.props.length
+                      ? (
+                        <OverflowCue
+                          axis="inline"
+                          scrollContainer="descendant"
+                          className="discern-catalogue-api__cue"
+                        >
+                          <div
+                            className="discern-catalogue-api__table"
+                            role="region"
+                            aria-label={`${meta.name} props`}
+                            tabIndex={0}
+                            data-discern-overflow-cue-target=""
+                          >
+                            <table>
+                              <thead>
+                                <tr>
+                                  <th scope="col">Prop</th>
+                                  <th scope="col">Type</th>
+                                  <th scope="col">Requirement</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {propDocumentation.props.map((prop) => (
+                                  <tr key={prop.name}>
+                                    <th scope="row">
+                                      <code>{prop.name}</code>
+                                      {prop.description
+                                        ? (
+                                          <small
+                                            {...catalogueDecisionCopyProps}
+                                          >
+                                            {prop.description}
+                                          </small>
+                                        )
+                                        : null}
+                                    </th>
+                                    <td>
+                                      <code>{prop.type}</code>
+                                    </td>
+                                    <td>
+                                      {prop.required ? "Required" : "Optional"}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </OverflowCue>
+                      )
+                      : (
+                        <p {...catalogueDecisionCopyProps}>
+                          No Component-specific props.
+                        </p>
+                      )}
+                  </>
+                )
+                : (
+                  <p {...catalogueDecisionCopyProps}>
+                    {propDocumentation.reason}
+                  </p>
+                )}
+              {variants.length
+                ? (
+                  <div className="discern-catalogue-variants">
+                    {variants.map((variant) => (
+                      <div key={variant.typeName}>
+                        <strong>{variant.typeName}</strong>
+                        <span>
+                          {variant.values.map((value) => (
+                            <code key={value}>{value}</code>
+                          ))}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )
+                : null}
+            </div>
+          </details>
+        )}
     </div>
   );
 }

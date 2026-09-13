@@ -1,5 +1,9 @@
 # Components
 
+[Source inspection](source-inspection.md) explains exact copying, authored wrapping, logical line references, and the separate terminal width contract.
+
+- [Feedback and state transitions](feedback-and-state-transitions.md) — Notice hierarchy, empty situations, and consumer-owned progress/outcome continuity.
+
 - [Action states](action-states.md) — Button/IconButton lifecycle, activation, focus, hierarchy, and wrapping.
 
 The Component folders under [`src/components/`](../../src/components/) cover anatomy (CSS, implementation, Metadata, examples, `mod.ts`, and a CLI renderer when the required stance is rendered), the thirteen Groups, Owned Classes, and the authoring rules for adding or changing a Component. Metadata can enrol a Component in Catalogue purpose collections, state when to use or avoid it, and must declare whether its CLI stance is rendered or intentionally exempt with a reason. The named `componentExampleVocabulary` beside each Component's Metadata owns ordered ids, labels, and surface applicability; React and rendered CLI modules bind their incompatible inputs to that one semantic sequence, and generation rejects drift. Component variants carry semantic differences: Theme toggle offers outlined and quiet treatments, Table of contents separates numbered sections from unnumbered nested entries, and Prerequisite list separates static requirements from live verification states. Docs nav keeps each section's destinations in one contiguous pointer run and accepts `page` or `location` current semantics; one calm rounded row, semantic weight, and a visible focus outline communicate the state without a decorative rail or underlined badge. End-of-page next actions remain a named Branch choice example and source-backed Catalogue recipe rather than a separate Component.
@@ -77,6 +81,8 @@ Ten concrete Backdrops depend on that foundation without depending on one anothe
 Hero block's optional `backdrop` slot places any decorative node behind its complete foreground composition. Marketing does not import Artwork, so selecting Hero block alone adds no Backdrop CSS and each Backdrop also works behind consumer-owned sections. Bespoke identity art, logos, product evidence, semantic diagrams, and page-specific narrative compositions stay with the consumer. [ADR-0008](../_adr/0008-package-owns-reusable-decorative-artwork.md) records that qualified ownership boundary.
 
 ## Workflow and Agents
+
+[Operational status and evidence](operational-evidence.md) explains outcome/action ordering, native evidence disclosure, complete identities, and explicit routine record boundaries.
 
 The Workflow Group is the operational vocabulary: command and path primitives, procedures and recovery, results and diagnostics, artifacts, standards, task orientation, and handoffs. All 23 Workflow Components have pure terminal renderers beside their web implementations. Commands keep run context and proof visible; Artifact tree uses capability-aware connectors; Procedure and Procedure step pass semantic statuses and phases to the package motif stepper; Standard meter passes scale values to the package progress primitive rather than owning another glyph cycle. Activity log presents long-running work as one calm frame — pinned narration-toned results above a bounded, indented streamed tail whose first row attaches through an angled connector, plus an in-progress partial line — and its terminal form accepts the interactive activity-log frame state directly ([ADR-0016](../_adr/0016-stream-activity-through-a-component-backed-log-frame.md)).
 

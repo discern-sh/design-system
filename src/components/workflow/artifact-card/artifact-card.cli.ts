@@ -18,7 +18,7 @@ import {
   assertWorkflowCliText,
   workflowCliTheme,
   workflowCliWidth,
-  workflowPathText,
+  workflowFactLines,
 } from "../workflow-cli.ts";
 
 const ownershipLabels: Readonly<Record<ArtifactOwnership, string>> = {
@@ -91,9 +91,7 @@ const renderArtifactCardCli: CliRenderer<ArtifactCardCliProps> = (
   const body = [
     props.summary,
     "",
-    `Path: ${
-      workflowPathText(props.path, Math.max(1, width - 10), capabilities)
-    }`,
+    ...workflowFactLines("Path", props.path, width - 4),
     `Ownership: ${ownershipLabels[props.ownership]}`,
     `Provenance: ${props.provenance}`,
     ...(props.source === undefined ? [] : [`Source: ${props.source}`]),

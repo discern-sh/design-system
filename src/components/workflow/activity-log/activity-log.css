@@ -20,6 +20,7 @@
   }
   .discern-activity-log__headline {
     display: flex;
+    flex-wrap: wrap;
     align-items: baseline;
     gap: var(--discern-space-2);
     margin: 0;
@@ -32,6 +33,15 @@
   }
   .discern-activity-log[data-discern-status="cancelled"] .discern-activity-log__marker {
     color: var(--discern-color-ink-faint);
+  }
+  .discern-activity-log__status {
+    font-size: var(--discern-font-size-xs);
+  }
+  .discern-activity-log[data-discern-status="blocked"] .discern-activity-log__status {
+    color: var(--discern-color-danger);
+  }
+  .discern-activity-log[data-discern-status="complete"] .discern-activity-log__status {
+    color: var(--discern-color-success-deep);
   }
   .discern-activity-log__stable {
     display: flex;

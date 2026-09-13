@@ -31,7 +31,7 @@ const interactionGrammarJourneyStages = {
   "failure-triage": [
     ".discern-result-summary",
     ".discern-diagnostic",
-    ".discern-raw-output",
+    ".discern-diagnostic + .discern-raw-output",
     ".discern-retry-notice",
   ],
   "survey-artifacts": [
@@ -191,7 +191,7 @@ Deno.test("the named journey oracle catches a removed middle stage", () => {
       ? {
         ...declaration,
         stages: declaration.stages.filter((stage) =>
-          stage !== ".discern-raw-output"
+          stage !== interactionGrammarJourneyStages["failure-triage"][2]
         ),
       }
       : declaration

@@ -48,12 +48,12 @@ Deno.test("Result summary renders exact widths, capability levels, and every sta
     machineReadable: '{"ok":true}',
   } as const;
   const standard =
-    '✓ Passed: The full gate passed\nTests: 310   Files: 98   Duration: 2m 18s\nNext: Accept the branch\nData: {"ok":true}';
+    '✓ Passed: The full gate passed\nNext: Accept the branch\nTests: 310   Files: 98   Duration: 2m 18s\nData: {"ok":true}';
   for (
     const [columns, expected] of [
       [
         24,
-        '✓ Passed: The full gate\n          passed\nTests: 310   Files: 98\nDuration: 2m 18s\nNext: Accept the branch\nData: {"ok":true}',
+        '✓ Passed: The full gate\n          passed\nNext: Accept the branch\nTests: 310   Files: 98\nDuration: 2m 18s\nData: {"ok":true}',
       ],
       [52, standard],
       [80, standard],
@@ -69,7 +69,7 @@ Deno.test("Result summary renders exact widths, capability levels, and every sta
   assertCapabilityLevels(
     (capabilities) => renderResultSummaryCli(props, capabilities),
     standard,
-    '+ Passed: The full gate passed\nTests: 310   Files: 98   Duration: 2m 18s\nNext: Accept the branch\nData: {"ok":true}',
+    '+ Passed: The full gate passed\nNext: Accept the branch\nTests: 310   Files: 98   Duration: 2m 18s\nData: {"ok":true}',
   );
 
   const unicodeStates = {
