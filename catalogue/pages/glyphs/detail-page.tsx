@@ -10,9 +10,14 @@ import {
   GLYPH_ATLAS_UNICODE_SOURCES,
   GLYPH_ATLAS_UNICODE_TERMS_URL,
 } from "../../../src/glyphs/atlas.ts";
+import { getGlyph, resolveGlyph } from "../../../src/glyphs/mod.ts";
 import { catalogueGlyphPath, type GlyphCatalogueEntry } from "../../routes.ts";
 import { preserveCatalogueAppearanceHref } from "../../shell/appearance-state.ts";
 import { CataloguePageHeader, CopyableCode } from "../shared.tsx";
+import {
+  type GlyphMeaningSetMember,
+  glyphMeaningSetsForAliasNames,
+} from "./meaning-sets.ts";
 
 import {
   glyphBrowserFontRoles,
@@ -67,6 +72,53 @@ export function glyphPresentationFamily(
   );
 }
 
+const GLYPH_SPECIMEN_SIZES = [16, 20, 24, 32] as const;
+
+function GlyphSizeStrip({ entry }: { readonly entry: GlyphCatalogueEntry }) {
+  const { canonical, aliases } = entry;
+  const context = aliases.find(({ publication }) => publication === "candidate")
+    ?.discoveryTitle ?? humanize(canonical.officialLabel);
+  return (
+    <section
+      className="discern-catalogue-glyph-sizes"
+      aria-labelledby="glyph-sizes-title"
+    >
+      <div className="discern-catalogue-glyph-section-heading">
+        <div>
+          <p className="discern-catalogue-glyph-eyebrow">Judge the size</p>
+          <h2 id="glyph-sizes-title">Interface sizes, side by side.</h2>
+        </div>
+        <span>
+          {canonical.id} ·{" "}
+          {canonical.presentation.effectivePresentation === "emoji"
+            ? "Emoji presentation"
+            : "Text presentation"} · <code>--discern-font-ui</code>
+        </span>
+      </div>
+      <ul className="discern-catalogue-glyph-sizes__rows">
+        {GLYPH_SPECIMEN_SIZES.map((size) => (
+          <li key={size} data-discern-glyph-size={size}>
+            <span className="discern-catalogue-glyph-sizes__label">
+              {size} px
+            </span>
+            <span
+              className="discern-catalogue-glyph-sizes__line"
+              style={{ fontSize: `${size}px` } as CSSProperties}
+            >
+              <span aria-hidden="true">{canonical.text}</span> {context}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <p className="discern-catalogue-glyph-sizes__note">
+        The same sequence at four simultaneous CSS-pixel sizes, each on a shared
+        baseline with the same label. The workbench below tries any single size,
+        font, and repertoire.
+      </p>
+    </section>
+  );
+}
+
 function GlyphPresentationFamily({ entry, entries, currentUrl }: {
   readonly entry: GlyphCatalogueEntry;
   readonly entries: readonly GlyphCatalogueEntry[];
@@ -112,6 +164,98 @@ function GlyphPresentationFamily({ entry, entries, currentUrl }: {
           </a>
         ))}
       </div>
+    </section>
+  );
+}
+
+function glyphMeaningMemberFacts(
+  member: GlyphMeaningSetMember,
+  target: GlyphCatalogueEntry | undefined,
+): string {
+  const glyph = getGlyph(member.name);
+  const ascii = resolveGlyph(member.name, "ascii");
+  const fallback = ascii.available
+    ? `ASCII ${ascii.text} (${ascii.fidelity})`
+    : glyph.terminal === "reference-only"
+    ? "no terminal use"
+    : "Unicode-only in terminals";
+  const presentation = target === undefined ? [] : [
+    target.canonical.presentation.effectivePresentation === "emoji"
+      ? "emoji presentation"
+      : "text presentation",
+  ];
+  return [
+    `${glyph.columns} cell${glyph.columns === 1 ? "" : "s"}`,
+    ...presentation,
+    fallback,
+  ].join(" · ");
+}
+
+function GlyphMeaningSets({ entry, entries, currentUrl }: {
+  readonly entry: GlyphCatalogueEntry;
+  readonly entries: readonly GlyphCatalogueEntry[];
+  readonly currentUrl: URL;
+}) {
+  const names = entry.aliases
+    .filter(({ publication }) => publication === "candidate")
+    .map(({ name }) => name);
+  const sets = glyphMeaningSetsForAliasNames(names);
+  if (sets.length === 0) return null;
+  const entryByAlias = new Map<string, GlyphCatalogueEntry>();
+  for (const candidate of entries) {
+    for (const alias of candidate.aliases) {
+      entryByAlias.set(alias.name, candidate);
+    }
+  }
+  return (
+    <section
+      className="discern-catalogue-glyph-section"
+      aria-labelledby="glyph-meanings-title"
+    >
+      <h2 id="glyph-meanings-title">Meaningful together.</h2>
+      <p>
+        These published names change together in an interface. Every member
+        resolves through <code>./glyphs</code>{" "}
+        with its own exact sequence and terminal constraints; the role labels
+        are editorial, and accessible names stay with the consumer's context.
+      </p>
+      {sets.map((set) => (
+        <div
+          key={set.id}
+          className="discern-catalogue-glyph-set"
+          data-discern-glyph-set={set.id}
+        >
+          <h3>{set.title}</h3>
+          <p>{set.description}</p>
+          <div className="discern-catalogue-glyph-set__members">
+            {set.members.map((member) => {
+              const target = entryByAlias.get(member.name);
+              const href = target === undefined
+                ? undefined
+                : preserveCatalogueAppearanceHref(
+                  currentUrl,
+                  `${catalogueGlyphPath(target.canonical)}?use=${member.name}`,
+                );
+              return (
+                <a
+                  key={member.name}
+                  href={href}
+                  aria-current={target?.canonical.id === entry.canonical.id
+                    ? "page"
+                    : undefined}
+                >
+                  <span aria-hidden="true">
+                    {getGlyph(member.name).unicode}
+                  </span>
+                  <strong>{member.role}</strong>
+                  <code>{member.name}</code>
+                  <small>{glyphMeaningMemberFacts(member, target)}</small>
+                </a>
+              );
+            })}
+          </div>
+        </div>
+      ))}
     </section>
   );
 }
@@ -263,9 +407,15 @@ export function GlyphDetailPage(
         </div>
       </section>
 
+      <GlyphSizeStrip entry={entry} />
       <GlyphWorkbench
         key={canonical.id}
         entry={entry}
+        currentUrl={currentUrl}
+      />
+      <GlyphMeaningSets
+        entry={entry}
+        entries={entries}
         currentUrl={currentUrl}
       />
       <GlyphPresentationFamily

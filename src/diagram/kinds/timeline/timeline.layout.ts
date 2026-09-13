@@ -49,6 +49,12 @@ const T = Object.freeze({
   taskBarHeight: 16,
   milestoneSize: 20,
   itemGap: 4,
+  /**
+   * Clear space below one lane's bar or diamond before the next lane's label
+   * or the row separator, so a wrapped label can never push its item into
+   * the neighbouring lane band.
+   */
+  laneClearance: 12,
   minimumChartWidth: 320,
   minimumTickGap: 98,
 });
@@ -64,10 +70,39 @@ interface GroupPlan {
 interface RowPlan {
   readonly row: ValidatedTimelineRow;
   readonly label: DiagramMeasuredText;
-  readonly tasks: readonly ValidatedTimelineTask[];
-  readonly milestones: readonly ValidatedTimelineMilestone[];
+  readonly lanes: readonly LanePlan[];
   readonly top: number;
   readonly height: number;
+}
+
+/** One measured task or milestone lane inside a row. */
+type LanePlan =
+  & {
+    readonly label: DiagramMeasuredText;
+    readonly top: number;
+    readonly height: number;
+  }
+  & (
+    | { readonly kind: "task"; readonly task: ValidatedTimelineTask }
+    | {
+      readonly kind: "milestone";
+      readonly milestone: ValidatedTimelineMilestone;
+    }
+  );
+
+/** The visible wording a milestone lane renders and measures. */
+function milestoneVisibleLabel(milestone: ValidatedTimelineMilestone): string {
+  return `${
+    milestone.emphasis === "critical" ? "Critical gate" : "Gate"
+  } — ${milestone.label}`;
+}
+
+/** One lane's height: its wrapped label, item, and trailing clearance. */
+function laneHeight(label: DiagramMeasuredText, itemHeight: number): number {
+  return Math.max(
+    T.itemLaneHeight,
+    label.height + T.itemGap + itemHeight + T.laneClearance,
+  );
 }
 
 function measure(
@@ -216,20 +251,48 @@ function planGroups(
         "rowLabelLines",
         `row ${row.id} label`,
       );
-      const tasks = spec.tasks.filter((task) => task.rowId === row.id);
-      const milestones = spec.milestones.filter((milestone) =>
-        milestone.rowId === row.id
-      );
-      const lanes = Math.max(1, tasks.length + milestones.length);
-      const height = lanes * T.itemLaneHeight;
-      rows.push({
-        row,
-        label: rowLabel,
-        tasks,
-        milestones,
-        top: rowTop,
-        height,
-      });
+      const lanes: LanePlan[] = [];
+      let laneTop = rowTop;
+      for (const task of spec.tasks.filter((item) => item.rowId === row.id)) {
+        const label = measure(
+          task.label,
+          T.itemLabelWidth,
+          "interface",
+          G.text.annotationSize,
+          G.text.annotationLineHeight,
+          "itemLabelLines",
+          `task ${task.id} label`,
+        );
+        const height = laneHeight(label, T.taskBarHeight);
+        lanes.push({ kind: "task", task, label, top: laneTop, height });
+        laneTop += height;
+      }
+      for (
+        const milestone of spec.milestones.filter((item) =>
+          item.rowId === row.id
+        )
+      ) {
+        const label = measure(
+          milestoneVisibleLabel(milestone),
+          T.itemLabelWidth,
+          "interface",
+          G.text.annotationSize,
+          G.text.annotationLineHeight,
+          "itemLabelLines",
+          `milestone ${milestone.id} label`,
+        );
+        const height = laneHeight(label, T.milestoneSize);
+        lanes.push({
+          kind: "milestone",
+          milestone,
+          label,
+          top: laneTop,
+          height,
+        });
+        laneTop += height;
+      }
+      const height = Math.max(T.itemLaneHeight, laneTop - rowTop);
+      rows.push({ row, label: rowLabel, lanes, top: rowTop, height });
       rowTop += height + T.rowGap;
     }
     const bottom = rowTop - T.rowGap + T.groupPadding;
@@ -292,19 +355,11 @@ function groupElements(plan: GroupPlan): readonly DiagramSceneElement[] {
 function taskElements(
   spec: ValidatedTimelineDiagram,
   task: ValidatedTimelineTask,
+  label: DiagramMeasuredText,
   laneTop: number,
   chartX: number,
   chartWidth: number,
 ): readonly DiagramSceneElement[] {
-  const label = measure(
-    task.label,
-    T.itemLabelWidth,
-    "interface",
-    G.text.annotationSize,
-    G.text.annotationLineHeight,
-    "itemLabelLines",
-    `task ${task.id} label`,
-  );
   const start = dateX(spec, chartX, chartWidth, task.start.ordinal);
   const end = dateX(spec, chartX, chartWidth, task.end.ordinal);
   const width = roundDiagramNumber(Math.max(8, end - start));
@@ -341,22 +396,11 @@ function taskElements(
 function milestoneElements(
   spec: ValidatedTimelineDiagram,
   milestone: ValidatedTimelineMilestone,
+  label: DiagramMeasuredText,
   laneTop: number,
   chartX: number,
   chartWidth: number,
 ): readonly DiagramSceneElement[] {
-  const visibleLabel = `${
-    milestone.emphasis === "critical" ? "Critical gate" : "Gate"
-  } — ${milestone.label}`;
-  const label = measure(
-    visibleLabel,
-    T.itemLabelWidth,
-    "interface",
-    G.text.annotationSize,
-    G.text.annotationLineHeight,
-    "itemLabelLines",
-    `milestone ${milestone.id} label`,
-  );
   const centerX = dateX(spec, chartX, chartWidth, milestone.date.ordinal);
   const size = T.milestoneSize;
   const bounds = {
@@ -421,7 +465,7 @@ export const layoutMeasures: DiagramLayoutMeasures = {
     },
   ],
   extent: [
-    `The label column is ${T.labelColumnWidth} units and the calendar at least ${T.minimumChartWidth}, widening with the range so that ticks stay ${T.minimumTickGap} units apart; each task or milestone lane adds ${T.itemLaneHeight} units of height.`,
+    `The label column is ${T.labelColumnWidth} units and the calendar at least ${T.minimumChartWidth}, widening with the range so that ticks stay ${T.minimumTickGap} units apart; each task or milestone lane adds at least ${T.itemLaneHeight} units of height and grows with its wrapped label so the item keeps ${T.laneClearance} units of clearance.`,
   ],
 };
 
@@ -500,26 +544,26 @@ export default function layoutTimelineDiagram(
           top: row.top + (row.height - row.label.height) / 2,
         }),
       );
-      let lane = 0;
-      for (const task of row.tasks) {
-        elements.push(...taskElements(
-          spec,
-          task,
-          row.top + lane * T.itemLaneHeight,
-          chartX,
-          chartWidth,
-        ));
-        lane += 1;
-      }
-      for (const milestone of row.milestones) {
-        elements.push(...milestoneElements(
-          spec,
-          milestone,
-          row.top + lane * T.itemLaneHeight,
-          chartX,
-          chartWidth,
-        ));
-        lane += 1;
+      for (const lane of row.lanes) {
+        elements.push(
+          ...(lane.kind === "task"
+            ? taskElements(
+              spec,
+              lane.task,
+              lane.label,
+              lane.top,
+              chartX,
+              chartWidth,
+            )
+            : milestoneElements(
+              spec,
+              lane.milestone,
+              lane.label,
+              lane.top,
+              chartX,
+              chartWidth,
+            )),
+        );
       }
     }
   }

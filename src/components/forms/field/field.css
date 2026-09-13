@@ -22,7 +22,33 @@
   .discern-field__message--error {
     color: var(--discern-color-danger);
   }
-  .discern-field--invalid .discern-control {
-    border-color: var(--discern-color-danger);
+  .discern-field-row {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: var(--discern-field-row-columns, minmax(0, 1fr));
+    grid-template-rows: auto auto auto auto;
+    align-items: start;
+    column-gap: var(--discern-space-3);
+  }
+  .discern-field-row > .discern-field {
+    grid-row: 1 / span 4;
+    grid-template-rows: subgrid;
+    gap: 0;
+  }
+  .discern-field-row > :not(.discern-field),
+  .discern-field-row .discern-field > * {
+    grid-row: 2;
+  }
+  .discern-field-row .discern-field__label {
+    grid-row: 1;
+    align-self: end;
+    margin-block-end: var(--discern-rhythm-related);
+  }
+  .discern-field-row .discern-field__message {
+    grid-row: 4;
+    margin-block-start: var(--discern-rhythm-related);
+  }
+  .discern-field-row .discern-field__message--error {
+    grid-row: 3;
   }
 }

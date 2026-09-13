@@ -10,7 +10,11 @@ import {
   chartRectUnion,
   roundChartNumber,
 } from "../../geometry.ts";
-import { chartTickLabel } from "../../kind-layout.ts";
+import {
+  chartAxisLine,
+  chartGridLine,
+  chartTickLabel,
+} from "../../kind-layout.ts";
 import {
   chartLinearPosition,
   chartLogPosition,
@@ -39,9 +43,6 @@ const G = CHART_GEOMETRY;
 
 /** Marker radius in scene units; the inscribed shape reads at label size. */
 const MARKER_RADIUS = 3;
-
-/** Subordinate gridline hairline width. */
-const GRID_LINE_WIDTH = 1;
 
 /**
  * Gap between the plot's bottom edge and the x tick labels. Wider than the
@@ -165,30 +166,7 @@ function axisLine(
   start: ChartPoint,
   end: ChartPoint,
 ): ChartAxisLine {
-  return {
-    kind: "axis-line",
-    id,
-    axis: "value",
-    lineWidth: G.axis.lineWidth,
-    start,
-    end,
-    bounds: chartPointBounds([start, end], G.axis.lineWidth / 2),
-  };
-}
-
-function gridLine(
-  id: string,
-  start: ChartPoint,
-  end: ChartPoint,
-): ChartGridLine {
-  return {
-    kind: "grid-line",
-    id,
-    lineWidth: GRID_LINE_WIDTH,
-    start,
-    end,
-    bounds: chartPointBounds([start, end], GRID_LINE_WIDTH / 2),
-  };
+  return chartAxisLine(id, "value", start, end);
 }
 
 function tickLabel(options: {
@@ -258,7 +236,7 @@ export default function layoutScatterChart(
     // gridline would only repaint the hairline.
     ...xAxis.ticks.slice(1).map((tick, index) => {
       const position = roundChartNumber(xPosition(tick.value));
-      return gridLine(
+      return chartGridLine(
         `grid-x-${index + 1}`,
         { x: position, y: plot.y },
         { x: position, y: plotBottom },
@@ -266,7 +244,7 @@ export default function layoutScatterChart(
     }),
     ...yAxis.ticks.slice(1).map((tick, index) => {
       const position = roundChartNumber(yPosition(tick.value));
-      return gridLine(
+      return chartGridLine(
         `grid-y-${index + 1}`,
         { x: plot.x, y: position },
         { x: plotRight, y: position },

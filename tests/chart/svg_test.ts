@@ -197,47 +197,59 @@ Deno.test("every generated release asset is intrinsic, namespaced, and standalon
 
 /**
  * Each kind's declared calm visual character: its hairline axis count, its
- * one data-encoding vocabulary, and whether subordinate gridlines appear. A
- * new kind fails the lookup until it declares its own row.
+ * one data-encoding vocabulary, and its subordinate gridline stance — every
+ * continuous scale anchors its ticks with gridlines beneath the data, while
+ * direct-labelled and band-only canvases stay bare. A new kind fails the
+ * lookup until it declares its own row.
  */
 const CALM_CHARACTER: Readonly<
   Record<string, {
     readonly axisLines: number;
-    readonly grid: boolean;
+    readonly grid: "always" | "never" | "continuous-variants";
     readonly encodings: readonly RegExp[];
   }>
 > = {
   bar: {
     axisLines: 1,
-    grid: false,
+    grid: "always",
     encodings: [/discern-chart__mark discern-chart__mark--series-\d/u],
   },
   line: {
     axisLines: 1,
-    grid: false,
+    grid: "always",
     encodings: [/discern-chart__path discern-chart__path--series-\d/u],
   },
   distribution: {
     axisLines: 1,
-    grid: false,
+    grid: "continuous-variants",
     encodings: [/discern-chart__mark discern-chart__mark--series-\d/u],
   },
   heatmap: {
     axisLines: 0,
-    grid: false,
+    grid: "never",
     encodings: [/discern-chart__mark discern-chart__mark--ramp-\d/u],
   },
   scatter: {
     axisLines: 2,
-    grid: true,
+    grid: "always",
     encodings: [/discern-chart__points discern-chart__points--series-\d/u],
   },
   slope: {
     axisLines: 2,
-    grid: false,
+    grid: "never",
     encodings: [/discern-chart__path discern-chart__path--series-\d/u],
   },
 };
+
+/** Whether one release case's canvas anchors ticks with gridlines. */
+function expectsGrid(
+  grid: "always" | "never" | "continuous-variants",
+  spec: ChartSpec,
+): boolean {
+  if (grid === "always") return true;
+  if (grid === "never") return false;
+  return (spec as { readonly variant?: string }).variant !== "box";
+}
 
 Deno.test("every kind's canvas keeps its declared calm visual character", () => {
   for (const entry of chartKindRegistry) {
@@ -247,16 +259,23 @@ Deno.test("every kind's canvas keeps its declared calm visual character", () => 
       `${entry.meta.slug} must declare its calm visual character`,
     );
     for (const releaseCase of entry.releaseCorpus.cases) {
-      const svg = renderChartSvg(releaseCase.spec as ChartSpec, {
-        theme: "light",
-      });
+      const spec = releaseCase.spec as ChartSpec;
+      const svg = renderChartSvg(spec, { theme: "light" });
       const context = `${entry.meta.slug}/${releaseCase.name}`;
       assertEquals(
         (svg.match(/<line class="discern-chart__axis"/gu) ?? []).length,
         character.axisLines,
         `${context} must draw exactly its declared hairline axis count`,
       );
-      if (!character.grid) assertNotMatch(svg, /discern-chart__grid/u);
+      if (expectsGrid(character.grid, spec)) {
+        assertMatch(
+          svg,
+          /discern-chart__grid/u,
+          `${context} must anchor its ticks with subordinate gridlines`,
+        );
+      } else {
+        assertNotMatch(svg, /discern-chart__grid/u);
+      }
       for (const encoding of character.encodings) {
         assertMatch(svg, encoding, `${context} must carry its data encoding`);
       }

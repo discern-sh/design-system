@@ -22,20 +22,20 @@ Relative sizes are planning judgments, not elapsed-time promises: S is a bounded
 | 1B  | [Make published copy actions work in static output](_done/1b-static-copy-contract.md)        | Q1                     | None            | M    | Complete |
 | 1C  | [Separate the Catalogue ownership seams](_done/1c-catalogue-ownership-seams.md)              | Enabling work only     | None            | M    | Complete |
 | 2A  | [Polish buttons and action states](_done/2a-buttons-and-action-states.md)                    | B1, B2, B3, B4, B5     | None            | M    | Complete |
-| 2B  | [Polish form alignment and validation](2b-form-alignment-and-validation.md)                  | C1, C2, C4             | None            | M    | Prepared |
+| 2B  | [Polish form alignment and validation](_done/2b-form-alignment-and-validation.md)            | C1, C2, C4             | None            | M    | Complete |
 | 2C  | [Clarify feedback and state transitions](_done/2c-feedback-and-state-transitions.md)         | D3, D4, D5             | 1A              | M    | Complete |
 | 2D  | [Polish cards, navigation, and identities](_done/2d-cards-navigation-and-identities.md)      | E3, E4, E5             | None            | M    | Complete |
 | 2E  | [Polish sustained reading and article navigation](_done/2e-reading-rhythm-and-navigation.md) | F1, F2, F4             | None            | M    | Complete |
 | 2F  | [Improve source listing copy and wrapping](2f-code-listing-copy-and-wrap.md)                 | F3                     | 1B              | S–M  | Prepared |
 | 2G  | [Clarify operational status and evidence](2g-operational-hierarchy-and-evidence.md)          | G1, G2, G3, G4, G5     | 1B              | L    | Prepared |
 | 2H  | [Polish marketing composition and content](_done/2h-marketing-composition-and-content.md)    | H1, H2, H3, H5         | None            | M–L  | Complete |
-| 2I  | [Improve chart axis and data hierarchy](2i-chart-hierarchy.md)                               | I2                     | None            | M    | Prepared |
-| 2J  | [Improve dense diagram legibility](2j-dense-diagram-legibility.md)                           | I5                     | None            | M    | Prepared |
+| 2I  | [Improve chart axis and data hierarchy](_done/2i-chart-hierarchy.md)                         | I2                     | None            | M    | Complete |
+| 2J  | [Improve dense diagram legibility](_done/2j-dense-diagram-legibility.md)                     | I5                     | None            | M    | Complete |
 | 2K  | [Make component discovery faster and preserve context](_done/2k-component-discovery.md)      | J1, J2, J3, J5         | 1A, 1C          | M    | Complete |
 | 2L  | [Make component details useful for adoption](2l-component-detail-playground.md)              | K1, K2, K3, K4, K5     | 1A, 1B, 1C      | L    | Prepared |
 | 2M  | [Make comparison genuinely side by side](2m-side-by-side-comparison.md)                      | L1                     | 1C              | S    | Prepared |
 | 2N  | [Polish the shell, search, and Appearance controls](2n-shell-search-and-appearance.md)       | M1, M3, M4, P1, P2, P3 | 1C              | L    | Prepared |
-| 2O  | [Make glyph discovery useful for adoption](2o-glyph-adoption-and-size-comparison.md)         | N1, N2, N3             | None            | M    | Prepared |
+| 2O  | [Make glyph discovery useful for adoption](_done/2o-glyph-adoption-and-size-comparison.md)   | N1, N2, N3             | None            | M    | Complete |
 | 2P  | [Polish terminal previews and guided flows](2p-terminal-capabilities-and-guided-flows.md)    | O1, O2, O3, O5         | 1A, 1C          | L    | Prepared |
 | 2Q  | [Fit compositions to their available space](_done/2q-composition-fit-and-width-controls.md)  | P5                     | None            | S    | Complete |
 

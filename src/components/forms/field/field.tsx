@@ -46,10 +46,11 @@ export function Field(
             className="discern-field__message discern-field__message--error"
             id={`${controlId}-error`}
           >
-            {error}
+            <span className="discern-visually-hidden">Error:</span> {error}
           </span>
         )
-        : hint
+        : null}
+      {hint
         ? (
           <span className="discern-field__message" id={`${controlId}-hint`}>
             {hint}
@@ -60,13 +61,15 @@ export function Field(
   );
 }
 
-/** Resolve the describedby id a Field-wrapped control should reference. */
+/** Resolve the describedby value a Field-wrapped control should reference. */
 export function fieldDescriptionId(
   controlId: string,
   hint: ReactNode,
   error: ReactNode,
 ): string | undefined {
-  if (error) return `${controlId}-error`;
-  if (hint) return `${controlId}-hint`;
-  return undefined;
+  const ids = [
+    error ? `${controlId}-error` : undefined,
+    hint ? `${controlId}-hint` : undefined,
+  ].filter(Boolean);
+  return ids.length > 0 ? ids.join(" ") : undefined;
 }

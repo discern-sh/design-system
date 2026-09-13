@@ -193,6 +193,12 @@ function laneKey(edge: ValidatedFlowEdge, role: FlowLaneRole): string {
   return `${edge.id}\u0000${role}`;
 }
 
+/** One edge's claim on a rank-boundary lane. */
+interface FlowLaneUser {
+  readonly key: string;
+  readonly edge: ValidatedFlowEdge;
+}
+
 /**
  * The lanes one rank boundary must hold, in lane order. Edges bound for an
  * external rail leave first, so their run out crosses no adjacent lane, and
@@ -204,11 +210,11 @@ function laneKey(edge: ValidatedFlowEdge, role: FlowLaneRole): string {
 function laneUsers(
   spec: ValidatedFlowDiagram,
   boundary: number,
-): readonly string[] {
+): readonly FlowLaneUser[] {
   const byId = new Map(spec.nodes.map((node) => [node.id, node]));
-  const leaving: string[] = [];
-  const adjacent: string[] = [];
-  const arriving: string[] = [];
+  const leaving: FlowLaneUser[] = [];
+  const adjacent: FlowLaneUser[] = [];
+  const arriving: FlowLaneUser[] = [];
   for (const edge of spec.edges) {
     const source = byId.get(edge.from);
     const target = byId.get(edge.to);
@@ -217,38 +223,106 @@ function laneUsers(
     const to = target.rank;
     if (edge.emphasis === "return") {
       if (from === boundary && !returnUsesRail(source)) {
-        leaving.push(laneKey(edge, "return-source"));
+        leaving.push({ key: laneKey(edge, "return-source"), edge });
       }
       if (to - 1 === boundary && !returnUsesRail(target)) {
-        arriving.push(laneKey(edge, "return-target"));
+        arriving.push({ key: laneKey(edge, "return-target"), edge });
       }
       continue;
     }
     if (to === from + 1) {
-      if (from === boundary) adjacent.push(laneKey(edge, "adjacent"));
+      if (from === boundary) {
+        adjacent.push({ key: laneKey(edge, "adjacent"), edge });
+      }
       continue;
     }
-    if (from === boundary) leaving.push(laneKey(edge, "source"));
-    if (to - 1 === boundary) arriving.push(laneKey(edge, "target"));
+    if (from === boundary) leaving.push({ key: laneKey(edge, "source"), edge });
+    if (to - 1 === boundary) {
+      arriving.push({ key: laneKey(edge, "target"), edge });
+    }
   }
   return [...leaving, ...adjacent, ...arriving];
+}
+
+/** Measure every authored edge label exactly once for lanes and placement. */
+function measureEdgeLabels(
+  spec: ValidatedFlowDiagram,
+): ReadonlyMap<string, DiagramMeasuredText> {
+  const measured = new Map<string, DiagramMeasuredText>();
+  for (const edge of spec.edges) {
+    if (edge.label === undefined) continue;
+    measured.set(
+      edge.id,
+      measuredText(
+        edge.label,
+        G.text.edgeMaximumWidth,
+        "interface",
+        G.text.edgeSize,
+        G.text.edgeLineHeight,
+        "edgeLabelLines",
+        `edge ${edge.id} label`,
+      ),
+    );
+  }
+  return measured;
+}
+
+/**
+ * The room one lane reserves toward its predecessor so its own label keeps a
+ * clear band beside the run: the measured label extent across the lane axis
+ * plus the authored label gap. Unlabelled lanes reserve nothing, so a
+ * label-free boundary keeps the exact compact pitch.
+ */
+function laneNeed(
+  spec: ValidatedFlowDiagram,
+  user: FlowLaneUser,
+  labels: ReadonlyMap<string, DiagramMeasuredText>,
+): number {
+  const label = labels.get(user.edge.id);
+  if (label === undefined) return 0;
+  const extent = spec.direction === "top-to-bottom"
+    ? label.height
+    : label.width;
+  return extent + G.connector.labelGap;
+}
+
+/**
+ * Cumulative lane offsets at one boundary: each lane sits one lane gap plus
+ * its own reserved label band after the previous, and the first lane leads
+ * with its own band so a label never presses into the neighbouring rank.
+ */
+function laneOffsets(
+  spec: ValidatedFlowDiagram,
+  boundary: number,
+  labels: ReadonlyMap<string, DiagramMeasuredText>,
+): readonly (readonly [string, number])[] {
+  const offsets: Array<readonly [string, number]> = [];
+  let position = 0;
+  for (const [index, user] of laneUsers(spec, boundary).entries()) {
+    position += (index === 0 ? 0 : G.connector.laneGap) +
+      laneNeed(spec, user, labels);
+    offsets.push([user.key, position]);
+  }
+  return offsets;
 }
 
 /** The gap after one rank: the base rhythm plus room for every lane it holds. */
 function rankGap(
   spec: ValidatedFlowDiagram,
   boundary: number,
+  labels: ReadonlyMap<string, DiagramMeasuredText>,
 ): number {
   const base = spec.direction === "left-to-right"
     ? G.connector.horizontalRankGap
     : G.connector.baseRankGap;
-  return base +
-    Math.max(0, laneUsers(spec, boundary).length - 1) * G.connector.laneGap;
+  const offsets = laneOffsets(spec, boundary, labels);
+  return base + (offsets.at(-1)?.[1] ?? 0);
 }
 
 function placeNodes(
   spec: ValidatedFlowDiagram,
   plans: readonly NodePlan[],
+  labels: ReadonlyMap<string, DiagramMeasuredText>,
 ): readonly number[] {
   const byId = new Map(plans.map((plan) => [plan.node.id, plan]));
   const rankPrimarySizes = spec.ranks.map((rank) =>
@@ -301,7 +375,9 @@ function placeNodes(
       }
     }
     primary += (rankPrimarySizes[rankIndex] ?? 0) +
-      (rankIndex === spec.ranks.length - 1 ? 0 : rankGap(spec, rankIndex));
+      (rankIndex === spec.ranks.length - 1
+        ? 0
+        : rankGap(spec, rankIndex, labels));
   }
   return Object.freeze(rankStarts);
 }
@@ -605,34 +681,26 @@ function connectorFromPath(
 function assignLanes(
   spec: ValidatedFlowDiagram,
   plans: readonly NodePlan[],
+  labels: ReadonlyMap<string, DiagramMeasuredText>,
 ): ReadonlyMap<string, number> {
   const allBounds = diagramRectUnion(plans.map((plan) => plan.bounds));
   const lanes = new Map<string, number>();
   const vertical = spec.direction === "top-to-bottom";
   for (let boundary = -1; boundary < spec.ranks.length; boundary += 1) {
-    const users = laneUsers(spec, boundary);
-    if (users.length === 0) continue;
-    const spread = (users.length - 1) / 2 * G.connector.laneGap;
-    const center = boundary < 0
-      ? roundDiagramNumber(
-        (vertical ? allBounds.y : allBounds.x) - G.connector.externalGap -
-          spread,
-      )
-      : boundary < spec.ranks.length - 1
-      ? boundaryAfterRank(spec, plans, boundary)
-      : roundDiagramNumber(
-        (vertical
+    const offsets = laneOffsets(spec, boundary, labels);
+    const span = offsets.at(-1)?.[1];
+    if (span === undefined) continue;
+    for (const [key, offset] of offsets) {
+      const position = boundary < 0
+        ? (vertical ? allBounds.y : allBounds.x) - G.connector.externalGap -
+          span + offset
+        : boundary < spec.ranks.length - 1
+        ? boundaryAfterRank(spec, plans, boundary) - span / 2 + offset
+        : (vertical
           ? diagramRectBottom(allBounds)
-          : diagramRectRight(allBounds)) + G.connector.externalGap + spread,
-      );
-    users.forEach((key, index) =>
-      lanes.set(
-        key,
-        roundDiagramNumber(
-          center + (index - (users.length - 1) / 2) * G.connector.laneGap,
-        ),
-      )
-    );
+          : diagramRectRight(allBounds)) + G.connector.externalGap + offset;
+      lanes.set(key, roundDiagramNumber(position));
+    }
   }
   return lanes;
 }
@@ -640,10 +708,11 @@ function assignLanes(
 function routeEdges(
   spec: ValidatedFlowDiagram,
   plans: readonly NodePlan[],
+  labels: ReadonlyMap<string, DiagramMeasuredText>,
 ): readonly RoutedEdge[] {
   const byId = new Map(plans.map((plan) => [plan.node.id, plan]));
   const ports = assignEdgePorts(spec, plans);
-  const lanes = assignLanes(spec, plans);
+  const lanes = assignLanes(spec, plans, labels);
   const allBounds = diagramRectUnion(plans.map((plan) => plan.bounds));
   const long = spec.edges.filter((edge) =>
     edge.emphasis !== "return" &&
@@ -769,6 +838,21 @@ function segmentBounds(
   return diagramPointBounds([start, end], expansion);
 }
 
+/**
+ * Deterministic anchor fractions along one segment, centre first. A dense
+ * sibling fan can cross the exact midpoint band, so the label may slide
+ * toward either end of its own run before the layout refuses.
+ */
+const LABEL_ANCHOR_FRACTIONS = [
+  1 / 2,
+  3 / 8,
+  5 / 8,
+  1 / 4,
+  3 / 4,
+  1 / 8,
+  7 / 8,
+] as const;
+
 function labelCandidates(
   connector: DiagramConnector,
   text: DiagramMeasuredText,
@@ -786,39 +870,41 @@ function labelCandidates(
   });
   const candidates: DiagramRect[] = [];
   for (const { start, end } of segments) {
-    const centerX = (start.x + end.x) / 2;
-    const centerY = (start.y + end.y) / 2;
-    const offset = G.connector.labelGap + G.text.clearance;
-    if (Math.abs(start.y - end.y) <= G.tolerance) {
-      candidates.push(
-        {
-          x: centerX - text.width / 2,
-          y: centerY - offset - text.height,
-          width: text.width,
-          height: text.height,
-        },
-        {
-          x: centerX - text.width / 2,
-          y: centerY + offset,
-          width: text.width,
-          height: text.height,
-        },
-      );
-    } else {
-      candidates.push(
-        {
-          x: centerX + offset,
-          y: centerY - text.height / 2,
-          width: text.width,
-          height: text.height,
-        },
-        {
-          x: centerX - offset - text.width,
-          y: centerY - text.height / 2,
-          width: text.width,
-          height: text.height,
-        },
-      );
+    for (const fraction of LABEL_ANCHOR_FRACTIONS) {
+      const anchorX = start.x + (end.x - start.x) * fraction;
+      const anchorY = start.y + (end.y - start.y) * fraction;
+      const offset = G.connector.labelGap + G.text.clearance;
+      if (Math.abs(start.y - end.y) <= G.tolerance) {
+        candidates.push(
+          {
+            x: anchorX - text.width / 2,
+            y: anchorY - offset - text.height,
+            width: text.width,
+            height: text.height,
+          },
+          {
+            x: anchorX - text.width / 2,
+            y: anchorY + offset,
+            width: text.width,
+            height: text.height,
+          },
+        );
+      } else {
+        candidates.push(
+          {
+            x: anchorX + offset,
+            y: anchorY - text.height / 2,
+            width: text.width,
+            height: text.height,
+          },
+          {
+            x: anchorX - offset - text.width,
+            y: anchorY - text.height / 2,
+            width: text.width,
+            height: text.height,
+          },
+        );
+      }
     }
   }
   return candidates.map((rect) => ({
@@ -837,6 +923,7 @@ function rectsOverlap(left: DiagramRect, right: DiagramRect): boolean {
 function placeEdgeLabels(
   routed: readonly RoutedEdge[],
   nodeElementsValue: readonly DiagramSceneElement[],
+  labels: ReadonlyMap<string, DiagramMeasuredText>,
 ): readonly DiagramText[] {
   const clearance = G.text.clearance + G.tolerance;
   const obstacles: DiagramRect[] = nodeElementsValue.map((element) =>
@@ -855,18 +942,10 @@ function placeEdgeLabels(
       expandDiagramRect(connector.arrowhead.bounds, clearance),
     ];
   });
-  const labels: DiagramText[] = [];
+  const placed: DiagramText[] = [];
   for (const { edge, connector } of routed) {
-    if (edge.label === undefined) continue;
-    const measured = measuredText(
-      edge.label,
-      G.text.edgeMaximumWidth,
-      "interface",
-      G.text.edgeSize,
-      G.text.edgeLineHeight,
-      "edgeLabelLines",
-      `edge ${edge.id} label`,
-    );
+    const measured = labels.get(edge.id);
+    if (measured === undefined) continue;
     const bounds = labelCandidates(connector, measured).find((candidate) =>
       ![...obstacles, ...connectorObstacles].some((obstacle) =>
         rectsOverlap(candidate, obstacle)
@@ -887,10 +966,10 @@ function placeEdgeLabels(
       bounds.x + bounds.width / 2,
       bounds.y,
     );
-    labels.push(text);
+    placed.push(text);
     obstacles.push(expandDiagramRect(text.bounds, clearance));
   }
-  return labels;
+  return placed;
 }
 
 /** The measures this layout wraps text at and how a flow's scene grows. */
@@ -927,7 +1006,7 @@ export const layoutMeasures: DiagramLayoutMeasures = {
   ],
   extent: [
     `A tier is at least ${G.node.minimumWidth} units per node plus ${G.node.rankMemberGap} between nodes, and a decision is twice its label box; the widest tier sets the width.`,
-    `Ranks sit ${G.connector.baseRankGap} units apart top-to-bottom (${G.connector.horizontalRankGap} left-to-right) plus ${G.connector.laneGap} for each further lane crossing that boundary.`,
+    `Ranks sit ${G.connector.baseRankGap} units apart top-to-bottom (${G.connector.horizontalRankGap} left-to-right) plus ${G.connector.laneGap} for each further lane crossing that boundary, and every labelled lane also reserves its wrapped label extent plus ${G.connector.labelGap} so the label keeps a clear band beside its run.`,
     `Each tier-skipping or return edge adds a rail ${G.connector.externalGap} units outside the nodes plus ${G.connector.laneGap} per further edge on that side, and the canvas adds ${G.canvasPadding} on every side.`,
   ],
 };
@@ -936,11 +1015,12 @@ export const layoutMeasures: DiagramLayoutMeasures = {
 export default function layoutFlowDiagram(
   spec: ValidatedFlowDiagram,
 ): DiagramScene {
+  const edgeLabels = measureEdgeLabels(spec);
   const plans = spec.nodes.map((node) => measureNode(node, spec.direction));
-  placeNodes(spec, plans);
+  placeNodes(spec, plans, edgeLabels);
   const nodes = plans.flatMap(nodeElements);
-  const routed = routeEdges(spec, plans);
-  const labels = placeEdgeLabels(routed, nodes);
+  const routed = routeEdges(spec, plans, edgeLabels);
+  const labels = placeEdgeLabels(routed, nodes, edgeLabels);
   const rawElements: DiagramSceneElement[] = [
     ...routed.map(({ connector }) => connector),
     ...labels,

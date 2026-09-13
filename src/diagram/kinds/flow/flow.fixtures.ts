@@ -150,6 +150,41 @@ const maximumDensity = {
   ],
 } satisfies FlowDiagramSpec;
 
+const labelledFanOut = {
+  kind: "flow",
+  title: "Partition and rejoin a batch",
+  summary: "One decision fans out to four labelled lanes that converge again.",
+  nodes: [
+    { id: "open", label: "Open the batch", role: "start" as const },
+    { id: "split", label: "Partition work", role: "decision" as const },
+    { id: "lane-a", label: "Transform partition A" },
+    { id: "lane-b", label: "Transform partition B" },
+    { id: "lane-c", label: "Transform partition C" },
+    { id: "lane-d", label: "Transform partition D" },
+    { id: "join", label: "Join results" },
+    { id: "close", label: "Close the batch", role: "end" as const },
+  ],
+  edges: [
+    { id: "start", from: "open", to: "split" },
+    { id: "assign-a", from: "split", to: "lane-a", label: "Key range one" },
+    { id: "assign-b", from: "split", to: "lane-b", label: "Key range two" },
+    { id: "assign-c", from: "split", to: "lane-c", label: "Key range three" },
+    { id: "assign-d", from: "split", to: "lane-d", label: "Key range four" },
+    { id: "collect-a", from: "lane-a", to: "join" },
+    { id: "collect-b", from: "lane-b", to: "join" },
+    { id: "collect-c", from: "lane-c", to: "join" },
+    { id: "collect-d", from: "lane-d", to: "join" },
+    { id: "finish", from: "join", to: "close" },
+    {
+      id: "rebalance",
+      from: "join",
+      to: "split",
+      emphasis: "return" as const,
+      label: "Rebalance",
+    },
+  ],
+} satisfies FlowDiagramSpec;
+
 /** Package-owned Flow corpus; every projection derives from these specs. */
 export const releaseCorpus = defineDiagramKindReleaseCorpus(
   {
@@ -167,6 +202,11 @@ export const releaseCorpus = defineDiagramKindReleaseCorpus(
         name: "maximum-density",
         postures: ["maximum-density"],
         spec: maximumDensity,
+      },
+      {
+        name: "labelled-fan-out",
+        postures: ["maximum-density"],
+        spec: labelledFanOut,
       },
     ],
     overBudget: {
