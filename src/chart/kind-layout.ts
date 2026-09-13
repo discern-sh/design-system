@@ -20,6 +20,7 @@ import {
 } from "./geometry.ts";
 import type {
   ChartAxisLine,
+  ChartGridLine,
   ChartPoint,
   ChartReferenceLine,
   ChartTickLabel,
@@ -42,6 +43,22 @@ export function chartAxisLine(
     start,
     end,
     bounds: chartPointBounds([start, end], G.axis.lineWidth / 2),
+  };
+}
+
+/** Construct one subordinate background gridline with fresh bounds. */
+export function chartGridLine(
+  id: string,
+  start: ChartPoint,
+  end: ChartPoint,
+): ChartGridLine {
+  return {
+    kind: "grid-line",
+    id,
+    lineWidth: G.grid.lineWidth,
+    start,
+    end,
+    bounds: chartPointBounds([start, end], G.grid.lineWidth / 2),
   };
 }
 

@@ -11,7 +11,11 @@ import {
   chartRectUnion,
   roundChartNumber,
 } from "../../geometry.ts";
-import { chartAxisLine, chartTickLabel } from "../../kind-layout.ts";
+import {
+  chartAxisLine,
+  chartGridLine,
+  chartTickLabel,
+} from "../../kind-layout.ts";
 import {
   chartLinearPosition,
   chartLogPosition,
@@ -21,6 +25,7 @@ import {
 } from "../../scale.ts";
 import type {
   ChartAxisLine,
+  ChartGridLine,
   ChartPoint,
   ChartRect,
   ChartScene,
@@ -340,6 +345,17 @@ export default function layoutLineChart(spec: ValidatedLineChart): ChartScene {
     { x: plotRight, y: plotBottom },
   );
 
+  // The bottom value tick already reads as the baseline hairline, so
+  // gridlines anchor only the remaining value ticks across the domain.
+  const gridLines: ChartGridLine[] = vTicks.slice(1).map((tick, index) => {
+    const position = roundChartNumber(valuePosition(tick.value));
+    return chartGridLine(
+      `grid-value-${index + 1}`,
+      { x: plot.x, y: position },
+      { x: plotRight, y: position },
+    );
+  });
+
   const valueLabels = vTicks.map((tick, index) =>
     tickLabel({
       id: `value-tick-${index}`,
@@ -385,6 +401,7 @@ export default function layoutLineChart(spec: ValidatedLineChart): ChartScene {
   }
 
   const elements: ChartSceneElement[] = [
+    ...gridLines,
     ...areaElements,
     ...pathElements,
     baselineLine,

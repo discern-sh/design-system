@@ -9,7 +9,11 @@ import {
   chartRectUnion,
   roundChartNumber,
 } from "../../geometry.ts";
-import { chartAxisLine, chartTickLabel } from "../../kind-layout.ts";
+import {
+  chartAxisLine,
+  chartGridLine,
+  chartTickLabel,
+} from "../../kind-layout.ts";
 import {
   type ChartBandScale,
   chartBandSegment,
@@ -20,6 +24,7 @@ import {
 } from "../../scale.ts";
 import type {
   ChartAxisLine,
+  ChartGridLine,
   ChartMark,
   ChartPoint,
   ChartRect,
@@ -318,6 +323,25 @@ export default function layoutBarChart(spec: ValidatedBarChart): ChartScene {
       { x: plot.x, y: plotBottom },
     );
 
+  // The baseline tick already reads as the axis hairline, so gridlines
+  // anchor only the remaining value ticks across the category span.
+  const gridLines: ChartGridLine[] = ticks.slice(1).map((tick, index) => {
+    const position = roundChartNumber(
+      chartLinearPosition(valueScale, tick.value),
+    );
+    return vertical
+      ? chartGridLine(
+        `grid-value-${index + 1}`,
+        { x: plot.x, y: position },
+        { x: plotRight, y: position },
+      )
+      : chartGridLine(
+        `grid-value-${index + 1}`,
+        { x: position, y: plot.y },
+        { x: position, y: plotBottom },
+      );
+  });
+
   const valueLabels = ticks.map((tick, index) => {
     const position = roundChartNumber(
       chartLinearPosition(valueScale, tick.value),
@@ -389,7 +413,12 @@ export default function layoutBarChart(spec: ValidatedBarChart): ChartScene {
     }
   }
 
-  const elements: ChartSceneElement[] = [...marks, baselineLine, ...labels];
+  const elements: ChartSceneElement[] = [
+    ...gridLines,
+    ...marks,
+    baselineLine,
+    ...labels,
+  ];
   const content = chartRectUnion(elements.map(({ bounds }) => bounds));
   const padding = G.canvasPadding;
   return {
