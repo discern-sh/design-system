@@ -149,7 +149,7 @@ export function ComponentDetailPage(
               navigate({ ...state, view: componentDetailView(candidate) },
                 false)}
             items={[
-              { value: "single", label: "Example" },
+              { value: "single", label: "One example" },
               {
                 value: "all",
                 label: `All ${String(entry.canonicalExamples.length)}`,
