@@ -521,22 +521,86 @@ function extractVariants(symbols: readonly unknown[]): CatalogueVariant[] {
   return variants;
 }
 
+/**
+ * An interface's complete member surface: plain interface extends clauses
+ * resolvable in `resolution` flatten beneath the interface's own members,
+ * so a referencing prop (`items: SomeItem[]`) exposes inherited required
+ * members to structured controls. Generic applications and external names
+ * stay unresolved.
+ */
+/** The first real interface declaration for a name; re-export references skip. */
+function interfaceDeclaration(
+  symbols: readonly unknown[],
+  name: string,
+): Record<string, unknown> | undefined {
+  for (const candidate of symbols) {
+    const value = asRecord(candidate, "deno doc symbol");
+    if (value.name !== name) continue;
+    const declaration = asArray(
+      value.declarations,
+      `deno doc symbol ${name}.declarations`,
+    ).at(0);
+    if (declaration === undefined) continue;
+    const record = asRecord(declaration, `deno doc declaration ${name}`);
+    if (record.kind === "interface") return record;
+  }
+  return undefined;
+}
+
+function flattenedInterfaceProps(
+  typeName: string,
+  resolution: readonly unknown[],
+  visited: ReadonlySet<string>,
+): CatalogueProp[] {
+  const declaration = interfaceDeclaration(resolution, typeName);
+  if (declaration === undefined || visited.has(typeName)) return [];
+  const definition = asRecord(
+    declaration.def,
+    `deno doc declaration ${typeName}.def`,
+  );
+  const chainVisited = new Set([...visited, typeName]);
+  const byName = new Map<string, CatalogueProp>();
+  for (
+    const value of definition.extends === undefined
+      ? []
+      : asArray(definition.extends, `${typeName}.extends`)
+  ) {
+    const parent = asRecord(value, `${typeName}.extends`);
+    if (parent.kind !== "typeRef") continue;
+    const reference = asRecord(parent.value, `${typeName}.extends.value`);
+    if (
+      typeof reference.typeName !== "string" ||
+      (Array.isArray(reference.typeParams) && reference.typeParams.length > 0)
+    ) continue;
+    for (
+      const prop of flattenedInterfaceProps(
+        reference.typeName,
+        resolution,
+        chainVisited,
+      )
+    ) {
+      byName.set(prop.name, prop);
+    }
+  }
+  for (const prop of interfaceProps(definition, typeName)) {
+    byName.set(prop.name, prop);
+  }
+  return [...byName.values()];
+}
+
 /** Exported non-Props interfaces: the object shapes props may reference. */
 function extractObjectTypes(
   symbols: readonly unknown[],
+  resolution: readonly unknown[] = symbols,
 ): CatalogueObjectType[] {
   const objectTypes: CatalogueObjectType[] = [];
   for (const typeName of exportedSymbolNames(symbols)) {
     if (typeName.endsWith("Props")) continue;
     const declaration = symbolDeclaration(symbols, typeName);
     if (declaration?.kind !== "interface") continue;
-    const definition = asRecord(
-      declaration.def,
-      `deno doc declaration ${typeName}.def`,
-    );
     objectTypes.push({
       typeName,
-      props: interfaceProps(definition, typeName),
+      props: flattenedInterfaceProps(typeName, resolution, new Set()),
     });
   }
   return objectTypes;
@@ -645,8 +709,11 @@ async function enrichComponentSources(
         ...extractVariants(vocabularySymbols),
       ],
       objectTypes: [
-        ...extractObjectTypes(symbols),
-        ...extractObjectTypes(vocabularySymbols),
+        ...extractObjectTypes(symbols, [...symbols, ...vocabularySymbols]),
+        ...extractObjectTypes(vocabularySymbols, [
+          ...symbols,
+          ...vocabularySymbols,
+        ]),
       ],
     };
   });

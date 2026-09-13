@@ -32,7 +32,7 @@ Relative sizes are planning judgments, not elapsed-time promises: S is a bounded
 | 2I  | [Improve chart axis and data hierarchy](_done/2i-chart-hierarchy.md)                         | I2                     | None            | M    | Complete |
 | 2J  | [Improve dense diagram legibility](_done/2j-dense-diagram-legibility.md)                     | I5                     | None            | M    | Complete |
 | 2K  | [Make component discovery faster and preserve context](_done/2k-component-discovery.md)      | J1, J2, J3, J5         | 1A, 1C          | M    | Complete |
-| 2L  | [Make component details useful for adoption](2l-component-detail-playground.md)              | K1, K2, K3, K4, K5     | 1A, 1B, 1C      | L    | Prepared |
+| 2L  | [Make component details useful for adoption](_done/2l-component-detail-playground.md)        | K1, K2, K3, K4, K5     | 1A, 1B, 1C      | L    | Complete |
 | 2M  | [Make comparison genuinely side by side](2m-side-by-side-comparison.md)                      | L1                     | 1C              | S    | Prepared |
 | 2N  | [Polish the shell, search, and Appearance controls](2n-shell-search-and-appearance.md)       | M1, M3, M4, P1, P2, P3 | 1C              | L    | Prepared |
 | 2O  | [Make glyph discovery useful for adoption](_done/2o-glyph-adoption-and-size-comparison.md)   | N1, N2, N3             | None            | M    | Complete |

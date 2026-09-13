@@ -448,7 +448,7 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
   buttonUrl.searchParams.set("accent", "145.5");
   buttonUrl.searchParams.set("field", "0.25,1,0.8,1");
   await loadCataloguePage(page, buttonUrl.href);
-  await page.getByRole("button", { name: /View all 5 examples/ }).click();
+  await page.getByRole("radio", { name: "All 5", exact: true }).check();
   await openCatalogueAppearanceAxes(page);
   const primary = page.locator("main .discern-button--primary").first();
   const secondary = page.locator("main .discern-button--secondary").first();
