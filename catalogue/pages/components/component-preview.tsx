@@ -413,14 +413,27 @@ export function ComponentSpecimen(
   );
 }
 
+export type ComponentEvidenceSection = "guidance" | "selection" | "api";
+
+const COMPLETE_EVIDENCE: readonly ComponentEvidenceSection[] = [
+  "guidance",
+  "selection",
+  "api",
+];
+
 /** Closed supporting evidence, ordered from usage to implementation detail. */
 export function ComponentEvidence(
-  { entry }: { readonly entry: RegistryEntry },
+  { entry, sections = COMPLETE_EVIDENCE }: {
+    readonly entry: RegistryEntry;
+    /** Surfaces that present a fact elsewhere omit its disclosure here. */
+    readonly sections?: readonly ComponentEvidenceSection[];
+  },
 ) {
   const { meta, selection, propDocumentation, variants } = entry;
   return (
     <div className="discern-catalogue-component__evidence">
-      <details className="discern-catalogue-guidance">
+      {sections.includes("guidance") &&
+        <details className="discern-catalogue-guidance">
         <summary>Usage guidance</summary>
         <div>
           {meta.useWhen?.length
@@ -468,19 +481,21 @@ export function ComponentEvidence(
             )
             : null}
         </div>
-      </details>
-      <details className="discern-catalogue-instrument">
-        <summary>Selection and import</summary>
-        <div>
-          <CopyableCode
-            label="Component selection"
-            value={selection.component}
-          />
-          <CopyableCode label="Group selection" value={selection.group} />
-          <CopyableCode label="React import" value={selection.reactImport} />
-        </div>
-      </details>
-      <details className="discern-catalogue-api">
+      </details>}
+      {sections.includes("selection") &&
+        <details className="discern-catalogue-instrument">
+          <summary>Selection and import</summary>
+          <div>
+            <CopyableCode
+              label="Component selection"
+              value={selection.component}
+            />
+            <CopyableCode label="Group selection" value={selection.group} />
+            <CopyableCode label="React import" value={selection.reactImport} />
+          </div>
+        </details>}
+      {sections.includes("api") &&
+        <details className="discern-catalogue-api">
         <summary>Props and variants</summary>
         <div>
           <h5>{propDocumentation.typeName}</h5>
@@ -573,7 +588,7 @@ export function ComponentEvidence(
             )
             : null}
         </div>
-      </details>
+      </details>}
     </div>
   );
 }

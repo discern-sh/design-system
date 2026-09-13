@@ -3,24 +3,50 @@ import {
   ComponentDetailNavigation,
 } from "./detail-navigation.tsx";
 import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
+import { SegmentedControl } from "../../../src/components/forms/segmented-control/segmented-control.tsx";
 import type { RegistryEntry } from "../../generated/registry.ts";
 import { catalogueDecisionCopyProps } from "../../metadata-copy.ts";
 import type { CatalogueTerminalPresentation } from "../../terminal-theme.ts";
 import { announceCatalogueLocationChange } from "../../shell/location.ts";
 import { preserveComponentReturnHref } from "./return-context.ts";
+import { CopyableCode } from "../shared.tsx";
 import type { CatalogueSurface } from "../shared.tsx";
 import {
   ComponentEvidence,
   ComponentExampleControl,
   ComponentSourceActions,
   ComponentSpecimen,
-  ComponentSurfaceControl,
 } from "./component-preview.tsx";
+import { ComponentDetailPlayground } from "./detail-playground.tsx";
+import { ComponentStateStrip } from "./detail-states.tsx";
+import { DetailStage } from "./detail-stage.tsx";
 import {
+  componentDetailFitWidth,
   componentDetailHref,
   type ComponentDetailState,
+  type ComponentDetailView,
+  componentDetailView,
   parseComponentDetailState,
 } from "./detail-state.ts";
+
+function ViewUnavailable(
+  { view }: { readonly view: ComponentDetailView },
+) {
+  return (
+    <div
+      className="discern-catalogue-component__unavailable"
+      data-discern-view-unavailable={view}
+      role="status"
+    >
+      <strong>The Playground edits the Web adapter.</strong>
+      <p {...catalogueDecisionCopyProps}>
+        Switch to the Web surface to adjust the starter; the CLI surface
+        renders canonical example frames.
+      </p>
+    </div>
+  );
+}
 
 export function ComponentDetailPage(
   { entry, surface, terminalPresentation, onSurfaceChange }: {
@@ -60,8 +86,30 @@ export function ComponentDetailPage(
     announceCatalogueLocationChange();
   };
 
+  const view = state.view;
+  const width = state.width ?? componentDetailFitWidth;
+  const expanded = state.expanded === true;
+  const stage = (canvas: ReactNode) => (
+    <DetailStage
+      slug={entry.meta.slug}
+      label={entry.meta.name}
+      width={width}
+      expanded={expanded}
+      widthApplies={state.surface === "web"}
+      onWidthChange={(next) => navigate({ ...state, width: next }, false)}
+      onExpandedChange={(next) =>
+        navigate({ ...state, expanded: next }, false)}
+    >
+      {canvas}
+    </DetailStage>
+  );
+
   return (
-    <div className="discern-catalogue-page discern-catalogue-detail">
+    <div
+      className={`discern-catalogue-page discern-catalogue-detail${
+        expanded ? " discern-catalogue-detail--expanded" : ""
+      }`}
+    >
       <ComponentDetailBreadcrumb entry={entry} />
       <article
         className="discern-catalogue-component discern-catalogue-component--detail"
@@ -73,47 +121,119 @@ export function ComponentDetailPage(
             <h1>{entry.meta.name}</h1>
             <p {...catalogueDecisionCopyProps}>{entry.meta.description}</p>
           </div>
-          <ComponentSourceActions entry={entry} />
         </header>
         <div className="discern-catalogue-detail__controls">
-          <ComponentSurfaceControl
-            entry={entry}
-            surface={state.surface}
-            onChange={(candidate) => {
-              onSurfaceChange(candidate);
-              navigate({ ...state, surface: candidate });
+          <SegmentedControl
+            className="discern-catalogue-detail__control"
+            label="Surface"
+            name={`detail-surface-${entry.meta.slug}`}
+            value={state.surface}
+            onValueChange={(candidate) => {
+              const next: CatalogueSurface = candidate === "cli"
+                ? "cli"
+                : "web";
+              onSurfaceChange(next);
+              navigate({ ...state, surface: next });
             }}
+            items={[
+              { value: "web", label: "Web" },
+              { value: "cli", label: "CLI" },
+            ]}
           />
-          <ComponentExampleControl
-            entry={entry}
-            surface={state.surface}
-            exampleId={state.exampleId}
-            onChange={(exampleId) => navigate({ ...state, exampleId })}
+          <SegmentedControl
+            className="discern-catalogue-detail__control"
+            label="View"
+            name={`detail-view-${entry.meta.slug}`}
+            value={view}
+            onValueChange={(candidate) =>
+              navigate({ ...state, view: componentDetailView(candidate) },
+                false)}
+            items={[
+              { value: "single", label: "Example" },
+              {
+                value: "all",
+                label: `All ${String(entry.canonicalExamples.length)}`,
+              },
+              { value: "states", label: "States" },
+              { value: "playground", label: "Playground" },
+            ]}
           />
-          <button
-            type="button"
-            className="discern-catalogue-detail__view-all"
-            aria-pressed={state.view === "all"}
-            onClick={() =>
-              navigate({
-                ...state,
-                view: state.view === "all" ? "single" : "all",
-              }, false)}
-          >
-            {state.view === "all"
-              ? "Show selected example"
-              : `View all ${entry.canonicalExamples.length} examples`}
-          </button>
+          {view === "single" || view === "all"
+            ? (
+              <ComponentExampleControl
+                entry={entry}
+                surface={state.surface}
+                exampleId={state.exampleId}
+                onChange={(exampleId) => navigate({ ...state, exampleId })}
+              />
+            )
+            : null}
         </div>
-        <ComponentSpecimen
-          entry={entry}
-          surface={state.surface}
-          exampleId={state.exampleId}
-          view={state.view}
-          terminalPresentation={terminalPresentation}
-          headingLevel={2}
-        />
-        <ComponentEvidence entry={entry} />
+        {view === "playground"
+          ? state.surface === "cli"
+            ? <ViewUnavailable view="playground" />
+            : (
+              <ComponentDetailPlayground
+                entry={entry}
+                renderStage={stage}
+                key={entry.meta.slug}
+              />
+            )
+          : view === "states"
+          ? (
+            <ComponentStateStrip
+              entry={entry}
+              theme={terminalPresentation.theme}
+              state={state}
+            />
+          )
+          : stage(
+            <ComponentSpecimen
+              entry={entry}
+              surface={state.surface}
+              exampleId={state.exampleId}
+              view={view === "all" ? "all" : "single"}
+              terminalPresentation={terminalPresentation}
+              headingLevel={2}
+            />,
+          )}
+        <section
+          className="discern-catalogue-detail__adopt"
+          aria-label={`Adopt ${entry.meta.name}`}
+        >
+          <header>
+            <h2>Use this Component</h2>
+            {view === "playground" ? null : (
+              <button
+                type="button"
+                className="discern-catalogue-detail__adopt-playground"
+                onClick={() =>
+                  navigate({ ...state, view: "playground" }, false)}
+              >
+                Open the Playground for editable starter code
+              </button>
+            )}
+          </header>
+          <CopyableCode
+            label="React import"
+            value={entry.selection.reactImport}
+          />
+          <CopyableCode
+            label="Component selection"
+            value={entry.selection.component}
+          />
+          <CopyableCode
+            label="Group selection"
+            value={entry.selection.group}
+          />
+        </section>
+        <ComponentEvidence entry={entry} sections={["guidance", "api"]} />
+        <div className="discern-catalogue-detail__sources">
+          <span {...catalogueDecisionCopyProps}>
+            Implementation evidence
+          </span>
+          <ComponentSourceActions entry={entry} />
+        </div>
       </article>
       <ComponentDetailNavigation entry={entry} state={state} />
     </div>
