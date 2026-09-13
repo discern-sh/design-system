@@ -25,7 +25,8 @@ export const componentExampleCaptureContract = Object.freeze(
     bytePlatform: Object.freeze({
       os: "darwin",
       arch: "aarch64",
-      release: "25.6.0",
+      kernelRelease: "27.0.0",
+      macosProductVersion: "27.0",
     }),
     viewport: Object.freeze({ width: 1600, height: 2000 }),
     harness: Object.freeze({ width: 960, minimumHeight: 720, inset: 256 }),

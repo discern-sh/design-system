@@ -32,17 +32,43 @@ export function glyphsNavigationSections(
         .length,
     ] as const
   ).filter(([, count]) => count > 0);
-  const allTarget = glyphExplorerUrl(url, { query: "" });
+  const collections = [
+    {
+      label: "Ready to use",
+      count: matchingGlyphCatalogueEntries(entries, { query: "" }).length,
+      collection: undefined,
+    },
+    {
+      label: "Unicode Atlas",
+      count: matchingGlyphCatalogueEntries(entries, {
+        query: "",
+        collection: "reference",
+      }).length,
+      collection: "reference" as const,
+    },
+    {
+      label: "All Glyphs",
+      count: data.canonical.length,
+      collection: "all" as const,
+    },
+  ];
   return [
     {
-      items: [{
-        label: catalogueNavigationLabel("All Glyphs", data.canonical.length),
-        href: allTarget.pathname + allTarget.search,
-        current: route.page === "index" && Object.keys(state).length === 1 &&
-            state.query === ""
-          ? "location"
-          : false,
-      }],
+      items: collections.map(({ label, count, collection }) => {
+        const target = glyphExplorerUrl(url, {
+          query: "",
+          ...(collection === undefined ? {} : { collection }),
+        });
+        return {
+          label: catalogueNavigationLabel(label, count),
+          href: target.pathname + target.search,
+          current: route.page === "index" && state.query === "" &&
+              state.collection === collection &&
+              Object.keys(state).length === (collection === undefined ? 1 : 2)
+            ? "location" as const
+            : false,
+        };
+      }),
     },
     {
       title: "Discern categories",

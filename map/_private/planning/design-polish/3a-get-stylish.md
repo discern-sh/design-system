@@ -94,7 +94,7 @@ Use existing review and capture tools. Regenerate derived files and canonical im
 - The package implements the result without Catalogue-only styling fixes.
 - Independent findings are resolved and durable guidance is current.
 
-Provide exact Catalogue URLs on the deterministic worktree port. After preview approval, stop this effort's preview/watch processes before every gate run. Run `discern_prepare`, inspect its changes, commit logical changes atomically, then run `discern_done` on the clean final HEAD. Use discern queue for direct tests.
+Provide exact Catalogue URLs on the deterministic worktree port. Leave the preview running after `discern_done` so the project owner can review your changes. Stop the preview before running `discern_accept`, as acceptance will remove the worktree. Run `discern_prepare`, inspect its changes, commit logical changes atomically, then run `discern_done` on the clean final HEAD. Use discern queue for direct tests.
 
 Landing requires the owner's approval or machine-verified authority. Follow `discern_done`'s authority-aware next action; use `discern_accept` when authorized. Otherwise return the Proof and stop. This brief grants no landing authority. Never push or publish.
 

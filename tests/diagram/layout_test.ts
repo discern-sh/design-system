@@ -1117,3 +1117,54 @@ Deno.test("flow keeps decision diamonds no flatter than the arrowhead", () => {
   );
   assertEquals(decision.bounds.height % DIAGRAM_GEOMETRY.rhythm, 0);
 });
+
+Deno.test("flow places every label of a dense labelled fan-out", () => {
+  for (const direction of ["top-to-bottom", "left-to-right"] as const) {
+    const spec = { ...fixtures[5], direction };
+    const scene = layoutDiagram(spec);
+    assertIndependentSceneInvariants(scene);
+    const labelled = spec.edges.filter((edge) => edge.label !== undefined);
+    const placed = scene.elements.filter((element) =>
+      element.kind === "text" && element.role === "connector-label"
+    );
+    assertEquals(placed.length, labelled.length);
+    const connectors = scene.elements.filter((
+      element,
+    ): element is DiagramConnector => element.kind === "connector");
+    assertEquals(overlappingRuns(connectors), []);
+    assertEquals(repeatedPorts(connectors), []);
+  }
+});
+
+Deno.test("flow lane pitch reserves the measured band for each labelled lane", () => {
+  const scene = layoutDiagram(fixtures[5]);
+  const lanes = scene.elements.filter((
+    element,
+  ): element is DiagramConnector =>
+    element.kind === "connector" &&
+    fixtures[5].edges.some((edge) =>
+      edge.id === element.semanticId && edge.label !== undefined &&
+      edge.emphasis !== "return"
+    )
+  ).map((connector) => {
+    const horizontal = connector.points.slice(1).map((end, index) => ({
+      start: connector.points[index] as DiagramPoint,
+      end,
+    })).filter(({ start, end }) => Math.abs(start.y - end.y) <= EPSILON)
+      .toSorted((left, right) =>
+        Math.abs(right.end.x - right.start.x) -
+        Math.abs(left.end.x - left.start.x)
+      )[0];
+    assert(horizontal !== undefined);
+    return horizontal.start.y;
+  }).toSorted((left, right) => left - right);
+  for (let index = 1; index < lanes.length; index += 1) {
+    const pitch = (lanes[index] ?? 0) - (lanes[index - 1] ?? 0);
+    assert(
+      pitch >= DIAGRAM_GEOMETRY.connector.laneGap +
+          DIAGRAM_GEOMETRY.text.edgeLineHeight +
+          DIAGRAM_GEOMETRY.connector.labelGap - EPSILON,
+      `labelled lanes sit only ${pitch} apart`,
+    );
+  }
+});

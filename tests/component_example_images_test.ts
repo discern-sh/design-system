@@ -39,7 +39,10 @@ import {
 import { componentExampleRegistry } from "../scripts/generated/component-examples.ts";
 import {
   componentExampleCaptureDependencyPaths,
+  type ComponentExampleCaptureHostIdentity,
   componentExampleCaptureInputHash,
+  componentExampleCapturePlatformDescription,
+  componentExampleCapturePlatformMatches,
   componentExampleCaptureSourceHash,
   componentExampleContentHash,
   componentExampleImagePostureEffects,
@@ -53,6 +56,32 @@ import {
 } from "../scripts/component-example-images.ts";
 
 const ROOT = new URL("../", import.meta.url);
+
+Deno.test("capture platform distinguishes Darwin kernel from macOS product version", () => {
+  const expected: ComponentExampleCaptureHostIdentity = {
+    os: "darwin",
+    arch: "aarch64",
+    kernelRelease: "99.4.2",
+    macosProductVersion: "88.7",
+  };
+  assertEquals(
+    componentExampleCapturePlatformDescription(expected),
+    "darwin/aarch64 (Darwin kernel 99.4.2; macOS product 88.7)",
+  );
+  assert(componentExampleCapturePlatformMatches(expected, expected));
+  assert(
+    !componentExampleCapturePlatformMatches(
+      { ...expected, kernelRelease: "99.4.3" },
+      expected,
+    ),
+  );
+  assert(
+    !componentExampleCapturePlatformMatches(
+      { ...expected, macosProductVersion: "88.8" },
+      expected,
+    ),
+  );
+});
 
 Deno.test("capture dependency discovery follows imports and excludes unrelated source containers", () => {
   const root = "file:///workspace/catalogue/example-images/capture.tsx";

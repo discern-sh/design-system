@@ -11,7 +11,7 @@
     font-family: var(--discern-font-ui);
     font-size: var(--discern-font-size-sm);
     line-height: var(--discern-leading-snug);
-    transition-property: background, border-color, box-shadow;
+    transition-property: background, border-color;
     transition-duration: var(--discern-duration-fast);
   }
   .discern-control::placeholder {
@@ -33,10 +33,8 @@
     opacity: 1;
     -webkit-text-fill-color: var(--discern-color-ink-muted);
   }
-  .discern-control[aria-invalid="true"] {
+  .discern-control[aria-invalid="true"],
+  .discern-control:user-invalid {
     border-color: var(--discern-color-danger);
-  }
-  .discern-control[aria-invalid="true"]:focus-visible {
-    outline-color: var(--discern-color-accent-500);
   }
 }

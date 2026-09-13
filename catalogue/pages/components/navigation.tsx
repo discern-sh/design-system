@@ -1,3 +1,7 @@
+import {
+  componentReturnHref,
+  preserveComponentReturnHref,
+} from "./return-context.ts";
 import { catalogueGroupFromSlug } from "../../routes.ts";
 import type {
   CatalogueNavigationSections,
@@ -31,22 +35,28 @@ export function componentsNavigationSections(
     return [
       {
         items: [{
-          label: `← ${componentEntry.meta.group} Components`,
-          href: componentGroupHref(componentEntry.meta.group),
+          label: componentReturnHref(url) === undefined
+            ? `← ${componentEntry.meta.group} Components`
+            : "← Back to results",
+          href: componentReturnHref(url) ??
+            componentGroupHref(componentEntry.meta.group),
         }],
       },
       {
         title: componentEntry.meta.group,
         items: groupEntries.map((candidate) => ({
           label: candidate.meta.name,
-          href: componentDetailHref(candidate, {
-            ...detailState,
-            exampleId: candidate.canonicalExamples.some(({ id }) =>
-                id === detailState.exampleId
-              )
-              ? detailState.exampleId
-              : candidate.canonicalExamples[0]?.id ?? "default",
-          }),
+          href: preserveComponentReturnHref(
+            url,
+            componentDetailHref(candidate, {
+              ...detailState,
+              exampleId: candidate.canonicalExamples.some(({ id }) =>
+                  id === detailState.exampleId
+                )
+                ? detailState.exampleId
+                : candidate.canonicalExamples[0]?.id ?? "default",
+            }),
+          ),
           current: candidate.meta.slug === componentEntry.meta.slug
             ? "location" as const
             : false,

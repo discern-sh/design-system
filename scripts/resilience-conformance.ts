@@ -1,4 +1,5 @@
 import type { Browser, Page } from "playwright-core";
+import { loadConformancePage as loadPage } from "./conformance/catalogue/component-conformance-page.ts";
 import { themeTokens } from "../src/tokens/tokens.ts";
 import {
   scanBrowserAccessibility,
@@ -131,12 +132,6 @@ function conformanceUrl(origin: string, theme = "light"): string {
   url.searchParams.set("conformance", "1");
   url.searchParams.set("theme", theme);
   return url.href;
-}
-
-async function loadPage(page: Page, url: string): Promise<void> {
-  await page.goto(url, { waitUntil: "networkidle" });
-  await page.locator('[data-discern-conformance-ready="true"]').waitFor();
-  await page.evaluate(() => document.fonts.ready.then(() => undefined));
 }
 
 function errorMessage(error: unknown): string {

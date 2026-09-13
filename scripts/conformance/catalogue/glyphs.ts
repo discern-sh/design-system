@@ -4,6 +4,7 @@ import { glyphs, resolveGlyph } from "../../../src/glyphs/mod.ts";
 import {
   catalogueGlyphPath,
   glyphCatalogueEntries,
+  glyphSequenceSlug,
   glyphsRouteFamily,
 } from "../../../catalogue/routes/glyphs.ts";
 import { scanBrowserAccessibility } from "../../browser-conformance-support.ts";
@@ -23,6 +24,9 @@ export interface GlyphsCatalogueEvidence {
   readonly details: number;
   readonly searchChecks: number;
   readonly filterHistoryChecks: number;
+  readonly adoptionChecks: number;
+  readonly sizeChecks: number;
+  readonly meaningSetChecks: number;
   readonly copyChecks: number;
   readonly themeChecks: number;
   readonly accessibilityScans: number;
@@ -179,20 +183,59 @@ async function documentDoesNotOverflow(
 async function verifyExplorer(page: Page, origin: string): Promise<{
   readonly searchChecks: number;
   readonly filterHistoryChecks: number;
+  readonly adoptionChecks: number;
 }> {
+  const entries = glyphCatalogueEntries(glyphAtlasData);
+  const publishedCount =
+    entries.filter((entry) =>
+      entry.aliases.some(({ publication }) => publication === "candidate")
+    ).length;
   const url = new URL(glyphsRouteFamily.descriptor.path, origin);
   url.searchParams.set("theme", "light");
   await loadCataloguePage(page, url.href);
   invariant(
-    await page.locator("[data-discern-glyph-card]").count() ===
-      glyphAtlasData.canonical.length,
-    "Glyph explorer did not auto-enrol the canonical Atlas population",
+    await page.locator("[data-discern-glyph-card]").count() === publishedCount,
+    "The default adoption view differs from the published vocabulary",
+  );
+  invariant(
+    await page.locator(
+      "[data-discern-glyph-card][data-discern-glyph-available]",
+    ).count() === publishedCount,
+    "The default adoption view included research-only characters",
+  );
+  await page.getByRole("button", { name: "All glyphs", exact: true }).click();
+  await eventually(
+    async () =>
+      await page.locator("[data-discern-glyph-card]").count() ===
+        glyphAtlasData.canonical.length,
+    "The explicit All collection did not enrol the canonical Atlas population",
+  );
+  invariant(
+    new URL(page.url()).searchParams.get("collection") === "all",
+    "The All collection did not reach the URL",
   );
   invariant(
     await page.locator(
       "[data-discern-glyph-card][data-discern-catalogue-index-card] [data-discern-catalogue-index-card-primary]",
     ).count() === glyphAtlasData.canonical.length,
     "Glyph explorer cards bypassed the shared CatalogueIndexCard authority",
+  );
+  await page.getByRole("button", { name: "Atlas reference", exact: true })
+    .click();
+  await eventually(
+    async () =>
+      await page.locator("[data-discern-glyph-card]").count() ===
+        glyphAtlasData.canonical.length - publishedCount,
+    "The Atlas reference collection did not isolate research-only identities",
+  );
+  await page.getByRole("button", { name: "Ready to use", exact: true })
+    .click();
+  await eventually(
+    async () =>
+      new URL(page.url()).searchParams.get("collection") === null &&
+      await page.locator("[data-discern-glyph-card]").count() ===
+        publishedCount,
+    "Returning to the default did not restore the published vocabulary",
   );
 
   const search = page.getByRole("searchbox", { name: "Search Glyphs" });
@@ -210,6 +253,27 @@ async function verifyExplorer(page: Page, origin: string): Promise<{
     async () =>
       await page.locator('[data-discern-glyph-card="u-2713"]').count() === 1,
     "Code-point search did not reach U+2713",
+  );
+
+  const atlasOnly = entries.find((entry) => entry.aliases.length === 0);
+  invariant(
+    atlasOnly !== undefined,
+    "Conformance needs a research-only Atlas identity",
+  );
+  await search.fill(atlasOnly.canonical.officialLabel);
+  await eventually(
+    async () =>
+      await page.locator(
+        `[data-discern-glyph-card="${
+          glyphSequenceSlug(atlasOnly.canonical.codePoints)
+        }"]`,
+      ).count() === 1,
+    "A default-view query did not reach a research-only Atlas identity",
+  );
+  invariant(
+    await page.getByRole("heading", { name: "From the Unicode Atlas" })
+      .count() === 1,
+    "Research search results were not distinguished from published names",
   );
 
   await search.fill("");
@@ -249,7 +313,7 @@ async function verifyExplorer(page: Page, origin: string): Promise<{
       await recommendation.inputValue() === "recommended",
     "Forward navigation did not restore the Glyph recommendation",
   );
-  return { searchChecks: 2, filterHistoryChecks: 4 };
+  return { searchChecks: 3, filterHistoryChecks: 4, adoptionChecks: 6 };
 }
 
 async function verifyDetail(
@@ -278,6 +342,42 @@ async function verifyDetail(
   );
 }
 
+async function verifyAdoptionJourney(page: Page, origin: string): Promise<{
+  readonly sizeChecks: number;
+  readonly meaningSetChecks: number;
+}> {
+  await loadCataloguePage(page, `${origin}/catalogue/glyphs/u-2713/`);
+  let sizeChecks = 0;
+  for (const size of [16, 20, 24, 32] as const) {
+    invariant(
+      await page.locator(
+        `[data-discern-glyph-size="${size}"] .discern-catalogue-glyph-sizes__line`,
+      ).evaluate((node) => getComputedStyle(node).fontSize) === `${size}px`,
+      `The ${size}px specimen is not measured at its labelled CSS size`,
+    );
+    sizeChecks += 1;
+  }
+  invariant(
+    await page.locator('[data-discern-glyph-set="selection-state"] a')
+      .count() === 3,
+    "The selection set did not present its three states together",
+  );
+  await page.locator(
+    '[data-discern-glyph-set="selection-state"] a[href*="u-2610/"]',
+  ).click();
+  await eventually(
+    async () =>
+      await page.locator('[data-discern-glyph-detail="U+2610"]').count() === 1,
+    "A meaning-set member did not navigate to its canonical identity",
+  );
+  invariant(
+    await page.getByLabel("Use as", { exact: true }).inputValue() ===
+      "selection-unselected",
+    "A meaning-set link did not select its contextual workbench role",
+  );
+  return { sizeChecks, meaningSetChecks: 3 };
+}
+
 /** Exercise exact identities, URL state, accessibility, copy, and reflow. */
 export async function verifyGlyphsCatalogue(
   page: Page,
@@ -292,6 +392,7 @@ export async function verifyGlyphsCatalogue(
     let reflowChecks = 0;
     let forcedColorChecks = 0;
     const workbenchChecks = await verifyWorkbench(page, origin);
+    const adoption = await verifyAdoptionJourney(page, origin);
     await loadCataloguePage(page, `${origin}/catalogue/glyphs/`);
 
     const explorerAccessibility = await scanBrowserAccessibility(
@@ -439,6 +540,9 @@ export async function verifyGlyphsCatalogue(
       details: identities.length,
       searchChecks,
       filterHistoryChecks: explorer.filterHistoryChecks,
+      adoptionChecks: explorer.adoptionChecks,
+      sizeChecks: adoption.sizeChecks,
+      meaningSetChecks: adoption.meaningSetChecks,
       copyChecks,
       themeChecks,
       accessibilityScans,

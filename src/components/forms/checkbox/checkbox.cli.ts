@@ -82,6 +82,25 @@ const cliExampleImplementations = [
     },
   },
   {
+    name: "multiline",
+    props: {
+      kind: "multiselect",
+      label: "Report retention",
+      lifecycle: { status: "active" },
+      options: [
+        {
+          id: "local",
+          label:
+            "Keep a local copy of every generated report so reviews stay available offline",
+          description: "Copies are removed after thirty days of inactivity.",
+        },
+        { id: "share", label: "Share a link instead" },
+      ],
+      highlightedIndex: 0,
+      selectedIds: ["local"],
+    },
+  },
+  {
     name: "active",
     props: { ...base, lifecycle: { status: "active" } },
   },

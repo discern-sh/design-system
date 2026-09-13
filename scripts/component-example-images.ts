@@ -586,10 +586,65 @@ function imageSources(): readonly ComponentExampleImageSource[] {
   }));
 }
 
-function platformMatchesByteContract(): boolean {
-  return Deno.build.os === componentExampleCaptureContract.bytePlatform.os &&
-    Deno.build.arch === componentExampleCaptureContract.bytePlatform.arch &&
-    Deno.osRelease() === componentExampleCaptureContract.bytePlatform.release;
+/** Host facts whose separate versions can affect canonical raster bytes. */
+export interface ComponentExampleCaptureHostIdentity {
+  readonly os: string;
+  readonly arch: string;
+  readonly kernelRelease: string;
+  readonly macosProductVersion: string | undefined;
+}
+
+/** Compare every versioned host fact in the canonical raster contract. */
+export function componentExampleCapturePlatformMatches(
+  actual: ComponentExampleCaptureHostIdentity,
+  expected: ComponentExampleCaptureHostIdentity,
+): boolean {
+  return actual.os === expected.os && actual.arch === expected.arch &&
+    actual.kernelRelease === expected.kernelRelease &&
+    actual.macosProductVersion === expected.macosProductVersion;
+}
+
+/** Name kernel and product versions independently in host diagnostics. */
+export function componentExampleCapturePlatformDescription(
+  identity: ComponentExampleCaptureHostIdentity,
+): string {
+  const platform = `${identity.os}/${identity.arch}`;
+  if (identity.os !== "darwin") {
+    return `${platform} (kernel ${identity.kernelRelease})`;
+  }
+  return `${platform} (Darwin kernel ${identity.kernelRelease}; macOS product ${
+    identity.macosProductVersion ?? "unavailable"
+  })`;
+}
+
+async function macosProductVersion(): Promise<string | undefined> {
+  if (Deno.build.os !== "darwin") return undefined;
+  const result = await new Deno.Command("/usr/bin/sw_vers", {
+    args: ["-productVersion"],
+    stdout: "piped",
+    stderr: "piped",
+  }).output();
+  const version = new TextDecoder().decode(result.stdout).trim();
+  if (!result.success || version === "") {
+    const detail = new TextDecoder().decode(result.stderr).trim();
+    throw new Error(
+      `Could not identify the macOS product version with /usr/bin/sw_vers -productVersion${
+        detail === "" ? "" : `: ${detail}`
+      }`,
+    );
+  }
+  return version;
+}
+
+async function captureHostIdentity(): Promise<
+  ComponentExampleCaptureHostIdentity
+> {
+  return {
+    os: Deno.build.os,
+    arch: Deno.build.arch,
+    kernelRelease: Deno.osRelease(),
+    macosProductVersion: await macosProductVersion(),
+  };
 }
 
 async function assertRuntime(): Promise<string> {
@@ -616,11 +671,20 @@ async function assertRuntime(): Promise<string> {
       `package.json must pin playwright-core ${componentExampleCaptureContract.playwrightVersion}`,
     );
   }
-  if (!platformMatchesByteContract()) {
-    const actual = `${Deno.build.os}/${Deno.build.arch}/${Deno.osRelease()}`;
+  const actual = await captureHostIdentity();
+  if (
+    !componentExampleCapturePlatformMatches(
+      actual,
+      componentExampleCaptureContract.bytePlatform,
+    )
+  ) {
     const expected = componentExampleCaptureContract.bytePlatform;
     throw new Error(
-      `Image updates require the canonical raster platform ${expected.os}/${expected.arch}/${expected.release}; received ${actual}. Verification reads source and committed artifacts and does not launch Chromium.`,
+      `Image updates require the canonical raster platform ${
+        componentExampleCapturePlatformDescription(expected)
+      }; received ${
+        componentExampleCapturePlatformDescription(actual)
+      }. Verification reads source and committed artifacts and does not launch Chromium.`,
     );
   }
   const executable = chromium.executablePath();
