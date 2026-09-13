@@ -46,7 +46,7 @@ export function Field(
             className="discern-field__message discern-field__message--error"
             id={`${controlId}-error`}
           >
-            <span className="discern-visually-hidden">Error:{" "}</span>
+            <span className="discern-visually-hidden">Error: </span>
             {error}
           </span>
         )
