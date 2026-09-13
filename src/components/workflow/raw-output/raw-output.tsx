@@ -38,13 +38,13 @@ export const RawOutput: DiscernComponent<HTMLDetailsElement, RawOutputProps> =
           <span className="discern-raw-output__marker" aria-hidden="true">
             ›
           </span>
-          <span className="discern-raw-output__subject">{label}</span>
+          <span className="discern-raw-output__subject">{label}</span>{" "}
           <span className="discern-raw-output__extent">
             {extent ??
               (typeof children === "string"
                 ? outputExtent(children)
                 : undefined)}
-          </span>
+          </span>{" "}
           {outcome !== undefined && (
             <span className="discern-raw-output__outcome">{outcome}</span>
           )}
