@@ -65,7 +65,7 @@ Family state uses stable parameters and omits comfort defaults:
 | Family                  | Consequential URL state                                                                                             |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | Components index        | [Discovery controls, result anchor, and Appearance](component-discovery.md)                                         |
-| Component detail        | surface, canonical example, deliberate View all, Appearance, and [discovery return context](component-discovery.md) |
+| Component detail        | [surface, canonical example, view, width, and expansion](component-detail.md), plus Appearance and return context   |
 | Compare                 | scope, global surface, overrides, examples, membership, jump target, Appearance state                               |
 | Foundations Appearance  | optional accent hue, Darkness, Structure, Emphasis, Density, and the pigment tints                                  |
 | Tokens and Compositions | query/category and responsive width, plus shared Appearance state                                                   |
@@ -95,7 +95,7 @@ The machine-only `?conformance=1` route remains exhaustive. Ordinary indexes sta
 
 ## Where to start
 
-[Component discovery](component-discovery.md) explains capability filtering, representative framing, and shareable return navigation.
+[Component discovery](component-discovery.md) explains capability filtering, representative framing, and shareable return navigation. [Component detail](component-detail.md) explains the adoption hierarchy, the Builder-backed starter playground, the width-inspection stage, and the snapshot state strip.
 
 For independent page, style, and test work, use the [Catalogue ownership seams](ownership-seams.md) before editing shared consumers.
 
