@@ -206,7 +206,7 @@ async function verifyDiscoveryReturnJourney(
     new URL(page.url()).searchParams.get("surface") === "cli",
     "CLI discovery did not open a CLI detail",
   );
-  await page.getByRole("button", { name: /View all .* examples/ }).click();
+  await page.getByRole("radio", { name: /^All \d+$/ }).check();
   invariant(
     new URL(page.url()).searchParams.has("return"),
     "Detail controls dropped discovery context",

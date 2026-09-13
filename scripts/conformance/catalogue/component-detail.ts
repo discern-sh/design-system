@@ -22,6 +22,103 @@ import {
 } from "./support.ts";
 import { verifyInlineOverflowCueEdges } from "./overflow-cue.ts";
 
+/** Render → adjust → copy: the playground shares one model with its code. */
+async function verifyDetailPlaygroundJourney(
+  page: Page,
+  origin: string,
+): Promise<void> {
+  const playgroundUrl = new URL(catalogueComponentPath("button"), origin);
+  playgroundUrl.searchParams.set("view", "playground");
+  await loadCataloguePage(page, playgroundUrl.href);
+  invariant(
+    await page.locator("[data-discern-detail-playground]").count() === 1,
+    "Playground did not mount its starter",
+  );
+  const tsx = page.locator("[data-discern-playground-tsx]");
+  invariant(
+    ((await tsx.textContent()) ?? "").includes("<Button"),
+    "Starter TSX lacks its adapter tag",
+  );
+  invariant(
+    await page.getByRole("button", { name: "Copy starter TSX" }).count() === 1,
+    "Starter usage lacks its copy action",
+  );
+  await page.locator("#detail-slot-button-children").fill(
+    "Conformance label",
+  );
+  await eventually(
+    async () =>
+      ((await tsx.textContent()) ?? "").includes("Conformance label") &&
+      await page.locator(".discern-catalogue-playground__canvas").getByText(
+          "Conformance label",
+        ).count() === 1,
+    "Playground render and code did not share the adjusted model",
+  );
+  const variantField = page.locator(".discern-builder-control").filter({
+    hasText: "variant",
+  }).first();
+  await variantField.locator("select").selectOption({ label: "Secondary" });
+  await eventually(
+    async () =>
+      ((await tsx.textContent()) ?? "").includes('variant="secondary"'),
+    "A select adjustment did not reach the exported code",
+  );
+  await page.getByRole("button", { name: "Reset starter" }).click();
+  await eventually(
+    async () => {
+      const source = (await tsx.textContent()) ?? "";
+      return !source.includes("Conformance label") &&
+        !source.includes('variant="secondary"');
+    },
+    "Reset starter left edited state behind",
+  );
+
+  const cliUrl = new URL(catalogueComponentPath("button"), origin);
+  cliUrl.searchParams.set("surface", "cli");
+  cliUrl.searchParams.set("view", "playground");
+  await loadCataloguePage(page, cliUrl.href);
+  invariant(
+    await page.locator('[data-discern-view-unavailable="playground"]')
+      .count() === 1,
+    "CLI playground must state its Web-only contract",
+  );
+}
+
+/** Snapshots stay distinguishable stills; the live example is one link away. */
+async function verifyDetailStatesJourney(
+  page: Page,
+  origin: string,
+  slug: string,
+): Promise<void> {
+  const statesUrl = new URL(catalogueComponentPath(slug), origin);
+  statesUrl.searchParams.set("view", "states");
+  await loadCataloguePage(page, statesUrl.href);
+  const cards = page.locator("[data-discern-detail-state]");
+  const count = await cards.count();
+  invariant(
+    await page.locator("[data-discern-detail-states]").count() === 1 &&
+      count > 0,
+    "State strip did not present the canonical examples",
+  );
+  invariant(
+    await page.locator(
+      `[data-discern-detail-states] img[src*="/catalogue/generated/example-images/${slug}--"]`,
+    ).count() === count,
+    "State strip must reuse committed generated snapshots",
+  );
+  invariant(
+    await page.getByText("Snapshot — not operable").count() === count,
+    "Snapshots must be distinguished from operable controls",
+  );
+  await cards.first().getByRole("link", { name: "Open live" }).click();
+  await page.waitForLoadState();
+  await eventually(
+    async () =>
+      await page.locator("[data-discern-example-state]").count() === 1,
+    "Opening a live example from the strip did not restore the single specimen",
+  );
+}
+
 export async function verifyComponentDetailJourneys(
   page: Page,
   origin: string,
@@ -49,21 +146,39 @@ export async function verifyComponentDetailJourneys(
       ".discern-catalogue-component__evidence > details",
     );
     invariant(
-      await evidence.count() === 3 &&
+      await evidence.count() === 2 &&
         await page.locator(
             ".discern-catalogue-component__evidence > details[open]",
           ).count() === 0,
-      "Detail evidence must stay three ordered, closed disclosures",
+      "Detail evidence must stay two ordered, closed disclosures",
     );
     invariant(
       JSON.stringify(await evidence.locator("summary").allTextContents()) ===
         JSON.stringify([
           "Usage guidance",
-          "Selection and import",
           "Props and variants",
         ]),
       "Detail disclosure order changed",
     );
+    const adopt = page.locator(".discern-catalogue-detail__adopt");
+    invariant(
+      await adopt.count() === 1,
+      "Detail lacks its open adoption section",
+    );
+    for (
+      const label of [
+        "React import",
+        "Component selection",
+        "Group selection",
+      ] as const
+    ) {
+      invariant(
+        await adopt.locator(".discern-catalogue-copyable").filter({
+          hasText: label,
+        }).count() === 1,
+        `Adoption section lacks the copyable ${label}`,
+      );
+    }
     for (
       const [label, suffix] of [
         ["Open React source", ".tsx"],
@@ -76,9 +191,11 @@ export async function verifyComponentDetailJourneys(
         `${label} does not describe its destination`,
       );
     }
-    const exampleSelect = page.getByLabel("Example");
+    const exampleSelect = page.locator(
+      ".discern-catalogue-component__example-picker select",
+    );
     const selectedId = await exampleSelect.inputValue();
-    await page.getByRole("button", { name: "CLI", exact: true }).click();
+    await page.getByRole("radio", { name: "CLI", exact: true }).check();
     invariant(
       await exampleSelect.inputValue() === selectedId &&
         new URL(page.url()).searchParams.get("example") === selectedId &&
@@ -87,20 +204,66 @@ export async function verifyComponentDetailJourneys(
         new URL(page.url()).searchParams.get("field") === "0,1,1,1",
       "Web/CLI switching changed canonical example or Appearance identity",
     );
-    await page.getByRole("button", { name: "Web", exact: true }).click();
-    const viewAll = page.getByRole("button", { name: /View all / });
-    await viewAll.click();
+    await page.getByRole("radio", { name: "Web", exact: true }).check();
+    await page.getByRole("radio", { name: /^All \d+$/ }).check();
+    const optionLabels = await exampleSelect.locator("option")
+      .allTextContents();
     invariant(
       new URL(page.url()).searchParams.get("view") === "all" &&
         await page.locator("[data-discern-example-state]").count() ===
-          await exampleSelect.locator("option:not([disabled])").count(),
+          optionLabels.filter((label) => !label.includes("unavailable on Web"))
+            .length,
       "View all examples is not a deliberate ordered gallery",
+    );
+
+    await page.getByRole("radio", { name: "360px", exact: true }).check();
+    await eventually(
+      async () =>
+        new URL(page.url()).searchParams.get("width") === "narrow" &&
+        await page.locator('[data-discern-detail-measured="360"]').count() ===
+          1,
+      "Exact 360px inspection did not measure 360",
+    );
+    const exactCanvas = await page.locator(
+      ".discern-catalogue-detail__stage-canvas",
+    ).boundingBox();
+    invariant(
+      exactCanvas !== null && Math.abs(exactCanvas.width - 360) <= 1,
+      `Exact width canvas measured ${String(exactCanvas?.width)}px`,
+    );
+    await page.getByRole("radio", { name: "Fit", exact: true }).check();
+    await eventually(
+      async () => {
+        const measured = await page.locator("[data-discern-detail-measured]")
+          .getAttribute("data-discern-detail-measured");
+        return new URL(page.url()).searchParams.get("width") === null &&
+          Number(measured) > 400;
+      },
+      "Fit did not return the specimen to its allocated canvas",
+    );
+    await page.getByRole("button", { name: "Expand page column" }).click();
+    await eventually(
+      async () =>
+        new URL(page.url()).searchParams.get("expanded") === "1" &&
+        await page.locator(".discern-catalogue-detail--expanded").count() === 1,
+      "Expanded inspection did not widen the detail column",
+    );
+    await page.getByRole("button", { name: "Standard page column" }).click();
+    await eventually(
+      () =>
+        Promise.resolve(
+          new URL(page.url()).searchParams.get("expanded") === null,
+        ),
+      "Expanded inspection did not release the detail column",
     );
     invariant(
       await page.locator('nav[aria-label="Component continuation"] a').count() >
         0,
       "Detail lacks canonical previous/next or Compare continuation",
     );
+
+    await verifyDetailPlaygroundJourney(page, origin);
+    await verifyDetailStatesJourney(page, origin, detailSlug);
 
     const allUrl = new URL(catalogueRoutePaths.components, origin);
     allUrl.searchParams.set("all", "1");
@@ -204,6 +367,26 @@ export async function verifyComponentDetailMetadata(
       "Selected-surface unavailability explanations",
     );
     await verifyPage("CLI exemption metadata/light");
+
+    const states = new URL(catalogueComponentPath("command"), origin);
+    states.searchParams.set("view", "states");
+    states.searchParams.set("theme", "light");
+    await loadCataloguePage(page, states.href);
+    await verifyDecisionCopyEnrollment(
+      page,
+      ".discern-catalogue-states__legend",
+      "State strip legend",
+    );
+    const playground = new URL(catalogueComponentPath("button"), origin);
+    playground.searchParams.set("view", "playground");
+    playground.searchParams.set("theme", "dark");
+    await loadCataloguePage(page, playground.href);
+    await verifyDecisionCopyEnrollment(
+      page,
+      ".discern-catalogue-playground__code > p",
+      "Starter usage explanation",
+    );
+    await verifyPage("Detail playground metadata/dark", { scan: true });
   });
   await withViewport(page, CATALOGUE_400_PERCENT_REFLOW_VIEWPORT, async () => {
     const detail = new URL(catalogueComponentPath("command"), origin);
