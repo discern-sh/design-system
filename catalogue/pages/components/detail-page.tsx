@@ -73,13 +73,18 @@ export function ComponentDetailPage(
     };
   }, [entry.meta.slug, surface]);
 
-  const navigate = (next: ComponentDetailState, anchor = true): void => {
-    globalThis.history.pushState(
+  const navigate = (
+    next: ComponentDetailState,
+    options: Readonly<{ anchor?: boolean; replace?: boolean }> = {},
+  ): void => {
+    // Filter-style inspection controls replace the current entry; selection
+    // changes push, matching the Catalogue-wide URL-state convention.
+    globalThis.history[options.replace === true ? "replaceState" : "pushState"](
       null,
       "",
       preserveComponentReturnHref(
         new URL(globalThis.location.href),
-        componentDetailHref(entry, next, { anchor }),
+        componentDetailHref(entry, next, { anchor: options.anchor ?? true }),
       ),
     );
     setState(next);
@@ -96,8 +101,13 @@ export function ComponentDetailPage(
       width={width}
       expanded={expanded}
       widthApplies={state.surface === "web"}
-      onWidthChange={(next) => navigate({ ...state, width: next }, false)}
-      onExpandedChange={(next) => navigate({ ...state, expanded: next }, false)}
+      onWidthChange={(next) =>
+        navigate({ ...state, width: next }, { anchor: false, replace: true })}
+      onExpandedChange={(next) =>
+        navigate({ ...state, expanded: next }, {
+          anchor: false,
+          replace: true,
+        })}
     >
       {canvas}
     </DetailStage>
@@ -147,7 +157,7 @@ export function ComponentDetailPage(
             onValueChange={(candidate) =>
               navigate(
                 { ...state, view: componentDetailView(candidate) },
-                false,
+                { anchor: false },
               )}
             items={[
               { value: "single", label: "One example" },
@@ -209,7 +219,9 @@ export function ComponentDetailPage(
                 type="button"
                 className="discern-catalogue-detail__adopt-playground"
                 onClick={() =>
-                  navigate({ ...state, view: "playground" }, false)}
+                  navigate({ ...state, view: "playground" }, {
+                    anchor: false,
+                  })}
               >
                 Open the Playground for editable starter code
               </button>
