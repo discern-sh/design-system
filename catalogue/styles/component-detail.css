@@ -497,7 +497,7 @@
   .discern-catalogue-playground__note {
     margin: 0;
     color: var(--discern-color-ink-muted);
-    font-size: var(--discern-font-size-xs);
+    font-size: var(--discern-font-size-sm);
   }
   .discern-catalogue-playground__code {
     grid-column: 1 / -1;
@@ -589,11 +589,15 @@
     border-radius: var(--discern-radius-sm);
     background: var(--discern-color-canvas);
   }
-  .discern-catalogue-states__snapshot figcaption,
-  .discern-catalogue-states__missing {
+  .discern-catalogue-states__snapshot figcaption {
     margin: 4px 0 0;
     color: var(--discern-color-ink-faint);
     font-size: var(--discern-font-size-xs);
+  }
+  .discern-catalogue-states__missing {
+    margin: 4px 0 0;
+    color: var(--discern-color-ink-muted);
+    font-size: var(--discern-font-size-sm);
   }
   .discern-catalogue-states__postures {
     margin: 0;

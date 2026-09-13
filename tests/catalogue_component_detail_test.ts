@@ -353,12 +353,20 @@ Deno.test("playground adjustments feed the render and the export from one model"
   assertStringIncludes(usage.tsx, 'variant="secondary"');
   assertStringIncludes(usage.tsx, "Ship the change");
 
-  const refused = playground.changeDetailProp(withLabel.node, "onClick", {
-    kind: "string",
-    value: "alert",
-  });
-  assert("error" in refused);
-  assertStringIncludes(refused.error, "not a modeled prop");
+  const refusedHandler = playground.changeDetailProp(
+    withLabel.node,
+    "onClick",
+    { kind: "string", value: "alert" },
+  );
+  assert("error" in refusedHandler);
+  assertStringIncludes(refusedHandler.error, "executable handler");
+  const refusedUnknown = playground.changeDetailProp(
+    withLabel.node,
+    "mystery",
+    { kind: "string", value: "value" },
+  );
+  assert("error" in refusedUnknown);
+  assertStringIncludes(refusedUnknown.error, "not a modeled prop");
 });
 
 Deno.test("the state strip presents committed snapshots and review posture links", async () => {

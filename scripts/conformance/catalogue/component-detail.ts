@@ -191,7 +191,9 @@ export async function verifyComponentDetailJourneys(
         `${label} does not describe its destination`,
       );
     }
-    const exampleSelect = page.getByLabel("Example", { exact: true });
+    const exampleSelect = page.locator(
+      ".discern-catalogue-component__example-picker select",
+    );
     const selectedId = await exampleSelect.inputValue();
     await page.getByRole("radio", { name: "CLI", exact: true }).check();
     invariant(

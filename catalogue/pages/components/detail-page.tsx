@@ -242,9 +242,7 @@ export function ComponentDetailPage(
         </section>
         <ComponentEvidence entry={entry} sections={["guidance", "api"]} />
         <div className="discern-catalogue-detail__sources">
-          <span {...catalogueDecisionCopyProps}>
-            Implementation evidence
-          </span>
+          <span>Implementation evidence</span>
           <ComponentSourceActions entry={entry} />
         </div>
       </article>
