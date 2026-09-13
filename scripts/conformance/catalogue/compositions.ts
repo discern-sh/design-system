@@ -15,6 +15,7 @@ import { verifyInlineOverflowCueEdges } from "./overflow-cue.ts";
 import {
   CATALOGUE_NARROW_VIEWPORT,
   CATALOGUE_WIDE_VIEWPORT,
+  catalogueSearchResult,
   eventually,
   invariant,
   loadCataloguePage,
@@ -145,10 +146,9 @@ async function verifyGallery(page: Page, origin: string): Promise<void> {
   await page.locator(".discern-catalogue-search").click();
   const search = page.getByRole("dialog", { name: "Search the Catalogue" });
   await search.locator(".discern-search-palette__input").fill("raw output");
-  const result = search.locator(
-    `.discern-search-palette__result[href="${
-      compositionRecipePath("failure-triage")
-    }"]`,
+  const result = catalogueSearchResult(
+    page,
+    compositionRecipePath("failure-triage"),
   );
   invariant(
     await result.count() === 1,

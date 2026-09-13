@@ -107,4 +107,4 @@ Review URLs on deterministic port 17998:
 - Precise axis review: `http://localhost:17998/catalogue/foundations/appearance/?theme=dark&accent=245&field=1,0.8,0.8,0.875`.
 - Search/recent journey: open Search at `/catalogue/`, enter `button`, press ArrowDown then Enter, reopen Search, and follow or clear Recent destinations.
 
-The preview is stopped before the final gate. Acceptance waits for the owner's explicit confirmation after Proof and adversarial review. Browser evidence is Chromium-based; native browser/OS select presentation remains platform-owned.
+The review preview remains available after the final gate and stops before acceptance. Acceptance waits for the owner's explicit confirmation after Proof and adversarial review. Browser evidence is Chromium-based; native browser/OS select presentation remains platform-owned.

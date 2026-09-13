@@ -12,6 +12,7 @@ import { withViewport } from "../../viewport.ts";
 import {
   CATALOGUE_NARROW_VIEWPORT,
   CATALOGUE_WIDE_VIEWPORT,
+  catalogueSearchResult,
   eventually,
   invariant,
   loadCataloguePage,
@@ -487,9 +488,8 @@ export async function verifyGlyphsCatalogue(
     });
     await globalSearch.locator(".discern-search-palette__input").fill("✓");
     invariant(
-      await globalSearch.locator(
-        `.discern-search-palette__result[href="${catalogueGlyphPath(check)}"]`,
-      ).count() === 1,
+      await catalogueSearchResult(page, catalogueGlyphPath(check)).count() ===
+        1,
       "Global literal search did not share the canonical Glyph destination",
     );
     searchChecks += 1;

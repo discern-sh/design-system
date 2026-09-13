@@ -18,6 +18,7 @@ import {
 import {
   CATALOGUE_NARROW_VIEWPORT,
   CATALOGUE_WIDE_VIEWPORT,
+  catalogueSearchResult,
   eventually,
   invariant,
   loadCataloguePage,
@@ -377,11 +378,7 @@ async function verifySearch(
 
   await trigger.click();
   await input.fill("call to action");
-  const cta = dialog.locator(
-    `.discern-search-palette__result[href^="${
-      catalogueComponentPath("cta-band")
-    }"]`,
-  );
+  const cta = catalogueSearchResult(page, catalogueComponentPath("cta-band"));
   invariant(await cta.count() === 1, "Call to action did not find CTA band");
   invariant(
     (await cta.locator(".discern-catalogue-search-match").textContent())
