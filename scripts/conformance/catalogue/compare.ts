@@ -196,14 +196,14 @@ export async function verifyCompareJourneys(
     overrideUrl.searchParams.set("components", "button,table,command");
     await loadCataloguePage(page, overrideUrl.href);
     const table = page.locator('[data-discern-compare-item="table"]');
-    await table.getByLabel("Example", { exact: true }).selectOption(
+    await table.getByRole("combobox").selectOption(
       "rich-cells",
     );
     await table.getByRole("button", { name: "CLI", exact: true }).click();
     const saved = page.url();
     await loadCataloguePage(page, saved);
     invariant(
-      await table.getByLabel("Example", { exact: true }).inputValue() ===
+      await table.getByRole("combobox").inputValue() ===
           "rich-cells" &&
         await table.getByRole("button", { name: "CLI", exact: true })
             .getAttribute("aria-pressed") === "true",
@@ -227,10 +227,8 @@ export async function verifyCompareJourneys(
       .getByRole("link", { name: "Table", exact: true });
     await jump.focus();
     await page.keyboard.press("Enter");
-    await eventually(
-      () => new URL(page.url()).hash === "#compare-component-table",
-      "Keyboard Compare jump lost its target identity",
-    );
+    await page.waitForURL((url) => url.hash === "#compare-component-table");
+    await table.waitFor({ state: "visible" });
     await page.keyboard.press("Tab");
     invariant(
       await table.locator("a:focus").count() === 1,
