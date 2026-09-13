@@ -349,7 +349,7 @@ const failureTriageRecipe = defineRecipe({
     stages: [
       ".discern-result-summary",
       ".discern-diagnostic",
-      ".discern-raw-output",
+      ".discern-diagnostic + .discern-raw-output",
       ".discern-retry-notice",
     ],
   },

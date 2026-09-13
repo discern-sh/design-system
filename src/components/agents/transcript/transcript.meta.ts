@@ -20,7 +20,7 @@ const meta = {
 export const componentExampleVocabulary = [{
   id: "default",
   label: "Review handoff",
-}, { id: "dense", label: "Routine entries and decision boundaries" }] as const;
+}, { id: "dense", label: "Routine turns and decisions" }] as const;
 defineComponentExampleVocabulary(meta, componentExampleVocabulary);
 
 export default meta;

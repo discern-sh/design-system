@@ -183,18 +183,31 @@ function namesState(value: string, state: string): boolean {
   return expected !== "" && words.includes(` ${expected} `);
 }
 
+/** Component-scoped authored labels shared by static and browser witness guards. */
+export const statusWitnessEnrollments = [
+  {
+    component: "activity-log",
+    className: "discern-activity-log",
+    state: "active",
+    label: activityStatusLabels.active,
+  },
+  {
+    component: "fleet",
+    className: "discern-fleet__row",
+    state: "done",
+    label: fleetStatusLabel("done"),
+  },
+] as const;
+
 /** Exact authored label aliases; other Components retain the literal state contract. */
 export function statusWitnessNames(
   component: string,
   state: string,
 ): readonly string[] {
-  if (component === "activity-log" && state === "active") {
-    return [state, activityStatusLabels.active];
-  }
-  if (component === "fleet" && state === "done") {
-    return [state, fleetStatusLabel("done")];
-  }
-  return [state];
+  const enrollment = statusWitnessEnrollments.find((entry) =>
+    entry.component === component && entry.state === state
+  );
+  return enrollment === undefined ? [state] : [state, enrollment.label];
 }
 
 function allElements(root: HtmlElement): readonly HtmlElement[] {
@@ -285,14 +298,14 @@ export function missingWitnessesInHtml(
       if (state === undefined || state === "") continue;
       occurrence += 1;
       const classes = (element.attributes.get("class") ?? "").split(/\s+/u);
-      const component = classes.includes("discern-activity-log")
-        ? "activity-log"
-        : classes.includes("discern-fleet__row")
-        ? "fleet"
-        : "";
+      const component = statusWitnessEnrollments.find((entry) =>
+        classes.includes(entry.className) && entry.state === state
+      )?.component ?? "";
       const names = statusWitnessNames(component, state);
       if (
-        names.some((name) => namesState(descendantText(element, false), name))
+        names.some((name) =>
+          namesState(descendantText(element, false), name)
+        )
       ) continue;
       if (names.some((name) => hasNamedIcon(element, name, ids))) continue;
       hits.push({ tag: element.tag, attribute, state, occurrence });

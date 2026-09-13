@@ -12,7 +12,7 @@ const meta = {
   order: 210,
   cli: { stance: "rendered" },
   description:
-    "One tool result fact stated in plain language, with supporting counts, duration, next action, and an optional adapter-only copy of its machine-readable form.",
+    "One tool result fact stated in plain language, with next action before supporting counts, duration, and optional exact machine-data copy.",
   purposes: [
     "building-documentation",
     "displaying-tool-output",
@@ -29,7 +29,7 @@ const meta = {
     "Every state appears as a visible word; semantic colour and markers only reinforce it.",
     "The primary fact and optional next action remain complete text in source order without relying on layout or terminal conventions.",
     "Supporting figures use a definition list, keeping each label programmatically bound to its value.",
-    "The adapter-only machine-data copy action announces completion politely and leaves focus on the button.",
+    "The machine-data copy action uses the selected static CopyButton behaviour, announces completion politely and leaves focus on the button.",
   ],
 } satisfies ComponentMeta;
 

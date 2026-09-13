@@ -1839,7 +1839,7 @@ export const componentExampleRegistry = {
     },
     {
       "id": "dense",
-      "label": "Routine entries and decision boundaries",
+      "label": "Routine turns and decisions",
       "surfaces": [
         "web",
         "cli",
