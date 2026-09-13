@@ -205,11 +205,14 @@ Deno.test("stacked fields keep the related rhythm between label, control, and me
     const gap = await page.locator(".discern-field").first().evaluate((node) =>
       Number.parseFloat(getComputedStyle(node).rowGap)
     );
-    const related = await page.locator("html").evaluate((node) =>
-      Number.parseFloat(
-        getComputedStyle(node).getPropertyValue("--discern-rhythm-related"),
-      )
-    );
+    const related = await page.evaluate(() => {
+      const probe = document.createElement("div");
+      probe.style.marginBlockStart = "var(--discern-rhythm-related)";
+      document.body.append(probe);
+      const value = Number.parseFloat(getComputedStyle(probe).marginTop);
+      probe.remove();
+      return value;
+    });
     const label = await box(page, "label[for] >> nth=0");
     const input = await box(page, 'input[name="team"]');
     const hint = await box(page, ".discern-field__message");
@@ -231,6 +234,9 @@ Deno.test("validation keeps values, focus, and geometry through failure, correct
     const page = await browser.newPage({
       viewport: { width: 720, height: 900 },
     });
+    // Deterministic colours: never read a border mid-transition, and prove
+    // the journey holds with motion reduced.
+    await page.emulateMedia({ reducedMotion: "reduce" });
     const form = (error?: string, email = "") =>
       renderToStaticMarkup(
         <form action="https://example.test/submit" method="get">
@@ -250,10 +256,12 @@ Deno.test("validation keeps values, focus, and geometry through failure, correct
     await page.setContent(pageHtml(css, form(), { width: 640 }));
     const email = page.locator('input[name="email"]');
     const before = await box(page, 'input[name="email"]');
-    const dangerBorder = await email.evaluate((node) => {
-      node.style.setProperty("border-color", "var(--discern-color-danger)");
-      const value = getComputedStyle(node).borderTopColor;
-      node.style.removeProperty("border-color");
+    const dangerBorder = await page.evaluate(() => {
+      const probe = document.createElement("div");
+      probe.style.borderTop = "1px solid var(--discern-color-danger)";
+      document.body.append(probe);
+      const value = getComputedStyle(probe).borderTopColor;
+      probe.remove();
       return value;
     });
     // Native constraint validation blocks the submit, marks the control,
