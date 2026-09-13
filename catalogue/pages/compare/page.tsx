@@ -404,16 +404,15 @@ export function ComparePage(
               </nav>
             </OverflowCue>
             <div className="discern-catalogue-review__population">
-              {grouped.map(({ group, entries }) => (
-                <section
-                  className="discern-catalogue-component-group"
-                  key={group}
-                >
-                  <div className="discern-catalogue-subsection__heading">
-                    <h2>{group}</h2>
-                    <span>{entries.length}</span>
-                  </div>
-                  {entries.map((entry) => {
+              <section aria-labelledby="discern-compare-specimens-heading">
+                <div className="discern-catalogue-subsection__heading">
+                  <h2 id="discern-compare-specimens-heading">
+                    Selected specimens
+                  </h2>
+                  <span>{scope.components.length}</span>
+                </div>
+                <div className="discern-catalogue-review__grid">
+                  {scope.components.map((entry) => {
                     const itemSurface =
                       state.surfaceOverrides[entry.meta.slug] ??
                         state.globalSurface;
@@ -469,8 +468,8 @@ export function ComparePage(
                       />
                     );
                   })}
-                </section>
-              ))}
+                </div>
+              </section>
             </div>
           </div>
         )}
