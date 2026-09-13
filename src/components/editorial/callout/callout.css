@@ -2,7 +2,6 @@
   .discern-callout {
     --discern-callout-fill: var(--discern-color-accent-100);
     --discern-callout-text: var(--discern-color-accent-700);
-    min-inline-size: 0;
     overflow-wrap: anywhere;
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);

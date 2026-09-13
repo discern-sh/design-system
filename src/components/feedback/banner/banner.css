@@ -13,7 +13,6 @@
     color: var(--discern-banner-text);
     font-size: var(--discern-font-size-sm);
     line-height: var(--discern-leading-body);
-    min-inline-size: 0;
     overflow-wrap: anywhere;
   }
   .discern-banner--accent {
@@ -48,6 +47,7 @@
     display: grid;
     flex: none;
     place-items: center;
+    align-content: center;
     inline-size: 1.2rem;
     block-size: 1.2rem;
     margin-block-start: calc(var(--discern-space-1) / 4);
