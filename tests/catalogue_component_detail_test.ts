@@ -31,6 +31,8 @@ Deno.test("detail URL defaults and valid fragments preserve canonical surface se
           example.surfaces.includes(surface)
         )?.id ?? entry.canonicalExamples[0]?.id ?? "default",
         view: "single",
+        width: "fit",
+        expanded: false,
       });
       assertEquals(
         parseComponentDetailState(
@@ -58,6 +60,64 @@ Deno.test("detail URL defaults and valid fragments preserve canonical surface se
       surface: "cli",
       exampleId: "failure",
       view: "single",
+      width: "fit",
+      expanded: false,
+    },
+  );
+});
+
+Deno.test("detail view, width, and expansion state round-trip through canonical URLs", async () => {
+  const { registry } = await catalogue();
+  const command = catalogueEntry(registry, "command");
+  const inspection = parseComponentDetailState(
+    command,
+    new URL(
+      "https://catalogue.example/catalogue/components/command/?example=overflow&view=playground&width=narrow&expanded=1",
+    ),
+    "web",
+  );
+  assertEquals(inspection, {
+    surface: "web",
+    exampleId: "overflow",
+    view: "playground",
+    width: "narrow",
+    expanded: true,
+  });
+  const href = componentDetailHref(command, inspection, { anchor: true });
+  assertEquals(
+    href,
+    "/catalogue/components/command/?example=overflow&view=playground&width=narrow&expanded=1",
+  );
+  assertEquals(
+    parseComponentDetailState(
+      command,
+      new URL(href, "https://catalogue.example"),
+      "web",
+    ),
+    inspection,
+  );
+  assertEquals(
+    parseComponentDetailState(
+      command,
+      new URL(
+        "https://catalogue.example/?view=states&width=invalid&expanded=2",
+      ),
+      "web",
+    ).view,
+    "states",
+  );
+  assertEquals(
+    parseComponentDetailState(
+      command,
+      new URL("https://catalogue.example/?width=oversize&expanded=yes"),
+      "web",
+    ),
+    {
+      surface: "web",
+      exampleId: command.canonicalExamples[0]?.id ?? "default",
+      view: "single",
+      width: "fit",
+      expanded: false,
     },
   );
 });
@@ -76,6 +136,8 @@ Deno.test("Component detail URL state round-trips canonical evidence", async () 
     surface: "cli",
     exampleId: "failure",
     view: "all",
+    width: "fit",
+    expanded: false,
   });
   assertEquals(
     componentDetailHref(command, detail, { anchor: true }),
