@@ -98,6 +98,8 @@ The focused queued suite passed 65 tests. Terminal checks cover dense frames at 
 
 The reel uses click/focus actions to present native open states; its synthetic key dispatch cannot trigger browser default disclosure. Real keyboard semantics are exercised by browser tests and manual Enter/Tab inspection. Canonical images come from `deno task catalogue:images --update`; generated package projections come from `deno task codegen`.
 
+The review wrapper contains horizontal inspection only. Its real-wheel regression covers document scrolling over the component and surrounding padding with closed/open evidence at 390/1440 page widths, while retaining horizontal movement for a 1120-pixel specimen. A CSS parser scans every stylesheet beneath `catalogue/review/` for block-axis containment, including future folders and an unrelated synthetic container. This guard covers review layout, not the independently bounded Builder/Appearance panes or public Components' own scroll regions.
+
 Exact review entry points (the authored posture determines the allocation):
 
 - [Result summary, closed wide](http://localhost:18841/catalogue/reviews/components/?group=Workflow&component=result-summary&example=failed&posture=failed-wide&width=wide&theme=light&mode=reel) and [open narrow](http://localhost:18841/catalogue/reviews/components/?group=Workflow&component=result-summary&example=failed&posture=result-evidence&width=narrow&theme=dark&mode=reel).

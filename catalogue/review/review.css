@@ -121,7 +121,7 @@
     overflow: auto;
     padding: 18px;
     background: var(--discern-color-canvas);
-    overscroll-behavior: contain;
+    overscroll-behavior-inline: contain;
   }
   .discern-review-specimen {
     box-sizing: border-box;
