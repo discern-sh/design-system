@@ -6,6 +6,7 @@ Each release is cut from a green run of the full release gate — formatting, li
 
 ## Unreleased
 
+- Fit Catalogue Composition previews to their actually allocated canvas by default, following container resizes without document overflow. Narrow, Standard, and Wide remain exact URL-reproducible inspection widths; selecting Fit clears the width parameter, and existing width links, horizontal-scroll affordances, keyboard access, and copy actions keep their behaviour.
 - Make Catalogue Component discovery more compact, frame generated thumbnails by subject, filter by canonical Web/CLI availability and declared package behaviours, and preserve query, filters, Appearance, and result focus through detail/back/previous/next navigation.
 - Migrate the canonical Catalogue image-capture host to macOS 27.0 with Darwin kernel 27.0.0, retaining the pinned Deno, Playwright, and Chromium versions. Stale-image update diagnostics now distinguish the macOS product version from the Darwin kernel release.
 - Add `checkDiagram` to `./diagram` and `checkChart` to `./chart`: one pass returns every budget finding with its path, facts, and remedy, then the structural or layout refusal that stopped the run, instead of one refusal per render attempt. Budget refusal messages now name the offending path.
