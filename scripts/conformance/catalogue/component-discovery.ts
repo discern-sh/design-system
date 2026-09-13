@@ -18,6 +18,7 @@ export async function verifyComponentDiscoveryJourneys(
   origin: string,
   expectedComponents: readonly string[],
 ): Promise<void> {
+  await verifyDiscoveryControlStability(page, origin);
   await verifyDiscoveryPresentation(page, origin);
   await withViewport(page, WIDE_VIEWPORT, async () => {
     const discoveryUrl = new URL(catalogueRoutePaths.components, origin);
@@ -65,18 +66,19 @@ export async function verifyComponentDiscoveryJourneys(
       "Dark discovery did not select the truthful generated image theme",
     );
 
-    await page.getByRole("button", { name: /All Components \(/ }).click();
+    await page.getByRole("link", { name: "Browse all components" }).click();
     invariant(
       new URL(page.url()).searchParams.get("all") === "1" &&
         new URL(page.url()).searchParams.get("theme") === "dark",
       "All Components did not enter URL state without losing Appearance",
     );
-    invariant(
-      await page.locator(".discern-catalogue-component-card").count() ===
-        expectedComponents.length,
-      "All Components did not enrol the complete live registry",
+    await eventually(
+      async () =>
+        await page.locator(".discern-catalogue-component-card").count() ===
+          expectedComponents.length,
+      "Browse all components did not enrol the complete live registry",
     );
-    await page.getByText("More filters", { exact: true }).click();
+    await page.locator(".discern-catalogue-discovery__filters summary").click();
     const groupSelect = page.getByRole("combobox", {
       name: "Group",
       exact: true,
@@ -104,7 +106,7 @@ export async function verifyComponentDiscoveryJourneys(
       "Forward did not restore the selected Component Group",
     );
 
-    await page.getByRole("button", { name: "Reset directory" }).click();
+    await page.getByRole("link", { name: "Browse collections" }).click();
     const query = page.getByRole("searchbox", { name: "Search Components" });
     await query.fill("call to action");
     const ctaResult = page.locator(".discern-catalogue-component-card").filter({
@@ -127,12 +129,12 @@ export async function verifyComponentDiscoveryJourneys(
       "Component query did not round-trip through the URL",
     );
     invariant(
-      await page.getByRole("button", { name: "Return to collections" })
+      await page.getByRole("link", { name: "Browse collections" })
         .count() ===
         1,
       "Empty Component results need one recovery action",
     );
-    await page.getByRole("button", { name: "Return to collections" }).click();
+    await page.getByRole("link", { name: "Browse collections" }).click();
     await verifyDiscoveryReturnJourney(page, origin);
   });
 }
@@ -328,6 +330,99 @@ async function verifyDiscoveryPresentation(
         ),
         "Discovery overflowed the viewport",
       );
+    });
+  }
+}
+
+/** Primary controls keep their allocation while filtering or revealing options. */
+export async function verifyDiscoveryControlStability(
+  page: Page,
+  origin: string,
+): Promise<void> {
+  for (const width of [1440, 1280, 1024, 1000, 768, 390, 320]) {
+    await withViewport(page, { width, height: 850 }, async () => {
+      await loadCataloguePage(
+        page,
+        new URL("/catalogue/components/", origin).href,
+      );
+      const controls = page.locator(".discern-catalogue-explorer-controls");
+      const bounds = () =>
+        controls.locator(
+          'input[type="search"], .discern-segmented-control__surface, summary',
+        ).evaluateAll((elements) =>
+          elements.map((element) => {
+            const rect = element.getBoundingClientRect();
+            return {
+              x: rect.x + scrollX,
+              y: rect.y + scrollY,
+              width: rect.width,
+              height: rect.height,
+            };
+          })
+        );
+      const original = await bounds();
+      const verify = async (action: string) => {
+        const current = await bounds();
+        invariant(
+          current.length === original.length,
+          "Filtering replaced a primary control",
+        );
+        invariant(
+          current.every((rect, index) => {
+            const before = original[index]!;
+            return (Object.keys(rect) as (keyof typeof rect)[]).every((key) =>
+              Math.abs(rect[key] - before[key]) < 1
+            );
+          }),
+          `Discovery controls moved at ${width}px after ${action}: ${
+            JSON.stringify({ original, current })
+          }`,
+        );
+        invariant(
+          await page.evaluate(() =>
+            document.documentElement.scrollWidth <= innerWidth
+          ),
+          `Discovery controls overflowed at ${width}px after ${action}`,
+        );
+      };
+      for (const radio of await controls.getByRole("radio").all()) {
+        await radio.check();
+        await verify(`choosing ${await radio.inputValue()}`);
+      }
+      await controls.getByRole("radio", { name: "Any", exact: true }).check();
+      invariant(
+        new URL(page.url()).searchParams.get("all") === "1" &&
+          await page.locator("#component-results-title").count() === 1,
+        "Choosing Any must broaden results without switching to collections",
+      );
+      await controls.locator("summary").click();
+      await verify("opening filters");
+      for (const select of await controls.getByRole("combobox").all()) {
+        const value = await select.locator("option").nth(1).getAttribute(
+          "value",
+        );
+        invariant(value, "Discovery needs a declared filter option");
+        await select.selectOption(value);
+        await verify(`choosing ${value}`);
+        await select.selectOption("");
+        await verify(`clearing ${value}`);
+        invariant(
+          await select.isVisible(),
+          "Clearing a filter collapsed the other controls",
+        );
+      }
+      const group = controls.getByRole("combobox", {
+        name: "Group",
+        exact: true,
+      });
+      await group.selectOption({ index: 1 });
+      await controls.locator("summary").click();
+      await verify("closing active filters");
+      const search = controls.getByRole("searchbox");
+      await search.fill("button");
+      await verify("searching");
+      await search.fill("");
+      await verify("clearing search");
     });
   }
 }

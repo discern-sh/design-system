@@ -20,7 +20,6 @@ import { preserveCatalogueAppearanceHref } from "../../shell/appearance-state.ts
 import { CataloguePageHeader, cataloguePurpose } from "../shared.tsx";
 import {
   componentDirectory,
-  componentSupportsSurface,
   matchesComponentCapabilities,
 } from "./collections.ts";
 import {
@@ -49,6 +48,10 @@ export function ComponentIndexPage(
     sortedComponents,
   ]);
   const [state, setState] = useState(currentExplorerState);
+  const [filtersOpen, setFiltersOpen] = useState(() =>
+    state.group !== undefined || state.purpose !== undefined ||
+    state.behavior !== undefined
+  );
 
   useEffect(() => {
     const restore = () => setState(currentExplorerState());
@@ -106,7 +109,13 @@ export function ComponentIndexPage(
     link?.focus({ preventScroll: true });
   }, [state]);
 
-  const reset = () => navigate({ query: "", showAll: false });
+  const browseHref = (showAll: boolean) =>
+    preserveCatalogueAppearanceHref(
+      new URL(globalThis.location.href),
+      componentExplorerHref({ query: "", showAll }),
+    );
+  const secondaryFiltersActive = state.group !== undefined ||
+    state.purpose !== undefined || state.behavior !== undefined;
 
   return (
     <div
@@ -129,18 +138,18 @@ export function ComponentIndexPage(
             type="search"
             value={state.query}
             onChange={(event) =>
-              navigate({ ...state, query: event.currentTarget.value }, true)}
+              navigate({
+                ...state,
+                query: event.currentTarget.value,
+                showAll: true,
+              }, true)}
             placeholder="Name, alias, or purpose"
           />
         </label>
         <SegmentedControl
-          label={`Surface · ${
-            directory.components.filter((entry) =>
-              state.availability === undefined ||
-              componentSupportsSurface(entry, state.availability)
-            ).length
-          } available`}
-          name="discern-discovery-surface"
+          label="Component availability"
+          className="discern-catalogue-discovery__availability"
+          name="discern-discovery-availability"
           value={state.availability ?? "all"}
           items={[
             { value: "all", label: "Any" },
@@ -153,6 +162,7 @@ export function ComponentIndexPage(
             const { availability: _availability, ...rest } = state;
             navigate({
               ...rest,
+              showAll: true,
               ...(value === "web" || value === "cli"
                 ? { availability: value }
                 : {}),
@@ -161,13 +171,18 @@ export function ComponentIndexPage(
         />
         <details
           className="discern-catalogue-discovery__filters"
-          open={state.group !== undefined || state.purpose !== undefined ||
-            state.behavior !== undefined}
+          open={filtersOpen}
+          onToggle={(event) => setFiltersOpen(event.currentTarget.open)}
         >
           <summary>
-            More filters{state.group || state.purpose || state.behavior
-              ? " (active)"
-              : ""}
+            More filters{" "}
+            <span
+              className="discern-catalogue-discovery__filter-status"
+              aria-hidden={!secondaryFiltersActive}
+              data-discern-active={secondaryFiltersActive}
+            >
+              (active)
+            </span>
           </summary>
           <div className="discern-catalogue-discovery__filter-fields">
             <label>
@@ -229,6 +244,7 @@ export function ComponentIndexPage(
                   );
                   navigate({
                     ...rest,
+                    showAll: true,
                     ...(behavior === undefined ? {} : { behavior }),
                   });
                 }}
@@ -250,16 +266,6 @@ export function ComponentIndexPage(
             </p>
           </div>
         </details>
-        {resultsVisible
-          ? <button type="button" onClick={reset}>Reset directory</button>
-          : (
-            <button
-              type="button"
-              onClick={() => navigate({ ...state, showAll: true })}
-            >
-              All Components ({directory.components.length})
-            </button>
-          )}
       </div>
 
       {resultsVisible
@@ -271,6 +277,12 @@ export function ComponentIndexPage(
                   ? "Component results"
                   : cataloguePurposeDetails[state.purpose].label)}
               </h2>
+              <a
+                className="discern-catalogue-discovery__browse"
+                href={browseHref(false)}
+              >
+                Browse collections
+              </a>
               <p aria-live="polite">
                 {matches.length} Component{matches.length === 1 ? "" : "s"}
               </p>
@@ -279,9 +291,7 @@ export function ComponentIndexPage(
               ? (
                 <div className="discern-catalogue-empty">
                   <h3>No matching Components</h3>
-                  <button type="button" onClick={reset}>
-                    Return to collections
-                  </button>
+                  <p>Try another search or broaden your filters.</p>
                 </div>
               )
               : (
@@ -304,6 +314,12 @@ export function ComponentIndexPage(
             <section aria-labelledby="component-groups-title">
               <div className="discern-catalogue-results-header">
                 <h2 id="component-groups-title">Browse by Group</h2>
+                <a
+                  className="discern-catalogue-discovery__browse"
+                  href={browseHref(true)}
+                >
+                  Browse all components
+                </a>
                 <p>{directory.groups.length} Groups</p>
               </div>
               <div className="discern-catalogue-collection-grid">

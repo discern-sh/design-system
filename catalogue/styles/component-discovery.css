@@ -28,7 +28,7 @@
 @layer catalogue {
   .discern-catalogue-explorer-controls {
     display: grid;
-    grid-template-columns: minmax(180px, 1fr) minmax(240px, 1fr) auto auto;
+    grid-template-columns: minmax(0, 1fr) minmax(240px, 0.6fr);
     gap: 10px;
     align-items: end;
     margin-block-end: var(--discern-space-4);
@@ -36,24 +36,6 @@
     border: 1px solid var(--discern-color-border);
     border-radius: var(--discern-radius-lg);
     background: var(--discern-color-surface-sunken);
-  }
-  .discern-catalogue-explorer-controls > button {
-    min-height: var(--discern-control-size-md);
-    padding-inline: 13px;
-    border: 1px solid var(--discern-color-border-strong);
-    border-radius: var(--discern-radius-sm);
-    background: var(--discern-color-surface);
-    color: var(--discern-color-ink);
-    cursor: pointer;
-    font: var(--discern-font-size-xs) var(--discern-font-ui);
-    white-space: nowrap;
-  }
-  .discern-catalogue-explorer-controls > button:hover {
-    background: var(--discern-color-accent-100);
-  }
-  .discern-catalogue-explorer-controls > button:focus-visible {
-    outline: 2px solid var(--discern-color-accent-500);
-    outline-offset: 2px;
   }
   .discern-catalogue-component-index {
     display: grid;
@@ -172,14 +154,21 @@
   }
   .discern-catalogue-explorer-controls .discern-segmented-control__items {
     flex-direction: row;
+    padding: 0;
+  }
+  .discern-catalogue-discovery__availability .discern-segmented-control__legend {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .discern-catalogue-discovery__filter-status[data-discern-active="false"] {
+    visibility: hidden;
   }
   .discern-catalogue-discovery__filters {
-    grid-column: auto;
-    grid-row: auto;
-  }
-  .discern-catalogue-discovery__filters[open] {
     grid-column: 1 / -1;
-    grid-row: 2;
   }
   .discern-catalogue-discovery__filters summary {
     width: fit-content;
@@ -207,6 +196,17 @@
   .discern-catalogue-discovery .discern-catalogue-results-header {
     flex-direction: row;
     align-items: baseline;
+    flex-wrap: wrap;
+    column-gap: var(--discern-space-4);
+    row-gap: var(--discern-space-1);
+  }
+  .discern-catalogue-discovery__browse {
+    margin-inline-start: auto;
+    color: var(--discern-color-accent-700);
+    font-size: var(--discern-font-size-xs);
+  }
+  .discern-catalogue-discovery .discern-catalogue-results-header > p {
+    flex-basis: 100%;
   }
   .discern-catalogue-collection-card .discern-catalogue-index-card__media {
     order: 1;
@@ -246,16 +246,6 @@
   @media (max-width: 1000px) {
     .discern-catalogue-explorer-controls {
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    }
-    .discern-catalogue-discovery__filters {
-      grid-column: 1;
-      grid-row: auto;
-    }
-    .discern-catalogue-discovery__filters[open] {
-      grid-column: 1 / -1;
-    }
-    .discern-catalogue-explorer-controls > button {
-      justify-self: end;
     }
     .discern-catalogue-discovery__filter-fields {
       grid-template-columns: 1fr;
