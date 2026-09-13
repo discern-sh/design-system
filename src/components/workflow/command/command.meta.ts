@@ -23,7 +23,7 @@ const meta = {
   accessibility: [
     "The command is preformatted, never wraps, and its focusable region scrolls horizontally from the keyboard when it exceeds the available width.",
     "No shell-prefix glyph is rendered, so both copied and assistive-technology text contain only the executable input.",
-    "The adapter-only copy action announces its transient text state politely and leaves keyboard focus on the button.",
+    "The copy action uses the selected static CopyButton behaviour, announces its transient text state politely and leaves keyboard focus on the button.",
     "Failure guidance uses an explicit text label alongside attention colour.",
   ],
 } satisfies ComponentMeta;

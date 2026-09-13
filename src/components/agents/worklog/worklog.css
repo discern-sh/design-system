@@ -10,7 +10,8 @@
   .discern-worklog__entry {
     position: relative;
     display: grid;
-    grid-template-columns: var(--discern-space-6) minmax(0, 1fr) max-content;
+    grid-template-columns: var(--discern-space-6) minmax(0, 1fr) minmax(0,
+      max-content);
     align-items: start;
     gap: var(--discern-space-3);
     padding-block: var(--discern-space-2);
@@ -60,6 +61,14 @@
     background: var(--discern-color-danger-soft);
     color: var(--discern-color-danger);
   }
+  .discern-worklog__group {
+    font-size: var(--discern-font-size-xs);
+    color: var(--discern-color-ink-muted);
+  }
+  .discern-worklog__entry[data-discern-routine="continuation"] .discern-worklog__marker {
+    border: none;
+    background: transparent;
+  }
   .discern-worklog__body {
     display: flex;
     flex: 1;
@@ -93,6 +102,6 @@
     line-height: 1.4;
     padding-block-start: calc(var(--discern-space-1) * 0.5);
     text-align: end;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
   }
 }

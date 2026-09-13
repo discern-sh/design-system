@@ -8,7 +8,7 @@ const meta = {
   order: 40,
   cli: { stance: "rendered" },
   description:
-    "Inline file or directory path with middle truncation and an opt-in adapter-only copy affordance, keeping quiet prose inert while owning the correct clipboard payload when copying matters.",
+    "Complete file or directory path that wraps to its allocation, with an opt-in copy affordance using the selected static runtime.",
   purposes: [
     "building-documentation",
     "displaying-tool-output",
@@ -21,8 +21,8 @@ const meta = {
     "You need to summarise a created or changed artifact with ownership and provenance; use Artifact card.",
   ],
   accessibility: [
-    "The full path remains accessible text and a title even when its visible middle is truncated.",
-    "Truncation preserves the rootward prefix and final file or directory segment at narrow widths.",
+    "The full path remains visible, accessible text and a title; no distinguishing segment is removed.",
+    "Long rootward prefixes and terminal segments both wrap at narrow widths.",
     "The optional copy action announces its text state and copies the full untruncated path.",
   ],
 } satisfies ComponentMeta;

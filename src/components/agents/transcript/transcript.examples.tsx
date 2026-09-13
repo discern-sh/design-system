@@ -1,3 +1,5 @@
+import { denseTranscriptTurns } from "../operational-examples.ts";
+import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
 import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { Transcript } from "./transcript.tsx";
 import { AgentPersona } from "../agent-persona/agent-persona.tsx";
@@ -24,10 +26,17 @@ function ReviewHandoffState() {
   );
 }
 
+function DenseState() {
+  return <Transcript turns={denseTranscriptTurns} />;
+}
+
 export const catalogueExamples = defineCatalogueExamples(
   meta,
   componentExampleVocabulary,
-  [{ id: "default", Example: ReviewHandoffState }],
+  [{ id: "default", Example: ReviewHandoffState }, {
+    id: "dense",
+    Example: DenseState,
+  }],
 );
 
 export default function TranscriptExamples() {
@@ -37,3 +46,23 @@ export default function TranscriptExamples() {
     </div>
   );
 }
+
+export const reviewPostures = defineComponentReviewPostures(
+  meta,
+  componentExampleVocabulary,
+  [
+    ...(["narrow", "wide"] as const).map((inlineSize) => ({
+      id: `dense-${inlineSize}`,
+      label: `Dense evidence at ${inlineSize} width`,
+      example: "dense",
+      category: "responsive" as const,
+      requirements: { inlineSize },
+      sequence: [{
+        checkpoint: {
+          id: `dense-${inlineSize}-reading`,
+          label: "Outcome, identity and boundaries",
+        },
+      }],
+    })),
+  ],
+);

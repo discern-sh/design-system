@@ -4,6 +4,7 @@
  * @module
  */
 
+import { measureText } from "../../../cli/text.ts";
 import type {
   CliExample,
   CliPresentationOptions,
@@ -20,7 +21,7 @@ import {
   assertWorkflowCliText,
   styleWorkflowHeading,
   workflowCliWidth,
-  workflowPathText,
+  workflowFactLines,
 } from "../workflow-cli.ts";
 
 const labels: Readonly<Record<FileDisposition, string>> = {
@@ -128,14 +129,12 @@ const renderFileChangeCli: CliRenderer<FileChangeCliProps> = (
   const suffix = props.magnitude === undefined
     ? ""
     : ` +${props.magnitude.added} -${props.magnitude.removed}`;
-  const inlineMagnitude = prefix.length + suffix.length + 1 <= width;
-  const pathWidth = Math.max(
-    1,
-    width - prefix.length - (inlineMagnitude ? suffix.length : 0),
-  );
-  const frame = `${prefix}${
-    workflowPathText(props.path, pathWidth, capabilities)
-  }${inlineMagnitude ? suffix : suffix === "" ? "" : `\n  ${suffix.trim()}`}`;
+  const inline = `${prefix}${props.path}${suffix}`;
+  const frame = measureText(inline) <= width ? inline : [
+    prefix.trimEnd(),
+    ...workflowFactLines("Path", props.path, width),
+    ...(suffix === "" ? [] : [suffix.trim()]),
+  ].join("\n");
   return styleWorkflowHeading(
     frame,
     tones[props.disposition],

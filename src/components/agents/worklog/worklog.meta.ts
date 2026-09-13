@@ -11,6 +11,7 @@ const meta = {
     "Compact statused feed of a run's steps — done, active, queued, failed, or skipped — with text annotations and right-aligned timing.",
   purposes: ["displaying-tool-output"],
   accessibility: [
+    "Explicit routineGroup runs join only adjacent done, queued or skipped records with the same status. Active, failed and unmarked entries remain boundaries; every list item and detail is retained.",
     "Each entry's visible marker glyph carries an accessible status name beside the printed task label.",
     "Status pairs a distinct glyph shape and accessible name with its colour, so no state is conveyed by colour alone.",
     "Renders an ordered list, so assistive technology announces the run's length and each step's place in it.",
@@ -20,6 +21,7 @@ const meta = {
 export const componentExampleVocabulary = [
   { id: "default", label: "Active run" },
   { id: "failure", label: "Failed run" },
+  { id: "dense", label: "Dense operational evidence" },
 ] as const;
 defineComponentExampleVocabulary(meta, componentExampleVocabulary);
 

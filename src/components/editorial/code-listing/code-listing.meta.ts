@@ -8,14 +8,16 @@ const meta = {
   order: 80,
   cli: { stance: "rendered" },
   description:
-    "Captioned source listing with standard and campaign showcase treatments, file and language context, stable line numbers, horizontal overflow, and optional highlighted lines.",
+    "Captioned source listing with standard and campaign showcase treatments, file and language context, exact-source copying, stable line numbers, optional visual wrapping, horizontal scrolling, and highlighted lines.",
   purposes: ["building-documentation", "marketing-site"],
   useWhen: [
     "A reader needs source with stable line references; use showcase when the listing is visual evidence inside a campaign page.",
   ],
   accessibility: [
     "Source remains semantic preformatted code; line numbers and highlights do not alter its readable text.",
-    "Long lines scroll horizontally rather than being visually reflowed into invalid code.",
+    "Wrapping is an authored browser-only option; the default scrolls horizontally. Both preserve logical line numbers and the exact copied string.",
+    "CopyButton uses the selected runtime script; without it the copy control is inert and source remains selectable. Set copyable=false to omit the action.",
+    "The CLI keeps its existing width-bounded, truncated listing; browser wrap and copyable do not change terminal bytes. Use CLI Code block for lossless source inspection.",
     "Showcase keeps the same semantic code and caption while using stable inverse roles in both themes.",
   ],
 } satisfies ComponentMeta;

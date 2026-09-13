@@ -62,14 +62,14 @@ The Component review instrument accepts the same complete state and links both p
 
 Family state uses stable parameters and omits comfort defaults:
 
-| Family                  | Consequential URL state                                                                                             |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| Components index        | [Discovery controls, result anchor, and Appearance](component-discovery.md)                                         |
-| Component detail        | surface, canonical example, deliberate View all, Appearance, and [discovery return context](component-discovery.md) |
-| Compare                 | scope, global surface, overrides, examples, membership, jump target, Appearance state                               |
-| Foundations Appearance  | optional accent hue, Darkness, Structure, Emphasis, Density, and the pigment tints                                  |
-| Tokens and Compositions | query/category and responsive width, plus shared Appearance state                                                   |
-| Terminal layouts        | preset/custom capabilities and grid, plus the shared Web/CLI Appearance projection                                  |
+| Family                  | Consequential URL state                                                                                           |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Components index        | [Discovery controls, result anchor, and Appearance](component-discovery.md)                                       |
+| Component detail        | [surface, canonical example, view, width, and expansion](component-detail.md), plus Appearance and return context |
+| Compare                 | scope, global surface, overrides, examples, membership, jump target, Appearance state                             |
+| Foundations Appearance  | optional accent hue, Darkness, Structure, Emphasis, Density, and the pigment tints                                |
+| Tokens and Compositions | query/category and responsive width, plus shared Appearance state                                                 |
+| Terminal layouts        | preset/custom capabilities and grid, plus the shared Web/CLI Appearance projection                                |
 
 Invalid values fall back to bounded canonical defaults. Components and Compare use native history for consequential selection changes; the filter-style Token, Composition width, Terminal capability, and Appearance controls replace their current entry. Reload and Back/Forward reconstruct visible controls from the URL rather than hidden component state.
 
@@ -95,7 +95,9 @@ The machine-only `?conformance=1` route remains exhaustive. Ordinary indexes sta
 
 ## Where to start
 
-[Component discovery](component-discovery.md) explains capability filtering, representative framing, and shareable return navigation.
+[Comparison workspace](compare.md) explains simultaneous specimens, wrapping, and the independent URL-state boundary.
+
+[Component discovery](component-discovery.md) explains capability filtering, representative framing, and shareable return navigation. [Component detail](component-detail.md) explains the adoption hierarchy, the Builder-backed starter playground, the width-inspection stage, and the snapshot state strip.
 
 For independent page, style, and test work, use the [Catalogue ownership seams](ownership-seams.md) before editing shared consumers. [Shell controls](shell-controls.md) records preset, exact-entry, search-history, and responsive focus boundaries.
 

@@ -1,0 +1,249 @@
+/* Shared prop-control and structured-object field styles. Consumed by the
+   Builder inspector and the Component detail playground. */
+@layer catalogue {
+  .discern-builder-control {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: var(--discern-font-size-xs);
+  }
+  .discern-builder-control__heading {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 4px 8px;
+    align-items: start;
+  }
+  .discern-builder-control__heading > div {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .discern-builder-control__heading label {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    color: var(--discern-color-ink);
+    font-weight: var(--discern-font-weight-strong);
+  }
+  .discern-builder-control__technical,
+  .discern-builder-control__help {
+    display: block;
+    overflow: hidden;
+    color: var(--discern-color-ink-faint);
+    font-weight: var(--discern-font-weight-body);
+    text-overflow: ellipsis;
+  }
+  .discern-builder-control__help {
+    color: var(--discern-color-ink-muted);
+  }
+  .discern-builder-control__effective {
+    grid-column: 1 / -1;
+    margin: 0;
+    color: var(--discern-color-ink-muted);
+  }
+  .discern-builder-control__effective strong {
+    color: var(--discern-color-ink);
+  }
+  .discern-builder-control__reset,
+  .discern-builder-json-apply {
+    padding: 4px 7px;
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-md);
+    background: var(--discern-color-surface);
+    color: inherit;
+    font-size: var(--discern-font-size-xs);
+    cursor: pointer;
+  }
+  .discern-builder-json-apply {
+    align-self: flex-start;
+  }
+  .discern-builder-control--toggle {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+  .discern-builder-control--toggle > .discern-builder-control__heading {
+    grid-column: 1;
+  }
+  .discern-builder-control--toggle > input {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .discern-builder-control--row {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+  .discern-builder-control > span {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    color: var(--discern-color-ink-muted);
+    font-weight: var(--discern-font-weight-strong);
+  }
+  .discern-builder-control code {
+    overflow: hidden;
+    max-width: 160px;
+    color: var(--discern-color-ink-faint);
+    font-family: var(--discern-font-mono);
+    font-feature-settings: normal;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .discern-builder-control input[type="text"],
+  .discern-builder-control input[type="number"],
+  .discern-builder-control textarea {
+    padding: 6px 8px;
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-md);
+    background: var(--discern-color-canvas);
+    color: inherit;
+    font: inherit;
+  }
+  .discern-builder-control textarea {
+    overflow: hidden;
+    resize: none;
+    font-family: var(--discern-font-mono);
+    font-feature-settings: normal;
+    font-size: var(--discern-font-size-xs);
+  }
+  .discern-builder-control__optional {
+    color: var(--discern-color-ink-faint);
+    font-weight: var(--discern-font-weight-body);
+  }
+  .discern-builder-control__required {
+    color: var(--discern-color-accent-600);
+    font-weight: var(--discern-font-weight-body);
+  }
+  .discern-builder-control__error {
+    color: var(--discern-color-danger);
+  }
+  .discern-builder-control__issue {
+    padding: 8px;
+    border-inline-start: 3px solid var(--discern-color-danger);
+    background: var(--discern-color-danger-soft);
+  }
+  .discern-builder-control__issue p {
+    margin: 0;
+  }
+  .discern-builder-control__issue details {
+    margin-block-start: 6px;
+  }
+  .discern-builder-control__issue summary,
+  .discern-builder-control__hint {
+    color: var(--discern-color-ink-muted);
+    cursor: pointer;
+  }
+  .discern-builder-control__issue code {
+    display: block;
+    max-width: none;
+    margin-block-start: 4px;
+    overflow: auto;
+    white-space: normal;
+  }
+
+  .discern-builder-object {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .discern-builder-object__row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-start;
+    padding: 8px;
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-md);
+    background: var(--discern-color-canvas);
+  }
+  .discern-builder-object__row > summary {
+    width: 100%;
+    color: var(--discern-color-ink-muted);
+    font-weight: var(--discern-font-weight-strong);
+    cursor: pointer;
+  }
+  .discern-builder-object__cells {
+    display: flex;
+    flex: 1;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-width: 0;
+  }
+  .discern-builder-object__cell {
+    display: flex;
+    flex: 1 1 45%;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    font-size: var(--discern-font-size-xs);
+  }
+  .discern-builder-object__cell > span {
+    color: var(--discern-color-ink-muted);
+    font-weight: var(--discern-font-weight-strong);
+  }
+  .discern-builder-object__cell--row {
+    flex-basis: 100%;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+  }
+  .discern-builder-object__cell input[type="text"],
+  .discern-builder-object__cell input[type="number"] {
+    min-width: 0;
+    padding: 5px 7px;
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-md);
+    background: var(--discern-color-surface);
+    color: inherit;
+    font: inherit;
+  }
+  .discern-builder-object__cell .discern-select .discern-control {
+    min-block-size: 30px;
+    padding-block: 4px;
+    font-size: var(--discern-font-size-xs);
+  }
+  .discern-builder-object__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .discern-builder-object__actions > button {
+    padding: 5px 8px;
+    border: none;
+    border-radius: var(--discern-radius-md);
+    background: none;
+    color: var(--discern-color-ink-faint);
+    cursor: pointer;
+  }
+  .discern-builder-object__actions > button:hover:not(:disabled) {
+    background: var(--discern-color-danger-soft);
+    color: var(--discern-color-danger);
+  }
+  .discern-builder-object__add {
+    align-self: flex-start;
+    padding: 6px 10px;
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-md);
+    background: var(--discern-color-surface);
+    color: inherit;
+    font-size: var(--discern-font-size-xs);
+    cursor: pointer;
+  }
+  .discern-builder-object__add:hover {
+    border-color: var(--discern-color-border-strong);
+    background: var(--discern-color-surface-sunken);
+  }
+  .discern-builder-object__raw summary {
+    color: var(--discern-color-ink-faint);
+    font-size: var(--discern-font-size-xs);
+    cursor: pointer;
+  }
+  .discern-builder-object__raw textarea {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 38px;
+    margin-top: 6px;
+  }
+}

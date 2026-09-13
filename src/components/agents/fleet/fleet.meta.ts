@@ -13,13 +13,14 @@ const meta = {
   accessibility: [
     "Ahead/behind arrows are hidden decoration; the counts are spoken as visually hidden words after them.",
     "Pass label to name the board; assistive technology then announces the list and its length under that name.",
-    "The persona and state slots carry their own semantics — compose Agent persona and Badge so identity and status stay announced once each.",
+    "The optional status prints its semantic word independently of the state slot. Provide nextAction for blocked work; omit redundant status in the persona slot. Branch text wraps completely.",
   ],
 } satisfies ComponentMeta;
 
 export const componentExampleVocabulary = [
   { id: "default", label: "Parallel work" },
   { id: "lossless-identities", label: "Long identities" },
+  { id: "dense", label: "Dense operational evidence" },
 ] as const;
 defineComponentExampleVocabulary(meta, componentExampleVocabulary);
 

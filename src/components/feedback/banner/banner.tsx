@@ -1,3 +1,5 @@
+import { Cluster } from "../../layout/cluster/cluster.tsx";
+import { Stack } from "../../layout/stack/stack.tsx";
 import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
@@ -9,6 +11,10 @@ export type { BannerTone } from "./banner.types.ts";
 export interface BannerProps extends HTMLAttributes<HTMLDivElement> {
   readonly tone?: BannerTone;
   readonly icon?: ReactNode;
+  /** Optional visible heading; the native title attribute remains available. */
+  readonly heading?: ReactNode;
+  /** Follow-up controls rendered after the message. */
+  readonly actions?: ReactNode;
   readonly children: ReactNode;
 }
 
@@ -25,7 +31,16 @@ export const Banner: DiscernComponent<HTMLDivElement, BannerProps> = forwardRef<
   HTMLDivElement,
   BannerProps
 >(function Banner(
-  { tone = "neutral", icon, children, className, role, ...props },
+  {
+    tone = "neutral",
+    icon,
+    heading,
+    actions,
+    children,
+    className,
+    role,
+    ...props
+  },
   ref,
 ) {
   const semanticRole = role ?? (tone === "danger" ? "alert" : "status");
@@ -49,7 +64,13 @@ export const Banner: DiscernComponent<HTMLDivElement, BannerProps> = forwardRef<
       >
         {icon ?? toneGlyphs[tone]}
       </span>
-      <div>{children}</div>
+      <Stack gap={3} className="discern-banner__content">
+        {heading !== undefined && (
+          <h3 className="discern-banner__heading">{heading}</h3>
+        )}
+        <Stack className="discern-banner__body">{children}</Stack>
+        {actions !== undefined && <Cluster>{actions}</Cluster>}
+      </Stack>
     </div>
   );
 });

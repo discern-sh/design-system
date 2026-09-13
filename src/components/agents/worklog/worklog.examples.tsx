@@ -1,3 +1,5 @@
+import { denseWorklogEntries } from "../operational-examples.ts";
+import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
 import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { Worklog } from "./worklog.tsx";
 import meta, { componentExampleVocabulary } from "./worklog.meta.ts";
@@ -43,12 +45,17 @@ function FailedRunState() {
   );
 }
 
+function DenseState() {
+  return <Worklog entries={denseWorklogEntries} />;
+}
+
 export const catalogueExamples = defineCatalogueExamples(
   meta,
   componentExampleVocabulary,
   [
     { id: "default", Example: ActiveRunState, capture: worklogCapture },
     { id: "failure", Example: FailedRunState, capture: worklogCapture },
+    { id: "dense", Example: DenseState, capture: worklogCapture },
   ],
 );
 
@@ -60,3 +67,23 @@ export default function WorklogExamples() {
     </div>
   );
 }
+
+export const reviewPostures = defineComponentReviewPostures(
+  meta,
+  componentExampleVocabulary,
+  [
+    ...(["narrow", "wide"] as const).map((inlineSize) => ({
+      id: `dense-${inlineSize}`,
+      label: `Dense evidence at ${inlineSize} width`,
+      example: "dense",
+      category: "responsive" as const,
+      requirements: { inlineSize },
+      sequence: [{
+        checkpoint: {
+          id: `dense-${inlineSize}-reading`,
+          label: "Outcome, identity and boundaries",
+        },
+      }],
+    })),
+  ],
+);

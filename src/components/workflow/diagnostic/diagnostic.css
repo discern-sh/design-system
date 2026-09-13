@@ -2,7 +2,7 @@
   .discern-diagnostic {
     container: discern-diagnostic / inline-size;
     display: grid;
-    gap: var(--discern-space-5);
+    gap: var(--discern-space-4);
     max-inline-size: 100%;
     min-inline-size: 0;
     padding: var(--discern-space-5);
@@ -21,7 +21,6 @@
   .discern-diagnostic__severity,
   .discern-diagnostic__label,
   .discern-diagnostic__coordinates,
-  .discern-diagnostic__evidence pre,
   .discern-diagnostic__correction strong {
     font-size: var(--discern-font-size-xs);
   }
@@ -52,7 +51,6 @@
     text-transform: uppercase;
   }
   .discern-diagnostic__impact,
-  .discern-diagnostic__evidence,
   .discern-diagnostic__commands > section {
     display: grid;
     gap: var(--discern-space-2);
@@ -80,25 +78,6 @@
     color: var(--discern-color-ink-muted);
     font-family: var(--discern-font-mono);
   }
-  .discern-diagnostic__evidence pre {
-    max-inline-size: 100%;
-    margin: 0;
-    overflow-x: auto;
-    padding: var(--discern-space-3) var(--discern-space-4);
-    border-inline-start: 0.125rem solid var(--discern-color-border-strong);
-    background: var(--discern-color-surface-sunken);
-    color: var(--discern-color-ink);
-    font-family: var(--discern-font-mono);
-    line-height: var(--discern-leading-body);
-    white-space: pre;
-  }
-  .discern-diagnostic__evidence code {
-    display: block;
-    inline-size: max-content;
-    min-inline-size: 100%;
-    color: inherit;
-    font: inherit;
-  }
   .discern-diagnostic__commands {
     display: grid;
     gap: var(--discern-space-4);
@@ -108,10 +87,7 @@
     display: grid;
     grid-template-columns: max-content minmax(0, 1fr);
     gap: var(--discern-space-3);
-    padding: var(--discern-space-3) var(--discern-space-4);
-    border-inline-start: 0.125rem solid var(--discern-color-warning);
-    background: var(--discern-color-warning-soft);
-    color: var(--discern-color-warning-deep);
+    color: var(--discern-color-ink);
     font-size: var(--discern-font-size-sm);
     line-height: var(--discern-leading-body);
   }

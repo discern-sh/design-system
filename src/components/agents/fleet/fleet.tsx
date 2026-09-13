@@ -1,6 +1,8 @@
 import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
+import type { AgentStatus } from "../agent-avatar/agent-avatar.types.ts";
+import { fleetStatusLabel } from "./fleet.types.ts";
 import { classNames } from "../../class-names.ts";
 
 /** One row rendered by the {@linkcode Fleet} component. */
@@ -8,6 +10,10 @@ export interface FleetRow {
   readonly persona: ReactNode;
   readonly branch?: ReactNode;
   readonly state?: ReactNode;
+  /** Semantic status printed as a visible word, independently of the state slot. */
+  readonly status?: AgentStatus;
+  /** Caller-authored explanation or action for work needing attention. */
+  readonly nextAction?: ReactNode;
   readonly ahead?: number;
   readonly behind?: number;
   readonly meta?: ReactNode;
@@ -50,15 +56,32 @@ export const Fleet: DiscernComponent<HTMLUListElement, FleetProps> = forwardRef<
       {...props}
     >
       {rows.map((row, index) => (
-        <li className="discern-fleet__row" key={index}>
+        <li
+          className="discern-fleet__row"
+          data-discern-status={row.status}
+          key={index}
+        >
           <span className="discern-fleet__persona">{row.persona}</span>
           {row.branch !== undefined && row.branch !== null
             ? <span className="discern-fleet__branch">{row.branch}</span>
             : null}
-          {row.state !== undefined && row.state !== null
-            ? <span className="discern-fleet__state">{row.state}</span>
+          {row.status !== undefined ||
+              (row.state !== undefined && row.state !== null)
+            ? (
+              <span className="discern-fleet__state">
+                {row.status !== undefined && (
+                  <strong>{fleetStatusLabel(row.status)}</strong>
+                )}
+                {row.state !== undefined && <span>{row.state}</span>}
+              </span>
+            )
             : null}
           {drift(row.ahead, row.behind)}
+          {row.nextAction !== undefined && (
+            <span className="discern-fleet__next">
+              <strong>Next:</strong> {row.nextAction}
+            </span>
+          )}
           {row.meta !== undefined && row.meta !== null
             ? <span className="discern-fleet__meta">{row.meta}</span>
             : null}

@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import { RawOutput } from "../raw-output/raw-output.tsx";
 import { CopyButton } from "../../docs/copy-button/copy-button.tsx";
 import {
   RESULT_SUMMARY_STATE_LABELS,
@@ -63,6 +64,14 @@ export const ResultSummary: DiscernComponent<
         </span>
         <div className="discern-result-summary__fact">{fact}</div>
       </header>
+      {nextAction !== undefined
+        ? (
+          <div className="discern-result-summary__next">
+            <strong>Next action</strong>
+            <div>{nextAction}</div>
+          </div>
+        )
+        : null}
       {hasReadings
         ? (
           <dl className="discern-result-summary__readings">
@@ -83,18 +92,15 @@ export const ResultSummary: DiscernComponent<
           </dl>
         )
         : null}
-      {nextAction !== undefined
-        ? (
-          <div className="discern-result-summary__next">
-            <strong>Next action</strong>
-            <div>{nextAction}</div>
-          </div>
-        )
-        : null}
       {machineReadable !== undefined
         ? (
           <div className="discern-result-summary__machine">
-            <span>Machine-readable result</span>
+            <RawOutput
+              label="Result data"
+              outcome={RESULT_SUMMARY_STATE_LABELS[state]}
+            >
+              {machineReadable}
+            </RawOutput>
             <CopyButton
               value={machineReadable}
               label={copyLabel}

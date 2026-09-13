@@ -1,3 +1,5 @@
+import { denseVerificationReport } from "../operational-examples.ts";
+import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
 import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { VerificationReport } from "./verification-report.tsx";
 import { Diffstat } from "../../display/diffstat/diffstat.tsx";
@@ -42,9 +44,13 @@ function FailingReportState() {
         { label: "tests", state: "fail", value: "2 of 184 failing" },
         { label: "preview", state: "skip" },
       ]}
-      footer="Fix the failing cases before handing off."
+      nextAction="Fix the failing cases before handing off."
     />
   );
+}
+
+function DenseState() {
+  return <VerificationReport {...denseVerificationReport} />;
 }
 
 export const catalogueExamples = defineCatalogueExamples(
@@ -53,6 +59,7 @@ export const catalogueExamples = defineCatalogueExamples(
   [
     { id: "default", Example: PassingReportState },
     { id: "failure", Example: FailingReportState },
+    { id: "dense", Example: DenseState },
   ],
 );
 
@@ -64,3 +71,48 @@ export default function VerificationReportExamples() {
     </div>
   );
 }
+
+export const reviewPostures = defineComponentReviewPostures(
+  meta,
+  componentExampleVocabulary,
+  [
+    ...(["narrow", "wide"] as const).map((inlineSize) => ({
+      id: `dense-${inlineSize}`,
+      label: `Dense evidence at ${inlineSize} width`,
+      example: "dense",
+      category: "responsive" as const,
+      requirements: { inlineSize },
+      sequence: [{
+        checkpoint: {
+          id: `dense-${inlineSize}-reading`,
+          label: "Outcome, identity and boundaries",
+        },
+      }],
+    })),
+    {
+      id: "open-evidence",
+      label: "Opened complete evidence",
+      example: "dense",
+      category: "interaction",
+      requirements: { inlineSize: "narrow" },
+      sequence: [
+        {
+          action: "click",
+          target: {
+            selector: ".discern-verification-report__evidence > summary",
+          },
+        },
+        {
+          expect: "visible",
+          target: { selector: ".discern-verification-report__checks" },
+        },
+        {
+          checkpoint: {
+            id: "evidence-open",
+            label: "24 exact checks and artifact context",
+          },
+        },
+      ],
+    },
+  ],
+);

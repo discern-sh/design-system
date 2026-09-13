@@ -15,6 +15,10 @@
     tab-size: 4;
     white-space: pre;
   }
+  .discern-code-block--wrap {
+    white-space: break-spaces;
+    overflow-wrap: anywhere;
+  }
   .discern-code-block:first-child {
     margin-block-start: 0;
   }

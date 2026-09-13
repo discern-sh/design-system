@@ -1,4 +1,5 @@
 import type { Page } from "playwright-core";
+import { waitForPaintedFrames } from "../../browser-conformance-support.ts";
 import { baseTokens } from "../../../src/tokens/tokens.ts";
 import { misalignedGridText } from "../centered-grid-text.ts";
 import { invariant } from "./support.ts";
@@ -16,6 +17,7 @@ export async function verifySharedFoundations(page: Page): Promise<void> {
         document.querySelector<HTMLElement>(".discern-catalogue-shell")!.style
           .setProperty("--discern-density", String(point.density));
       }, { density, fontSize });
+      await waitForPaintedFrames(page);
       const gridTextFailures = await misalignedGridText(page);
       invariant(gridTextFailures.length === 0, gridTextFailures.join("\n"));
       const geometry = await study.evaluate((node) => {
@@ -52,7 +54,9 @@ export async function verifySharedFoundations(page: Page): Promise<void> {
           dimensions.length === 2 &&
             Math.abs(dimensions[0]!.height - dimensions[1]!.height) < 0.1 &&
             Math.abs(dimensions[1]!.height - dimensions[1]!.width) < 0.1,
-          `${size} action sizes must align and Icon button must remain square`,
+          `${size} action sizes must align and Icon button must remain square at density ${density}, root ${fontSize}: ${
+            JSON.stringify(dimensions)
+          }`,
         );
       }
     }
@@ -63,6 +67,7 @@ export async function verifySharedFoundations(page: Page): Promise<void> {
       .removeProperty("--discern-density");
     node.style.setProperty("--discern-control-size-md", "57px");
   });
+  await waitForPaintedFrames(page);
   const overridden = await study.locator("form :is(input, select, button)")
     .evaluateAll((nodes) =>
       nodes.map((node) => node.getBoundingClientRect().height)
@@ -74,6 +79,7 @@ export async function verifySharedFoundations(page: Page): Promise<void> {
   await study.evaluate((node) =>
     node.style.removeProperty("--discern-control-size-md")
   );
+  await waitForPaintedFrames(page);
   const hierarchy = await page.evaluate(() => {
     const study = document.querySelector("#shared-foundations")!;
     const selectors = [

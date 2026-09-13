@@ -1394,6 +1394,24 @@ export const componentExampleRegistry = {
         "cli",
       ],
     },
+    {
+      "id": "loading-success",
+      "label": "Loading to success",
+      "surfaces": [
+        "web",
+      ],
+      "reason":
+        "The CLI renderer supplies static text frames and cannot retain DOM focus or a browser live region through timed updates.",
+    },
+    {
+      "id": "loading-failure",
+      "label": "Loading to failure",
+      "surfaces": [
+        "web",
+      ],
+      "reason":
+        "The CLI renderer supplies static text frames and cannot retain DOM focus or a browser live region through timed updates.",
+    },
   ],
   "toast": [
     {
@@ -1592,6 +1610,30 @@ export const componentExampleRegistry = {
     {
       "id": "compact",
       "label": "Compact",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
+    {
+      "id": "no-results",
+      "label": "No search results",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
+    {
+      "id": "unavailable",
+      "label": "Unavailable content",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
+    {
+      "id": "recoverable-failure",
+      "label": "Recoverable failure",
       "surfaces": [
         "web",
         "cli",
@@ -1862,11 +1904,27 @@ export const componentExampleRegistry = {
         "cli",
       ],
     },
+    {
+      "id": "dense",
+      "label": "Dense operational evidence",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
   ],
   "transcript": [
     {
       "id": "default",
       "label": "Review handoff",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
+    {
+      "id": "dense",
+      "label": "Routine turns and decisions",
       "surfaces": [
         "web",
         "cli",
@@ -1890,6 +1948,14 @@ export const componentExampleRegistry = {
         "cli",
       ],
     },
+    {
+      "id": "dense",
+      "label": "Dense operational evidence",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
   ],
   "fleet": [
     {
@@ -1903,6 +1969,14 @@ export const componentExampleRegistry = {
     {
       "id": "lossless-identities",
       "label": "Long identities",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
+    {
+      "id": "dense",
+      "label": "Dense operational evidence",
       "surfaces": [
         "web",
         "cli",
@@ -2229,6 +2303,22 @@ export const componentExampleRegistry = {
     {
       "id": "cancelled",
       "label": "Cancelled activity",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
+    {
+      "id": "waiting",
+      "label": "Waiting for a decision",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
+    {
+      "id": "blocked",
+      "label": "Blocked with next action",
       "surfaces": [
         "web",
         "cli",

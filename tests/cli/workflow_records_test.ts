@@ -83,7 +83,7 @@ Deno.test("Artifact card renders exact narrow, standard, wide, and capability fr
     const [columns, expected] of [
       [
         24,
-        "┌ Artifact: CLI reg… ──┐\n│ Public aliases from  │\n│ component metadata   │\n│                      │\n│ Path: cli-renderers… │\n│ Ownership: Generated │\n│ Provenance: deno     │\n│ task codegen         │\n│ Source: Component    │\n│ metadata             │\n└──────────────────────┘",
+        "┌ Artifact: CLI reg… ──┐\n│ Public aliases from  │\n│ component metadata   │\n│                      │\n│ Path: src/generated/ │\n│       cli-renderers. │\n│       ts             │\n│ Ownership: Generated │\n│ Provenance: deno     │\n│ task codegen         │\n│ Source: Component    │\n│ metadata             │\n└──────────────────────┘",
       ],
       [52, standard],
       [
@@ -125,7 +125,7 @@ Deno.test("Artifact tree renders exact narrow, standard, wide, and capability fr
     const [columns, expected] of [
       [
         24,
-        "Command component\n└─▱ command\n  ├─⌑ command.cli.ts — …\n  ├─⌑ command.tsx — web\n  └─⌑ command.meta.ts",
+        "Command component\n└─▱ command\n  ├─⌑ command.cli.ts —\n      terminal\n  ├─⌑ command.tsx — web\n  └─⌑ command.meta.ts",
       ],
       [52, standard],
       [80, standard],
