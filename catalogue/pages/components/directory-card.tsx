@@ -1,3 +1,8 @@
+import type { CSSProperties } from "react";
+import {
+  componentDiscoveryDetailHref,
+  componentResultId,
+} from "./return-context.ts";
 import type { RegistryEntry } from "../../generated/registry.ts";
 import { catalogueDecisionCopyProps } from "../../metadata-copy.ts";
 import { Tag } from "../../../src/components/display/tag/tag.tsx";
@@ -32,6 +37,19 @@ function ThemedRepresentativeImage(
             data-discern-collection-image={collection
               ? entry.meta.slug
               : undefined}
+            data-discern-image-framing={!collection &&
+                entry.meta.group === "Core" && presentation.height <= 48 &&
+                presentation.width / presentation.height >= 8
+              ? "control-strip"
+              : presentation.width <= 320 &&
+                  presentation.height <= 180
+              ? "control"
+              : presentation.width / presentation.height >= 2.4
+              ? "wide"
+              : "composition"}
+            style={{
+              "--discern-discovery-image-width": `${presentation.width}px`,
+            } as CSSProperties}
             src={presentation.src}
             width={presentation.width}
             height={presentation.height}
@@ -103,13 +121,17 @@ export function ComponentCollectionCard(
 
 /** Lightweight discovery result: generated pixels, never a live specimen. */
 export function ComponentResultCard(
-  { entry, showGroup, matchReason }: {
+  { entry, showGroup, matchReason, discoveryUrl }: {
     readonly entry: RegistryEntry;
     readonly showGroup: boolean;
+    readonly discoveryUrl?: URL;
     readonly matchReason?: Readonly<{ label: string; value: string }>;
   },
 ) {
-  const detailHref = catalogueComponentPath(entry.meta.slug);
+  const path = catalogueComponentPath(entry.meta.slug);
+  const detailHref = discoveryUrl === undefined
+    ? path
+    : componentDiscoveryDetailHref(discoveryUrl, path, entry.meta.slug);
   const compareHref = catalogueHref("/catalogue/review/", {
     components: entry.meta.slug,
   });
@@ -118,44 +140,59 @@ export function ComponentResultCard(
     ? undefined
     : matchReason;
   return (
-    <CatalogueIndexCard
-      className="discern-catalogue-component-card"
-      href={detailHref}
-      title={entry.meta.name}
-      description={entry.meta.description}
-      descriptionClassName="discern-catalogue-component-card__description"
-      action="Inspect Component"
-      headingLevel={3}
-      eyebrow={showGroup ? entry.meta.group : undefined}
-      primaryClassName="discern-catalogue-component-card__inspect"
-      media={
-        <span className="discern-catalogue-component-card__image">
-          <ThemedRepresentativeImage entry={entry} />
-        </span>
-      }
-      metadata={
-        <>
-          {supplementaryMatchReason === undefined ? null : (
-            <p
-              className="discern-catalogue-component-card__match"
-              {...catalogueDecisionCopyProps}
-            >
-              Matched {supplementaryMatchReason.label.toLowerCase()}:{" "}
-              {supplementaryMatchReason.value}
-            </p>
-          )}
-          <Tag>
-            {entry.cli.stance === "rendered" ? "Web and CLI" : "Web only"}
-          </Tag>
-        </>
-      }
-      secondaryActions={[{
-        href: compareHref,
-        label: "Compare",
-        ariaLabel: `Compare ${entry.meta.name}`,
-        className: "discern-catalogue-component-card__compare",
-      }]}
-    />
+    <div
+      id={componentResultId(entry.meta.slug)}
+      onClick={(event) => {
+        if (
+          discoveryUrl === undefined || event.button !== 0 || event.metaKey ||
+          event.ctrlKey || event.shiftKey || event.altKey ||
+          !(event.target instanceof Element) ||
+          !event.target.closest(".discern-catalogue-component-card__inspect")
+        ) return;
+        const current = new URL(globalThis.location.href);
+        current.hash = componentResultId(entry.meta.slug);
+        globalThis.history.replaceState(globalThis.history.state, "", current);
+      }}
+    >
+      <CatalogueIndexCard
+        className="discern-catalogue-component-card"
+        href={detailHref}
+        title={entry.meta.name}
+        description={entry.meta.description}
+        descriptionClassName="discern-catalogue-component-card__description"
+        action="Inspect Component"
+        headingLevel={3}
+        eyebrow={showGroup ? entry.meta.group : undefined}
+        primaryClassName="discern-catalogue-component-card__inspect"
+        media={
+          <span className="discern-catalogue-component-card__image">
+            <ThemedRepresentativeImage entry={entry} />
+          </span>
+        }
+        metadata={
+          <>
+            {supplementaryMatchReason === undefined ? null : (
+              <p
+                className="discern-catalogue-component-card__match"
+                {...catalogueDecisionCopyProps}
+              >
+                Matched {supplementaryMatchReason.label.toLowerCase()}:{" "}
+                {supplementaryMatchReason.value}
+              </p>
+            )}
+            <Tag>
+              {entry.cli.stance === "rendered" ? "Web and CLI" : "Web only"}
+            </Tag>
+          </>
+        }
+        secondaryActions={[{
+          href: compareHref,
+          label: "Compare",
+          ariaLabel: `Compare ${entry.meta.name}`,
+          className: "discern-catalogue-component-card__compare",
+        }]}
+      />
+    </div>
   );
 }
 

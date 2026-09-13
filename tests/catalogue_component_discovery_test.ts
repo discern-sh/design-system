@@ -183,3 +183,123 @@ Deno.test("detail navigation keeps native return, neighbour, and Compare destina
     'rel="prev" href="/catalogue/components/command/?surface=cli&amp;example=failure&amp;view=all"',
   );
 });
+
+Deno.test("capability filters require authored behaviours and applicable canonical examples", async () => {
+  const { componentSupportsSurface, matchesComponentCapabilities } =
+    await import("../catalogue/pages/components/collections.ts");
+  const { registry } = await catalogue();
+  for (const entry of registry) {
+    for (const availability of ["web", "cli"] as const) {
+      assertEquals(
+        componentSupportsSurface(entry, availability),
+        (availability === "web" || entry.cli.stance === "rendered") &&
+          entry.canonicalExamples.some(({ surfaces }) =>
+            surfaces.includes(availability)
+          ),
+      );
+    }
+    assertEquals(
+      matchesComponentCapabilities(entry, {
+        query: "",
+        showAll: true,
+        behavior: "floating-surface",
+      }),
+      entry.meta.behaviors?.includes("floating-surface") === true,
+    );
+    assertEquals(
+      componentSupportsSurface({ ...entry, canonicalExamples: [] }, "cli"),
+      false,
+    );
+    assertEquals(
+      matchesComponentCapabilities({
+        ...entry,
+        meta: { ...entry.meta, behaviors: [] },
+      }, { query: "", showAll: true, behavior: "copy-button" }),
+      false,
+    );
+  }
+  const state = parseComponentExplorerState(
+    new URL(
+      "https://example.test/catalogue/components/?availability=cli&behavior=copy-button&group=forms&q=copy&all=1",
+    ),
+  );
+  assertEquals(
+    parseComponentExplorerState(
+      new URL(componentExplorerHref(state), "https://example.test"),
+    ),
+    state,
+  );
+  assertEquals(
+    parseComponentExplorerState(
+      new URL(
+        "https://example.test/catalogue/components/?availability=terminal&behavior=hydrated&group=unknown&purpose=nope",
+      ),
+    ),
+    { query: "", showAll: false },
+  );
+});
+
+Deno.test("discovery return URLs are local, canonical, shareable and preserve detail selections", async () => {
+  const {
+    componentDiscoveryDetailHref,
+    componentReturnHref,
+    preserveComponentReturnHref,
+  } = await import("../catalogue/pages/components/return-context.ts");
+  const origin = "https://example.test";
+  const directory = new URL(
+    "/catalogue/components/?q=command&group=workflow&availability=cli&all=1&theme=dark",
+    origin,
+  );
+  const detail = new URL(
+    componentDiscoveryDetailHref(
+      directory,
+      "/catalogue/components/command/",
+      "command",
+    ),
+    origin,
+  );
+  assertEquals(detail.searchParams.get("surface"), "cli");
+  assertEquals(detail.searchParams.get("theme"), "dark");
+  const back = new URL(componentReturnHref(detail)!, origin);
+  assertEquals(
+    parseComponentExplorerState(back),
+    parseComponentExplorerState(directory),
+  );
+  assertEquals(back.hash, "#component-result-command");
+  const next = new URL(
+    preserveComponentReturnHref(
+      detail,
+      "/catalogue/components/command-group/?surface=cli&example=failure#component-command-group--cli-failure",
+    ),
+    origin,
+  );
+  assertEquals(componentReturnHref(next), componentReturnHref(detail));
+  assertEquals(next.searchParams.get("example"), "failure");
+  assertEquals(next.hash, "#component-command-group--cli-failure");
+  for (
+    const value of [
+      "https://evil.test/catalogue/components/",
+      "//evil.test/catalogue/components/",
+      "/catalogue/components/../../other/",
+      "/catalogue/components/command/",
+      "javascript:alert(1)",
+      "/catalogue/components/\\evil.test/",
+    ]
+  ) {
+    const bad = new URL("/catalogue/components/command/", origin);
+    bad.searchParams.set("return", value);
+    assertEquals(componentReturnHref(bad), undefined, value);
+  }
+  const invalid = new URL("/catalogue/components/command/", origin);
+  invalid.searchParams.set(
+    "return",
+    "/catalogue/components/?availability=bogus&behavior=hydrated&return=recursive#arbitrary",
+  );
+  assertEquals(componentReturnHref(invalid), "/catalogue/components/");
+  assertEquals(
+    componentReturnHref(
+      new URL("/catalogue/components/command/?example=failure", origin),
+    ),
+    undefined,
+  );
+});
