@@ -2,9 +2,6 @@
   .discern-empty-state {
     min-inline-size: 0;
     overflow-wrap: anywhere;
-    display: grid;
-    gap: var(--discern-space-2);
-    justify-items: center;
     padding: var(--discern-space-10) var(--discern-space-6);
     border: 1px dashed var(--discern-color-border-strong);
     border-radius: var(--discern-radius-md);

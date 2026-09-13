@@ -44,14 +44,10 @@
     font: var(--discern-font-weight-strong) var(--discern-font-size-sm) /
       var(--discern-leading-snug) var(--discern-font-ui);
   }
-  .discern-banner__body > :last-child {
-    margin-block-end: 0;
-  }
   .discern-banner__icon {
     display: grid;
     flex: none;
     place-items: center;
-    align-content: center;
     inline-size: 1.2rem;
     block-size: 1.2rem;
     margin-block-start: calc(var(--discern-space-1) / 4);

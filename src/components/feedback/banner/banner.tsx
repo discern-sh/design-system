@@ -68,7 +68,7 @@ export const Banner: DiscernComponent<HTMLDivElement, BannerProps> = forwardRef<
         {heading !== undefined && (
           <h3 className="discern-banner__heading">{heading}</h3>
         )}
-        <div className="discern-banner__body">{children}</div>
+        <Stack className="discern-banner__body">{children}</Stack>
         {actions !== undefined && <Cluster>{actions}</Cluster>}
       </Stack>
     </div>
