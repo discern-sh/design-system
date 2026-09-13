@@ -128,6 +128,7 @@ interface ScrollFocusCase {
   readonly component: string;
   readonly example: string;
   readonly target: string;
+  readonly posture?: string;
   readonly mustOverflow: boolean;
 }
 
@@ -158,6 +159,7 @@ const scrollFocusCases: readonly ScrollFocusCase[] = [
     component: "diagnostic",
     example: "verbose-failure",
     target: ".discern-diagnostic__evidence pre",
+    posture: "diagnostic-evidence",
     mustOverflow: true,
   },
   {
@@ -779,6 +781,9 @@ export async function verifyComponentReviewInstrument(
           group: scrollCase.group,
           component: scrollCase.component,
           example: scrollCase.example,
+          ...(scrollCase.posture === undefined
+            ? {}
+            : { posture: scrollCase.posture }),
           width: "narrow",
           theme: "dark",
           appearance: "rose",

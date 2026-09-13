@@ -1,3 +1,4 @@
+import { denseWorklogEntries } from "../operational-examples.ts";
 /**
  * Pure terminal renderer and deterministic example states for Worklog.
  *
@@ -14,7 +15,7 @@ import { defineCliExamples } from "../../../cli/component-examples.ts";
 import { renderMotifActivityBeacon } from "../../../cli/motifs.ts";
 import { triangleGlyph, TRIANGLES } from "../../../cli/triangles.ts";
 import type { TerminalSemanticTone } from "../../../cli/theme.ts";
-import type { WorklogStatus } from "./worklog.types.ts";
+import { worklogPositions, type WorklogStatus } from "./worklog.types.ts";
 import meta, { componentExampleVocabulary } from "./worklog.meta.ts";
 import {
   agentsCliWidth,
@@ -40,6 +41,8 @@ export interface WorklogCliEntry {
   readonly statusLabel?: string;
   readonly detail?: string;
   readonly meta?: string;
+  /** Explicit label for adjacent routine entries with the same status. */
+  readonly routineGroup?: string;
   /** Semantic phase consumed by the package activity beacon. */
   readonly phase?: number;
 }
@@ -81,6 +84,7 @@ const cliExampleImplementations = [
       ],
     },
   },
+  { name: "dense", props: { entries: denseWorklogEntries } },
 ] as const satisfies readonly CliExample<WorklogCliProps>[];
 defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
 
@@ -108,7 +112,11 @@ const renderWorklogCli: CliRenderer<WorklogCliProps> = (
   }
   const width = agentsCliWidth(props.maxWidth, capabilities, 16);
   const lines: string[] = [];
+  const positions = worklogPositions(props.entries);
   for (const [index, entry] of props.entries.entries()) {
+    if (entry.routineGroup !== undefined) {
+      assertAgentsCliText(entry.routineGroup, "worklog routine group");
+    }
     assertAgentsCliText(entry.label, `worklog entry ${index + 1} label`);
     if (entry.statusLabel !== undefined) {
       assertAgentsCliText(
@@ -129,6 +137,19 @@ const renderWorklogCli: CliRenderer<WorklogCliProps> = (
         `worklog entry ${index + 1} metadata`,
         true,
       );
+    }
+    const position = positions[index];
+    if (position !== undefined && !position.continued) {
+      lines.push(styleAgentsHeading(
+        agentsPrefixedLines(
+          "",
+          `${position.label} (${position.size} ${entry.status})`,
+          width,
+        ).join("\n"),
+        "neutral",
+        capabilities,
+        props,
+      ));
     }
     const marker = entry.status === "active"
       ? renderMotifActivityBeacon(

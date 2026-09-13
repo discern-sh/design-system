@@ -23,7 +23,10 @@ export function useMobileDrawer(
 
   useEffect(() => {
     const query = globalThis.matchMedia(drawerMedia);
-    const synchronise = (): void => setNarrow(query.matches);
+    const synchronise = (): void => {
+      setNarrow(query.matches);
+      if (!query.matches) onOpenChange(false);
+    };
     synchronise();
     query.addEventListener("change", synchronise);
     return () => query.removeEventListener("change", synchronise);
@@ -32,6 +35,17 @@ export function useMobileDrawer(
   useEffect(() => {
     const drawer = drawerRef.current;
     if (drawer === null) return;
+    const focusNavigation = (): void => {
+      (drawer.querySelector<HTMLElement>('a[aria-current="location"]') ??
+        drawer.querySelector<HTMLElement>('a[aria-current="page"]') ??
+        drawer.querySelector<HTMLElement>("a[href]"))?.focus();
+    };
+    if (narrow && !open && drawer.contains(document.activeElement)) {
+      triggerRef.current?.focus();
+    }
+    if (!narrow && document.activeElement === triggerRef.current) {
+      focusNavigation();
+    }
     drawer.inert = narrow && !open;
     if (!narrow || !open) return;
 
@@ -77,7 +91,11 @@ export function useMobileDrawer(
       document.removeEventListener("keydown", containFocus, true);
       document.body.style.overflow = previousOverflow;
       for (const element of background) element.inert = false;
-      triggerRef.current?.focus();
+      if (globalThis.matchMedia(drawerMedia).matches) {
+        triggerRef.current?.focus();
+      } else {
+        focusNavigation();
+      }
     };
   }, [narrow, onOpenChange, open]);
 

@@ -1,7 +1,8 @@
+import { denseFleetRows } from "../operational-examples.ts";
+import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
 import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { Fleet } from "./fleet.tsx";
 import { AgentPersona } from "../agent-persona/agent-persona.tsx";
-import { Badge } from "../../display/badge/badge.tsx";
 import meta, { componentExampleVocabulary } from "./fleet.meta.ts";
 
 function ParallelWorkState() {
@@ -11,16 +12,16 @@ function ParallelWorkState() {
       style={{ maxWidth: "40rem" }}
       rows={[
         {
-          persona: <AgentPersona name="quill" size="sm" status="working" />,
+          persona: <AgentPersona name="quill" size="sm" />,
           branch: "agent/checkout-flow",
-          state: <Badge tone="accent">running tests</Badge>,
+          status: "working",
           ahead: 4,
           meta: "2m ago",
         },
         {
-          persona: <AgentPersona name="forge-2" size="sm" status="waiting" />,
+          persona: <AgentPersona name="forge-2" size="sm" />,
           branch: "agent/payment-step",
-          state: <Badge tone="warning">needs review</Badge>,
+          status: "waiting",
           ahead: 7,
           behind: 2,
           meta: "18m ago",
@@ -38,12 +39,16 @@ function LosslessIdentitiesState() {
       rows={[{
         persona: <AgentPersona name="terminal-contract-audit" size="sm" />,
         branch: "agent/terminal-contract-audit-with-complete-identities",
-        state: <Badge tone="accent">reviewing compatibility</Badge>,
+        status: "working",
         ahead: 3,
         meta: "evidence in progress",
       }]}
     />
   );
+}
+
+function DenseState() {
+  return <Fleet rows={denseFleetRows} />;
 }
 
 export const catalogueExamples = defineCatalogueExamples(
@@ -52,6 +57,7 @@ export const catalogueExamples = defineCatalogueExamples(
   [
     { id: "default", Example: ParallelWorkState },
     { id: "lossless-identities", Example: LosslessIdentitiesState },
+    { id: "dense", Example: DenseState },
   ],
 );
 
@@ -63,3 +69,23 @@ export default function FleetExamples() {
     </div>
   );
 }
+
+export const reviewPostures = defineComponentReviewPostures(
+  meta,
+  componentExampleVocabulary,
+  [
+    ...(["narrow", "wide"] as const).map((inlineSize) => ({
+      id: `dense-${inlineSize}`,
+      label: `Dense evidence at ${inlineSize} width`,
+      example: "dense",
+      category: "responsive" as const,
+      requirements: { inlineSize },
+      sequence: [{
+        checkpoint: {
+          id: `dense-${inlineSize}-reading`,
+          label: "Outcome, identity and boundaries",
+        },
+      }],
+    })),
+  ],
+);

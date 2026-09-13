@@ -1,4 +1,5 @@
-import type { Page } from "playwright-core";
+import type { Locator, Page } from "playwright-core";
+import { preserveCatalogueAppearanceHref } from "../../../catalogue/shell/appearance-state.ts";
 import { loadReadyBrowserPage } from "../../browser-conformance-support.ts";
 
 export const CATALOGUE_WIDE_VIEWPORT = { width: 1440, height: 1000 } as const;
@@ -81,4 +82,15 @@ export async function setCatalogueAppearanceInput(
       requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
     );
   });
+}
+
+/** Select an exact search destination, including the current portable Appearance. */
+export function catalogueSearchResult(page: Page, href: string): Locator {
+  const destination = preserveCatalogueAppearanceHref(
+    new URL(page.url()),
+    href,
+  );
+  return page.getByRole("dialog", { name: "Search the Catalogue" }).locator(
+    `.discern-search-palette__result[href=${JSON.stringify(destination)}]`,
+  );
 }

@@ -23,6 +23,26 @@
     }
     .discern-catalogue-toolbar {
       left: 0;
+      gap: var(--discern-space-2);
+      padding-inline: var(--discern-space-3);
+    }
+    .discern-catalogue-menu,
+    .discern-catalogue-sidebar__close {
+      inline-size: 44px;
+      block-size: 44px;
+    }
+    .discern-catalogue-search,
+    .discern-catalogue-appearance > summary {
+      min-block-size: 44px;
+      min-inline-size: 44px;
+    }
+    .discern-catalogue-appearance > summary {
+      min-inline-size: 0;
+    }
+    .discern-catalogue-search .discern-kbd,
+    .discern-catalogue-search__desktop-copy,
+    .discern-catalogue-appearance > summary small {
+      display: none;
     }
     .discern-catalogue-main {
       margin-inline-start: 0;

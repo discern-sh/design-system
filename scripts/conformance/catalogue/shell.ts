@@ -18,6 +18,7 @@ import {
 import {
   CATALOGUE_NARROW_VIEWPORT,
   CATALOGUE_WIDE_VIEWPORT,
+  catalogueSearchResult,
   eventually,
   invariant,
   loadCataloguePage,
@@ -303,7 +304,7 @@ async function verifySearch(
     page,
     new URL(catalogueRoutePaths.overview, origin).href,
   );
-  const trigger = page.getByRole("button", { name: "Find in the Catalogue" });
+  const trigger = page.getByRole("button", { name: "Search the Catalogue" });
   await trigger.click();
   const dialog = page.getByRole("dialog", { name: "Search the Catalogue" });
   const input = dialog.getByRole("searchbox", { name: "Search the Catalogue" });
@@ -312,7 +313,13 @@ async function verifySearch(
     "Global search did not focus its input",
   );
   const starts = await dialog.locator(".discern-search-palette__result-title")
-    .allTextContents();
+    .evaluateAll((nodes) =>
+      nodes.map((node) => {
+        const copy = node.cloneNode(true) as HTMLElement;
+        copy.querySelector('[aria-hidden="true"]')?.remove();
+        return copy.textContent;
+      })
+    );
   const expectedStarts = catalogueNavigation.slice(1, 4).map(({ label }) =>
     label
   );
@@ -371,11 +378,7 @@ async function verifySearch(
 
   await trigger.click();
   await input.fill("call to action");
-  const cta = dialog.locator(
-    `.discern-search-palette__result[href="${
-      catalogueComponentPath("cta-band")
-    }"]`,
-  );
+  const cta = catalogueSearchResult(page, catalogueComponentPath("cta-band"));
   invariant(await cta.count() === 1, "Call to action did not find CTA band");
   invariant(
     (await cta.locator(".discern-catalogue-search-match").textContent())
@@ -448,21 +451,21 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
   buttonUrl.searchParams.set("accent", "145.5");
   buttonUrl.searchParams.set("field", "0.25,1,0.8,1");
   await loadCataloguePage(page, buttonUrl.href);
-  await page.getByRole("button", { name: /View all 5 examples/ }).click();
+  await page.getByRole("radio", { name: "All 5", exact: true }).check();
   await openCatalogueAppearanceAxes(page);
   const primary = page.locator("main .discern-button--primary").first();
   const secondary = page.locator("main .discern-button--secondary").first();
   const density = page.locator(
-    '.discern-catalogue-appearance [data-discern-axis="density"] input',
+    '.discern-catalogue-appearance [data-discern-axis="density"] input[type="range"]',
   );
   const structure = page.locator(
-    '.discern-catalogue-appearance [data-discern-axis="structure"] input',
+    '.discern-catalogue-appearance [data-discern-axis="structure"] input[type="range"]',
   );
   const darkness = page.locator(
-    '.discern-catalogue-appearance [data-discern-axis="darkness"] input',
+    '.discern-catalogue-appearance [data-discern-axis="darkness"] input[type="range"]',
   );
   const emphasis = page.locator(
-    '.discern-catalogue-appearance [data-discern-axis="emphasis"] input',
+    '.discern-catalogue-appearance [data-discern-axis="emphasis"] input[type="range"]',
   );
   const buttonMeasure = async () =>
     await primary.evaluate((node) => {
@@ -516,6 +519,7 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
   );
   checks += 1;
 
+  await openCatalogueAppearanceAxes(page);
   const buttonColours = async () => ({
     primary: await primary.evaluate((node) =>
       getComputedStyle(node).backgroundColor
@@ -790,7 +794,7 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
     await axes.focus();
     await axes.press("Enter");
     const darknessSlider = page.locator(
-      '.discern-catalogue-appearance [data-discern-axis="darkness"] input',
+      '.discern-catalogue-appearance [data-discern-axis="darkness"] input[type="range"]',
     );
     const before = await darknessSlider.inputValue();
     await darknessSlider.focus();
@@ -875,11 +879,323 @@ async function verifyPopulationPostures(
   );
 }
 
+/** Every instance of the shared Appearance disclosure must dismiss without hiding focus. */
+export async function verifyAppearanceDismissal(
+  page: Page,
+  origin: string,
+): Promise<void> {
+  await loadCataloguePage(
+    page,
+    new URL(catalogueRoutePaths.overview, origin).href,
+  );
+  const panels = page.locator(".discern-catalogue-appearance");
+  for (let index = 0; index < await panels.count(); index += 1) {
+    const panel = panels.nth(index);
+    const trigger = panel.locator(":scope > summary");
+    await trigger.click();
+    await panel.getByRole("combobox", { name: "Accent", exact: true }).focus();
+    await page.keyboard.press("Escape");
+    invariant(
+      await panel.getAttribute("open") === null,
+      "Appearance Escape did not dismiss",
+    );
+    invariant(
+      await trigger.evaluate((node) => document.activeElement === node),
+      "Appearance dismissal hid focus",
+    );
+    await trigger.click();
+    await panel.getByRole("combobox", { name: "Accent", exact: true })
+      .selectOption("violet");
+    invariant(
+      await panel.getAttribute("open") !== null,
+      "Nested Appearance interaction dismissed its owner",
+    );
+    await page.locator("main h1").click();
+    invariant(
+      await panel.getAttribute("open") === null,
+      "Appearance outside interaction did not dismiss",
+    );
+  }
+}
+
+/** A modal drawer crossing to desktop must retain a visible focused destination. */
+export async function verifyDrawerResize(
+  page: Page,
+  origin: string,
+): Promise<void> {
+  await withViewport(page, { width: 390, height: 844 }, async () => {
+    await loadCataloguePage(
+      page,
+      new URL(catalogueRoutePaths.components, origin).href,
+    );
+    await page.getByRole("button", { name: "Open Catalogue navigation" })
+      .click();
+    await page.getByRole("button", { name: "Close Catalogue navigation" })
+      .focus();
+    await withViewport(page, CATALOGUE_WIDE_VIEWPORT, async () => {
+      await eventually(
+        () =>
+          page.evaluate(() =>
+            document.activeElement instanceof HTMLElement &&
+            document.activeElement !== document.body &&
+            document.activeElement.getClientRects().length > 0
+          ),
+        "Resizing the open drawer hid focus",
+      );
+    });
+    await eventually(
+      () =>
+        page.getByRole("button", { name: "Open Catalogue navigation" })
+          .evaluate((node) => document.activeElement === node),
+      "Returning to mobile hid the focused navigation destination",
+    );
+  });
+}
+
+/** Persistence failures must not disable live shell controls or canonical navigation. */
+async function verifyShellWithoutStorage(
+  page: Page,
+  origin: string,
+): Promise<void> {
+  const context = await page.context().browser()!.newContext({
+    reducedMotion: "reduce",
+    hasTouch: true,
+    isMobile: true,
+    viewport: { width: 390, height: 844 },
+  });
+  try {
+    await context.addInitScript(() => {
+      for (const method of ["getItem", "setItem", "removeItem"] as const) {
+        Storage.prototype[method] = () => {
+          throw new Error("Storage unavailable");
+        };
+      }
+    });
+    const isolated = await context.newPage();
+    await loadCataloguePage(
+      isolated,
+      new URL("/catalogue/?theme=system&accent=none&field=0,1,1,1", origin)
+        .href,
+    );
+    await isolated.getByRole("button", { name: "Open Catalogue navigation" })
+      .tap();
+    await isolated.getByRole("button", { name: "Close Catalogue navigation" })
+      .tap();
+    const appearance = isolated.locator(".discern-catalogue-appearance");
+    await appearance.locator("summary").tap();
+    await appearance.getByRole("combobox", { name: "Starting point" })
+      .selectOption("tools");
+    await isolated.emulateMedia({ colorScheme: "dark" });
+    await eventually(
+      () =>
+        new URL(isolated.url()).searchParams.get("field") === "1,1.1,1,0.65",
+      "System theme or preset failed without storage",
+    );
+    await appearance.locator("summary").press("Escape");
+    await isolated.getByRole("button", {
+      name: "Search the Catalogue",
+      exact: true,
+    }).click();
+    await isolated.getByRole("searchbox").fill("button");
+    await isolated.getByRole("searchbox").press("ArrowDown");
+    await isolated.keyboard.press("Enter");
+    await isolated.waitForURL((url) =>
+      url.pathname === catalogueComponentPath("button")
+    );
+    invariant(
+      new URL(isolated.url()).searchParams.get("field") === "1,1.1,1,0.65",
+      "Search lost Appearance without storage",
+    );
+    await isolated.goBack({ waitUntil: "networkidle" });
+    await isolated.goForward({ waitUntil: "networkidle" });
+    invariant(
+      new URL(isolated.url()).searchParams.get("field") === "1,1.1,1,0.65",
+      "Forward lost exact Appearance without storage",
+    );
+  } finally {
+    await context.close();
+  }
+}
+
+/** Complete shell journeys at portrait, short landscape, and zoom-equivalent CSS widths. */
+export async function verifyPolishedShell(
+  page: Page,
+  origin: string,
+): Promise<void> {
+  for (
+    const viewport of [
+      { width: 320, height: 640 },
+      { width: 667, height: 320 },
+      { width: 390, height: 844 },
+      { width: 1440, height: 1000 },
+    ]
+  ) {
+    await withViewport(page, viewport, async () => {
+      await loadCataloguePage(
+        page,
+        new URL(
+          "/catalogue/components/?group=layout&theme=dark&accent=245&field=1,1,1,1",
+          origin,
+        ).href,
+      );
+      const appearance = page.locator(".discern-catalogue-appearance");
+      const trigger = appearance.locator(":scope > summary");
+      const search = page.getByRole("button", {
+        name: "Search the Catalogue",
+        exact: true,
+      });
+      for (const control of [trigger, search]) {
+        const box = await control.boundingBox();
+        invariant(
+          box && box.x >= 0 && box.x + box.width <= viewport.width &&
+            box.height >= (viewport.width <= 850 ? 44 : 38),
+          "Toolbar target clipped or too small",
+        );
+      }
+      await trigger.click();
+      await appearance.getByRole("combobox", { name: "Starting point" })
+        .selectOption("reading");
+      invariant(
+        new URL(page.url()).searchParams.get("field") === "1,0.8,0.8,1.3" &&
+          new URL(page.url()).searchParams.get("accent") === "245",
+        "Reading preset changed theme/accent or lost coordinates",
+      );
+      await openCatalogueAppearanceAxes(page);
+      const exact = appearance.getByRole("spinbutton", {
+        name: "Density exact value",
+      });
+      await exact.fill("");
+      invariant(
+        new URL(page.url()).searchParams.get("field") === "1,0.8,0.8,1.3",
+        "Empty exact input changed the field",
+      );
+      await exact.fill("99");
+      await exact.press("Tab");
+      invariant(
+        await exact.inputValue() === "99" &&
+          await exact.getAttribute("aria-invalid") === "true",
+        "Invalid intermediate value snapped or lost feedback",
+      );
+      await exact.fill("0.875");
+      await exact.press("Enter");
+      invariant(
+        new URL(page.url()).searchParams.get("field") === "1,0.8,0.8,0.875",
+        "Exact entry did not commit a precise coordinate",
+      );
+      invariant(
+        await appearance.locator(
+          '[data-discern-axis="density"] input[type="range"]',
+        ).inputValue() === "0.875",
+        "Slider rounded the exact coordinate to a separate state",
+      );
+      await exact.fill("0.9");
+      await exact.press("Escape");
+      invariant(
+        await exact.inputValue() === "0.875" &&
+          await appearance.getAttribute("open") !== null,
+        "Edit cancellation dismissed the enclosing panel",
+      );
+      await appearance.getByRole("button", {
+        name: "Reset density",
+        exact: true,
+      }).click();
+      invariant(
+        await exact.inputValue() === "1",
+        "Axis reset did not restore its default",
+      );
+      const link = appearance.getByRole("link", {
+        name: "Inspect the Appearance projection",
+      });
+      await link.focus();
+      const bounds = await link.boundingBox();
+      invariant(
+        bounds && bounds.y >= 0 && bounds.y + bounds.height <= viewport.height,
+        "Focused Appearance content is hidden on a short screen",
+      );
+      await link.press("Escape");
+      invariant(
+        await trigger.evaluate((node) => document.activeElement === node),
+        "Escape lost the Appearance trigger",
+      );
+      if (viewport.width <= 850) {
+        await page.getByRole("button", { name: "Open Catalogue navigation" })
+          .click();
+      }
+      const groups = page.getByRole("button", { name: "Groups", exact: true });
+      if (await groups.getAttribute("aria-expanded") === "true") {
+        await groups.click();
+      }
+      const current = page.locator(
+        'nav[aria-label="Catalogue"] a[aria-current="location"]',
+      );
+      invariant(
+        await current.isVisible() &&
+          (await current.getAttribute("href"))?.includes("group=layout"),
+        "Collapsed group hid the current destination",
+      );
+      if (viewport.width <= 850) {
+        await groups.press("Escape");
+        invariant(
+          await page.getByRole("button", { name: "Open Catalogue navigation" })
+            .evaluate((node) => document.activeElement === node),
+          "Drawer close hid focus",
+        );
+      }
+      await search.click();
+      const dialog = page.getByRole("dialog", { name: "Search the Catalogue" });
+      const input = dialog.getByRole("searchbox");
+      await input.fill("button");
+      invariant(
+        await dialog.getByRole("region", { name: "Components", exact: true })
+          .count() === 1,
+        "Search did not group result families",
+      );
+      await input.press("ArrowDown");
+      const focused = dialog.locator(".discern-search-palette__result:focus");
+      const href = await focused.getAttribute("href");
+      invariant(href !== null, "ArrowDown did not select a named destination");
+      await focused.press("Enter");
+      await page.waitForURL((url) =>
+        url.pathname === new URL(href!, origin).pathname
+      );
+      await page.getByRole("button", {
+        name: "Search the Catalogue",
+        exact: true,
+      }).click();
+      const recent = page.getByRole("region", { name: "Recent destinations" });
+      invariant(
+        await recent.locator("a[href]").count() > 0,
+        "Visited search destination did not appear in recents",
+      );
+      const dialogBounds = await dialog.boundingBox();
+      invariant(
+        dialogBounds && dialogBounds.y >= 0 &&
+          dialogBounds.y + dialogBounds.height <= viewport.height,
+        "Search dialog escaped the viewport",
+      );
+      await dialog.getByRole("button", { name: "Clear recent" }).click();
+      invariant(
+        await recent.count() === 0,
+        "Clear recent left stale destinations",
+      );
+      invariant(
+        await input.evaluate((node) => document.activeElement === node),
+        "Clearing recents removed the focused control without a focus destination",
+      );
+      await input.press("Escape");
+    });
+  }
+}
+
 /** Exercise the shared Catalogue shell as a human-facing browser contract. */
 export async function verifyCatalogueShell(
   page: Page,
   origin: string,
 ): Promise<CatalogueShellEvidence> {
+  await verifyAppearanceDismissal(page, origin);
+  await verifyPolishedShell(page, origin);
+  await verifyDrawerResize(page, origin);
+  await verifyShellWithoutStorage(page, origin);
   const routeShapes = await verifyRouteShape(page, origin);
   const accessibility = await verifyReflowAndAccessibility(page, origin);
   await verifySkipLink(page, origin);

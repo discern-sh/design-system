@@ -1,3 +1,4 @@
+import { AppearancePresets } from "../../shell/appearance-presets.tsx";
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { Button } from "../../../src/components/core/button/button.tsx";
@@ -206,6 +207,7 @@ export function AppearancePage(
               These are the same controls as the global Appearance panel.
             </p>
           </div>
+          <AppearancePresets field={selection} onChange={changeSelection} />
           {primaryAppearanceAxisNames.map((axis) => (
             <AxisControl
               key={axis}

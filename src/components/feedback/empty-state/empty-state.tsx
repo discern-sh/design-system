@@ -1,3 +1,5 @@
+import { Cluster } from "../../layout/cluster/cluster.tsx";
+import { Stack } from "../../layout/stack/stack.tsx";
 import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
@@ -19,8 +21,10 @@ export const EmptyState: DiscernComponent<HTMLDivElement, EmptyStateProps> =
     ref,
   ) {
     return (
-      <div
+      <Stack
         ref={ref}
+        align="center"
+        gap={2}
         className={classNames("discern-empty-state", className)}
         {...props}
       >
@@ -34,8 +38,10 @@ export const EmptyState: DiscernComponent<HTMLDivElement, EmptyStateProps> =
           <p className="discern-empty-state__description">{description}</p>
         )}
         {actions !== undefined && (
-          <div className="discern-empty-state__actions">{actions}</div>
+          <Cluster justify="center" className="discern-empty-state__actions">
+            {actions}
+          </Cluster>
         )}
-      </div>
+      </Stack>
     );
   });

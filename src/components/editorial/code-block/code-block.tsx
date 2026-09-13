@@ -9,6 +9,8 @@ export interface CodeBlockProps
   extends Omit<HTMLAttributes<HTMLPreElement>, "children"> {
   /** Literal source text. No trimming or line transformation is applied. */
   readonly code: string;
+  /** Wrap browser lines visually; false keeps horizontal scrolling (default). Independent of CLI widthPolicy. */
+  readonly wrap?: boolean;
   /** Optional source-language hint exposed as a namespaced data hook. */
   readonly language?: string;
   /** Optional parser information exposed as a namespaced data hook. */
@@ -18,7 +20,7 @@ export interface CodeBlockProps
 /** Literal, non-line-numbered preformatted code without an editorial figure frame. */
 export const CodeBlock: DiscernComponent<HTMLPreElement, CodeBlockProps> =
   forwardRef<HTMLPreElement, CodeBlockProps>(function CodeBlock(
-    { code, language, info, className, ...props },
+    { code, wrap = false, language, info, className, ...props },
     ref,
   ) {
     const accessibleContext = [language?.trim(), info?.trim()]
@@ -28,11 +30,17 @@ export const CodeBlock: DiscernComponent<HTMLPreElement, CodeBlockProps> =
     return (
       <pre
         ref={ref}
-        className={classNames("discern-code-block", className)}
+        className={classNames(
+          "discern-code-block",
+          wrap && "discern-code-block--wrap",
+          className,
+        )}
         role="group"
         aria-label={accessibleContext
-          ? `Scrollable code block: ${accessibleContext}`
-          : "Scrollable code block"}
+          ? `${
+            wrap ? "Wrapped" : "Scrollable"
+          } code block: ${accessibleContext}`
+          : `${wrap ? "Wrapped" : "Scrollable"} code block`}
         tabIndex={0}
         {...props}
       >

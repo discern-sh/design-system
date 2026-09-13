@@ -20,6 +20,19 @@ export function CatalogueNavigation(
     readonly onNavigate: () => void;
   },
 ) {
+  const [collapsed, setCollapsed] = useState<readonly string[]>(() => {
+    try {
+      const value: unknown = JSON.parse(
+        localStorage.getItem("discern-catalogue-navigation-collapsed") ?? "[]",
+      );
+      return Array.isArray(value)
+        ? value.filter((item): item is string => typeof item === "string")
+          .slice(0, 100)
+        : [];
+    } catch {
+      return [];
+    }
+  });
   const [navigationUrl, setNavigationUrl] = useState(() =>
     new URL(globalThis.location.href)
   );
@@ -57,13 +70,44 @@ export function CatalogueNavigation(
         href: "/catalogue/builder/",
       }],
     },
-  ].map((section) => ({
-    ...section,
-    items: section.items.map((item) => ({
-      ...item,
-      href: preserveCatalogueAppearanceHref(navigationUrl, item.href),
-    })),
-  }));
+  ].map((section) => {
+    const key = `${route.family}:${String(section.title)}`;
+    const closed = section.title !== undefined && collapsed.includes(key);
+    return {
+      ...section,
+      ...(section.title === undefined ? {} : {
+        title: (
+          <button
+            type="button"
+            className="discern-catalogue-nav__toggle"
+            aria-expanded={!closed}
+            onClick={() => {
+              const next = closed
+                ? collapsed.filter((item) => item !== key)
+                : [...collapsed, key];
+              setCollapsed(next);
+              try {
+                localStorage.setItem(
+                  "discern-catalogue-navigation-collapsed",
+                  JSON.stringify(next),
+                );
+              } catch { /* Navigation does not require storage. */ }
+            }}
+          >
+            <span aria-hidden="true">{closed ? "▸" : "▾"}</span> {section.title}
+          </button>
+        ),
+      }),
+      items: (closed
+        ? section.items.filter((item) =>
+          "current" in item && item.current
+        )
+        : section.items).map((item) => ({
+          ...item,
+          href: preserveCatalogueAppearanceHref(navigationUrl, item.href),
+        })),
+    };
+  });
 
   return (
     <>

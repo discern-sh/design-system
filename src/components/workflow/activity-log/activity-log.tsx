@@ -2,13 +2,17 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
-import type { ActivityLogLineTone as ActivityLogLineToneVocabulary } from "./activity-log.types.ts";
+import {
+  type ActivityLogLineTone as ActivityLogLineToneVocabulary,
+  type ActivityLogStatus,
+  activityStatusLabels,
+} from "./activity-log.types.ts";
 
 /** Narration severity accepted by pinned activity log lines. */
 export type ActivityLogLineTone = ActivityLogLineToneVocabulary;
 
 /** Overall state presented by one {@linkcode ActivityLog} snapshot. */
-export type ActivityLogStatus = "active" | "complete" | "cancelled";
+export type { ActivityLogStatus } from "./activity-log.types.ts";
 
 /** One pinned stable line rendered by the {@linkcode ActivityLog} component. */
 export interface ActivityLogStableLine {
@@ -37,7 +41,9 @@ const stableMarkers: Record<ActivityLogLineTone, string> = {
 
 const statusMarkers: Record<ActivityLogStatus, string> = {
   active: "◢",
-  complete: "◥",
+  waiting: "◷",
+  blocked: "!",
+  complete: "✓",
   cancelled: "×",
 };
 
@@ -70,15 +76,20 @@ export const ActivityLog: DiscernComponent<HTMLElement, ActivityLogProps> =
         <p className="discern-activity-log__headline">
           <span
             className="discern-activity-log__marker"
-            role="img"
-            aria-label={status}
+            aria-hidden="true"
           >
             {statusMarkers[status]}
+          </span>
+          <span className="discern-activity-log__status">
+            {activityStatusLabels[status]}
           </span>
           <span className="discern-activity-log__label">
             {label}
           </span>
         </p>
+        {hint !== undefined && hint !== null
+          ? <p className="discern-activity-log__hint">{hint}</p>
+          : null}
         {stable !== undefined && stable.length > 0
           ? (
             <ul className="discern-activity-log__stable">
@@ -120,9 +131,6 @@ export const ActivityLog: DiscernComponent<HTMLElement, ActivityLogProps> =
                 : null}
             </div>
           )
-          : null}
-        {hint !== undefined && hint !== null
-          ? <p className="discern-activity-log__hint">{hint}</p>
           : null}
       </section>
     );

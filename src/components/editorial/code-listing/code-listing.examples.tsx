@@ -1,3 +1,4 @@
+import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
 import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import meta, { componentExampleVocabulary } from "./code-listing.meta.ts";
 import { CodeListing } from "./code-listing.tsx";
@@ -14,6 +15,7 @@ function StandardCodeListingState() {
       filename="reading-time.ts"
       language="TypeScript"
       code={example}
+      wrap
       highlightLines={[1, 2]}
       caption="Highlighted lines draw attention to the calculation."
     />
@@ -40,6 +42,27 @@ export const catalogueExamples = defineCatalogueExamples(
     { id: "standard", Example: StandardCodeListingState },
     { id: "showcase", Example: ShowcaseCodeListingState },
   ],
+);
+
+export const reviewPostures = defineComponentReviewPostures(
+  meta,
+  componentExampleVocabulary,
+  [{
+    id: "wrapped-keyboard",
+    label: "Wrapped source keyboard focus",
+    example: "standard",
+    category: "responsive",
+    requirements: { inlineSize: "narrow", reducedMotion: true },
+    sequence: [
+      { action: "focus", target: { selector: ".discern-code-listing__body" } },
+      {
+        checkpoint: {
+          id: "wrapped-focus",
+          label: "Logical lines and focus at narrow width",
+        },
+      },
+    ],
+  }],
 );
 
 export default function CodeListingExamples() {

@@ -1,10 +1,11 @@
-import { useId } from "react";
+import { useEffect, useId, useState } from "react";
+import { Button } from "../../src/components/core/button/button.tsx";
 import { Input } from "../../src/components/forms/input/input.tsx";
 import {
   appearanceAxes,
   type AppearanceAxisName,
 } from "../../src/tokens/appearance.ts";
-import { formatCatalogueAxisNumber } from "./axes-state.ts";
+import { formatCatalogueAxisNumber, parseCatalogueAxis } from "./axes-state.ts";
 
 const axisCopy: Readonly<
   Record<
@@ -29,25 +30,34 @@ const axisCopy: Readonly<
 export interface AxisControlProps {
   readonly axis: AppearanceAxisName;
   readonly value: number;
+  readonly label?: string;
   readonly onChange: (value: number) => void;
 }
 
 /** Shared public-Input projection used by the shell and Appearance instrument. */
 export function AxisControl(
-  { axis, value, onChange }: AxisControlProps,
+  { axis, value, label, onChange }: AxisControlProps,
 ) {
   const generatedId = useId();
   const id = `discern-catalogue-axis-${axis}-${generatedId}`;
   const descriptionId = `${id}-description`;
   const definition = appearanceAxes[axis];
   const copy = axisCopy[axis];
+  const name = label ?? copy.label;
+  const [draft, setDraft] = useState(formatCatalogueAxisNumber(value));
+  useEffect(() => setDraft(formatCatalogueAxisNumber(value)), [value]);
+  const parsed = parseCatalogueAxis(axis, draft);
+  const commit = (): void => {
+    if (parsed !== undefined) onChange(parsed);
+  };
+  const unit = axis.endsWith("Hue") ? "degrees" : "relative units";
   return (
     <div
       className="discern-catalogue-axis"
       data-discern-axis={axis}
     >
       <div>
-        <label htmlFor={id}>{copy.label}</label>
+        <label htmlFor={id}>{name}</label>
         <output htmlFor={id}>{formatCatalogueAxisNumber(value)}</output>
       </div>
       <Input
@@ -55,16 +65,57 @@ export function AxisControl(
         type="range"
         min={definition.minimum}
         max={definition.maximum}
-        step="0.01"
+        step="any"
         value={value}
         aria-describedby={descriptionId}
         onInput={(event) => onChange(event.currentTarget.valueAsNumber)}
       />
+      <div className="discern-catalogue-axis__exact">
+        <Input
+          type="number"
+          label={`${name} exact value`}
+          min={definition.minimum}
+          max={definition.maximum}
+          step="any"
+          value={draft}
+          aria-describedby={descriptionId}
+          aria-invalid={draft !== "" && parsed === undefined ? true : undefined}
+          onChange={(event) => setDraft(event.currentTarget.value)}
+          onBlur={commit}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              commit();
+            }
+            if (
+              event.key === "Escape" &&
+              draft !== formatCatalogueAxisNumber(value)
+            ) {
+              event.preventDefault();
+              event.stopPropagation();
+              setDraft(formatCatalogueAxisNumber(value));
+            }
+          }}
+        />
+        <Button
+          size="sm"
+          variant="secondary"
+          aria-label={`Reset ${name.toLowerCase()}`}
+          onClick={() => {
+            setDraft(formatCatalogueAxisNumber(definition.default));
+            onChange(definition.default);
+          }}
+        >
+          Reset
+        </Button>
+      </div>
       <small id={descriptionId}>
         <span>{copy.minimum} {definition.minimum}</span>
-        <span>{copy.maximum} {definition.maximum}</span>
+        <span>{copy.maximum} {definition.maximum} · {unit}</span>
         <span className="discern-catalogue-axis__description">
-          {definition.description}
+          {definition.description}{" "}
+          Exact values apply on Enter or leaving the field; Escape restores an
+          unfinished edit.
         </span>
       </small>
     </div>

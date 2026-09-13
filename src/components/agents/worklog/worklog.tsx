@@ -2,7 +2,7 @@ import { forwardRef } from "react";
 import type { OlHTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
-import type { WorklogStatus } from "./worklog.types.ts";
+import { worklogPositions, type WorklogStatus } from "./worklog.types.ts";
 
 export type { WorklogStatus } from "./worklog.types.ts";
 
@@ -13,6 +13,8 @@ export interface WorklogEntry {
   readonly statusLabel?: string;
   readonly detail?: ReactNode;
   readonly meta?: ReactNode;
+  /** Explicit label for adjacent routine entries; omit for decisions or boundaries. */
+  readonly routineGroup?: string;
 }
 
 /** Props for the {@linkcode Worklog} component. */
@@ -34,6 +36,7 @@ export const Worklog: DiscernComponent<HTMLOListElement, WorklogProps> =
     { entries, className, ...props },
     ref,
   ) {
+    const positions = worklogPositions(entries);
     return (
       <ol
         ref={ref}
@@ -44,6 +47,11 @@ export const Worklog: DiscernComponent<HTMLOListElement, WorklogProps> =
           <li
             className="discern-worklog__entry"
             data-discern-status={entry.status}
+            data-discern-routine={positions[index]?.continued
+              ? "continuation"
+              : positions[index]
+              ? "start"
+              : undefined}
             key={index}
           >
             <span
@@ -56,6 +64,12 @@ export const Worklog: DiscernComponent<HTMLOListElement, WorklogProps> =
               {markers[entry.status]}
             </span>
             <span className="discern-worklog__body">
+              {positions[index] && !positions[index]!.continued && (
+                <strong className="discern-worklog__group">
+                  {positions[index]!.label} · {positions[index]!.size}{" "}
+                  {entry.statusLabel ?? entry.status}
+                </strong>
+              )}
               <span className="discern-worklog__label">
                 {entry.label}
               </span>

@@ -19,7 +19,6 @@ import {
   workflowCliWidth,
   workflowFactLines,
   workflowIndentedLines,
-  workflowPathText,
   workflowPrefixedLines,
 } from "../workflow-cli.ts";
 
@@ -116,6 +115,7 @@ const renderDiagnosticCli: CliRenderer<DiagnosticCliProps> = (
       props,
     ),
     ...workflowFactLines("Why", props.impact, width),
+    ...workflowFactLines("Fix", props.correction, width),
   ];
   if (props.path !== undefined) {
     assertWorkflowCliText(props.path, "diagnostic path");
@@ -126,13 +126,7 @@ const renderDiagnosticCli: CliRenderer<DiagnosticCliProps> = (
     const suffix = coordinates === "" ? "" : `:${coordinates}`;
     lines.push(...workflowFactLines(
       "At",
-      `${
-        workflowPathText(
-          props.path,
-          Math.max(1, width - 4 - suffix.length),
-          capabilities,
-        )
-      }${suffix}`,
+      `${props.path}${suffix}`,
       width,
     ));
   }
@@ -161,7 +155,6 @@ const renderDiagnosticCli: CliRenderer<DiagnosticCliProps> = (
       ),
     );
   }
-  lines.push(...workflowFactLines("Fix", props.correction, width));
   if (props.retryCommand !== undefined) {
     assertWorkflowCliText(props.retryCommand, "diagnostic retry command", true);
     lines.push(...workflowFactLines("Retry", `$ ${props.retryCommand}`, width));

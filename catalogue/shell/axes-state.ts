@@ -29,6 +29,16 @@ function boundedAxis(axis: AppearanceAxisName, value: number): boolean {
     value <= definition.maximum;
 }
 
+/** Parse one exact coordinate with the same bounds as portable field points. */
+export function parseCatalogueAxis(
+  axis: AppearanceAxisName,
+  text: string,
+): number | undefined {
+  if (text.trim() === "") return undefined;
+  const value = Number(text);
+  return boundedAxis(axis, value) ? value : undefined;
+}
+
 /** Runtime guard for frame messages and other untyped Catalogue boundaries. */
 export function isCatalogueAxesSelection(
   value: unknown,
@@ -93,7 +103,13 @@ export function parseCatalogueAxesValue(
   const field = {
     ...defaultAppearance,
     ...Object.fromEntries(
-      axes.map((axis, index) => [axis, Number(numbers[index])]),
+      axes.map((
+        axis,
+        index,
+      ) => [
+        axis,
+        parseCatalogueAxis(axis, numbers[index] ?? "") ?? Number.NaN,
+      ]),
     ),
   };
   if (!isCatalogueAxesSelection(field)) return undefined;

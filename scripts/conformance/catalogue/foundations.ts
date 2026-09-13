@@ -15,6 +15,7 @@ import { verifyInlineOverflowCueEdges } from "./overflow-cue.ts";
 import {
   CATALOGUE_NARROW_VIEWPORT,
   CATALOGUE_WIDE_VIEWPORT,
+  catalogueSearchResult,
   eventually,
   invariant,
   loadCataloguePage,
@@ -330,10 +331,9 @@ async function verifyTerminalFoundations(
     name: "Search the Catalogue",
   });
   await searchDialog.locator(".discern-search-palette__input").fill("spinner");
-  const result = searchDialog.locator(
-    `.discern-search-palette__result[href="${
-      catalogueTerminalFoundationPath("motifs")
-    }"]`,
+  const result = catalogueSearchResult(
+    page,
+    catalogueTerminalFoundationPath("motifs"),
   );
   invariant(
     await result.count() === 1 &&

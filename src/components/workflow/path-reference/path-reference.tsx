@@ -25,7 +25,7 @@ function splitPath(path: string): readonly [string, string] {
     : [path.slice(0, separator + 1), path.slice(separator + 1)];
 }
 
-/** Inline file or directory path that preserves both its rootward context and terminal segment under truncation. */
+/** Complete file or directory path that wraps rootward context and terminal segments. */
 export const PathReference: DiscernComponent<
   HTMLSpanElement,
   PathReferenceProps

@@ -1,3 +1,4 @@
+import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
 import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
 import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { Diagnostic } from "./diagnostic.tsx";
@@ -12,28 +13,41 @@ export const conformance = [{
   example: "verbose-failure",
   name: "long location and verbose evidence stay contained at narrow width",
   viewport: { width: 390, height: 1400 },
-  steps: [{
-    expect: "within-viewport",
-    target: { selector: "[data-example-diagnostic-stress]" },
-  }, {
-    expect: "visible",
-    target: {
-      selector:
-        "[data-example-diagnostic-stress] .discern-path-reference__suffix",
+  steps: [
+    {
+      expect: "within-viewport",
+      target: { selector: "[data-example-diagnostic-stress]" },
     },
-  }, {
-    expect: "scrollable-x",
-    target: {
-      selector:
-        "[data-example-diagnostic-stress] .discern-diagnostic__evidence pre",
+    {
+      expect: "visible",
+      target: {
+        selector:
+          "[data-example-diagnostic-stress] .discern-path-reference__suffix",
+      },
     },
-  }, {
-    expect: "visible",
-    target: {
-      selector:
-        "[data-example-diagnostic-stress] .discern-diagnostic__evidence code",
+    {
+      action: "focus",
+      target: {
+        selector:
+          "[data-example-diagnostic-stress] .discern-diagnostic__evidence > summary",
+      },
     },
-  }],
+    { action: "press", key: "Enter" },
+    {
+      expect: "scrollable-x",
+      target: {
+        selector:
+          "[data-example-diagnostic-stress] .discern-diagnostic__evidence pre",
+      },
+    },
+    {
+      expect: "visible",
+      target: {
+        selector:
+          "[data-example-diagnostic-stress] .discern-diagnostic__evidence code",
+      },
+    },
+  ],
 }] satisfies readonly ConformanceScenario[];
 
 function VerboseFailureState() {
@@ -51,6 +65,7 @@ function VerboseFailureState() {
       workingDirectory="/path/to/project"
       correction='Handle the "pending" case before assigning the value, then rerun the type check.'
       rawDetail={rawDetail}
+      rawLabel="Type check log — 1 error"
       data-example-diagnostic-stress
     />
   );
@@ -84,3 +99,50 @@ export default function DiagnosticExamples() {
     </div>
   );
 }
+
+export const reviewPostures = defineComponentReviewPostures(
+  meta,
+  componentExampleVocabulary,
+  [
+    ...(["narrow", "wide"] as const).map((inlineSize) => ({
+      id: `diagnostic-${inlineSize}`,
+      label: `Correction before evidence at ${inlineSize} width`,
+      example: "verbose-failure",
+      category: "responsive" as const,
+      requirements: { inlineSize },
+      sequence: [{
+        checkpoint: {
+          id: `diagnostic-${inlineSize}-reading`,
+          label: "Failure, correction and exact location",
+        },
+      }],
+    })),
+    {
+      id: "diagnostic-evidence",
+      label: "Opened evidence inspection",
+      example: "verbose-failure",
+      category: "interaction",
+      requirements: { inlineSize: "narrow" },
+      sequence: [
+        {
+          action: "click",
+          target: { selector: ".discern-diagnostic__evidence > summary" },
+        },
+        {
+          action: "focus",
+          target: { selector: ".discern-diagnostic__evidence pre" },
+        },
+        {
+          expect: "focused",
+          target: { selector: ".discern-diagnostic__evidence pre" },
+        },
+        {
+          checkpoint: {
+            id: "diagnostic-evidence-open",
+            label: "Exact evidence reachable by keyboard",
+          },
+        },
+      ],
+    },
+  ],
+);

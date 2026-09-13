@@ -86,3 +86,25 @@ Authored feature files stay with their owner. Shared derived files and the narro
 - **Landing rule chosen by the owner:** After green `discern_done`, report the exact Proof, branch, worktree, preview URL, and any owner decision, then stop and wait for the owner to confirm acceptance.
 - Return the branch/worktree identity for an adversarial review against this brief. The planning agent will inspect the diff and reproduce the important journeys; gate success alone is not a visual review.
 - In the final implementation commit, before the final prepare → commit → done sequence, move `map/_private/planning/design-polish/2n-shell-search-and-appearance.md` to `map/_private/planning/design-polish/_done/2n-shell-search-and-appearance.md`, repair any moved relative links, and update **only this stream's row** in the programme README to the `_done/` path and completed state, preserving every sibling row.
+
+## Implementation evidence
+
+Appearance now offers Default, Comfortable reading, and Dense tools as ordinary axis coordinates from one shared preset authority. Theme policy, Darkness, and Accent remain independent. Header, shared Builder Appearance controls, and the Foundations instrument consume the same axis controls. Exact entries keep unfinished text, commit valid coordinates on Enter or blur, expose per-axis reset, and let Escape cancel a draft before dismissing the parent. Sliders admit the exact coordinate instead of rounding to another step grid. The native Appearance disclosure dismisses on Escape and outside interaction, preserves nested controls and outward Tab navigation, and uses shared floating-surface roles inside a viewport-bounded scroller.
+
+The mobile toolbar retains 44px menu/search/Appearance targets, hides desktop shortcut and descriptive decoration, and keeps the accessible search name. Secondary DocsNav titles are disclosure buttons; collapsed groups retain their current location, and local expansion preferences survive navigation. Drawer dismissal restores the mobile trigger; crossing to desktop retires the drawer and focuses the current navigation destination; returning to mobile moves focus to its visible menu trigger.
+
+Search keeps existing route records, matching, and explanations, groups the top bounded matches by route family, and shows existing representative Component images and literal Glyph previews. Native result links support Tab, arrows, and Enter with a polite result count. Recent destinations are the last five destinations opened from search, stored by record ID and resolved through current records; invalid, stale, duplicate, and oversized histories are discarded or bounded. Clear recent and Clear search return focus to the query. Storage is optional and search navigation carries canonical Appearance coordinates.
+
+Visual review covered the desktop shell at 1440×1000, mobile at 390×844 and 320×640, short landscape at 667×320, and enlarged text at 320px with a 200% root font. The toolbar, drawer, search results, Appearance preset selection, scrolled exact controls, and bottom reset/link actions were inspected. The enlarged-text Appearance panel had equal client and scroll widths (294px). Existing shell journeys cover both themes, axe, forced colours, history, numerical Appearance projection, and navigation semantics; new journeys add preset/exact/reset, invalid drafts, nested dismissal, recent search, touch under unavailable storage, system theme, Back/Forward, and drawer resize focus. The Escape and resize-focus guards each failed before their corresponding fix. Canonical Component images and the package/CLI contracts are unchanged; search consumes their existing generated representatives.
+
+Review identity: `refine-2n-b4e86a`, branch `agent/refine-2n-b4e86a`, worktree `/Users/jack/Sites/discern-design-system.worktrees/refine-2n-b4e86a`.
+
+Review URLs on deterministic port 17998:
+
+- Desktop/mobile shell: `http://localhost:17998/catalogue/` and `http://localhost:17998/catalogue/components/?group=layout`.
+- Comfortable reading: `http://localhost:17998/catalogue/foundations/appearance/?theme=light&accent=none&field=0,0.8,0.8,1.3`.
+- Dense tools: `http://localhost:17998/catalogue/?theme=dark&accent=245&field=1,1.1,1,0.65`.
+- Precise axis review: `http://localhost:17998/catalogue/foundations/appearance/?theme=dark&accent=245&field=1,0.8,0.8,0.875`.
+- Search/recent journey: open Search at `/catalogue/`, enter `button`, press ArrowDown then Enter, reopen Search, and follow or clear Recent destinations.
+
+The review preview remains available after the final gate and stops before acceptance. Acceptance waits for the owner's explicit confirmation after Proof and adversarial review. Browser evidence is Chromium-based; native browser/OS select presentation remains platform-owned.

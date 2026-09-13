@@ -19,6 +19,7 @@ import {
 import { withViewport } from "../../viewport.ts";
 import { verifyDecisionCopyEnrollment } from "./metadata-copy.ts";
 import { misalignedGridText } from "../centered-grid-text.ts";
+import { statusWitnessEnrollments } from "../../measure-missing-witnesses.ts";
 
 const OUTPUT_ROOT = new URL("../../../dist/conformance/", import.meta.url);
 const WIDE_VIEWPORT = { width: 1440, height: 1000 } as const;
@@ -890,7 +891,7 @@ async function verifyAxisReach(
 }
 
 async function verifyStatusWitnesses(page: Page): Promise<number> {
-  return await page.evaluate(() => {
+  return await page.evaluate((enrollments) => {
     const normalize = (value: string): string =>
       value.toLowerCase().replace(/[^a-z0-9]+/gu, " ").trim();
     const namesState = (value: string, state: string): boolean =>
@@ -935,13 +936,22 @@ async function verifyStatusWitnesses(page: Page): Promise<number> {
         ? "data-discern-tone"
         : "data-discern-status";
       const state = element.getAttribute(attribute)?.trim() ?? "";
-      if (state === "" || namesState(visibleText(element), state)) {
+      const enrollment = enrollments.find((entry) =>
+        element.classList.contains(entry.className) && entry.state === state
+      );
+      const names = enrollment === undefined
+        ? [state]
+        : [state, enrollment.label];
+      if (
+        state === "" ||
+        names.some((name) => namesState(visibleText(element), name))
+      ) {
         return undefined;
       }
       const namedIcon = [element, ...element.querySelectorAll("*")].some(
         (candidate) =>
           !hidden(candidate) && icon(candidate) &&
-          namesState(accessibleName(candidate), state),
+          names.some((name) => namesState(accessibleName(candidate), name)),
       );
       if (namedIcon) return undefined;
       const component = element.closest<HTMLElement>(
@@ -967,6 +977,25 @@ async function verifyStatusWitnesses(page: Page): Promise<number> {
     if (!futureProof) {
       failures.push("A synthetic missing status witness escaped the detector");
     }
+    for (const enrollment of enrollments) {
+      const fixture = document.createElement("span");
+      fixture.dataset.discernStatus = enrollment.state;
+      fixture.textContent = enrollment.label;
+      document.body.append(fixture);
+      const requiresComponent = inspect(fixture) !== undefined;
+      fixture.className = enrollment.className;
+      const acceptsAuthoredLabel = inspect(fixture) === undefined;
+      fixture.innerHTML = `<span aria-hidden="true">${enrollment.label}</span>`;
+      const requiresVisibleLabel = inspect(fixture) !== undefined;
+      fixture.remove();
+      if (
+        !requiresComponent || !acceptsAuthoredLabel || !requiresVisibleLabel
+      ) {
+        failures.push(
+          `Status witness enrollment escaped its scope: ${enrollment.component}`,
+        );
+      }
+    }
     if (elements.length === 0) {
       failures.push(
         "The status-witness browser contract exercised no elements",
@@ -976,7 +1005,7 @@ async function verifyStatusWitnesses(page: Page): Promise<number> {
       throw new Error(`Status witnesses failed:\n${failures.join("\n")}`);
     }
     return elements.length;
-  });
+  }, statusWitnessEnrollments);
 }
 
 /** Scan the complete requested Component population and retain target diagnostics. */

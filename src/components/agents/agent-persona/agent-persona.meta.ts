@@ -12,7 +12,7 @@ const meta = {
   accessibility: [
     "The visible name is the single source of identity: the built-in avatar renders decorative so nothing is announced twice.",
     "Status is printed directly after the name, so the avatar's colour and glyph only reinforce a visible state word.",
-    "Name and detail truncate visually with an ellipsis while the full text stays available to assistive technology.",
+    "Name and detail wrap at the available width so complete identities remain visible and announced.",
   ],
 } satisfies ComponentMeta;
 

@@ -1,3 +1,5 @@
+import { Cluster } from "../../layout/cluster/cluster.tsx";
+import { Stack } from "../../layout/stack/stack.tsx";
 import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
@@ -12,7 +14,18 @@ export interface CalloutProps
   readonly children: ReactNode;
   readonly icon?: ReactNode;
   readonly tone?: CalloutTone;
+  /** Follow-up controls beneath the editorial context. */
+  readonly actions?: ReactNode;
 }
+
+const toneWitnesses: Readonly<
+  Record<CalloutTone, { label: string; glyph: string }>
+> = {
+  note: { label: "Information", glyph: "i" },
+  insight: { label: "Insight", glyph: "✦" },
+  warning: { label: "Warning", glyph: "!" },
+  success: { label: "Success", glyph: "✓" },
+};
 
 /** Inset editorial note for context, interpretation, cautions, and successful outcomes without breaking the reading flow. */
 export const Callout: DiscernComponent<HTMLElement, CalloutProps> = forwardRef<
@@ -24,6 +37,7 @@ export const Callout: DiscernComponent<HTMLElement, CalloutProps> = forwardRef<
     title,
     children,
     icon,
+    actions,
     tone = "note",
     className,
     ...props
@@ -41,20 +55,21 @@ export const Callout: DiscernComponent<HTMLElement, CalloutProps> = forwardRef<
       role="note"
       {...props}
     >
-      {icon
-        ? (
-          <span className="discern-callout__icon" aria-hidden="true">
-            {icon}
-          </span>
-        )
-        : null}
-      <div>
+      <span
+        className="discern-callout__icon"
+        role="img"
+        aria-label={toneWitnesses[tone].label}
+      >
+        {icon ?? toneWitnesses[tone].glyph}
+      </span>
+      <Stack gap={2}>
         {eyebrow
           ? <span className="discern-callout__eyebrow">{eyebrow}</span>
           : null}
         <h3>{title}</h3>
-        <div className="discern-callout__body">{children}</div>
-      </div>
+        <Stack className="discern-callout__body">{children}</Stack>
+        {actions !== undefined && <Cluster>{actions}</Cluster>}
+      </Stack>
     </aside>
   );
 });

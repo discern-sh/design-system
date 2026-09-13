@@ -38,8 +38,11 @@ Deno.test("Path reference renders exact narrow, standard, wide, and capability f
   } as const;
   for (
     const [columns, expected] of [
-      [16, "…/command.cli.ts"],
-      [40, "src/components/workflow/…/command.cli.ts"],
+      [16, "src/components/w\norkflow/command/\ncommand.cli.ts"],
+      [
+        40,
+        "src/components/workflow/command/command.\ncli.ts",
+      ],
       [80, "src/components/workflow/command/command.cli.ts"],
     ] as const
   ) {
@@ -52,8 +55,8 @@ Deno.test("Path reference renders exact narrow, standard, wide, and capability f
   }
   assertCapabilityLevels(
     (capabilities) => renderPathReferenceCli(props, capabilities),
-    "src/components/workflow/…/command.cli.ts",
-    "src/components/workflo.../command.cli.ts",
+    "src/components/workflow/command/command.\ncli.ts",
+    "src/components/workflow/command/command.\ncli.ts",
   );
 });
 
@@ -123,10 +126,16 @@ Deno.test("Raw output renders exact narrow, standard, wide, and capability frame
     const [columns, expected] of [
       [
         16,
-        "▾ Raw output\n  error:\n  unexpected\n  token at\n  generated\n  registry",
+        "▾ Raw output · 1\n  line\n  error:\n  unexpected\n  token at\n  generated\n  registry",
       ],
-      [40, "▾ Raw output\n  error: unexpected token at generated\n  registry"],
-      [80, "▾ Raw output\n  error: unexpected token at generated registry"],
+      [
+        40,
+        "▾ Raw output · 1 line\n  error: unexpected token at generated\n  registry",
+      ],
+      [
+        80,
+        "▾ Raw output · 1 line\n  error: unexpected token at generated registry",
+      ],
     ] as const
   ) {
     const capabilities = testTerminalCapabilities({ columns });
@@ -138,8 +147,8 @@ Deno.test("Raw output renders exact narrow, standard, wide, and capability frame
   }
   assertCapabilityLevels(
     (capabilities) => renderRawOutputCli(props, capabilities),
-    "▾ Raw output\n  error: unexpected token at generated\n  registry",
-    "v Raw output\n  error: unexpected token at generated\n  registry",
+    "▾ Raw output · 1 line\n  error: unexpected token at generated\n  registry",
+    "v Raw output - 1 line\n  error: unexpected token at generated\n  registry",
   );
 });
 
@@ -151,8 +160,11 @@ Deno.test("File change renders exact narrow, standard, wide, and capability fram
   } as const;
   for (
     const [columns, expected] of [
-      [16, "◇ Generated cli…\n  +24 -3"],
-      [40, "◇ Generated src…/cli-renderers.ts +24 -3"],
+      [
+        16,
+        "◇ Generated\nPath: src/genera\n      ted/cli-re\n      nderers.ts\n+24 -3",
+      ],
+      [40, "◇ Generated\nPath: src/generated/cli-renderers.ts\n+24 -3"],
       [80, "◇ Generated src/generated/cli-renderers.ts +24 -3"],
     ] as const
   ) {
@@ -165,7 +177,7 @@ Deno.test("File change renders exact narrow, standard, wide, and capability fram
   }
   assertCapabilityLevels(
     (capabilities) => renderFileChangeCli(props, capabilities),
-    "◇ Generated src…/cli-renderers.ts +24 -3",
-    "* Generated s.../cli-renderers.ts +24 -3",
+    "◇ Generated\nPath: src/generated/cli-renderers.ts\n+24 -3",
+    "* Generated\nPath: src/generated/cli-renderers.ts\n+24 -3",
   );
 });

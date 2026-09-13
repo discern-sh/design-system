@@ -9,7 +9,7 @@ const example = `function total(values: readonly number[]): number {
 console.log(total([2, 3, 5]));`;
 
 function TypeScriptSourceExample() {
-  return <CodeBlock code={example} language="ts" info="module" />;
+  return <CodeBlock code={example} wrap language="ts" info="module" />;
 }
 
 function PreservedLongLineExample() {

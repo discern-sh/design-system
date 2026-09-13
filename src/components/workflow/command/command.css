@@ -32,15 +32,16 @@
     min-inline-size: 0;
   }
   .discern-command__context-label {
+    flex: none;
     color: var(--discern-color-ink-faint);
     font-weight: var(--discern-font-weight-strong);
   }
   .discern-command__context code {
-    overflow: hidden;
+    min-inline-size: 0;
     color: var(--discern-color-ink);
     font-family: var(--discern-font-mono);
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
   }
   .discern-command__execution {
     display: grid;

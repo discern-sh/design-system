@@ -28,12 +28,39 @@ const cliExampleImplementations = [
   {
     name: "default",
     props: {
-      title: "Nothing here yet",
-      description: "Create the first item to get started.",
-      action: "Create item",
+      title: "Create your first collection",
+      description:
+        "Collections keep related items together. Create one when you have something to save.",
+      action: "Create collection",
     },
   },
   { name: "compact", props: { title: "No results" } },
+  {
+    name: "no-results",
+    props: {
+      title: "No results for 'field notes'",
+      description: "Try fewer words or clear the filters to search all items.",
+      action: "Clear filters",
+    },
+  },
+  {
+    name: "unavailable",
+    props: {
+      title: "This collection is unavailable",
+      description:
+        "It may have been moved or access may have changed. Return to your collections to choose another.",
+      action: "Browse collections",
+    },
+  },
+  {
+    name: "recoverable-failure",
+    props: {
+      title: "Items could not be loaded",
+      description:
+        "Your collection is still saved. Check your connection, then try loading it again.",
+      action: "Try loading again",
+    },
+  },
 ] as const satisfies readonly CliExample<EmptyStateCliProps>[];
 defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
 

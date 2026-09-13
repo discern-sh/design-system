@@ -19,7 +19,8 @@ const meta = {
     "Use Blockquote or Pull quote for quoted material rather than an editorial note.",
   ],
   accessibility: [
-    "The callout is exposed as a note landmark with a real heading and never relies on colour alone for meaning.",
+    "The callout is exposed as a non-live note with a real heading and a named visible tone glyph, including when custom artwork is supplied.",
+    "Optional actions follow the body in reading order; the consumer owns their behaviour and announcement policy.",
   ],
 } satisfies ComponentMeta;
 

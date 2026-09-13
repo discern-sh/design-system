@@ -1,3 +1,4 @@
+import { completeResponse } from "./raw-output.examples-data.ts";
 import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
 import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
@@ -5,10 +6,6 @@ import { RawOutput } from "./raw-output.tsx";
 import meta, { componentExampleVocabulary } from "./raw-output.meta.ts";
 
 const collapsedOutput = "error: expected a string\nat src/example.ts:18:7";
-const completeResponse = `{
-  "ok": false,
-  "reason": "invalid input"
-}`;
 
 const disclosure = {
   selector: "[data-example-raw-output] .discern-raw-output__summary",
@@ -25,7 +22,8 @@ export const conformance = [{
   name: "native disclosure toggles its content and open state",
   steps: [
     { expect: "hidden", target: content },
-    { action: "click", target: disclosure },
+    { action: "focus", target: disclosure },
+    { action: "press", key: "Enter" },
     {
       expect: "attribute",
       target: rawOutput,
@@ -33,16 +31,24 @@ export const conformance = [{
       value: "",
     },
     { expect: "visible", target: content },
+    { action: "press", key: "Tab" },
+    { expect: "focused", target: content },
   ],
 }] satisfies readonly ConformanceScenario[];
 
 function CollapsedOutputState() {
-  return <RawOutput data-example-raw-output>{collapsedOutput}</RawOutput>;
+  return (
+    <RawOutput label="Parser output" outcome="Failed" data-example-raw-output>
+      {collapsedOutput}
+    </RawOutput>
+  );
 }
 
 function ExpandedOutputState() {
   return (
-    <RawOutput label="Complete response" open>{completeResponse}</RawOutput>
+    <RawOutput label="Checkout fixture response" outcome="2 failures" open>
+      {completeResponse}
+    </RawOutput>
   );
 }
 
@@ -59,6 +65,19 @@ export const reviewPostures = defineComponentReviewPostures(
   meta,
   componentExampleVocabulary,
   [
+    ...(["narrow", "wide"] as const).map((inlineSize) => ({
+      id: `raw-${inlineSize}`,
+      label: `Complete evidence at ${inlineSize} width`,
+      example: "expanded",
+      category: "responsive" as const,
+      requirements: { inlineSize },
+      sequence: [{
+        checkpoint: {
+          id: `raw-${inlineSize}-reading`,
+          label: "Precise raw content",
+        },
+      }],
+    })),
     {
       id: "press-raw-output",
       label: "Raw output disclosure pointer contact",

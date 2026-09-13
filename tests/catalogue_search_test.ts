@@ -194,3 +194,41 @@ Deno.test("component providers restrict populations without changing semantics a
     searchRecords(projected, "bridge")[0]?.record.title,
   );
 });
+
+Deno.test("recent destinations resolve current records, discard stale identities, and stay bounded", async () => {
+  const {
+    recentCatalogueRecords,
+    rememberCatalogueRecord,
+    catalogueRecentLimit,
+  } = await import("../catalogue/search/recent.ts");
+  const population = Array.from(
+    { length: 10 },
+    (_, id) => ({
+      id: String(id),
+      href: `/new/${id}`,
+      title: `Current ${id}`,
+      context: "Component",
+    }),
+  );
+  for (
+    const stored of [
+      null,
+      "{broken",
+      "{}",
+      JSON.stringify([{}, false, "removed"]),
+      "x".repeat(4097),
+    ]
+  ) assertEquals(recentCatalogueRecords(population, stored), []);
+  const restored = recentCatalogueRecords(
+    population,
+    JSON.stringify(["stale", "1", "1", "2", "3", "4", "5", "6"]),
+  );
+  assertEquals(restored.map((record) => record.id), ["1", "2", "3", "4", "5"]);
+  assertEquals(restored[0], population[1]);
+  const next = rememberCatalogueRecord(restored, population[3]!);
+  assertEquals(next.map((record) => record.id), ["3", "1", "2", "4", "5"]);
+  assertEquals(
+    rememberCatalogueRecord(next, population[0]!).length,
+    catalogueRecentLimit,
+  );
+});

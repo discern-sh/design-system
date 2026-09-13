@@ -74,3 +74,23 @@ Authored feature files stay with their owner. Shared derived files and the narro
 - **Landing rule chosen by the owner:** After green `discern_done`, report the exact Proof, branch, worktree, preview URL, and any owner decision, then stop and wait for the owner to confirm acceptance.
 - Return the branch/worktree identity for an adversarial review against this brief. The planning agent will inspect the diff and reproduce the important journeys; gate success alone is not a visual review.
 - In the final implementation commit, before the final prepare → commit → done sequence, move `map/_private/planning/design-polish/2m-side-by-side-comparison.md` to `map/_private/planning/design-polish/_done/2m-side-by-side-comparison.md`, repair any moved relative links, and update **only this stream's row** in the programme README to the `_done/` path and completed state, preserving every sibling row.
+
+## Implementation evidence
+
+Compare uses one selected population across groups, with up to three columns, a 320px minimum allocation when space permits, and shared header/control/specimen tracks. Wider selections wrap; constrained allocations stack. Group membership remains visible in the compact horizontal jump list. Selection parsing, canonical order, remove/reset, global surface semantics, and the shared specimen implementation remain unchanged.
+
+The baseline three-item URL at 1440px placed Button, Table, and Command at separate vertical positions; the column/alignment predicate returned false. The same predicate now observes three distinct columns with identical item and specimen starts. Geometry review covered two, three, and five selections at 1440, 1280, 768, 390, and 320 CSS pixels. At 1440px three items receive 328px each; two receive 500px each. The 1280px and 768px views use two columns, while 390px and 320px stack. The reviewed widths retain exact document containment. Light and Dark previews, mixed Web/CLI surfaces, an individual reset row, and native jump targets were visually reviewed.
+
+The Compare-owned browser runner adds permanent geometry and compatibility checks to its existing gate enrollment: cross-group two/three/five-item layouts, useful minimum widths, wrapping, aligned specimen starts with an override, example/surface reload, per-item reset, and keyboard jump continuation. Existing complete-system, removal, global reset, narrow dense-overflow, focus, and jump-cue checks remain. The guarded defect is a Compare population split into serial group containers or allowed to collapse its column allocation; detail pages and independently owned specimen interiors are outside this layout boundary. Different Component families in the five-item selection exercise the same grid without per-Component layout rules.
+
+Review URLs (both reviewed at desktop and narrow widths):
+
+- `http://localhost:18907/catalogue/review/?components=button,table&theme=light`
+- `http://localhost:18907/catalogue/review/?components=button,table,command&theme=dark`
+- Mixed surfaces: `http://localhost:18907/catalogue/review/?components=button,table,command&surface=cli&surfaces=table:web&examples=table:rich-cells&theme=dark`
+
+The tradeoff is deliberate wrapping below the width needed for three useful columns. Long individual specimens may still scroll inside their existing local host, and their full heights need not fit one viewport. No CLI renderer, canonical Web example, package API, or shared foundation changed.
+
+Review identity: `refine-2m-2b34e6`, branch `agent/refine-2m-2b34e6`, worktree `/Users/jack/Sites/discern-design-system.worktrees/refine-2m-2b34e6`. Acceptance awaits the owner's explicit confirmation after final Proof.
+
+Integration verification includes the Components → Foundations journey. The Foundations geometry matrix waits for painted frames after root-font, density, and consumer-size changes, using the shared browser helper; its alignment, square-control, and size-floor assertions remain unchanged. The density 1/root 16 transition is covered after the enlarged-text posture, and failures report the active posture and measured dimensions.

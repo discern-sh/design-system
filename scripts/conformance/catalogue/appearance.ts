@@ -473,7 +473,7 @@ async function switchSurface(
   page: Page,
   surface: "Web" | "CLI",
 ): Promise<void> {
-  await page.getByRole("button", { name: surface, exact: true }).click();
+  await page.getByRole("radio", { name: surface, exact: true }).check();
   const attribute = surface === "Web"
     ? "data-discern-example-state"
     : "data-discern-cli-example-state";
@@ -628,7 +628,7 @@ async function cliState(page: Page): Promise<{
 function fieldAxis(page: Page, axis: string): Locator {
   return page.locator(
     '.discern-catalogue-appearance [data-discern-axis="' + axis +
-      '"] input',
+      '"] input[type="range"]',
   );
 }
 
@@ -667,6 +667,7 @@ async function verifyInteractiveAxesAndIdentity(
   );
 
   await switchSurface(page, "CLI");
+  await openCatalogueAppearanceAxes(page);
   const vividCli = await cliState(page);
   invariant(
     vividCli.appearance === "accent" && vividCli.hue === "137.5" &&

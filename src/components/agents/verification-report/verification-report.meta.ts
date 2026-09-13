@@ -8,7 +8,7 @@ const meta = {
   order: 60,
   cli: { stance: "rendered" },
   description:
-    "Durable multi-check report with a stamped title, metadata rows, and dot-leadered results recording what was verified and how it ended.",
+    "Durable report leading with outcome, summary and next action before native disclosure of complete metadata and check evidence.",
   purposes: ["displaying-tool-output"],
   useWhen: [
     "A durable handoff must record several checks and their outcomes with branch, commit, timing, or change metadata.",
@@ -17,15 +17,16 @@ const meta = {
     "You need the plain-language outcome and next action for one tool run; use Result summary.",
   ],
   accessibility: [
-    "Check outcomes are spoken as visually hidden text after each value; the glyphs are hidden decoration paired with colour, never colour alone.",
+    "Check outcomes remain visible words after each complete value; decorative glyphs and semantic colour reinforce their meaning.",
     "Metadata and checks render as definition lists, so each label stays programmatically bound to its value.",
-    "The dot leaders are painted decoration behind the text, invisible to assistive technology and absent in forced-colour modes.",
+    "Native disclosure exposes subject extent and check outcome counts before expansion. Every evidence value and link remains keyboard reachable when open.",
   ],
 } satisfies ComponentMeta;
 
 export const componentExampleVocabulary = [
   { id: "default", label: "Passing report" },
   { id: "failure", label: "Failing report" },
+  { id: "dense", label: "Dense operational evidence" },
 ] as const;
 defineComponentExampleVocabulary(meta, componentExampleVocabulary);
 
