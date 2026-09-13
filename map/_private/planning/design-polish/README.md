@@ -27,7 +27,7 @@ Relative sizes are planning judgments, not elapsed-time promises: S is a bounded
 | 2D  | [Polish cards, navigation, and identities](_done/2d-cards-navigation-and-identities.md)      | E3, E4, E5             | None            | M    | Complete |
 | 2E  | [Polish sustained reading and article navigation](_done/2e-reading-rhythm-and-navigation.md) | F1, F2, F4             | None            | M    | Complete |
 | 2F  | [Improve source listing copy and wrapping](2f-code-listing-copy-and-wrap.md)                 | F3                     | 1B              | S–M  | Prepared |
-| 2G  | [Clarify operational status and evidence](2g-operational-hierarchy-and-evidence.md)          | G1, G2, G3, G4, G5     | 1B              | L    | Prepared |
+| 2G  | [Clarify operational status and evidence](_done/2g-operational-hierarchy-and-evidence.md)    | G1, G2, G3, G4, G5     | 1B              | L    | Complete |
 | 2H  | [Polish marketing composition and content](_done/2h-marketing-composition-and-content.md)    | H1, H2, H3, H5         | None            | M–L  | Complete |
 | 2I  | [Improve chart axis and data hierarchy](2i-chart-hierarchy.md)                               | I2                     | None            | M    | Prepared |
 | 2J  | [Improve dense diagram legibility](2j-dense-diagram-legibility.md)                           | I5                     | None            | M    | Prepared |
