@@ -13,6 +13,7 @@ const meta = {
 export const componentExampleVocabulary = [
   { id: "default", label: "Idle" },
   { id: "grouped", label: "Grouped choices" },
+  { id: "multiline", label: "Multiline label" },
   { id: "active", label: "Active" },
   { id: "filled", label: "Selected" },
   { id: "validation-error", label: "Validation error" },
