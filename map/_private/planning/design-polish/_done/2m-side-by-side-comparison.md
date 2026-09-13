@@ -92,3 +92,5 @@ Review URLs (both reviewed at desktop and narrow widths):
 The tradeoff is deliberate wrapping below the width needed for three useful columns. Long individual specimens may still scroll inside their existing local host, and their full heights need not fit one viewport. No CLI renderer, canonical Web example, package API, or shared foundation changed.
 
 Review identity: `refine-2m-2b34e6`, branch `agent/refine-2m-2b34e6`, worktree `/Users/jack/Sites/discern-design-system.worktrees/refine-2m-2b34e6`. Acceptance awaits the owner's explicit confirmation after final Proof.
+
+Integration verification includes the Components → Foundations journey. The Foundations geometry matrix waits for painted frames after root-font, density, and consumer-size changes, using the shared browser helper; its alignment, square-control, and size-floor assertions remain unchanged. The density 1/root 16 transition is covered after the enlarged-text posture, and failures report the active posture and measured dimensions.
