@@ -112,6 +112,7 @@ const emptyGlyphsEvidence: GlyphsCatalogueEvidence = {
 const emptyCompositionsEvidence: CompositionsCatalogueEvidence = {
   patterns: 0,
   widthChecks: 0,
+  fitChecks: 0,
   themeChecks: 0,
   accessibilityScans: 0,
   copyChecks: 0,
@@ -347,8 +348,9 @@ export async function runConformance(progress?: Progress): Promise<void> {
         `accessibility scans, ${glyphs.forcedColorChecks} forced-colour checks, ` +
         `and ${glyphs.reflowChecks} reflow checks across ` +
         `${glyphs.records} canonical records and ${glyphs.details} representative details. ` +
-        `Compositions passed ${compositions.widthChecks} width checks and ` +
-        `${compositions.themeChecks} theme checks across ${compositions.patterns} ` +
+        `Compositions passed ${compositions.widthChecks} width checks, ` +
+        `${compositions.fitChecks} fit checks, and ${compositions.themeChecks} ` +
+        `theme checks across ${compositions.patterns} ` +
         `patterns, with ${compositions.accessibilityScans} accessibility scans, ` +
         `${compositions.copyChecks} copy checks, and ${compositions.keyboardChecks} ` +
         `keyboard checks. ` +
