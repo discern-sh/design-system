@@ -286,14 +286,16 @@
   }
   /* SegmentedControl is an inline-size container and cannot size itself from
      its content; the route supplies each control's allocation. */
+  /* Bases sit above the Component's own 20rem stacking query so the segments
+     stay on one row wherever the page can afford it. */
   .discern-catalogue-detail__control--surface {
-    flex: 0 1 170px;
+    flex: 0 1 330px;
   }
   .discern-catalogue-detail__control--view {
-    flex: 0 1 430px;
+    flex: 0 1 480px;
   }
   .discern-catalogue-detail__stage-widths {
-    flex: 0 1 320px;
+    flex: 0 1 340px;
   }
   .discern-catalogue-detail__control .discern-segmented-control__legend,
   .discern-catalogue-detail__stage-widths .discern-segmented-control__legend {
