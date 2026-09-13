@@ -545,11 +545,25 @@ export default function layoutTimelineDiagram(
         }),
       );
       for (const lane of row.lanes) {
-        elements.push(...(lane.kind === "task"
-          ? taskElements(spec, lane.task, lane.label, lane.top, chartX,
-            chartWidth)
-          : milestoneElements(spec, lane.milestone, lane.label, lane.top,
-            chartX, chartWidth)));
+        elements.push(
+          ...(lane.kind === "task"
+            ? taskElements(
+              spec,
+              lane.task,
+              lane.label,
+              lane.top,
+              chartX,
+              chartWidth,
+            )
+            : milestoneElements(
+              spec,
+              lane.milestone,
+              lane.label,
+              lane.top,
+              chartX,
+              chartWidth,
+            )),
+        );
       }
     }
   }

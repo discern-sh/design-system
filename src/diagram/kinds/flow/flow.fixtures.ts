@@ -153,8 +153,7 @@ const maximumDensity = {
 const labelledFanOut = {
   kind: "flow",
   title: "Partition and rejoin a batch",
-  summary:
-    "One decision fans out to four labelled lanes that converge again.",
+  summary: "One decision fans out to four labelled lanes that converge again.",
   nodes: [
     { id: "open", label: "Open the batch", role: "start" as const },
     { id: "split", label: "Partition work", role: "decision" as const },
