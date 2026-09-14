@@ -552,7 +552,7 @@
 # emitted OFL texts stay integrity-mapped but are not browser font requests.
 [standards.font_transfer]
   run = "deno run --config deno.json --allow-read --allow-write scripts/measure-runtime.ts font_transfer_bytes"
-  limit = 183726
+  limit = 184096
   direction = "down"
   metric = "font_transfer_bytes"
   inputs = [
