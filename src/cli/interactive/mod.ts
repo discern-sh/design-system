@@ -14,6 +14,7 @@ export * from "./discovery-requests.ts";
 export * from "./errors.ts";
 export * from "./editor.ts";
 export * from "./io.ts";
+export * from "./observation.ts";
 export * from "./keys.ts";
 export {
   assertInteractiveTerminal,

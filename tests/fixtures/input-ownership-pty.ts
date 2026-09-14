@@ -2,6 +2,7 @@
 import {
   DenoTerminalIO,
   InteractionCancelled,
+  observeTerminalIO,
   runTerminalApplication,
   type TerminalApplicationContext,
 } from "@discern-sh/design-system/cli/interactive";
@@ -33,7 +34,10 @@ class OwnershipProbe extends DenoTerminalIO {
     return cancelled;
   }
 }
-const io = new OwnershipProbe({ readBufferSize: 1 });
+const io = observeTerminalIO(
+  new OwnershipProbe({ readBufferSize: 1 }),
+  () => {},
+);
 const demo = applicationDemoOptions(() => {});
 try {
   await runTerminalApplication({

@@ -75,6 +75,8 @@ export interface PtyProcessOptions {
   /** Behavioral completion bound. Scripted-input runs start it only after the
    * final readiness-gated input phase completes. */
   readonly timeoutMs?: number;
+  /** Allowance for all input readiness, captures, and scripted steps; defaults to 15 seconds independently of completion. */
+  readonly readinessTimeoutMs?: number;
 }
 
 /** Complete observable process result; product values travel elsewhere. */
@@ -120,10 +122,15 @@ export async function runPtyProcess(
   options: PtyProcessOptions,
 ): Promise<PtyProcessResult> {
   validateInput(options.input);
-  if (
-    !Number.isFinite(options.timeoutMs ?? DEFAULT_TIMEOUT_MS) ||
-    (options.timeoutMs ?? DEFAULT_TIMEOUT_MS) <= 0
-  ) throw new TypeError("PTY timeout must be positive and finite");
+  const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const readinessTimeoutMs = options.readinessTimeoutMs ?? DEFAULT_TIMEOUT_MS;
+  for (
+    const [name, budget] of Object.entries({ timeoutMs, readinessTimeoutMs })
+  ) {
+    if (!Number.isFinite(budget) || budget <= 0) {
+      throw new TypeError(`${name} must be positive and finite`);
+    }
+  }
   if (Deno.build.os === "windows") {
     throw new Error("the interactive PTY harness requires script(1)");
   }
@@ -331,28 +338,30 @@ export async function runPtyProcess(
     );
   const input = immediateInput ?? phasedInput;
 
-  const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const statusPromise = process.status;
-  let timedOut = false;
+  let exceeded: {
+    readonly phase: "readiness" | "completion";
+    readonly budget: number;
+  } | undefined;
   let inputError: unknown;
   if (input !== undefined) {
-    const readiness = await settledWithin(input, DEFAULT_TIMEOUT_MS);
+    const readiness = await settledWithin(input, readinessTimeoutMs);
     if (readiness.kind === "timeout") {
-      timedOut = true;
+      exceeded = { phase: "readiness", budget: readinessTimeoutMs };
     } else {
       inputError = readiness.value;
     }
   }
-  if (timedOut || inputError !== undefined) {
+  if (exceeded !== undefined || inputError !== undefined) {
     await terminateProcessTree(process);
   }
   let status: Deno.CommandStatus;
-  if (timedOut || inputError !== undefined) {
+  if (exceeded !== undefined || inputError !== undefined) {
     status = await statusPromise;
   } else {
     const completion = await settledWithin(statusPromise, timeoutMs);
     if (completion.kind === "timeout") {
-      timedOut = true;
+      exceeded = { phase: "completion", budget: timeoutMs };
       await terminateProcessTree(process);
       status = await statusPromise;
     } else {
@@ -368,9 +377,9 @@ export async function runPtyProcess(
   const stdout = DECODER.decode(stdoutOutput);
   const stderr = DECODER.decode(stderrOutput);
   const transcriptBytes = concatenateBytes(stdoutOutput, stderrOutput);
-  if (timedOut) {
+  if (exceeded !== undefined) {
     throw new Error(
-      `pseudo-terminal command exceeded ${timeoutMs}ms ` +
+      `pseudo-terminal ${exceeded.phase} exceeded ${exceeded.budget}ms ` +
         `(${inputProgress}; ${Deno.build.os} script transport):\n${stdout}${stderr}`,
     );
   }

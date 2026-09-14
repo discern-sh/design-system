@@ -142,6 +142,12 @@ Deno.test("every exported module graph is inside the publish set", async () => {
       readonly modules: readonly { readonly specifier: string }[];
     };
     for (const module of graph.modules) {
+      if (!entry.endsWith("/testing.ts")) {
+        assert(
+          !/(?:^|\/)(?:testing|[^/]+-testing)\.ts$/u.test(module.specifier),
+          `${entry} reached a testing-only module: ${module.specifier}`,
+        );
+      }
       if (!module.specifier.startsWith("file://")) continue;
       const path = relative(PACKAGE_ROOT, fromFileUrl(module.specifier));
       if (path.startsWith("node_modules/")) continue;

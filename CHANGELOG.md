@@ -4,6 +4,11 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
+## Unreleased
+
+- Add `PtyProcessOptions.readinessTimeoutMs` so consumers can select an input-readiness allowance independently of the post-input completion timeout. Both keep their 15-second defaults, reject non-positive or non-finite values before launch, and timeout errors identify the phase and actual budget that expired.
+- Export `observeTerminalIO` and `TerminalIOObservation` from `./cli/interactive` without capture or PTY dependencies. The testing entrypoint retains the same exports and implementation. Observation preserves pending-read cancellation, the source receiver, and optional resize support.
+
 ## 0.31.0
 
 ### Public API
