@@ -318,7 +318,12 @@ function ReviewSpecimen({
         </div>
         <code>{posture.category}</code>
       </header>
-      <div className="discern-review-scroller">
+      <div
+        className="discern-review-scroller"
+        tabIndex={0}
+        role="group"
+        aria-label={`${entry.meta.name} · ${posture.label} specimen`}
+      >
         <div
           key={replay}
           className="discern-review-specimen"

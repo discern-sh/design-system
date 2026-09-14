@@ -1,5 +1,3 @@
-@import url("./signature.css");
-
 @layer catalogue-review {
   :where(body) {
     margin: 0;

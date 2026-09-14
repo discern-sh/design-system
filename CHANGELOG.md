@@ -20,6 +20,7 @@ Each release is cut from a green run of the full release gate — formatting, li
 - Refine Button's edge and vertical press/shadow compression, add quiet selected-surface depth to SegmentedControl, and give ArtifactCard headings their operational UI face. Existing target floors, unavailable states, focus and CLI meaning remain intact.
 - Add shared, Appearance-projected material shade/highlight, relief shadow and ambient roles. The moving light plane retains coverage throughout its full travel, including light backgrounds. Filled and outlined imported SVG examples, a no-hydration package consumer and mechanism-based regression guards demonstrate the public boundaries.
 - Builder exposes singleton string/number literal props as bounded choices, including Card's optional shimmer arrival, and preserves the unset default. LightBackdrop uses the documented backdrop interface form so generated adoption controls and consumer exports do not invent a children slot.
+- Keep static Component review specimens keyboard-scrollable with named frames and shared visible focus. The review page loads its signature stylesheet through a direct stable link, including during accessibility inspection.
 
 ## 0.31.0
 
