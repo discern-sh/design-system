@@ -194,6 +194,21 @@ Deno.test("complete purpose specimens fit their allocation with enlarged fallbac
               geometry.available,
               `${purpose}/${theme}/${width}`,
             );
+            const skippedHeadings = await page.locator(
+              ".discern-signature-specimen",
+            ).evaluate((root) => {
+              const headings = [...root.querySelectorAll("h1,h2,h3,h4,h5,h6")];
+              return headings.filter((node, index) =>
+                index > 0 &&
+                Number(node.tagName.slice(1)) >
+                  Number(headings[index - 1]!.tagName.slice(1)) + 1
+              ).map((node) => node.textContent);
+            });
+            assertEquals(
+              skippedHeadings,
+              [],
+              `${purpose} must preserve a complete heading hierarchy`,
+            );
           });
         }
       }

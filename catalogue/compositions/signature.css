@@ -114,7 +114,8 @@
   align-content: start;
   gap: var(--discern-space-6);
 }
-.discern-signature-task-aside h2 {
+.discern-signature-task-aside h2,
+.discern-signature-section-title {
   font: 600 var(--discern-font-size-lg) var(--discern-font-ui);
 }
 .discern-signature-task-layout .discern-table table {

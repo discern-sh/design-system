@@ -361,6 +361,7 @@ function Operations(
               ) && <p>No tasks match this search.</p>}
             </Card>
             <div id={`${id}-verification`}>
+              <h2 className="discern-signature-section-title">Verification</h2>
               {verification}
             </div>
           </Stack>
