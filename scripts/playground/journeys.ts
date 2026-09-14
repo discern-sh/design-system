@@ -1209,6 +1209,10 @@ export const interactiveExportCoverage: Readonly<
     excluded:
       "Refusal signal; the playground entry reports it for non-TTY runs.",
   },
+  observeTerminalIO: {
+    excluded:
+      "Content-free diagnostics wrap existing terminal journeys without adding an interaction.",
+  },
   DenoTerminalIO: {
     excluded:
       "The terminal implementation every real playground session runs through.",

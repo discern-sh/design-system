@@ -60,7 +60,4 @@ export function captureTerminalFrame(
   };
 }
 
-export {
-  observeTerminalIO,
-  type TerminalIOObservation,
-} from "./observation.ts";
+export * from "./observation.ts";
