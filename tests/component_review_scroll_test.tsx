@@ -1,4 +1,5 @@
 import { assert, assertEquals } from "@std/assert";
+import { Buffer } from "node:buffer";
 import { renderToStaticMarkup } from "react-dom/server";
 import { launchBrowser } from "../scripts/browser.ts";
 import {
@@ -51,23 +52,26 @@ async function reviewStyles(directory: URL): Promise<string[]> {
 
 Deno.test("live review frames preserve keyboard scrolling and stylesheet URLs during accessibility scans", async () => {
   await buildDesignSystem();
-  const host = Deno.serve({
-    hostname: "127.0.0.1",
-    port: 0,
-    onListen: () => undefined,
-  }, server.fetch);
   const browser = await launchBrowser();
   try {
     const context = await browser.newContext({
       viewport: { width: 1440, height: 1000 },
       reducedMotion: "reduce",
     });
+    await context.route("http://component-review.test/**", async (route) => {
+      const response = await server.fetch(new Request(route.request().url()));
+      await route.fulfill({
+        status: response.status,
+        headers: Object.fromEntries(response.headers),
+        body: Buffer.from(await response.arrayBuffer()),
+      });
+    });
     const page = await context.newPage();
     const failures: string[] = [];
     addPageFailureListeners(page, failures);
     await loadReadyBrowserPage(
       page,
-      `http://127.0.0.1:${host.addr.port}/catalogue/reviews/components/?group=Core&width=medium&theme=light&accent=none&motion=reduced&mode=contact`,
+      "http://component-review.test/catalogue/reviews/components/?group=Core&width=medium&theme=light&accent=none&motion=reduced&mode=contact",
       'html[data-discern-review-status="ready"]',
     );
     const scan = await scanBrowserAccessibility(page, ".discern-review-shell");
@@ -127,7 +131,6 @@ Deno.test("live review frames preserve keyboard scrolling and stylesheet URLs du
     await context.close();
   } finally {
     await browser.close();
-    await host.shutdown();
   }
 });
 
