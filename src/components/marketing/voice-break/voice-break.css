@@ -65,7 +65,7 @@
     position: relative;
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
-    column-gap: 0.06em;
+    column-gap: calc(var(--discern-space-1) / 2);
     max-inline-size: 24ch;
     margin: 0;
     color: var(--discern-color-ink);
