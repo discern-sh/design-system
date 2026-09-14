@@ -9,6 +9,10 @@ export interface IconProps
   readonly children: ReactNode;
   readonly label?: string;
   readonly size?: number | string;
+  /** Quiet relief with fit="contain" at allocations of at least 2.5rem; intrinsic and smaller graphics stay flat. */
+  readonly relief?: boolean;
+  /** Preserve supplied dimensions by default; contain scales the graphic into the Icon allocation. */
+  readonly fit?: "intrinsic" | "contain";
 }
 
 /** Vendor-neutral sizing and accessibility wrapper for an injected icon graphic. */
@@ -16,7 +20,16 @@ export const Icon: DiscernComponent<HTMLSpanElement, IconProps> = forwardRef<
   HTMLSpanElement,
   IconProps
 >(function Icon(
-  { children, label, size = "1em", className, style, ...props },
+  {
+    children,
+    label,
+    size = "1em",
+    relief = false,
+    fit = "intrinsic",
+    className,
+    style,
+    ...props
+  },
   ref,
 ) {
   const accessibility = label
@@ -25,7 +38,12 @@ export const Icon: DiscernComponent<HTMLSpanElement, IconProps> = forwardRef<
   return (
     <span
       ref={ref}
-      className={classNames("discern-icon", className)}
+      className={classNames(
+        "discern-icon",
+        relief && "discern-icon--relief",
+        fit === "contain" && "discern-icon--contain",
+        className,
+      )}
       style={{ width: size, height: size, ...style }}
       {...accessibility}
       {...props}

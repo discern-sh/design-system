@@ -63,6 +63,18 @@ const cliExampleImplementations = [
       surface: "atmospheric",
     },
   },
+  {
+    name: "statement",
+    props: {
+      layout: "statement",
+      eyebrow: "A shared project workspace",
+      title: "Good work starts with a clear next step.",
+      description:
+        "Keep the plan, its context, and the next decision together.",
+      actions: ["Explore the workspace"],
+      visual: "Find your bearings · Keep context close · Move forward together",
+    },
+  },
 ] as const satisfies readonly CliExample<HeroBlockCliProps>[];
 defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
 

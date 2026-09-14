@@ -133,6 +133,18 @@ export const baseTokens: readonly DesignToken[] = [
     "System interface stack; optional font assets may override it.",
   ),
   token(
+    "--discern-font-marketing",
+    'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    "Typography",
+    "Marketing headline stack, independently replaceable for consumer branding; optional font assets provide Inter.",
+  ),
+  token(
+    "--discern-font-weight-marketing",
+    "600",
+    "Typography",
+    "Confident marketing headline weight, separate from editorial display and interface emphasis.",
+  ),
+  token(
     "--discern-font-size-xs",
     "0.85rem",
     "Typography",

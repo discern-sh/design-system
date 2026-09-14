@@ -27,6 +27,9 @@
     font-weight: var(--discern-font-weight-strong);
   }
   .discern-feature-bento__header h2 {
+    font-family: var(--discern-font-marketing);
+    font-weight: var(--discern-font-weight-marketing);
+    letter-spacing: -0.055em;
     margin-inline: auto;
     overflow-wrap: anywhere;
     text-wrap: balance;

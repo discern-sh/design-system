@@ -4,6 +4,22 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
+## Unreleased
+
+- Keep semantic/deep text and focus legible at low Emphasis. Shared Appearance laws retain state-marker separation near the polarity crossover, preserve necessary semantic/action chroma, and taper chromatic semantic text towards neutral contrast at the actual tinted crossover. Admission checks semantic text against canvas and its composited wash and covers both Emphasis bounds. Web Terminal showcase command prefixes and success text use the fixed inverse foreground; existing terminal pole colours and renderers are retained.
+
+### Public API and migration
+
+- **Breaking visual contract:** ordinary Marketing headlines now use `--discern-font-marketing` and `--discern-font-weight-marketing`, independently of the serif display role. The optional font asset supplies Inter through `Discern Inter Marketing`, with face-bound `calt dlig tnum ss01 ss02 ss03`; body/UI Inter stays unchanged. Consumers who deliberately want serif marketing headlines can point the new font and weight roles to their existing display roles. EditorialHero, reading and quotation roles retain their serif face. MarketingIntro also gains a firmer, more concise default hierarchy.
+- **Breaking SVG paint contract:** Icon preserves a supplied graphic's fill and stroke instead of forcing an outline. Consumers whose SVG depended on the wrapper's paint must declare their intended fill/stroke on the supplied SVG (for an outline, `fill="none" stroke="currentColor"`). The package's BusyGlyph now owns its outline paint. Icon keeps intrinsic sizing by default and adds `fit="contain"` for assets that should fill its allocation, plus opt-in `relief` with contain fitting for expressive placements; intrinsic graphics and small allocations stay flat and label/alignment semantics remain intact.
+- Add LightBackdrop to the Artwork/public React and metadata surfaces. It composes Backdrop's presence, theme balance and opt-outs, starts still, and supports explicitly requested ambient motion. Existing Appearance scopes select neutral or restrained accent illumination; no new colour axis, hydration or terminal decoration is introduced.
+- Add Card `texture="shaded"` independently of existing elevation and `arrival="shimmer"` for a one-shot decorative content arrival. Plain remains the default; reduced motion and forced colours omit shimmer. Add HeroBlock `layout="statement"` and MarketingSection `spacing="compact"` for concise product composition with breathing room.
+
+### Components and verification
+
+- Refine Button's edge and vertical press/shadow compression, add quiet selected-surface depth to SegmentedControl, and give ArtifactCard headings their operational UI face. Existing target floors, unavailable states, focus and CLI meaning remain intact.
+- Add shared, Appearance-projected material shade/highlight, relief shadow and ambient roles. The moving light plane retains coverage throughout its full travel, including light backgrounds. Filled and outlined imported SVG examples, a no-hydration package consumer and mechanism-based regression guards demonstrate the public boundaries.
+
 ## 0.31.0
 
 ### Public API

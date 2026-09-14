@@ -33,6 +33,9 @@
     font-weight: var(--discern-font-weight-strong);
   }
   .discern-audience-grid__header h2 {
+    font-family: var(--discern-font-marketing);
+    font-weight: var(--discern-font-weight-marketing);
+    letter-spacing: -0.055em;
     max-width: 15ch;
     margin: 0;
   }

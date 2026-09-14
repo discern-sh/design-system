@@ -12,6 +12,15 @@ export const componentExampleRegistry = {
         "cli",
       ],
     },
+    {
+      "id": "imported-relief",
+      "label": "Imported graphics, flat and relief",
+      "surfaces": [
+        "web",
+      ],
+      "reason":
+        "SVG paint preservation and optical relief require browser vector rendering; CLI Icon retains its text and label semantics.",
+    },
   ],
   "button": [
     {
@@ -447,6 +456,24 @@ export const componentExampleRegistry = {
         "cli",
       ],
     },
+    {
+      "id": "shaded",
+      "label": "Shaded material",
+      "surfaces": [
+        "web",
+      ],
+      "reason":
+        "Optical surface shading is decorative browser material; terminal Card retains its existing border and text hierarchy.",
+    },
+    {
+      "id": "arrival",
+      "label": "Content arrival",
+      "surfaces": [
+        "web",
+      ],
+      "reason":
+        "A decorative transition shimmer is browser motion; terminal content arrives through the consumer's output lifecycle.",
+    },
   ],
   "divider": [
     {
@@ -701,6 +728,17 @@ export const componentExampleRegistry = {
       ],
       "reason":
         "Backdrop owns viewport-scaled browser positioning and decorative layer presence; terminal output has no background plane or semantic content to render in its place.",
+    },
+  ],
+  "light-backdrop": [
+    {
+      "id": "default",
+      "label": "Still illumination",
+      "surfaces": [
+        "web",
+      ],
+      "reason":
+        "Light backdrop is decorative spatial illumination without a terminal information or interaction equivalent.",
     },
   ],
   "survey-backdrop": [
@@ -2698,6 +2736,14 @@ export const componentExampleRegistry = {
     {
       "id": "showcase",
       "label": "Showcase",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
+    {
+      "id": "statement",
+      "label": "Clear statement",
       "surfaces": [
         "web",
         "cli",

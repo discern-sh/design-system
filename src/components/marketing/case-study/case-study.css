@@ -28,6 +28,9 @@
     font-weight: var(--discern-font-weight-strong);
   }
   .discern-case-study__story h2 {
+    font-family: var(--discern-font-marketing);
+    font-weight: var(--discern-font-weight-marketing);
+    letter-spacing: -0.055em;
     max-width: 14ch;
   }
   .discern-case-study__summary {

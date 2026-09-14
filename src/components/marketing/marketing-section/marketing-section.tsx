@@ -18,7 +18,7 @@ export type {
 export interface MarketingSectionProps extends HTMLAttributes<HTMLElement> {
   /** Semantic surface or an explicit request to inherit the surrounding one. */
   readonly surface?: MarketingSectionSurface;
-  /** Ordinary design-system rhythm or the larger campaign-page rhythm. */
+  /** Compact product rhythm, ordinary section rhythm, or spacious campaign rhythm. */
   readonly spacing?: MarketingSectionSpacing;
   /** Ordinary editorial measure or the wider campaign-page frame. */
   readonly frame?: MarketingSectionFrame;

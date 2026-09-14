@@ -13,6 +13,11 @@
     margin: 0 auto var(--discern-space-10);
     text-align: center;
   }
+  .discern-comparison-table__header h2 {
+    font-family: var(--discern-font-marketing);
+    font-weight: var(--discern-font-weight-marketing);
+    letter-spacing: -0.055em;
+  }
   .discern-comparison-table__eyebrow,
   .discern-comparison-table thead th,
   .discern-comparison-table tbody th {

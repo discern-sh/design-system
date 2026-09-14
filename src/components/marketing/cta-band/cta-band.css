@@ -63,6 +63,9 @@
     color: var(--discern-color-on-action);
   }
   .discern-cta-band__content h2 {
+    font-family: var(--discern-font-marketing);
+    font-weight: var(--discern-font-weight-marketing);
+    letter-spacing: -0.055em;
     max-width: 14ch;
     margin-inline: auto;
   }

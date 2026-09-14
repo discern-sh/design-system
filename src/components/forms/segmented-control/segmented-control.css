@@ -59,6 +59,9 @@
     color: var(--discern-color-on-action);
     text-decoration: underline;
     text-underline-offset: var(--discern-space-1);
+    --discern-shadow-segmented: inset 0 1px 0 var(--discern-color-material-highlight),
+      0 0.125rem 0.25rem -0.1875rem var(--discern-color-action-shadow);
+    box-shadow: var(--discern-shadow-segmented);
   }
   .discern-segmented-control__input:focus-visible + .discern-segmented-control__surface {
     outline: 0.125rem solid var(--discern-color-accent-500);

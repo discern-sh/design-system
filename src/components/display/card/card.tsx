@@ -9,6 +9,8 @@ export interface CardProps extends HTMLAttributes<HTMLDivElement> {
   readonly raised?: boolean;
   readonly texture?: CardTexture;
   readonly padding?: CardPadding;
+  /** Decorative, one-shot shimmer when this card arrives; omit for ordinary or repeated surfaces. */
+  readonly arrival?: "shimmer";
   readonly children: ReactNode;
 }
 
@@ -21,6 +23,7 @@ export const Card: DiscernComponent<HTMLDivElement, CardProps> = forwardRef<
     raised = false,
     texture = "plain",
     padding = "md",
+    arrival,
     className,
     children,
     ...props
@@ -33,7 +36,8 @@ export const Card: DiscernComponent<HTMLDivElement, CardProps> = forwardRef<
       className={classNames(
         "discern-card",
         raised && "discern-card--raised",
-        texture === "dots" && "discern-card--dots",
+        texture !== "plain" && `discern-card--${texture}`,
+        arrival === "shimmer" && "discern-card--shimmer",
         `discern-card--pad-${padding}`,
         className,
       )}

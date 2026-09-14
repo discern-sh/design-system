@@ -5,6 +5,36 @@ import { Badge } from "../../display/badge/badge.tsx";
 import { Window } from "../../display/window/window.tsx";
 import meta, { componentExampleVocabulary } from "./hero-block.meta.ts";
 import { HeroBlock } from "./hero-block.tsx";
+import { LightBackdrop } from "../../artwork/light-backdrop/light-backdrop.tsx";
+import { Icon } from "../../core/icon/icon.tsx";
+import { Grid } from "../../layout/grid/grid.tsx";
+import { ExampleIcon } from "../../../fixtures/example-icon.tsx";
+
+function StatementHeroState() {
+  return (
+    <HeroBlock
+      layout="statement"
+      eyebrow="A shared project workspace"
+      title="Good work starts with a clear next step."
+      description="Keep the plan, its context, and the next decision together."
+      actions={<Button href="#explore">Explore the workspace</Button>}
+      backdrop={<LightBackdrop />}
+      visual={
+        <Grid minimum="12rem" gap={6}>
+          {["Find your bearings", "Keep context close", "Move forward together"]
+            .map((text) => (
+              <div key={text}>
+                <Icon size="3rem" fit="contain" relief>
+                  <ExampleIcon name="spark" />
+                </Icon>
+                <p>{text}</p>
+              </div>
+            ))}
+        </Grid>
+      }
+    />
+  );
+}
 
 function SplitHeroState() {
   return (
@@ -111,6 +141,15 @@ export const catalogueExamples = defineCatalogueExamples(
   [
     { id: "split", Example: SplitHeroState },
     { id: "showcase", Example: ShowcaseHeroState },
+    {
+      id: "statement",
+      Example: StatementHeroState,
+      capture: {
+        selectors: [".discern-hero-block"],
+        // The symbol relief remains inside the padded Hero section.
+        paintBleed: 0,
+      },
+    },
     { id: "backdrop", Example: BackdropHeroState },
   ],
 );
