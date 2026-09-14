@@ -1,0 +1,98 @@
+# 3A review record
+
+## Effort baseline
+
+- Worktree: `/Users/jack/Sites/discern-design-system.worktrees/signature-12ba39`.
+- Branch: `agent/signature-12ba39`.
+- Starting commit: `c52640ca9cfa2b1aae4459c1039c44e127f86445` (0.31.0).
+- Preview port: `18393`.
+- The owner confirms wave 2 has landed; its completed briefs and delivered authorities are present.
+- Marketing font: the owner selects Inter as the current default, with a separately customisable marketing role. The existing bundled upright 400–700 font and calibrated sans fallbacks cover this choice. Its marketing-only feature bundle is `calt dlig tnum ss01 ss02 ss03`: contextual alternates, discretionary ligatures, tabular numbers, alternate digits, Disambiguation, and round quotes & comma.
+
+## Bounded interpretations
+
+The [saved studies and decisions](3a-references/README.md) remain unchanged reference evidence. Both fragments were replayed through the visualization skill's compatible standalone wrapper, including Lucide, both themes, the surface transition, and the preferred flat-angle icon configuration.
+
+The original [comparison](http://127.0.0.1:18393/catalogue/reviews/components/?study=signature&purpose=marketing&direction=instrument&theme=light&field=0%2C1%2C1%2C1&allocation=wide&motion=reduced) used the existing review route and real package Components. Baseline applied 0.31.0 typography and surfaces to the same new content; it is not a reconstruction of a previously published consumer page. Complete pages use the existing Builder precedent of actual iframe viewports, with document scrolling and measured frame height. The temporary baseline/B typography and effect CSS was removed after selection; the live route now demonstrates the selected package implementation.
+
+| Interpretation       | Marketing                                                                       | Operations                                                          | Reading                                                             |
+| -------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Baseline             | Existing serif display, split Hero block and generous default spacing           | Existing component typography and surfaces                          | Existing editorial roles and reading rhythm                         |
+| A — Quiet instrument | Stronger left-aligned hierarchy, compact symbol band, restrained section rhythm | Compact UI title, consistent UI headings, selected material regions | Retained serif hierarchy; quiet figure and everyday control details |
+| B — Open studio      | Centered invitation, lighter display weight, framed symbol group and more space | More open title hierarchy and a subtly lifted page surface          | The same retained editorial character and selected details          |
+
+The original top controls visibly selected purpose, baseline/A/B, theme, allocation, still/production motion, depth, ambient, shimmer and relief. The selected preview retains those controls except the retired interpretation chooser. Accent tint remains optional and takes its hue from the matched Appearance control. Advanced controls expose Structure, Emphasis, Darkness and actual enlarged root text. The URL retains each selection.
+
+### Bounded verification
+
+- Build and Catalogue TypeScript checks pass.
+- Queued browser capture inspected three purposes × three interpretations × two themes × two widths (390 and 1120 pixels). All 36 corrected witnesses have equal root client and scroll widths. Ephemeral PNGs, opening crops and exact-URL geometry records are under `/private/tmp/discern-signature-12ba39-evidence/` so subsequent builds do not remove them.
+- The reading study's narrow grid was corrected after measurement showed its automatic minimum expanded a 342-pixel content allocation to 470.64 pixels. The explicit zero minimum now keeps the page contained while Code block owns its local horizontal scrolling.
+- Live browser operation verified purpose/direction/theme/allocation changes, task filtering, task sorting, Plan/Details content changes, pin state, still mode and separate depth/ambient/relief opt-outs. Production ambient uses its actual 24-second study timing. Enlarged narrow marketing uses a real 24-pixel document root with a 390-pixel viewport and no document overflow.
+- Ambient opt-out removes both deliberately selected planes from marketing; relief opt-out restores `filter: none` on all three expressive symbols. Small control icons stay flat. Repeated task rows do not acquire ambient planes.
+- These captures preserve the bounded comparison; they are not final package or gate evidence.
+
+### Early independent critique
+
+The read-only visual critic recommends A: the left-aligned headline, firm weight and unframed symbol row communicate a software product and a benefit while still. B is welcoming but more conventional; its extra framing does not add a stronger reason to explore. The critic found A's operational hierarchy compact and precise and the narrow reading page appropriately editorial, with no direction-choice blocker in the inspected captures.
+
+Two tuning findings carry into implementation: keep light ambient illumination from becoming a broad grey wash, and keep icon silhouettes crisp rather than thickening them with stacked shadows. The critic inspected both marketing openings in light, the operational opening in dark, the narrow reading page, and relevant source. Its live browser connection failed; it did not independently operate the updated controls or inspect motion and dark large-icon relief. Those limits must be covered in the final rendered review.
+
+The owner selects A, Quiet Instrument, with a modest increase in vertical spacing towards B. The owner also reports a moving hard edge in light-mode ambient illumination. The implemented statement Hero and compact section rhythm provide that extra space. The ambient repair is described below. Final integrated visual approval is still required.
+
+### Independent contract investigation
+
+The supplied-graphic paint issue was reproduced through `discern-cure-a-bug` diagnosis. With the starting Icon CSS, SVG roots declaring `fill="currentColor" stroke="none"` become `fill: none; stroke: currentColor`; both a direct path and an inherited group/circle witness fail. An explicitly outlined SVG retains its paint. Removing only the generic root-paint rule in the diagnostic makes all three witnesses preserve their paint. An independently named wrapper with the same rule reproduces the failure.
+
+The generative mechanism is a sizing/accessibility wrapper taking ownership of a supplied graphic's fill/stroke. CSS for package-owned diagrams, charts and decorative drawings has a different ownership contract. Coupling identifies Button, Icon button and their action-state evidence as regression candidates. The selected implementation removes generic SVG paint ownership, makes BusyGlyph declare its own outline, and guards every authored wrapper stylesheet by mechanism. Unedited Lucide and Bootstrap SVG fixtures prove both paint models. CHANGELOG records the migration.
+
+## Integrated result and independent findings
+
+The reusable ingredients live in the token/Appearance authorities, font asset, Button, SegmentedControl, Card, Icon, the marketing headline owners, and the new LightBackdrop composing Backdrop. The Catalogue stylesheet owns only review controls and consumer layout. [Material guidance](../../../20-components/material-presence.md) records defaults, composition and excess boundaries. No principle is overridden and no hard-to-reverse framework is introduced; the small roles and optional Component capabilities do not require a new ADR.
+
+- The moving-edge diagnosis measured the original plane entering its clip by 58.24 pixels at the Hero endpoint. Overscan in both axes keeps every edge outside the clip at all sampled phases and authored keyframes, including tall/narrow surfaces. A separately named undersized fixture fails the geometry guard; a missing animation/duration also fails. The original planning studies remain unchanged evidence.
+- The visual critic confirms the selected hierarchy distinguishes the three purposes and recommends retaining the crisp, slight dark relief. Its two final findings—misaligned icon rows and touching verification panels—were corrected using public Stack/Grid layout and re-reviewed in refreshed light/dark, wide/narrow captures.
+- The contract critic independently verified supplied SVG paint, keyboard radio focus, the emitted consumer without hydration, dark narrow axe results, and reduced/forced-colour behaviour. Its large-wrapper/small-asset relief finding is fixed: relief requires contain fitting and an expressive allocation. Its vacuous animation-test finding is fixed. Both were independently re-verified.
+- The low-Emphasis review found existing transparent success/warning text. The shared semantic/deep text and focus laws retain their readable ink rungs. A local crossover envelope separates monochrome markers, semantic/action chroma retains the minimum strength needed for distinction, and chromatic semantic text tapers both lightness and chroma towards readable neutral ink at the actual tinted crossover. Admission covers both Emphasis bounds and measures foreground composited onto canvas and each resolved semantic wash. The unchanged CLI theme suite passes with its existing pole-colour and finite-palette assertions. Web Terminal showcase text also uses its fixed inverse foreground.
+- The visual critic's browser connection was unavailable. It inspected actual captures and source; the parent and contract critic cover live controls, motion and accessibility separately. No critic edited files or launched another agent.
+- The standalone consumer's font link was corrected to the emitted `fonts.css` path. Its regression witness now loads the real marketing face and replaces that role with Georgia while verifying UI typography remains unchanged. The complete purpose specimens also pass at 390, 720 and 1120 pixels with enlarged fallback text.
+- Refreshed wide/narrow consumer captures explicitly verify a loaded marketing FontFace. The visual critic reports no new findings in all four real-font captures; this supersedes its earlier consumer typography assessment. The existing browser parity helper passes its complete role, scope and nesting checks, and the real-font consumer has no axe violations in either theme at 390 pixels.
+- The canonical owner regenerated all 756 images, changing 230 files. Banner's historically coupled accent/danger images were both captured; the accent image remained byte-identical while the danger witness changed. Their shared Appearance and state contracts remain in the existing admission and component conformance population, so an artificial paired image edit is unnecessary.
+
+### Motion and rendering cost
+
+The existing browser harness measured twelve repeated shaded Cards with light omitted, twelve still lights, one selected moving light, and twelve explicitly moving lights. Omitted/still treatments had no running animations and four compositor layers; one moving light had six layers and the twelve-light stress case had twenty-eight. All cases had zero layout work during the 2.4-second sample. Style recalculation consumed about 21 ms for one moving light and 32 ms for twelve; frame intervals remained near the host's 120 Hz cadence. These are local diagnostic observations, not portable performance guarantees. They support the still default and the rule to select motion for one meaningful region, not every repeated surface. The measured ambient cycle is 24 seconds. The actual shimmer completed once at its authored 650 ms duration and left no running animation. Raw observations are in `material-performance.json` beside the captures.
+
+The owner authorises CSS budget increases for this feature, including the separate projection test cap from 12,000 to 13,000 declaration bytes after measuring 12,324. The emitted styles remain readable; final measurements and config-only standard proposals will record the configured budget growth. No CSS minifier or relaxed terminal assertion is part of this change.
+
+## Family review
+
+Each family was inspected through its relevant source and representative rendered composition or canonical posture. Changes stay at the owners; retained families benefit from corrected shared semantic text without acquiring new decorative treatments. Canonical population and state assertions remain the existing full gate's responsibility.
+
+| Web family | Disposition and representative evidence                                                                                                                                                                                                                      |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Core       | Changed Button press/contact edge and Icon paint, fitting and optional relief. Ordinary Plan/Details/Pin controls and imported-icon comparison show the relationship at small and large sizes. Brand/Logo and theme controls retain their existing identity. |
+| Layout     | Reviewed and retained. Grid, Stack, page/header allocation and containment work across the three complete specimens. Portable recipes now use Stack instead of Catalogue-only helpers.                                                                       |
+| Display    | Changed Card's independently optional shading/arrival and Web Terminal inverse text. Table, Badge, Window and existing nested-card elevation retain their grammar; dense operations keep visible state without lighting per row.                             |
+| Artwork    | Added still-default LightBackdrop through Backdrop's presence, motion, clipping and theme gain. Existing drawing families remain retained; the geometric coverage guard also enrols SurveyBackdrop's moving wash.                                            |
+| Forms      | Changed selected SegmentedControl contact detail. Inputs, checkboxes, radios, switches and labels retain wave-2 sizing, focus and state relationships; task filtering and the verification checklist are representative.                                     |
+| Feedback   | Reviewed and retained; shared semantic text floor repaired. Banner's neutral, success, warning, error and reduced-motion postures remain clearly labelled; no ambient treatment is added to notices.                                                         |
+| Navigation | Reviewed and retained. Tabs' selected underline, manual activation and narrow long-label states remain precise; breadcrumbs and navigation stay quiet.                                                                                                       |
+| People     | Reviewed and retained. ProfileCard portrait, landscape and narrow long-name states preserve human/editorial emphasis and existing quiet material framing in both themes.                                                                                     |
+| Agents     | Reviewed and retained. VerificationReport's stamp, collapsed evidence, metadata and generated-artifact handoff remain compact and legible. No decorative motion is added to state evidence.                                                                  |
+| Workflow   | ArtifactCard title uses the UI role. Diagnostic/result/retry/ownership structure is retained; shared semantic text remains visible at low Emphasis. Public Stack keeps handoff, failure and survey recipes portable.                                         |
+| Docs       | Reviewed and retained. DocsNav, code navigation and reading structure keep the successful editorial relationships in the sustained reading specimen.                                                                                                         |
+| Marketing  | Changed the distinct headline role, statement Hero and compact section option; other marketing headline owners share that role. EditorialHero, VoiceBreak, quotations and selected reading-first passages retain serif.                                      |
+| Editorial  | Reviewed and retained. ArticleHeader, Prose, code, DataFigure and returning navigation preserve reading rhythm. The narrow composition uses a shrinkable grid so code owns its local scrolling.                                                              |
+
+## Evidence and remaining work
+
+The preview uses deterministic port **18393**. Complete selected specimens have 390, 720 and 1120 pixel captures in both themes. The original 36 matched baseline/A/B captures and refreshed selected PNGs, geometry records and diagnostic scripts are under `/private/tmp/discern-signature-12ba39-evidence/`; ordinary builds leave that evidence directory intact.
+
+- [Marketing, both themes](http://127.0.0.1:18393/catalogue/reviews/components/?study=signature&purpose=marketing&themes=both&theme=light&field=0%2C1%2C1%2C1&allocation=wide&motion=reduced)
+- [Operational task](http://127.0.0.1:18393/catalogue/reviews/components/?study=signature&purpose=operations&theme=dark&field=1%2C1%2C1%2C1&allocation=wide&motion=reduced)
+- [Sustained reading](http://127.0.0.1:18393/catalogue/reviews/components/?study=signature&purpose=reading&theme=light&field=0%2C1%2C1%2C1&allocation=narrow&motion=reduced)
+- [Imported SVG comparison](http://127.0.0.1:18393/catalogue/reviews/components/?group=Core&component=icon&example=imported-relief&theme=dark&field=1%2C1%2C1%2C1&width=medium&motion=reduced&mode=contact)
+- [Emitted package consumer](http://127.0.0.1:18393/dist/signature-consumer/index.html) · [dark](http://127.0.0.1:18393/dist/signature-consumer/dark.html)
+
+Numerical/browser checks and canonical image regeneration are complete as recorded above. Final integrated visual approval, the full clean-HEAD gate and authority-aware acceptance remain pending. The brief stays unarchived until that visual approval; this record does not claim the work has landed.
