@@ -4,7 +4,7 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
-## Unreleased
+## 0.32.0
 
 - Keep semantic/deep text and focus legible at low Emphasis. Shared Appearance laws retain state-marker separation near the polarity crossover, preserve necessary semantic/action chroma, and taper chromatic semantic text towards neutral contrast at the actual tinted crossover. Admission checks semantic text against canvas and its composited wash and covers both Emphasis bounds. Web Terminal showcase command prefixes and success text use the fixed inverse foreground; existing terminal pole colours and renderers are retained.
 
