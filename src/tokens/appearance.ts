@@ -822,7 +822,7 @@ const accent500Expression = readableInk(
     0.5,
     0.9,
   ),
-  inkFaintExpression,
+  polarCurve(0.5, 0.72, 0.72, 0.55),
 );
 // The admitted crossover envelope separates composited state markers when
 // low/high Emphasis compresses their alpha ladder. Pigment poles stay unchanged.
@@ -1161,7 +1161,10 @@ export const appearanceColorRoleLaws: readonly AppearanceColorRoleLaw[] = Object
         "--discern-color-success-deep",
         "Successful-outcome text on its wash.",
         "active-ink",
-        readableInk(scaledCurve([0.82, 0.86, 0.9, 0.9, 0.9], "emphasis")),
+        readableInk(
+          scaledCurve([0.82, 0.86, 0.9, 0.9, 0.9], "emphasis"),
+          inkMutedExpression,
+        ),
         successDeepProjection,
       ),
       role(
@@ -1182,7 +1185,10 @@ export const appearanceColorRoleLaws: readonly AppearanceColorRoleLaw[] = Object
         "--discern-color-warning-deep",
         "Warning text on its wash.",
         "active-ink",
-        readableInk(scaledCurve([0.78, 0.82, 0.86, 0.86, 0.86], "emphasis")),
+        readableInk(
+          scaledCurve([0.78, 0.82, 0.86, 0.86, 0.86], "emphasis"),
+          inkMutedExpression,
+        ),
         warningDeepProjection,
       ),
       role(
