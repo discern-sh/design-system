@@ -405,3 +405,51 @@ Deno.test("application paging advances by visible choices rather than group head
     `item-${visibleChoices}`,
   );
 });
+
+Deno.test("application search owns typing, retains its query through updates and routes, and clears without exiting", async () => {
+  const searchable = (
+    ids = ["a", "b", "qr"],
+  ): TerminalApplicationView<string> => {
+    const base = view(ids);
+    return {
+      ...base,
+      help: "? help  q quit",
+      regions: [
+        { ...base.regions[0], search: true } as Extract<
+          TerminalApplicationView<string>["regions"][number],
+          { kind: "choices" }
+        >,
+        base.regions[1]!,
+      ],
+    };
+  };
+  const io = new FakeTerminalIO(["/qr\r\r", "q"], { rows: 24 });
+  let activations = 0;
+  const state = await runTerminalApplication({
+    view: searchable(),
+    onKey: (key) =>
+      key.kind === "text" && key.text === "q" ? { kind: "exit" } : undefined,
+    onAction: (action, context) => {
+      assertEquals(action.itemId, "qr");
+      activations++;
+      context.update(searchable(["qr", "a", "b"]));
+      return {
+        kind: "foreground",
+        run: () => {
+          assertEquals(context.state.positions.list?.query, "qr");
+        },
+      };
+    },
+  }, { io });
+  assertEquals(activations, 1);
+  assertEquals(state.positions.list?.selectedId, "qr");
+  assertEquals(state.positions.list?.query, "qr");
+
+  let edited =
+    transitionTerminalApplication(state, { kind: "text", text: "/" }).state;
+  edited =
+    transitionTerminalApplication(edited, { kind: "named", name: "escape" })
+      .state;
+  assertEquals(edited.positions.list?.query, "");
+  assertEquals(edited.positions.list?.selectedId, "qr");
+});

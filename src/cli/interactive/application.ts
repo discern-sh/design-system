@@ -1,5 +1,6 @@
 /** Persistent application effects over the package's bounded region model. @module */
 import {
+  applicationSearchOwnsKey,
   renderTerminalApplication,
   type TerminalApplicationAction,
   type TerminalApplicationFrame,
@@ -247,10 +248,17 @@ export async function runTerminalApplication<Action>(
                 rendered!.state.view !== state.view ||
                 rendered!.state.focusedRegionId !== state.focusedRegionId
               ) paint();
-              let command: TerminalApplicationCommand | void = options.onKey?.(
-                key,
-                context,
-              );
+              const editing = applicationSearchOwnsKey(state, key);
+              let command: TerminalApplicationCommand | void = editing
+                ? { kind: "handled" }
+                : options.onKey?.(key, context);
+              if (editing) {
+                state = transitionTerminalApplication(
+                  state,
+                  key,
+                  rendered!.regionRows,
+                ).state;
+              }
               if (command?.kind === "foreground") {
                 throw new TypeError(
                   "foreground operations must be activated from a choice with Enter",

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Application choice regions support local search using the shared Unicode editor. Search state survives updates and foreground work; typing is isolated from caller shortcuts. Applications may supply key-map help.
+
 Releases follow [SemVer](https://semver.org). JSR versions are immutable: a published version is never edited or replaced, and a bad release is superseded by a new version (or yanked) rather than rewritten. Before 1.0, minor versions may still change the public contract; every breaking change is recorded here.
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.

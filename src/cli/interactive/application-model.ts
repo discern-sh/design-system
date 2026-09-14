@@ -24,7 +24,12 @@ import {
   terminalScrollOffset,
 } from "../viewport.ts";
 import { renderSelectCli } from "../../generated/cli-renderers.ts";
-import { assertChoices, isInteractionChoice } from "./choice-navigation.ts";
+import {
+  assertChoices,
+  filterInteractionEntries,
+  isInteractionChoice,
+} from "./choice-navigation.ts";
+import { GraphemeTextEditor, segmentGraphemes } from "./editor.ts";
 import type { InteractionEntry } from "./types.ts";
 import type { TerminalSize } from "./io.ts";
 import { isNamedKey, type TerminalKey } from "./keys.ts";
@@ -43,6 +48,8 @@ export type TerminalApplicationRegion<Action> =
     readonly id: string;
     readonly title: string;
     readonly entries: readonly InteractionEntry<Action>[];
+    /** Enable local search with /; editing uses the shared Unicode editor. */
+    readonly search?: boolean;
   }
   | {
     readonly kind: "reading";
@@ -61,6 +68,8 @@ export interface TerminalApplicationView<Action> {
       TerminalApplicationRegion<Action>,
     ];
   readonly tip?: SemanticInlineContent;
+  /** Caller key-map help; the package supplies editing help during search. */
+  readonly help?: SemanticInlineContent;
   /** Explicit focus request on a view change; omission preserves the current region. */
   readonly focusedRegionId?: string;
 }
@@ -70,6 +79,10 @@ export interface TerminalApplicationPosition {
   readonly selectedId?: string;
   readonly selectedIndex: number;
   readonly scrollOffset: number;
+  /** Search survives provider updates, hidden regions and foreground return. */
+  readonly query?: string;
+  readonly queryCursor?: number;
+  readonly searching?: boolean;
 }
 
 /** Immutable application snapshot. Values belong to the caller; navigation belongs to the package. */
@@ -149,6 +162,7 @@ export function updateTerminalApplication<Action>(
     throw new TypeError("an application has one or two regions");
   }
   if (view.tip !== undefined) validateSemanticInlineContent(view.tip);
+  if (view.help !== undefined) validateSemanticInlineContent(view.help);
   const ids = new Set<string>();
   const positions: Record<string, TerminalApplicationPosition> = Object.assign(
     Object.create(null),
@@ -185,17 +199,27 @@ export function updateTerminalApplication<Action>(
             : { status: annotationSnapshot(entry.status) }),
         });
       }));
-      const index = indexEntries(entries);
+      const visible = searchedEntries(entries, old?.query ?? "");
+      const index = indexEntries(visible);
       const retained = old?.selectedId === undefined
         ? undefined
         : index.ordinal.get(old.selectedId);
       const selectedIndex = retained === undefined
-        ? index.choices.find((i) => i >= (old?.selectedIndex ?? 0)) ??
+        ? index.choices.find((i) =>
+          entries.indexOf(visible[i]!) >= (old?.selectedIndex ?? 0)
+        ) ??
           index.choices.at(-1) ?? -1
         : index.choices[retained]!;
-      const selectedId = entries[selectedIndex]?.id;
+      const selectedId = visible[selectedIndex]?.id;
       positions[region.id] = {
-        selectedIndex,
+        ...(old?.query === undefined ? {} : {
+          query: old.query,
+          queryCursor: old.queryCursor,
+          searching: old.searching,
+        }),
+        selectedIndex: selectedIndex < 0
+          ? -1
+          : entries.indexOf(visible[selectedIndex]!),
         scrollOffset: old?.scrollOffset ?? 0,
         ...(selectedId === undefined ? {} : { selectedId }),
       };
@@ -216,12 +240,45 @@ export function updateTerminalApplication<Action>(
       Action
     >["regions"],
     ...(view.tip === undefined ? {} : { tip: annotationSnapshot(view.tip) }),
+    ...(view.help === undefined ? {} : { help: annotationSnapshot(view.help) }),
   };
   return Object.freeze({
     view: Object.freeze(snapshot),
     focusedRegionId,
     positions: Object.freeze(positions),
   });
+}
+
+const searchCache = new WeakMap<
+  object,
+  { query: string; entries: readonly InteractionEntry<unknown>[] }
+>();
+
+function searchedEntries<Action>(
+  entries: readonly InteractionEntry<Action>[],
+  query: string,
+): readonly InteractionEntry<Action>[] {
+  if (query === "") return entries;
+  const found = searchCache.get(entries);
+  if (found?.query === query) {
+    return found.entries as readonly InteractionEntry<Action>[];
+  }
+  const filtered = filterInteractionEntries(entries, query);
+  searchCache.set(entries, { query, entries: filtered });
+  return filtered;
+}
+
+/** Whether this key belongs to a region's editor, ahead of caller shortcuts. */
+export function applicationSearchOwnsKey<Action>(
+  state: TerminalApplicationState<Action>,
+  key: TerminalKey,
+): boolean {
+  const active = state.view.regions.find((region) =>
+    region.id === state.focusedRegionId
+  );
+  return active?.kind === "choices" && active.search === true &&
+    (state.positions[active.id]?.searching === true ||
+      key.kind === "text" && key.text === "/");
 }
 
 /** Geometry and observable layout work for one exact complete frame. */
@@ -257,6 +314,29 @@ export function transitionTerminalApplication<Action>(
   }
   const current = state.positions[active.id]!;
   let position = current;
+  if (applicationSearchOwnsKey(state, key)) {
+    const editor = new GraphemeTextEditor(current.query ?? "");
+    editor.moveCursorTo(current.queryCursor ?? editor.cursor);
+    const starting = current.searching !== true;
+    if (!starting && !isNamedKey(key, "escape") && !isNamedKey(key, "enter")) {
+      editor.handle(key);
+    }
+    if (isNamedKey(key, "escape")) editor.replace("");
+    const searching = !isNamedKey(key, "escape") && !isNamedKey(key, "enter");
+    const next = {
+      ...state,
+      positions: {
+        ...state.positions,
+        [active.id]: {
+          ...current,
+          query: editor.value,
+          queryCursor: editor.cursor,
+          searching,
+        },
+      },
+    };
+    return { state: updateTerminalApplication(state.view, next) };
+  }
   const page = Math.max(1, regionRows[active.id] ?? 1);
   const delta = isNamedKey(key, "down")
     ? 1
@@ -268,7 +348,8 @@ export function transitionTerminalApplication<Action>(
     ? -page
     : 0;
   if (active.kind === "choices") {
-    const index = indexEntries(active.entries);
+    const entries = searchedEntries(active.entries, current.query ?? "");
+    const index = indexEntries(entries);
     const ordinal = current.selectedId === undefined
       ? 0
       : index.ordinal.get(current.selectedId) ?? 0;
@@ -277,8 +358,10 @@ export function transitionTerminalApplication<Action>(
       : isNamedKey(key, "end")
       ? index.choices.length - 1
       : Math.max(0, Math.min(index.choices.length - 1, ordinal + delta));
-    const selectedIndex = index.choices[target] ?? -1;
-    const selected = active.entries[selectedIndex];
+    const selected = entries[index.choices[target] ?? -1];
+    const selectedIndex = selected === undefined
+      ? -1
+      : active.entries.indexOf(selected);
     if (selectedIndex !== current.selectedIndex) {
       position = {
         ...current,
@@ -410,10 +493,10 @@ export function renderTerminalApplication<Action>(
       }/${cached.lines.length}`;
       regionRows[region.id] = bodyRows;
     } else if (region.entries.length === 0 || position.selectedIndex < 0) {
-      lines = [quiet("No items")];
+      lines = [quiet(position.query ? "No matches" : "No items")];
       regionRows[region.id] = bodyRows;
     } else {
-      const entries = region.entries;
+      const entries = searchedEntries(region.entries, position.query ?? "");
       const index = indexEntries(entries);
       const focused = source.focusedRegionId === region.id;
       const fitted = fitInteractionFrame({
@@ -425,7 +508,9 @@ export function renderTerminalApplication<Action>(
           const start = Math.max(
             0,
             Math.min(
-              position.selectedIndex - Math.floor(count / 2),
+              (index
+                .choices[index.ordinal.get(position.selectedId ?? "") ?? 0] ??
+                0) - Math.floor(count / 2),
               entries.length - count,
             ),
           );
@@ -473,11 +558,22 @@ export function renderTerminalApplication<Action>(
       (_, row) => ` ${fit(lines[row] ?? "", bodyWidth)} `,
     ).join("\n");
     const active = source.focusedRegionId === region.id;
+    const queryParts = segmentGraphemes(position.query ?? "");
+    const queryCursor = position.queryCursor ?? queryParts.length;
+    const queryDisplay = position.searching
+      ? `${queryParts.slice(0, queryCursor).join("")}|${
+        queryParts.slice(queryCursor).join("")
+      }`
+      : position.query ?? "";
     return renderBox({
       body,
       title: `${
         active ? capabilities.unicode ? "› " : "> " : ""
-      }${region.title}`,
+      }${region.title}${
+        region.kind === "choices" && (position.searching || position.query)
+          ? ` / ${queryDisplay}`
+          : ""
+      }`,
       width,
       padding: 0,
       bottomLabel,
@@ -513,9 +609,21 @@ export function renderTerminalApplication<Action>(
     : columns < 48
     ? "↑↓ move  Enter  Tab pane  Esc"
     : "↑↓/Pg move  Enter open  Tab pane  Esc back";
+  const searching =
+    source.positions[source.focusedRegionId]?.searching === true;
+  const customHelp = source.view.help === undefined
+    ? undefined
+    : renderSemanticInlineContent(source.view.help, capabilities, presentation);
+  const searchable = regions.some((region) =>
+    region.kind === "choices" && region.id === source.focusedRegionId &&
+    region.search
+  );
+  const controlsWithSearch = searching
+    ? "Type to find  Enter done  Esc clear"
+    : customHelp ?? `${controls}${searchable ? "  / find" : ""}`;
   const help = capabilities.unicode
-    ? controls
-    : controls.replace("↑↓", "Up/Dn");
+    ? controlsWithSearch
+    : controlsWithSearch.replace("↑↓", "Up/Dn");
   return {
     frame: [fit(title), body, fit(tip), fit(quiet(help))].join("\n"),
     state: { ...source, positions },
