@@ -100,6 +100,10 @@ Deno.test("live review frames preserve keyboard scrolling and stylesheet URLs du
         element.scrollWidth > element.clientWidth
       ),
     );
+    await first.evaluate((element) => {
+      element.scrollLeft = 0;
+    });
+    assertEquals(await first.evaluate((element) => element.scrollLeft), 0);
     await first.press("ArrowRight");
     await page.waitForFunction(() =>
       document.querySelector(".discern-review-scroller")!.scrollLeft > 0
