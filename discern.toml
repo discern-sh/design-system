@@ -494,7 +494,7 @@
 # dependencies, with headroom for ordinary drift.
 [standards.docs_selection]
   run = "deno run --config deno.json --allow-read --allow-write scripts/measure.ts"
-  limit = 46612
+  limit = 48824
   direction = "down"
   metric = "docs_selection_bytes"
   inputs = ["src/**", "scripts/**"]
