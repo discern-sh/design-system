@@ -45,6 +45,7 @@
   }
   .discern-article-header h1,
   .discern-article-header h2 {
+    font-size: var(--discern-font-size-display-lg);
     max-width: 17ch;
     margin-block-end: var(--discern-space-6);
   }

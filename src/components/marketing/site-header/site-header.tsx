@@ -26,7 +26,7 @@ export interface SiteHeaderProps extends HTMLAttributes<HTMLElement> {
   readonly actions?: ReactNode;
   readonly notice?: ReactNode;
   readonly sticky?: boolean;
-  /** Hide the navigation below the narrow breakpoint when the action remains the compact route into it. */
+  /** Hide navigation at a narrow local allocation when the action remains the compact route into it. */
   readonly collapseNavOnNarrow?: boolean;
   /** Standard page chrome or the wider campaign masthead. */
   readonly variant?: SiteHeaderVariant;

@@ -4,14 +4,21 @@ import { Select } from "../../src/components/forms/select/select.tsx";
 import { reviewInlineSizes } from "../review-postures.ts";
 import { catalogueAppearanceRootStyle } from "../shell/axes-state.ts";
 import { componentReviewHref, parseComponentReviewState } from "./state.ts";
-import { EverydayControls, SignatureSpecimen } from "./signature-specimens.tsx";
+import {
+  EverydayControls,
+  SignatureSpecimen,
+} from "../compositions/signature-specimens.tsx";
+import { compositionRecipes } from "../compositions.tsx";
 import type {
   SignaturePurpose,
   SignatureTreatments,
-} from "./signature-specimens.tsx";
+} from "../compositions/signature-specimens.tsx";
 
 const initialUrl = new URL(location.href);
 const initial = parseComponentReviewState(initialUrl);
+const reportRecipe = compositionRecipes.find(({ id }) =>
+  id === "handoff-verification-report"
+)!;
 
 function SignatureFrame(
   { src, title, width }: {
@@ -127,7 +134,12 @@ export function SignatureStudy() {
           appearance.accent,
         ) as CSSProperties}
       >
-        <SignatureSpecimen purpose={purpose} id={id} treatments={applied} />
+        <SignatureSpecimen
+          purpose={purpose}
+          id={id}
+          treatments={applied}
+          verification={<reportRecipe.Example />}
+        />
         <section
           className="discern-signature-ordinary"
           aria-label="Ordinary control witness"

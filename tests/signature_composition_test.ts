@@ -1,5 +1,5 @@
 import { assert, assertEquals } from "@std/assert";
-import { toFileUrl } from "@std/path";
+import { fromFileUrl, toFileUrl } from "@std/path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { launchBrowser } from "../scripts/browser.ts";
@@ -7,7 +7,143 @@ import { withViewport } from "../scripts/viewport.ts";
 import { buildSignatureConsumer } from "../scripts/signature-consumer.tsx";
 import { emitDesignSystemRuntime } from "../src/runtime.ts";
 import { componentGroups } from "../src/types/component-meta.ts";
-import { SignatureSpecimen } from "../catalogue/review/signature-specimens.tsx";
+import { compositionGalleryItems } from "../catalogue/pages/compositions/page.tsx";
+import { compositionSearchRecords } from "../catalogue/routes/compositions.ts";
+import { SignatureSpecimen } from "../catalogue/compositions/signature-specimens.tsx";
+import { compositionRecipes } from "../catalogue/compositions.tsx";
+
+Deno.test("selected purpose pages are discoverable and their supplied source reproduces the live composition", async () => {
+  const output = await Deno.makeTempDir();
+  try {
+    const config = toFileUrl(`${output}/deno.json`);
+    const projectUrl = new URL("../deno.json", import.meta.url);
+    const project = JSON.parse(await Deno.readTextFile(projectUrl)) as {
+      compilerOptions: Record<string, unknown>;
+      imports: Record<string, string>;
+    };
+    const authoringPackage = JSON.parse(
+      await Deno.readTextFile(
+        new URL("../package.json", import.meta.url),
+      ),
+    ) as { devDependencies: Record<string, string> };
+    await Deno.writeTextFile(
+      `${output}/package.json`,
+      JSON.stringify({
+        type: "module",
+        dependencies: Object.fromEntries(
+          ["react", "react-dom", "@types/react", "@types/react-dom"].map((
+            name,
+          ) => [name, authoringPackage.devDependencies[name]]),
+        ),
+      }),
+    );
+    await Deno.writeTextFile(
+      config,
+      JSON.stringify({
+        compilerOptions: project.compilerOptions,
+        nodeModulesDir: "auto",
+        imports: {
+          ...Object.fromEntries(
+            Object.entries(project.imports).map((
+              [name, target],
+            ) => [
+              name,
+              target.startsWith(".")
+                ? new URL(target, projectUrl).href
+                : target,
+            ]),
+          ),
+          "@discern-sh/design-system/react":
+            new URL("../src/react.ts", import.meta.url).href,
+        },
+      }),
+    );
+    const entries: string[] = [];
+    for (const purpose of ["marketing", "reading", "operations"]) {
+      const id = `quiet-instrument-${purpose}`;
+      const recipe = compositionRecipes.find((entry) => entry.id === id);
+      assert(recipe, `${purpose} needs a normal Composition entry`);
+      assert(
+        compositionGalleryItems(compositionRecipes).some((entry) =>
+          entry.id === id
+        ),
+      );
+      assert(
+        compositionSearchRecords(compositionRecipes).some((entry) =>
+          entry.id === `composition:${id}`
+        ),
+      );
+      assert(recipe.sourceFiles, `${id} must supply every local source file`);
+      const directory = `${output}/${purpose}`;
+      await Deno.mkdir(directory);
+      for (const file of recipe.sourceFiles) {
+        await Deno.writeTextFile(`${directory}/${file.name}`, file.source);
+        assert(
+          !/from ["'][^"']*(?:catalogue|review|src\/react)/u.test(file.source),
+          `${id}/${file.name} leaked a repository import`,
+        );
+      }
+      assertEquals(
+        recipe.sourceFiles.find(({ name }) => name === "quiet-instrument.css")
+          ?.source,
+        await Deno.readTextFile(
+          new URL("../catalogue/compositions/signature.css", import.meta.url),
+        ),
+      );
+      const copied = toFileUrl(`${directory}/page.tsx`).href;
+      entries.push(copied);
+    }
+    const checked = await new Deno.Command(Deno.execPath(), {
+      args: ["check", "--config", fromFileUrl(config), ...entries],
+      stdout: "piped",
+      stderr: "piped",
+    }).output();
+    assert(checked.success, new TextDecoder().decode(checked.stderr));
+
+    // Render the supplied files in their consumer import context, then compare
+    // their actual output with the Catalogue recipe rather than a second template.
+    const renderScript = `${output}/render.tsx`;
+    await Deno.writeTextFile(
+      renderScript,
+      `import { createElement } from "react";\nimport { renderToStaticMarkup } from "react-dom/server";\n${
+        entries.map((entry, index) =>
+          `import Page${index} from ${JSON.stringify(entry)};`
+        ).join("\n")
+      }\nfor (const Page of [${
+        entries.map((_, index) => `Page${index}`).join(", ")
+      }]) {\n console.log(JSON.stringify(renderToStaticMarkup(createElement(Page))));\n}\n`,
+    );
+    const rendered = await new Deno.Command(Deno.execPath(), {
+      args: [
+        "run",
+        "--config",
+        fromFileUrl(config),
+        "--allow-env=NODE_ENV",
+        renderScript,
+      ],
+      stdout: "piped",
+      stderr: "piped",
+    }).output();
+    assert(rendered.success, new TextDecoder().decode(rendered.stderr));
+    const copiedMarkup = new TextDecoder().decode(rendered.stdout).trim().split(
+      "\n",
+    ).map((line) => JSON.parse(line) as string);
+    for (
+      const [index, purpose] of ["marketing", "reading", "operations"].entries()
+    ) {
+      const recipe = compositionRecipes.find(({ id }) =>
+        id === `quiet-instrument-${purpose}`
+      )!;
+      assertEquals(
+        copiedMarkup[index],
+        renderToStaticMarkup(createElement(recipe.Example)),
+        purpose,
+      );
+    }
+  } finally {
+    await Deno.remove(output, { recursive: true });
+  }
+});
 
 Deno.test("complete purpose specimens fit their allocation with enlarged fallback text", async () => {
   const output = await Deno.makeTempDir();
@@ -19,13 +155,18 @@ Deno.test("complete purpose specimens fit their allocation with enlarged fallbac
     });
     const css = await Deno.readTextFile(`${output}/discern.css`);
     const compositionCss = await Deno.readTextFile(
-      new URL("../catalogue/review/signature.css", import.meta.url),
+      new URL("../catalogue/compositions/signature.css", import.meta.url),
     );
     const page = await browser.newPage();
     for (const purpose of ["reading", "operations", "marketing"] as const) {
       const html = renderToStaticMarkup(createElement(SignatureSpecimen, {
         purpose,
         id: "specimen",
+        verification: createElement(
+          compositionRecipes.find(({ id }) =>
+            id === "handoff-verification-report"
+          )!.Example,
+        ),
         treatments: {
           depth: true,
           ambient: true,
@@ -56,6 +197,55 @@ Deno.test("complete purpose specimens fit their allocation with enlarged fallbac
           });
         }
       }
+      await withViewport(page, { width: 1440, height: 900 }, async () => {
+        const headings = [];
+        for (const rootHeadingLevel of [1, 2] as const) {
+          const example = renderToStaticMarkup(
+            createElement(SignatureSpecimen, {
+              purpose,
+              id: "heading-parity",
+              rootHeadingLevel,
+              treatments: {
+                depth: true,
+                ambient: true,
+                shimmer: true,
+                relief: true,
+                tint: false,
+                motion: false,
+              },
+            }),
+          );
+          await page.setContent(
+            `<html data-discern-root data-discern-theme="light"><style>${css}${compositionCss}</style><body><div class="discern-signature-specimen" style="width:360px">${example}</div></body></html>`,
+          );
+          const styles = await page.locator(".discern-signature-specimen")
+            .evaluate((root) => {
+              const title = root.querySelector("h1, h2")!;
+              return [
+                title,
+                ...root.querySelectorAll(
+                  ".discern-signature-benefits :is(h2,h3)",
+                ),
+              ].map((node) => {
+                const style = getComputedStyle(node);
+                return {
+                  family: style.fontFamily,
+                  size: style.fontSize,
+                  weight: style.fontWeight,
+                  leading: style.lineHeight,
+                  spacing: style.letterSpacing,
+                  margin: style.margin,
+                };
+              });
+            });
+          headings.push(styles);
+        }
+        assertEquals(
+          headings[0],
+          headings[1],
+          `${purpose} must preserve visual heading roles when embedded below another page heading`,
+        );
+      });
     }
   } finally {
     await browser.close();

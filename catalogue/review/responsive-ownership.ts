@@ -42,13 +42,6 @@ export const componentViewportLayoutPolicies = Object.freeze(
         "The full-width continuation band owns a bounded multi-story grid whose contract is the surrounding page.",
     },
     {
-      slug: "site-header",
-      stylesheet: "src/components/marketing/site-header/site-header.css",
-      reviewAllocation: "page",
-      reason:
-        "The sticky full-site header owns the viewport relationship between its brand, primary navigation, and compact menu trigger.",
-    },
-    {
       slug: "site-footer",
       stylesheet: "src/components/marketing/site-footer/site-footer.css",
       reviewAllocation: "page",

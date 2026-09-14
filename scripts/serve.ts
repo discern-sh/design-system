@@ -122,7 +122,10 @@ export default {
       url.pathname = "/catalogue/";
       return Response.redirect(url, 307);
     }
-    const shellPathname = canonicalCatalogueShellPathname(url.pathname);
+    const extension = url.pathname.slice(url.pathname.lastIndexOf("."));
+    const shellPathname = CONTENT_TYPES[extension] === undefined
+      ? canonicalCatalogueShellPathname(url.pathname)
+      : null;
     if (shellPathname !== null) {
       if (url.pathname !== shellPathname) {
         url.pathname = shellPathname;

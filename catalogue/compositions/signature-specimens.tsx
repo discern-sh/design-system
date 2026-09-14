@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { ReactNode } from "react";
 import {
   ArticleHeader,
   Badge,
@@ -24,7 +25,6 @@ import {
   Table,
   VoiceBreak,
 } from "../../src/react.ts";
-import { compositionRecipes } from "../compositions.tsx";
 
 export type SignaturePurpose = "marketing" | "operations" | "reading";
 export interface SignatureTreatments {
@@ -34,6 +34,23 @@ export interface SignatureTreatments {
   readonly relief: boolean;
   readonly tint: boolean;
   readonly motion: boolean;
+}
+
+/** Selected material choices; ambient motion remains an explicit opt-in. */
+export const signatureTreatments: SignatureTreatments = {
+  depth: true,
+  ambient: true,
+  shimmer: true,
+  relief: true,
+  tint: false,
+  motion: false,
+};
+
+interface SignaturePageProps {
+  readonly id: string;
+  readonly treatments: SignatureTreatments;
+  readonly rootHeadingLevel: 1 | 2;
+  readonly verification?: ReactNode;
 }
 
 /** Supplied artwork remains ordinary SVG; only its enclosing Icon carries relief. */
@@ -102,7 +119,13 @@ const benefits = [
   },
 ] as const;
 
-function Benefits({ relief }: { readonly relief: boolean }) {
+function Benefits(
+  { relief, headingLevel }: {
+    readonly relief: boolean;
+    readonly headingLevel: 2 | 3;
+  },
+) {
+  const Heading = headingLevel === 2 ? "h2" : "h3";
   return (
     <Grid minimum="12rem" gap={6} className="discern-signature-benefits">
       {benefits.map(({ symbol, title, description }) => (
@@ -115,7 +138,7 @@ function Benefits({ relief }: { readonly relief: boolean }) {
           >
             <Symbol name={symbol} />
           </Icon>
-          <h3>{title}</h3>
+          <Heading>{title}</Heading>
           <p>{description}</p>
         </div>
       ))}
@@ -124,10 +147,7 @@ function Benefits({ relief }: { readonly relief: boolean }) {
 }
 
 function Marketing(
-  { id, treatments }: {
-    readonly id: string;
-    readonly treatments: SignatureTreatments;
-  },
+  { id, treatments, rootHeadingLevel }: SignaturePageProps,
 ) {
   return (
     <div className="discern-signature-marketing" id={`${id}-top`}>
@@ -144,6 +164,7 @@ function Marketing(
         }
       />
       <HeroBlock
+        headingLevel={rootHeadingLevel}
         layout="statement"
         eyebrow="A shared project workspace"
         title="Good work starts with a clear next step."
@@ -162,13 +183,16 @@ function Marketing(
         backdrop={<Ambient treatments={treatments} />}
         visual={
           <div id={`${id}-benefits`}>
-            <Benefits relief={treatments.relief} />
+            <Benefits
+              relief={treatments.relief}
+              headingLevel={rootHeadingLevel === 1 ? 2 : 3}
+            />
           </div>
         }
       />
       <MarketingSection
         spacing="compact"
-        className="discern-signature-support"
+        className="discern-signature-support discern-signature-overview"
         surface="sunken"
       >
         <MarketingIntro
@@ -231,18 +255,13 @@ function Marketing(
   );
 }
 
-const reportRecipe = compositionRecipes.find(({ id }) =>
-  id === "handoff-verification-report"
-)!;
-
 function Operations(
-  { id, treatments }: {
-    readonly id: string;
-    readonly treatments: SignatureTreatments;
-  },
+  { id, treatments, rootHeadingLevel, verification }: SignaturePageProps,
 ) {
+  const Title = rootHeadingLevel === 1 ? "h1" : "h2";
   const [filter, setFilter] = useState("");
-  const [saved, setSaved] = useState(false);
+  const [viewSaved, setViewSaved] = useState(false);
+  const [checklistSaved, setChecklistSaved] = useState(false);
   const [taskView, setTaskView] = useState("list");
   const tasks = [
     ["Confirm the project scope", "Ready", "Avery", "Today"],
@@ -268,13 +287,18 @@ function Operations(
         <header className="discern-signature-task-heading" id={`${id}-tasks`}>
           <div>
             <p className="discern-signature-kicker">Project / Shared plan</p>
-            <h1>Ready for the next step.</h1>
+            <Title className="discern-signature-task-title">
+              Ready for the next step.
+            </Title>
             <p>
               Review the work, check the evidence, and keep the team moving.
             </p>
           </div>
-          <Button onClick={() => setSaved(!saved)} aria-pressed={saved}>
-            {saved ? "View saved" : "Save this view"}
+          <Button
+            onClick={() => setViewSaved(!viewSaved)}
+            aria-pressed={viewSaved}
+          >
+            {viewSaved ? "View saved" : "Save this view"}
           </Button>
         </header>
         <div className="discern-signature-task-layout">
@@ -337,22 +361,39 @@ function Operations(
               ) && <p>No tasks match this search.</p>}
             </Card>
             <div id={`${id}-verification`}>
-              <reportRecipe.Example />
+              {verification}
             </div>
           </Stack>
-          <aside className="discern-signature-task-aside">
+          <aside
+            className="discern-signature-task-aside"
+            aria-label="Review controls"
+          >
             <EverydayControls id={id} treatments={treatments} />
             <Card>
               <Stack gap={3}>
                 <h2>Before you continue</h2>
-                <Checkbox label="The scope is clear" defaultChecked />
-                <Checkbox label="The evidence is available" defaultChecked />
-                <Checkbox label="The next owner is named" />
-                <Button variant="secondary" onClick={() => setSaved(true)}>
+                <Checkbox
+                  label="The scope is clear"
+                  defaultChecked
+                  onChange={() => setChecklistSaved(false)}
+                />
+                <Checkbox
+                  label="The evidence is available"
+                  defaultChecked
+                  onChange={() => setChecklistSaved(false)}
+                />
+                <Checkbox
+                  label="The next owner is named"
+                  onChange={() => setChecklistSaved(false)}
+                />
+                <Button
+                  variant="secondary"
+                  onClick={() => setChecklistSaved(true)}
+                >
                   Save checklist
                 </Button>
                 <span role="status">
-                  {saved
+                  {checklistSaved
                     ? "Saved for this review."
                     : "Changes stay in this example."}
                 </span>
@@ -368,7 +409,7 @@ function Operations(
 const readingSource =
   '[project]\nquestion = "What should we try next?"\nowner = "The project team"\n\n[review]\ninclude = ["decision", "evidence", "next step"]\nstatus = "ready"';
 
-function Reading({ id }: { readonly id: string }) {
+function Reading({ id, rootHeadingLevel }: SignaturePageProps) {
   return (
     <div className="discern-signature-reading">
       <SiteHeader
@@ -381,6 +422,7 @@ function Reading({ id }: { readonly id: string }) {
         }]}
       />
       <ArticleHeader
+        headingLevel={rootHeadingLevel}
         id={`${id}-article`}
         eyebrow="Notes on collaboration"
         title="A little structure makes room for better work."
@@ -571,17 +613,52 @@ export function EverydayControls(
 }
 
 export function SignatureSpecimen(
-  { purpose, id, treatments }: {
+  { purpose, id, treatments, rootHeadingLevel = 1, verification }: {
     readonly purpose: SignaturePurpose;
     readonly id: string;
     readonly treatments: SignatureTreatments;
+    readonly rootHeadingLevel?: 1 | 2;
+    readonly verification?: ReactNode;
   },
 ) {
+  const props = { id, treatments, rootHeadingLevel, verification };
   if (purpose === "marketing") {
-    return <Marketing id={id} treatments={treatments} />;
+    return <Marketing {...props} />;
   }
   if (purpose === "operations") {
-    return <Operations id={id} treatments={treatments} />;
+    return <Operations {...props} />;
   }
-  return <Reading id={id} />;
+  return <Reading {...props} />;
+}
+
+/** Complete illustrative page with a visible, still-default ambient control. */
+export function SignatureComposition(
+  { purpose, id, rootHeadingLevel = 1, verification }: {
+    readonly purpose: SignaturePurpose;
+    readonly id: string;
+    readonly rootHeadingLevel?: 1 | 2;
+    readonly verification?: ReactNode;
+  },
+) {
+  const [motion, setMotion] = useState(false);
+  return (
+    <div className="discern-signature-specimen">
+      {purpose !== "reading" && (
+        <div className="discern-signature-composition-controls">
+          <Checkbox
+            label="Allow ambient motion"
+            checked={motion}
+            onChange={(event) => setMotion(event.currentTarget.checked)}
+          />
+        </div>
+      )}
+      <SignatureSpecimen
+        purpose={purpose}
+        id={id}
+        rootHeadingLevel={rootHeadingLevel}
+        verification={verification}
+        treatments={{ ...signatureTreatments, motion }}
+      />
+    </div>
+  );
 }

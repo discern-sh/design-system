@@ -3,7 +3,7 @@ import type { ComponentExampleImageManifest } from "../example-images/contract.t
 
 export const componentExampleImageManifest: ComponentExampleImageManifest = {
   "captureContractVersion": "5",
-  "sourceHash": "sha256:c0660c655ced4fca771e4f4adc780b2bb24ea1070842d72426f02fc2530c2c7f",
+  "sourceHash": "sha256:dd731f4321d4704bd7d7b0afdef9f10f5c4f0f8e71ac3b306f191808ccfad988",
   "entries": [
     {
       "slug": "icon",
@@ -10321,7 +10321,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 220,
       "density": 2,
       "contentHash": "sha256:6cdb624f87f6ef6c6ed72f914f785a06a353f650262673f951a31af3a2703d4c",
-      "sourceHash": "sha256:ccc439405ddab7daf1ba489c4c33b9816360312b93cb140b3431ab6c01100eb0",
+      "sourceHash": "sha256:685c6e1fe6de631cc7a5f32a80e1a7f62b193b2a169a00b1d8e9df0a1d788838",
       "captureContractVersion": "5"
     },
     {
@@ -10338,7 +10338,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 220,
       "density": 2,
       "contentHash": "sha256:c001cf500721d3fb9f4b0b11365c7535b34bcde5a430d32a679991c487b396e4",
-      "sourceHash": "sha256:ccc439405ddab7daf1ba489c4c33b9816360312b93cb140b3431ab6c01100eb0",
+      "sourceHash": "sha256:685c6e1fe6de631cc7a5f32a80e1a7f62b193b2a169a00b1d8e9df0a1d788838",
       "captureContractVersion": "5"
     },
     {
@@ -10355,7 +10355,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 138,
       "density": 2,
       "contentHash": "sha256:3a004c1775f197d9b416371ef07eb43b19151061881effaeafc518efea080661",
-      "sourceHash": "sha256:ccc439405ddab7daf1ba489c4c33b9816360312b93cb140b3431ab6c01100eb0",
+      "sourceHash": "sha256:685c6e1fe6de631cc7a5f32a80e1a7f62b193b2a169a00b1d8e9df0a1d788838",
       "captureContractVersion": "5"
     },
     {
@@ -10372,7 +10372,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 138,
       "density": 2,
       "contentHash": "sha256:3f36a1242bfebfd6826f0544f1b8a5bf4b3d6063781cd63cdd0fa5ad59629d14",
-      "sourceHash": "sha256:ccc439405ddab7daf1ba489c4c33b9816360312b93cb140b3431ab6c01100eb0",
+      "sourceHash": "sha256:685c6e1fe6de631cc7a5f32a80e1a7f62b193b2a169a00b1d8e9df0a1d788838",
       "captureContractVersion": "5"
     },
     {
@@ -11613,7 +11613,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 1224,
       "density": 2,
       "contentHash": "sha256:081ad0a7b6652278f7028cf971a2d3ef3ce933d18ee3dda39f95cb8f84d07b36",
-      "sourceHash": "sha256:c51ede292b553d5a7a1442560f9ce1c650ee09f6fabbc62b008e37497cb6a9da",
+      "sourceHash": "sha256:270e0a080dfc961bb8ed5a167553a880cc256883b239381a5360044cddbc34f7",
       "captureContractVersion": "5"
     },
     {
@@ -11630,7 +11630,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 1224,
       "density": 2,
       "contentHash": "sha256:44e81a1f3edd66011b4066fe7076e7e2c4228c8c1bfdbfa1227f4305c5628a37",
-      "sourceHash": "sha256:c51ede292b553d5a7a1442560f9ce1c650ee09f6fabbc62b008e37497cb6a9da",
+      "sourceHash": "sha256:270e0a080dfc961bb8ed5a167553a880cc256883b239381a5360044cddbc34f7",
       "captureContractVersion": "5"
     },
     {

@@ -1,5 +1,6 @@
 @layer discern.components {
   .discern-site-header {
+    container-type: inline-size;
     z-index: 30;
     border-block-end: 1px solid var(--discern-color-border);
     background: var(--discern-color-surface);
@@ -137,7 +138,7 @@
     align-items: center;
     gap: var(--discern-space-2);
   }
-  @media (max-width: 45rem) {
+  @container (max-width: 45rem) {
     .discern-site-header__inner {
       flex-wrap: wrap;
       gap: var(--discern-space-3);
@@ -162,7 +163,7 @@
       width: min(100% - 2 * var(--discern-space-4), 86rem);
     }
   }
-  @media (max-width: 30rem) {
+  @container (max-width: 30rem) {
     .discern-site-header--collapse-nav .discern-site-header__nav {
       display: none;
     }

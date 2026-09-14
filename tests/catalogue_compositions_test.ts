@@ -66,6 +66,9 @@ Deno.test("Composition status, membership, source, and order share the recipe au
   assertEquals(
     compositionRecipes.map(({ id }) => id),
     [
+      "quiet-instrument-marketing",
+      "quiet-instrument-reading",
+      "quiet-instrument-operations",
       "documentation-task",
       "next-action",
       "failure-triage",
@@ -81,11 +84,23 @@ Deno.test("Composition status, membership, source, and order share the recipe au
       recipe.components,
     );
     assertEquals(new Set(recipe.components).size, recipe.components.length);
-    assertEquals(
-      recipe.source.startsWith(`${compositionExampleImport(recipe)}\n\n`),
-      true,
+    if (recipe.sourceFiles === undefined) {
+      assertEquals(
+        recipe.source.startsWith(`${compositionExampleImport(recipe)}\n\n`),
+        true,
+      );
+    } else {
+      assertEquals(recipe.sourceFiles[0].source, recipe.source);
+      assertEquals(
+        new Set(recipe.sourceFiles.map(({ name }) => name)).size,
+        recipe.sourceFiles.length,
+      );
+    }
+    assertStringIncludes(
+      recipe.sourceFiles?.map(({ source }) => source).join("\n") ??
+        recipe.source,
+      "@discern-sh/design-system/react",
     );
-    assertStringIncludes(recipe.source, "@discern-sh/design-system/react");
   }
 });
 

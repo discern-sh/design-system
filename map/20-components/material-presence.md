@@ -2,7 +2,7 @@
 
 Reading keeps the serif display role and sustained editorial rhythm. Product marketing uses the separate marketing headline role, a clear benefit, recognisable symbols and an immediate next action. Operational surfaces use UI hierarchy, aligned controls and explicit status. The relationship comes from shared edges, spacing, type quality and control feedback; a hero or animation is not needed to reveal it.
 
-The [three complete specimens](../../catalogue/review/signature-specimens.tsx) show these uses through the existing review route. [The minimal consumer](../../scripts/signature-consumer.tsx) emits public package CSS and fonts and renders the build-time adapter without Catalogue CSS, JavaScript or hydration. Run that script after the ordinary build to inspect its light and dark HTML under `dist/signature-consumer/`.
+The [three complete specimens](../../catalogue/compositions/signature-specimens.tsx) show these uses through ordinary Catalogue Compositions and the existing review route. Their recipe entries supply the shared TSX and layout CSS as copyable consumer files. [The minimal consumer](../../scripts/signature-consumer.tsx) emits public package CSS and fonts and renders the build-time adapter without Catalogue CSS, JavaScript or hydration. Run that script after the ordinary build to inspect its light and dark HTML under `dist/signature-consumer/`.
 
 ## Select the ingredient at its owner
 
