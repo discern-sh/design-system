@@ -1,0 +1,184 @@
+<style>
+#discern-surface-studies {
+  --study-paper: light-dark(#fafaf9, #171819);
+  --study-surface: light-dark(#ffffff, #202123);
+  --study-ink: light-dark(#202226, #eeeef0);
+  --study-muted: light-dark(#62656b, #b0b3ba);
+  --study-rule: light-dark(#dbdce0, #414349);
+  --study-well: light-dark(#eff0f2, #151618);
+  --study-action: light-dark(#25282d, #eeeef1);
+  --study-action-ink: light-dark(#ffffff, #202226);
+  --study-shadow: light-dark(#a6a8af, #070808);
+  --study-light: light-dark(#547db2, #93baff);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--study-ink);
+  font-size: 14px;
+  line-height: 1.5;
+}
+#discern-surface-studies * { box-sizing: border-box; }
+#discern-surface-studies .study-controls { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 12px 22px; margin-bottom: 10px; }
+#discern-surface-studies .study-theme { display: flex; flex-direction: column; gap: 6px; min-width: 135px; color: var(--study-muted); font-size: 13px; }
+#discern-surface-studies .study-theme select { width: 100%; min-height: 38px; padding: 7px 10px; border: 1px solid var(--study-rule); border-radius: 5px; background: var(--study-surface); color: var(--study-ink); font: inherit; }
+#discern-surface-studies .study-switches { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px 18px; }
+#discern-surface-studies .study-check { display: flex; align-items: center; gap: 8px; min-height: 30px; color: var(--study-ink); font-size: 13px; cursor: pointer; }
+#discern-surface-studies .study-check input { width: 16px; height: 16px; margin: 0; accent-color: var(--study-ink); flex-shrink: 0; }
+#discern-surface-studies .study-top { display: flex; align-items: center; justify-content: flex-end; margin-bottom: 12px; }
+#discern-surface-studies .study-motion { color: var(--study-muted); background: none; border: 0; padding: 8px 0 8px 12px; font: inherit; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+#discern-surface-studies .study-motion[hidden] { display: none; }
+#discern-surface-studies .study-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+#discern-surface-studies .study-label { display: flex; gap: 10px; align-items: baseline; margin: 0 0 10px; font-size: 13px; font-weight: 400; color: var(--study-muted); }
+#discern-surface-studies .study-label strong { color: var(--study-ink); font-weight: 500; }
+#discern-surface-studies .study-window { border: 1px solid var(--study-rule); border-radius: 10px; background: var(--study-paper); color: var(--study-ink); overflow: hidden; position: relative; isolation: isolate; }
+#discern-surface-studies .study-window::before { content: ""; position: absolute; pointer-events: none; z-index: -1; width: 150%; height: 210px; top: -100px; left: -40%; background: radial-gradient(ellipse at center, var(--study-light), transparent 62%); opacity: 0; }
+#discern-surface-studies [data-ambient="true"] .study-window::before { opacity: .13; animation: discern-study-drift 18s ease-in-out infinite alternate; }
+#discern-surface-studies[data-paused="true"] .study-window::before { animation-play-state: paused; }
+#discern-surface-studies .study-chrome { padding: 17px 20px; border-bottom: 1px solid var(--study-rule); display: flex; gap: 9px; align-items: center; font-size: 13px; font-weight: 500; }
+#discern-surface-studies svg { flex-shrink: 0; width: 17px; height: 17px; stroke-width: 1.6; }
+#discern-surface-studies .study-body { padding: 24px 20px 20px; }
+#discern-surface-studies .study-eyebrow { margin: 0 0 8px; color: var(--study-muted); font-size: 12px; }
+#discern-surface-studies .study-heading { margin: 0 0 20px; color: var(--study-ink); font-size: 23px; line-height: 1.2; letter-spacing: -.7px; font-weight: 500; }
+#discern-surface-studies .study-tabs { display: flex; gap: 3px; background: var(--study-well); padding: 4px; border-radius: 7px; }
+#discern-surface-studies .study-tab { flex: 1; min-width: 0; border: 1px solid transparent; padding: 8px 10px; background: transparent; color: var(--study-muted); font: inherit; font-size: 13px; border-radius: 4px; cursor: pointer; }
+#discern-surface-studies .study-tab[aria-pressed="true"] { color: var(--study-ink); background: var(--study-surface); border-color: var(--study-rule); }
+#discern-surface-studies .study-detail { position: relative; isolation: isolate; overflow: hidden; margin: 18px 0 20px; padding: 18px 16px; border: 1px solid var(--study-rule); border-radius: 6px; background: var(--study-surface); min-height: 146px; }
+#discern-surface-studies .study-detail::after { content: ""; pointer-events: none; position: absolute; inset: -20%; z-index: -1; opacity: 0; background: linear-gradient(112deg, transparent 25%, var(--study-light) 48%, transparent 72%); }
+#discern-surface-studies .study-detail.is-changing::after { animation: discern-study-arrival 760ms ease-out; }
+#discern-surface-studies .study-detail-title { display: flex; gap: 9px; align-items: center; margin: 0 0 10px; font-weight: 500; font-size: 14px; }
+#discern-surface-studies .study-detail-copy { margin: 0; color: var(--study-muted); font-size: 13px; line-height: 1.6; }
+#discern-surface-studies .study-footer { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+#discern-surface-studies .study-hint { color: var(--study-muted); font-size: 12px; }
+#discern-surface-studies .study-pin { display: flex; gap: 8px; align-items: center; justify-content: center; min-width: 103px; border: 1px solid var(--study-action); background: var(--study-action); color: var(--study-action-ink); border-radius: 5px; padding: 9px 14px; font: inherit; font-size: 13px; font-weight: 500; box-shadow: 0 3px 0 var(--study-shadow); transition: transform 100ms ease-out, box-shadow 100ms ease-out; cursor: pointer; }
+#discern-surface-studies .study-pin:active { transform: translateY(3px); box-shadow: 0 0 0 var(--study-shadow); }
+#discern-surface-studies .study-pin[aria-pressed="true"] { background: var(--study-surface); color: var(--study-ink); border-color: var(--study-rule); }
+#discern-surface-studies [data-depth="true"] .study-window { box-shadow: 0 8px 18px -14px var(--study-shadow); }
+#discern-surface-studies [data-depth="true"] .study-detail { background: linear-gradient(155deg, var(--study-surface) 40%, var(--study-paper)); box-shadow: inset 0 1px 0 light-dark(#fff, #ffffff0d), 0 3px 7px -5px var(--study-shadow); }
+#discern-surface-studies [data-depth="true"] .study-tab[aria-pressed="true"] { box-shadow: 0 2px 4px -3px var(--study-shadow); }
+#discern-surface-studies .study-accessible { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); }
+@keyframes discern-study-drift { from { transform: translate(-10%, 0) rotate(-8deg); } to { transform: translate(53%, 18px) rotate(8deg); } }
+@keyframes discern-study-arrival { 0% { transform: translateX(-60%); opacity: 0; } 28% { opacity: .045; } 100% { transform: translateX(70%); opacity: 0; } }
+@media (max-width: 580px) { #discern-surface-studies .study-grid { grid-template-columns: 1fr; gap: 24px; } }
+@media (pointer: coarse) { #discern-surface-studies button, #discern-surface-studies .study-check, #discern-surface-studies .study-theme select { min-height: 44px; } }
+@media (prefers-reduced-motion: reduce) { #discern-surface-studies .study-window::before, #discern-surface-studies .study-detail.is-changing::after { animation: none !important; } #discern-surface-studies .study-pin { transition: none; } }
+</style>
+<div id="discern-surface-studies" aria-label="Exploratory surface studies" data-paused="false">
+  <div class="study-controls" role="group" aria-label="Surface comparison controls">
+    <label class="study-theme" for="study-appearance">Appearance
+      <select id="study-appearance" data-control="theme"><option value="system">Follow app</option><option value="light">Light</option><option value="dark">Dark</option></select>
+    </label>
+    <div class="study-switches">
+      <label class="study-check"><input type="checkbox" data-control="ambient" checked>Ambient light</label>
+      <label class="study-check"><input type="checkbox" data-control="transition" checked>Transition shimmer</label>
+      <label class="study-check"><input type="checkbox" data-control="depth" checked>Surface depth</label>
+      <label class="study-check"><input type="checkbox" data-control="tinted">Cool light tint</label>
+    </div>
+  </div>
+  <div class="study-top"><button class="study-motion" type="button" aria-pressed="false"><i data-lucide="pause" aria-hidden="true"></i><span>Pause ambient light</span></button></div>
+  <div class="study-grid">
+    <section class="study-sample" data-study="still" data-ambient="false" data-depth="false" aria-label="Still study">
+      <h3 class="study-label"><strong>A</strong> Still</h3>
+      <div class="study-window">
+        <div class="study-chrome"><i data-lucide="notebook-pen" aria-hidden="true"></i>Studio notes</div>
+        <div class="study-body">
+          <p class="study-eyebrow">Personal collection</p>
+          <h2 class="study-heading">Room for your next idea.</h2>
+          <div class="study-tabs" role="group" aria-label="Collection view">
+            <button class="study-tab" data-view="overview" aria-pressed="true" type="button">Overview</button>
+            <button class="study-tab" data-view="details" aria-pressed="false" type="button">Details</button>
+          </div>
+          <div class="study-detail">
+            <h3 class="study-detail-title"><i data-lucide="layers-2" aria-hidden="true"></i><span>A little space to think</span></h3>
+            <p class="study-detail-copy">Keep your observations, references, and unfinished ideas together.</p>
+          </div>
+          <div class="study-footer"><span class="study-hint">Only visible to you</span><button class="study-pin" type="button" aria-pressed="false"><i data-lucide="pin" aria-hidden="true"></i><span>Pin</span></button></div>
+        </div>
+      </div>
+    </section>
+    <section class="study-sample" data-study="expressive" data-ambient="true" data-depth="true" aria-label="Light and transitions study">
+      <h3 class="study-label"><strong>B</strong> Light &amp; transitions</h3>
+      <div class="study-window">
+        <div class="study-chrome"><i data-lucide="notebook-pen" aria-hidden="true"></i>Studio notes</div>
+        <div class="study-body">
+          <p class="study-eyebrow">Personal collection</p>
+          <h2 class="study-heading">Room for your next idea.</h2>
+          <div class="study-tabs" role="group" aria-label="Collection view">
+            <button class="study-tab" data-view="overview" aria-pressed="true" type="button">Overview</button>
+            <button class="study-tab" data-view="details" aria-pressed="false" type="button">Details</button>
+          </div>
+          <div class="study-detail">
+            <h3 class="study-detail-title"><i data-lucide="layers-2" aria-hidden="true"></i><span>A little space to think</span></h3>
+            <p class="study-detail-copy">Keep your observations, references, and unfinished ideas together.</p>
+          </div>
+          <div class="study-footer"><span class="study-hint">Only visible to you</span><button class="study-pin" type="button" aria-pressed="false"><i data-lucide="pin" aria-hidden="true"></i><span>Pin</span></button></div>
+        </div>
+      </div>
+    </section>
+  </div>
+  <div class="study-accessible" role="status" aria-live="polite"></div>
+</div>
+<script>
+(() => {
+  const root = document.getElementById('discern-surface-studies');
+  const expressive = root.querySelector('[data-study="expressive"]');
+  const samples = Array.from(root.querySelectorAll('.study-sample'));
+  const state = { ambient: true, transition: true, depth: true, tinted: false, theme: 'system' };
+  const content = {
+    overview: ['A little space to think', 'Keep your observations, references, and unfinished ideas together.'],
+    details: ['Make it your own', 'Add a description, arrange your notes, and return whenever inspiration strikes.']
+  };
+  let view = 'overview';
+  let pinned = false;
+  let paused = false;
+  const status = root.querySelector('[role="status"]');
+  const pauseButton = root.querySelector('.study-motion');
+  function render() {
+    expressive.dataset.ambient = String(state.ambient);
+    expressive.dataset.depth = String(state.depth);
+    if (!state.transition) expressive.querySelector('.study-detail').classList.remove('is-changing');
+    for (const surface of root.querySelectorAll('.study-window')) surface.style.colorScheme = state.theme === 'system' ? '' : state.theme;
+    root.style.setProperty('--study-light', state.tinted ? 'light-dark(#547db2, #93baff)' : 'light-dark(#323a48, #d5dce8)');
+    pauseButton.hidden = !state.ambient;
+  }
+  for (const sample of samples) {
+    for (const button of sample.querySelectorAll('.study-tab')) {
+      button.addEventListener('click', () => {
+        if (view === button.dataset.view) return;
+        view = button.dataset.view;
+        for (const peer of samples) {
+          for (const tab of peer.querySelectorAll('.study-tab')) tab.setAttribute('aria-pressed', String(tab.dataset.view === view));
+          peer.querySelector('.study-detail-title span').textContent = content[view][0];
+          peer.querySelector('.study-detail-copy').textContent = content[view][1];
+        }
+        const panel = expressive.querySelector('.study-detail');
+        panel.classList.remove('is-changing');
+        if (state.transition) {
+          void panel.offsetWidth;
+          panel.classList.add('is-changing');
+        }
+        status.textContent = content[view][0] + '. ' + content[view][1];
+      });
+    }
+    sample.querySelector('.study-pin').addEventListener('click', () => {
+      pinned = !pinned;
+      for (const peer of samples) {
+        const button = peer.querySelector('.study-pin');
+        button.setAttribute('aria-pressed', String(pinned));
+        button.querySelector('span').textContent = pinned ? 'Pinned' : 'Pin';
+      }
+      status.textContent = pinned ? 'Collection pinned.' : 'Collection unpinned.';
+    });
+  }
+  pauseButton.addEventListener('click', () => {
+    paused = !paused;
+    root.dataset.paused = String(paused);
+    pauseButton.setAttribute('aria-pressed', String(paused));
+    pauseButton.querySelector('span').textContent = paused ? 'Resume ambient light' : 'Pause ambient light';
+  });
+  for (const control of root.querySelectorAll('[data-control]')) {
+    control.addEventListener('input', () => {
+      state[control.dataset.control] = control.type === 'checkbox' ? control.checked : control.value;
+      render();
+    });
+  }
+  render();
+})();
+</script>
