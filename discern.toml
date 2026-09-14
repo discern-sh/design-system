@@ -477,7 +477,7 @@
 # the measurement output; the consumer-facing budget is [standards.docs_selection].)
 [standards.css_density]
   run = "[ -f dist/discern.css ] || deno task build >/dev/null 2>&1; printf 'DISCERN_METRIC css_bytes %s\\n' \"$(wc -c < dist/discern.css | tr -d ' ')\""
-  limit = 2520.7062937062938
+  limit = 2489
   direction = "down"
   metric = "css_bytes"
   per = { files = "src/components/**/*.css" }
@@ -527,7 +527,7 @@
 # stable budget.
 [standards.marketing_css]
   run = "deno run --config deno.json --allow-read --allow-write scripts/measure-runtime.ts marketing_css_bytes"
-  limit = 5152.347826086957
+  limit = 5043.625
   direction = "down"
   metric = "marketing_css_bytes"
   per = { files = "src/components/marketing/**/*.css" }
