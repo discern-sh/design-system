@@ -39,7 +39,12 @@ async function verifyLivePageControls(detail: Locator): Promise<void> {
     name: "Allow ambient motion",
   });
   if (await ambient.count() === 0) return;
+  const backdrop = detail.locator(".discern-light-backdrop").first();
   const light = detail.locator(".discern-light-backdrop__light").first();
+  const motionAllowed = await detail.evaluate(() =>
+    !matchMedia("(prefers-reduced-motion: reduce)").matches &&
+    !matchMedia("(forced-colors: active)").matches
+  );
   const moving = () =>
     light.evaluate((node) =>
       node.getAnimations().some((animation) =>
@@ -52,12 +57,18 @@ async function verifyLivePageControls(detail: Locator): Promise<void> {
   );
   await ambient.check();
   await eventually(
-    moving,
-    "The visible ambient control did not start the light",
+    async () =>
+      !await backdrop.evaluate((node) =>
+        node.classList.contains("discern-backdrop--still")
+      ) && await moving() === motionAllowed,
+    "The ambient control did not request motion while respecting browser opt-outs",
   );
   await ambient.uncheck();
   await eventually(
-    async () => !await moving(),
+    async () =>
+      await backdrop.evaluate((node) =>
+        node.classList.contains("discern-backdrop--still")
+      ) && !await moving(),
     "Ambient motion did not stop when disabled",
   );
 

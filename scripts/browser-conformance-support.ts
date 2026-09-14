@@ -165,18 +165,47 @@ export function addPageFailureListeners(page: Page, failures: string[]): void {
   });
 }
 
-/** Sequentially reachable candidates, excluding inert and negative-tabindex. */
+/** Fresh forward Tab stops, including one eligible member of each native radio group. */
 export async function visibleEnabledTargets(root: Locator): Promise<Locator[]> {
   const candidates = root.locator(FOCUSABLE_SELECTOR);
-  const targets: Locator[] = [];
+  const eligible: number[] = [];
   for (let index = 0; index < await candidates.count(); index += 1) {
     const candidate = candidates.nth(index);
     if (!await candidate.isVisible() || !await candidate.isEnabled()) continue;
-    const sequential = await candidate.evaluate((element) =>
-      !element.closest("[inert]") &&
-      !(element instanceof HTMLElement && element.tabIndex < 0)
-    );
-    if (sequential) targets.push(candidate);
+    if (
+      await candidate.evaluate((element) =>
+        !element.closest("[inert]") &&
+        !(element instanceof HTMLElement && element.tabIndex < 0)
+      )
+    ) eligible.push(index);
   }
-  return targets;
+  const sequential = await candidates.evaluateAll((nodes, eligible) => {
+    return eligible.filter((index) => {
+      const element = nodes[index]!;
+      if (
+        !(element instanceof HTMLInputElement) || element.type !== "radio" ||
+        element.name === ""
+      ) return true;
+      // A checked peer can belong to this group outside the inspected container.
+      const peers = Array.from(
+        (element.getRootNode() as Document | ShadowRoot)
+          .querySelectorAll<HTMLInputElement>('input[type="radio"]'),
+      ).filter((radio) => {
+        if (
+          radio.name !== element.name || radio.form !== element.form ||
+          radio.tabIndex < 0 || radio.matches(":disabled") ||
+          radio.closest("[inert]")
+        ) return false;
+        const rect = radio.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0 &&
+          getComputedStyle(radio).visibility === "visible";
+      });
+      const checked = peers.find((radio) => radio.checked);
+      const firstLocal = eligible.map((index) => nodes[index]).find((node) =>
+        peers.includes(node as HTMLInputElement)
+      );
+      return element === (checked ?? firstLocal);
+    });
+  }, eligible);
+  return sequential.map((index) => candidates.nth(index));
 }

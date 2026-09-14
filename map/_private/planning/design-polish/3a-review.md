@@ -73,6 +73,8 @@ The integrated review found and resolved three host-dependent defects: SiteHeade
 
 Both independent critics re-reviewed the integration. The visual pass examined replacement light/dark and narrow/wide captures with the restored shared layout; the contract pass confirmed heading parity and independently saved view/checklist state. Neither reports a remaining actionable finding. Parent-run checks pass 31 focused tests, 36 width/theme cases across 9 recipes, 96 accessibility scans, 15 source copies, 9 keyboard checks and 6 complete-page interaction passes. The 15 new captures also cover a 320px Fit canvas in a 390px browser. Live source copies compile and render exactly through the public adapter.
 
+The full browser population also enrols text-only SiteHeader brands in its target-size guard. Their target height now retains the shared floor without requiring a mark. The shared keyboard oracle resolves native radio groups by live selection, form ownership and tree; a browser fixture compares its predictions with actual Tab traversal, including ineligible selections and peers outside the inspected container. Complete-page motion checks verify the visible control's request while respecting reduced motion and forced colours.
+
 Normal Catalogue destinations on this worktree are [marketing](http://127.0.0.1:18393/catalogue/compositions/quiet-instrument-marketing/), [reading](http://127.0.0.1:18393/catalogue/compositions/quiet-instrument-reading/) and [operations](http://127.0.0.1:18393/catalogue/compositions/quiet-instrument-operations/). The external evidence bundle's `catalogue-captures.json` records the exact allocation/theme URLs and capture files.
 
 ### Motion and rendering cost
