@@ -7,7 +7,7 @@ import { LightBackdrop } from "./light-backdrop.tsx";
 import meta, { componentExampleVocabulary } from "./light-backdrop.meta.ts";
 
 export default function LightBackdropExamples() {
-  const [moving, setMoving] = useState(false);
+  const [moving, setMoving] = useState(true);
   return (
     <Card
       texture="shaded"
@@ -18,8 +18,8 @@ export default function LightBackdropExamples() {
       <div style={{ position: "relative", zIndex: 1, maxWidth: "32rem" }}>
         <h2>A little light, deliberately placed.</h2>
         <p>
-          The complete surface is still by default. Select ambient motion only
-          where it earns attention.
+          Ambient light moves gently on this selected surface. Reduced motion
+          keeps it still; each placement can also opt out.
         </p>
         <Checkbox
           label="Ambient motion"
@@ -47,9 +47,6 @@ export const reviewPostures = defineComponentReviewPostures(
       category: "motion",
       requirements: { reducedMotion: false, inlineSize: "wide" },
       sequence: [{
-        action: "click",
-        target: { role: "checkbox", name: "Ambient motion" },
-      }, {
         checkpoint: { id: "ambient-moving", label: "Production illumination" },
       }],
     },
@@ -60,9 +57,6 @@ export const reviewPostures = defineComponentReviewPostures(
       category: "motion",
       requirements: { reducedMotion: true, inlineSize: "narrow" },
       sequence: [{
-        action: "click",
-        target: { role: "checkbox", name: "Ambient motion" },
-      }, {
         checkpoint: { id: "ambient-still", label: "Complete still surface" },
       }],
     },

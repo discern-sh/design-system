@@ -733,7 +733,7 @@ export const componentExampleRegistry = {
   "light-backdrop": [
     {
       "id": "default",
-      "label": "Still illumination",
+      "label": "Ambient illumination",
       "surfaces": [
         "web",
       ],
@@ -1322,6 +1322,15 @@ export const componentExampleRegistry = {
         "web",
         "cli",
       ],
+    },
+    {
+      "id": "content",
+      "label": "Content-sized group",
+      "surfaces": [
+        "web",
+      ],
+      "reason":
+        "Intrinsic CSS allocation has no terminal layout equivalent; the shared selection and disabled states retain their CLI examples.",
     },
   ],
   "switch": [

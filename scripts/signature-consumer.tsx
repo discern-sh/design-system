@@ -43,12 +43,11 @@ export async function buildSignatureConsumer(outputRoot: URL): Promise<void> {
         <head>
           <meta charSet="utf-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1" />
-          <title>Quiet Instrument · package consumer</title>
+          <title>Workspace · package consumer</title>
           <link rel="stylesheet" href="./discern.css" />
           <link rel="stylesheet" href="./fonts.css" />
           <style>
             {`.consumer-controls { padding:var(--discern-space-5); font-family:var(--discern-font-ui); }
-          #ambient:not(:checked) ~ main .discern-light-backdrop__light { animation:none; }
           main { display:block; }
           .consumer-controls a { margin-inline-start:var(--discern-space-5); }`}
           </style>
@@ -60,8 +59,6 @@ export async function buildSignatureConsumer(outputRoot: URL): Promise<void> {
               Switch to {theme === "light" ? "dark" : "light"}
             </a>
           </div>
-          <input type="checkbox" id="ambient" />
-          <label htmlFor="ambient">Allow ambient motion</label>
           <main>
             <HeroBlock
               layout="statement"
@@ -71,7 +68,7 @@ export async function buildSignatureConsumer(outputRoot: URL): Promise<void> {
               actions={
                 <Button href="#project-view">Explore the project view</Button>
               }
-              backdrop={<LightBackdrop motion="ambient" />}
+              backdrop={<LightBackdrop />}
               visual={
                 <Grid minimum="14rem" gap={8}>
                   {[[outlinedCompassSvg, "Find your bearings"], [
@@ -107,6 +104,7 @@ export async function buildSignatureConsumer(outputRoot: URL): Promise<void> {
                   <Stack gap={5}>
                     <h3>Your next step</h3>
                     <SegmentedControl
+                      sizing="content"
                       name="view"
                       label="Project view"
                       defaultValue="plan"

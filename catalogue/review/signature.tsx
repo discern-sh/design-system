@@ -6,6 +6,7 @@ import { catalogueAppearanceRootStyle } from "../shell/axes-state.ts";
 import { componentReviewHref, parseComponentReviewState } from "./state.ts";
 import {
   EverydayControls,
+  signaturePageIdentity,
   SignatureSpecimen,
 } from "../compositions/signature-specimens.tsx";
 import { compositionRecipes } from "../compositions.tsx";
@@ -165,7 +166,7 @@ export function SignatureStudy() {
           <h1>Distinct voices. Shared craft.</h1>
         </div>
         <p>
-          <strong>Quiet Instrument · Inter marketing headlines.</strong>
+          <strong>Selected compositions · Inter marketing headlines.</strong>
           <br />Slightly more breathing room. Public package ingredients.
         </p>
       </header>
@@ -318,7 +319,7 @@ export function SignatureStudy() {
       <div className="discern-signature-comparison">
         <section className="discern-signature-comparison__item">
           <header>
-            <h2>Quiet Instrument</h2>
+            <h2>Selected compositions</h2>
             <p>The selected voice, with independent material treatments.</p>
           </header>
           {themes.map((pole) => {
@@ -376,11 +377,13 @@ export function SignatureStudy() {
                   className="discern-signature-frame__scroller"
                   tabIndex={0}
                   role="region"
-                  aria-label={`Quiet Instrument, ${pole}, ${purpose}`}
+                  aria-label={`${
+                    signaturePageIdentity[purpose].title
+                  }, ${pole}`}
                 >
                   <SignatureFrame
                     src={frameUrl.href}
-                    title={`Quiet Instrument · ${purpose} · ${pole}`}
+                    title={`${signaturePageIdentity[purpose].title} · ${pole}`}
                     width={requestedWidth}
                   />
                 </div>

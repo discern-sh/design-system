@@ -9,7 +9,10 @@ import { emitDesignSystemRuntime } from "../src/runtime.ts";
 import { componentGroups } from "../src/types/component-meta.ts";
 import { compositionGalleryItems } from "../catalogue/pages/compositions/page.tsx";
 import { compositionSearchRecords } from "../catalogue/routes/compositions.ts";
-import { SignatureSpecimen } from "../catalogue/compositions/signature-specimens.tsx";
+import {
+  signaturePageIdentity,
+  SignatureSpecimen,
+} from "../catalogue/compositions/signature-specimens.tsx";
 import { compositionRecipes } from "../catalogue/compositions.tsx";
 
 Deno.test("selected purpose pages are discoverable and their supplied source reproduces the live composition", async () => {
@@ -59,8 +62,8 @@ Deno.test("selected purpose pages are discoverable and their supplied source rep
       }),
     );
     const entries: string[] = [];
-    for (const purpose of ["marketing", "reading", "operations"]) {
-      const id = `quiet-instrument-${purpose}`;
+    for (const purpose of (["marketing", "reading", "operations"] as const)) {
+      const id = signaturePageIdentity[purpose].id;
       const recipe = compositionRecipes.find((entry) => entry.id === id);
       assert(recipe, `${purpose} needs a normal Composition entry`);
       assert(
@@ -84,7 +87,7 @@ Deno.test("selected purpose pages are discoverable and their supplied source rep
         );
       }
       assertEquals(
-        recipe.sourceFiles.find(({ name }) => name === "quiet-instrument.css")
+        recipe.sourceFiles.find(({ name }) => name === "page-composition.css")
           ?.source,
         await Deno.readTextFile(
           new URL("../catalogue/compositions/signature.css", import.meta.url),
@@ -129,10 +132,11 @@ Deno.test("selected purpose pages are discoverable and their supplied source rep
       "\n",
     ).map((line) => JSON.parse(line) as string);
     for (
-      const [index, purpose] of ["marketing", "reading", "operations"].entries()
+      const [index, purpose]
+        of (["marketing", "reading", "operations"] as const).entries()
     ) {
       const recipe = compositionRecipes.find(({ id }) =>
-        id === `quiet-instrument-${purpose}`
+        id === signaturePageIdentity[purpose].id
       )!;
       assertEquals(
         copiedMarkup[index],

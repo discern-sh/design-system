@@ -22,14 +22,14 @@ const meta = {
   ],
   accessibility: [
     "The decorative layer is hidden from assistive technology and never intercepts input.",
-    "Still is the default. Explicit ambient motion obeys reduced motion; forced colours omit the light.",
-    "Keep foreground content above the plane and provide a still control when requesting continuous ambient motion.",
+    'Ambient motion is the default; motion="still" opts out for one placement. Reduced motion stops movement and forced colours omit the light.',
+    "Keep foreground content above the plane. Light is decorative and its complete meaning remains available without movement.",
   ],
 } satisfies ComponentMeta;
 
 export const componentExampleVocabulary = [{
   id: "default",
-  label: "Still illumination",
+  label: "Ambient illumination",
   only: "web",
 }] as const;
 defineComponentExampleVocabulary(meta, componentExampleVocabulary);

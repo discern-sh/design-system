@@ -12,7 +12,9 @@ function CalmVoiceState() {
   return (
     <VoiceBreak
       eyebrow="A change of voice"
-      quote="For the first time, the explanation felt shorter than the idea."
+      quote={
+        <p>For the first time, the explanation felt shorter than the idea.</p>
+      }
       attribution="A review team"
       context="After simplifying a complex launch page"
       portrait={<span>PT</span>}

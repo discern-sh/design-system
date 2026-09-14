@@ -1,11 +1,12 @@
 @layer discern.components {
   .discern-pull-quote {
     position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: var(--discern-space-4);
     margin-block: var(--discern-space-12);
     margin-inline: 0;
-    padding: var(--discern-space-8) var(--discern-space-8)
-      var(--discern-space-8)
-      clamp(var(--discern-space-10), 7vw, var(--discern-space-20));
+    padding: var(--discern-space-8);
     border-block: 1px solid var(--discern-color-border-strong);
     color: var(--discern-color-ink);
   }
@@ -15,15 +16,16 @@
       calc((100% - var(--discern-page-max)) / 2));
   }
   .discern-pull-quote__mark {
-    position: absolute;
-    inset-block-start: var(--discern-space-4);
-    inset-inline-start: 0;
+    grid-column: 1;
+    grid-row: 1;
     color: var(--discern-color-accent-300);
     font-family: var(--discern-font-display);
-    font-size: 6rem;
+    font-size: var(--discern-font-size-display-lg);
     line-height: 1;
   }
   .discern-pull-quote blockquote {
+    grid-column: 2;
+    grid-row: 1;
     margin: 0;
     font-family: var(--discern-font-display);
     font-size: clamp(1.6rem, 4vw, 2.45rem);
@@ -36,6 +38,7 @@
     margin-block-end: 0;
   }
   .discern-pull-quote figcaption {
+    grid-column: 2;
     display: flex;
     flex-wrap: wrap;
     gap: var(--discern-space-2) var(--discern-space-4);

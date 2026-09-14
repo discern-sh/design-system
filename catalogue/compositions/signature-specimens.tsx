@@ -27,6 +27,23 @@ import {
 } from "../../src/react.ts";
 
 export type SignaturePurpose = "marketing" | "operations" | "reading";
+export const signaturePageIdentity = {
+  marketing: {
+    id: "workspace-marketing",
+    title: "Workspace: marketing page",
+    brand: "Workspace",
+  },
+  reading: {
+    id: "fieldnotes-reading",
+    title: "Fieldnotes: reading page",
+    brand: "Fieldnotes",
+  },
+  operations: {
+    id: "facet-operations",
+    title: "Facet: operational UI",
+    brand: "Facet",
+  },
+} as const;
 export interface SignatureTreatments {
   readonly depth: boolean;
   readonly ambient: boolean;
@@ -36,14 +53,14 @@ export interface SignatureTreatments {
   readonly motion: boolean;
 }
 
-/** Selected material choices; ambient motion remains an explicit opt-in. */
+/** Selected material choices; the browser's reduced-motion preference takes precedence. */
 export const signatureTreatments: SignatureTreatments = {
   depth: true,
   ambient: true,
   shimmer: true,
   relief: true,
   tint: false,
-  motion: false,
+  motion: true,
 };
 
 interface SignaturePageProps {
@@ -152,7 +169,7 @@ function Marketing(
   return (
     <div className="discern-signature-marketing" id={`${id}-top`}>
       <SiteHeader
-        brand="Workspace"
+        brand={signaturePageIdentity.marketing.brand}
         brandTypeface="ui"
         homeHref={`#${id}-top`}
         navItems={[{ label: "Why Workspace", href: `#${id}-benefits` }, {
@@ -274,7 +291,7 @@ function Operations(
   return (
     <div className="discern-signature-operations">
       <SiteHeader
-        brand="Workspace"
+        brand={signaturePageIdentity.operations.brand}
         brandTypeface="ui"
         homeHref={`#${id}-tasks`}
         navItems={[{ label: "Tasks", href: `#${id}-tasks` }, {
@@ -311,6 +328,7 @@ function Operations(
                 onChange={(event) => setFilter(event.currentTarget.value)}
               />
               <SegmentedControl
+                sizing="content"
                 label="Task view"
                 name={`${id}-task-view`}
                 value={taskView}
@@ -414,7 +432,7 @@ function Reading({ id, rootHeadingLevel }: SignaturePageProps) {
   return (
     <div className="discern-signature-reading">
       <SiteHeader
-        brand="Fieldnotes"
+        brand={signaturePageIdentity.reading.brand}
         brandTypeface="display"
         homeHref={`#${id}-article`}
         navItems={[{ label: "The question", href: `#${id}-question` }, {
@@ -555,6 +573,7 @@ export function EverydayControls(
           <h3>Your next step.</h3>
         </div>
         <SegmentedControl
+          sizing="content"
           label="Project view"
           name={`${id}-project-view`}
           value={view}
@@ -632,7 +651,7 @@ export function SignatureSpecimen(
   return <Reading {...props} />;
 }
 
-/** Complete illustrative page with a visible, still-default ambient control. */
+/** Complete illustrative page using selected treatments and native motion preferences. */
 export function SignatureComposition(
   { purpose, id, rootHeadingLevel = 1, verification }: {
     readonly purpose: SignaturePurpose;
@@ -641,24 +660,14 @@ export function SignatureComposition(
     readonly verification?: ReactNode;
   },
 ) {
-  const [motion, setMotion] = useState(false);
   return (
     <div className="discern-signature-specimen">
-      {purpose !== "reading" && (
-        <div className="discern-signature-composition-controls">
-          <Checkbox
-            label="Allow ambient motion"
-            checked={motion}
-            onChange={(event) => setMotion(event.currentTarget.checked)}
-          />
-        </div>
-      )}
       <SignatureSpecimen
         purpose={purpose}
         id={id}
         rootHeadingLevel={rootHeadingLevel}
         verification={verification}
-        treatments={{ ...signatureTreatments, motion }}
+        treatments={signatureTreatments}
       />
     </div>
   );

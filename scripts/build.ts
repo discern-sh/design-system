@@ -1114,14 +1114,14 @@ export async function writeSignatureCompositionSources(): Promise<void> {
     );
   }
   const files = [{
-    name: "quiet-instrument.tsx",
+    name: "page-composition.tsx",
     language: "tsx",
     source: componentSource.replace(
       adapterImport,
       '"@discern-sh/design-system/react"',
     ),
   }, {
-    name: "quiet-instrument.css",
+    name: "page-composition.css",
     language: "css",
     source: await Deno.readTextFile(
       new URL("../catalogue/compositions/signature.css", import.meta.url),

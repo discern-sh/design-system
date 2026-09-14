@@ -13,6 +13,20 @@ function DefaultState() {
   const name = useId();
   return <SegmentedControl label="View" name={name} items={items} />;
 }
+function ContentSized() {
+  const name = useId();
+  return (
+    <SegmentedControl
+      label="Project view"
+      name={name}
+      sizing="content"
+      items={[
+        { value: "plan", label: "Plan" },
+        { value: "details", label: "Details" },
+      ]}
+    />
+  );
+}
 function LongLabels() {
   const name = useId();
   return (
@@ -64,6 +78,7 @@ export const catalogueExamples = defineCatalogueExamples(
     { id: "long-labels", Example: LongLabels },
     { id: "icons", Example: Icons },
     { id: "disabled", Example: Disabled },
+    { id: "content", Example: ContentSized },
   ],
 );
 export const conformance: readonly ConformanceScenario[] = [{

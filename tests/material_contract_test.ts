@@ -332,18 +332,22 @@ Deno.test("public material ingredients preserve paint, labels, small icons and m
       await page.locator(".discern-light-backdrop__light").evaluate((node) =>
         node.getAnimations().length
       ),
-      0,
-      "light starts still",
+      1,
+      "light starts with ambient motion",
     );
-    await page.locator(".discern-backdrop").evaluate((node) =>
-      node.classList.remove("discern-backdrop--still")
+    await page.locator("body").evaluate(
+      (body, html) => body.insertAdjacentHTML("beforeend", html),
+      renderToStaticMarkup(
+        createElement(LightBackdrop, { motion: "still", id: "local-still" }),
+      ),
     );
     assertEquals(
-      await page.locator(".discern-light-backdrop__light").evaluate((node) =>
-        node.getAnimations().length
-      ),
-      1,
+      await page.locator("#local-still .discern-light-backdrop__light")
+        .evaluate((node) => node.getAnimations().length),
+      0,
+      "the public motion prop opts out locally",
     );
+    await page.locator("#local-still").evaluate((node) => node.remove());
     await page.emulateMedia({ reducedMotion: "reduce" });
     assertEquals(
       await page.locator(".discern-light-backdrop__light").evaluate((node) =>

@@ -106,7 +106,6 @@
     background: var(--discern-color-series-6);
   }
   .discern-data-figure__visual {
-    min-height: 16rem;
     padding: var(--discern-space-6);
   }
   .discern-data-figure figcaption {

@@ -35,41 +35,27 @@ export interface CompositionsCatalogueEvidence {
 }
 
 async function verifyLivePageControls(detail: Locator): Promise<void> {
-  const ambient = detail.getByRole("checkbox", {
-    name: "Allow ambient motion",
-  });
-  if (await ambient.count() === 0) return;
-  const backdrop = detail.locator(".discern-light-backdrop").first();
-  const light = detail.locator(".discern-light-backdrop__light").first();
+  const light = detail.locator(".discern-light-backdrop__light");
+  if (await light.count() === 0) return;
+  invariant(
+    await detail.getByRole("checkbox", { name: "Allow ambient motion" })
+      .count() === 0,
+    "Complete pages follow browser motion preferences without a composition toggle",
+  );
   const motionAllowed = await detail.evaluate(() =>
     !matchMedia("(prefers-reduced-motion: reduce)").matches &&
     !matchMedia("(forced-colors: active)").matches
   );
-  const moving = () =>
-    light.evaluate((node) =>
-      node.getAnimations().some((animation) =>
-        animation.playState === "running"
-      )
-    );
-  invariant(
-    !await ambient.isChecked() && !await moving(),
-    "Complete pages must start with still ambient light",
-  );
-  await ambient.check();
   await eventually(
     async () =>
-      !await backdrop.evaluate((node) =>
-        node.classList.contains("discern-backdrop--still")
-      ) && await moving() === motionAllowed,
-    "The ambient control did not request motion while respecting browser opt-outs",
-  );
-  await ambient.uncheck();
-  await eventually(
-    async () =>
-      await backdrop.evaluate((node) =>
-        node.classList.contains("discern-backdrop--still")
-      ) && !await moving(),
-    "Ambient motion did not stop when disabled",
+      (await light.evaluateAll((nodes) =>
+        nodes.map((node) =>
+          node.getAnimations().some((animation) =>
+            animation.playState === "running"
+          )
+        )
+      )).every((moving) => moving === motionAllowed),
+    "Selected ambient light must start moving while respecting browser opt-outs",
   );
 
   await detail.getByRole("radio", { name: "Details", exact: true }).check();

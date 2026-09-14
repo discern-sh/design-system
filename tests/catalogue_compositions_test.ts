@@ -66,9 +66,9 @@ Deno.test("Composition status, membership, source, and order share the recipe au
   assertEquals(
     compositionRecipes.map(({ id }) => id),
     [
-      "quiet-instrument-marketing",
-      "quiet-instrument-reading",
-      "quiet-instrument-operations",
+      "workspace-marketing",
+      "fieldnotes-reading",
+      "facet-operations",
       "documentation-task",
       "next-action",
       "failure-triage",

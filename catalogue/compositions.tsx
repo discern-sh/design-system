@@ -20,7 +20,10 @@ import { RawOutput } from "../src/components/workflow/raw-output/raw-output.tsx"
 import { ResultSummary } from "../src/components/workflow/result-summary/result-summary.tsx";
 import { RetryNotice } from "../src/components/workflow/retry-notice/retry-notice.tsx";
 import { registry } from "./generated/registry.ts";
-import { SignatureComposition } from "./compositions/signature-specimens.tsx";
+import {
+  SignatureComposition,
+  signaturePageIdentity,
+} from "./compositions/signature-specimens.tsx";
 import type { SignaturePurpose } from "./compositions/signature-specimens.tsx";
 import { signatureCompositionFiles } from "./generated/signature-composition-sources.ts";
 
@@ -810,7 +813,7 @@ const readingFirstLandingRecipe = defineRecipe({
 const signaturePages = [
   {
     purpose: "marketing",
-    title: "Quiet Instrument: marketing page",
+    ...signaturePageIdentity.marketing,
     description:
       "An immediate product opening, expressive symbols, quiet material surfaces, and a working project view.",
     components: [
@@ -840,7 +843,7 @@ const signaturePages = [
   },
   {
     purpose: "reading",
-    title: "Quiet Instrument: reading page",
+    ...signaturePageIdentity.reading,
     description:
       "A sustained editorial page with local navigation, a figure, code, and a clear reading rhythm.",
     components: [
@@ -864,7 +867,7 @@ const signaturePages = [
   },
   {
     purpose: "operations",
-    title: "Quiet Instrument: operational workspace",
+    ...signaturePageIdentity.operations,
     description:
       "A dense task list with working search, status grouping, verification, a checklist, and precise everyday controls.",
     components: [
@@ -893,6 +896,7 @@ const signaturePages = [
   },
 ] as const satisfies readonly {
   readonly purpose: SignaturePurpose;
+  readonly id: string;
   readonly title: string;
   readonly description: string;
   readonly components: readonly string[];
@@ -900,7 +904,7 @@ const signaturePages = [
 }[];
 
 const signatureRecipes = signaturePages.map((page) => {
-  const id = `quiet-instrument-${page.purpose}`;
+  const id = page.id;
   return defineRecipe({
     id,
     title: page.title,
@@ -931,7 +935,7 @@ const signatureRecipes = signaturePages.map((page) => {
         name: "page.tsx",
         language: "tsx",
         source:
-          `import { SignatureComposition } from "./quiet-instrument.tsx";\n${report}\n// Load quiet-instrument.css after the emitted package CSS and fonts.\nexport default function Page() {\n  return (\n    <SignatureComposition\n      purpose="${purpose}"\n      id="${id}"${
+          `import { SignatureComposition } from "./page-composition.tsx";\n${report}\n// Load page-composition.css after the emitted package CSS and fonts.\nexport default function Page() {\n  return (\n    <SignatureComposition\n      purpose="${purpose}"\n      id="${id}"${
             purpose === "operations"
               ? "\n      verification={<Verification />}"
               : ""

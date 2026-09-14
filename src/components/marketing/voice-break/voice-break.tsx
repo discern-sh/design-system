@@ -53,7 +53,10 @@ export const VoiceBreak: DiscernComponent<HTMLElement, VoiceBreakProps> =
               ? <div className="discern-voice-break__eyebrow">{eyebrow}</div>
               : null}
             <blockquote className="discern-voice-break__quote">
-              {quote}
+              <span className="discern-voice-break__mark" aria-hidden="true">
+                “
+              </span>
+              <div className="discern-voice-break__text">{quote}</div>
             </blockquote>
           </div>
           <figcaption className="discern-voice-break__attribution">
