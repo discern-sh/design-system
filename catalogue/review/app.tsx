@@ -26,6 +26,7 @@ import {
 } from "../shell/axes-state.ts";
 import { captureRegionForReview, inspectReviewGeometry } from "./geometry.ts";
 import { reviewMotionStyle } from "./motion.ts";
+import { SignatureStudy } from "./signature.tsx";
 import {
   componentReviewInlineSize,
   componentReviewResponsiveAllocation,
@@ -674,4 +675,8 @@ function App() {
 
 const root = document.getElementById("root");
 if (root === null) throw new Error("Component review root is missing");
-createRoot(root).render(<App />);
+createRoot(root).render(
+  new URL(location.href).searchParams.get("study") === "signature"
+    ? <SignatureStudy />
+    : <App />,
+);

@@ -1,0 +1,327 @@
+/* Review controls and consumer composition layout; no package visual overrides. */
+.discern-signature-review {
+  padding: 24px;
+  min-block-size: 100vh;
+}
+.discern-signature-review__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: end;
+  margin-block-end: 20px;
+}
+.discern-signature-review__header h1 {
+  font: 600 1.65rem/1.2 var(--discern-font-ui);
+  letter-spacing: -.035em;
+  margin: 0;
+}
+.discern-signature-review__header p {
+  margin: 0 0 4px;
+  font: var(--discern-font-size-xs)/1.5 var(--discern-font-ui);
+  color: var(--discern-color-ink-muted);
+}
+.discern-signature-controls {
+  border-block: 1px solid var(--discern-color-border);
+  padding-block: 12px;
+  margin-block-end: 20px;
+}
+.discern-signature-controls__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  align-items: end;
+}
+.discern-signature-controls__row > label {
+  display: grid;
+  gap: 4px;
+  flex: 1;
+  min-inline-size: 140px;
+  font: var(--discern-font-size-xs)/1.4 var(--discern-font-ui);
+}
+.discern-signature-controls__treatments {
+  align-items: center;
+  padding-block: 9px;
+}
+.discern-signature-controls__treatments > label {
+  display: inline-flex;
+  flex: none;
+  min-inline-size: auto;
+  min-block-size: 32px;
+  align-items: center;
+  gap: 8px;
+}
+.discern-signature-controls input[type=checkbox] {
+  accent-color: var(--discern-color-ink);
+  width: 16px;
+  height: 16px;
+}
+.discern-signature-controls button {
+  padding: 8px 12px;
+  color: var(--discern-color-ink);
+  background: var(--discern-color-surface);
+  border: 1px solid var(--discern-color-border-strong);
+  border-radius: var(--discern-radius-sm);
+  font: var(--discern-font-size-xs) var(--discern-font-ui);
+  cursor: pointer;
+}
+.discern-signature-controls > p,
+.discern-signature-controls summary {
+  font-size: var(--discern-font-size-xs);
+  margin: 0;
+  color: var(--discern-color-ink-muted);
+}
+.discern-signature-controls summary {
+  cursor: pointer;
+  padding-block-start: 8px;
+}
+.discern-signature-controls details[open] .discern-signature-controls__row {
+  padding-block: 10px;
+}
+.discern-signature-comparison {
+  display: grid;
+  gap: 24px;
+}
+.discern-signature-comparison__item {
+  min-inline-size: 0;
+}
+.discern-signature-comparison__item > header {
+  margin-block-end: 12px;
+}
+.discern-signature-comparison__item > header h2 {
+  font: 600 1.125rem var(--discern-font-ui);
+  margin-block-end: 3px;
+}
+.discern-signature-comparison__item > header p {
+  margin: 0;
+  font-size: var(--discern-font-size-xs);
+  color: var(--discern-color-ink-muted);
+}
+.discern-signature-frame {
+  border: 1px solid var(--discern-color-border);
+  margin-block-end: 24px;
+  border-radius: var(--discern-radius-lg);
+  overflow: hidden;
+}
+.discern-signature-frame__caption {
+  padding: 7px 14px;
+  background: var(--discern-color-surface-sunken);
+  border-block-end: 1px solid var(--discern-color-border);
+  font: var(--discern-font-size-xs) var(--discern-font-ui);
+}
+.discern-signature-frame__scroller {
+  overflow: auto;
+}
+.discern-signature-frame__viewport {
+  display: block;
+  border: 0;
+  margin-inline: auto;
+}
+.discern-signature-specimen {
+  container: discern-signature / inline-size;
+  margin-inline: auto;
+  min-inline-size: 0;
+}
+.discern-signature-ordinary {
+  padding: var(--discern-space-8);
+  border-block-start: 1px solid var(--discern-color-border);
+}
+.discern-signature-ordinary > h2 {
+  font: 600 var(--discern-font-size-sm) var(--discern-font-ui);
+}
+.discern-signature-ordinary .discern-signature-everyday {
+  max-inline-size: 32rem;
+}
+.discern-signature-benefits h3 {
+  font-family: var(--discern-font-ui);
+  font-size: var(--discern-font-size-lg);
+  margin-block: var(--discern-space-5) var(--discern-space-2);
+}
+.discern-signature-benefits p {
+  color: var(--discern-color-ink-muted);
+  font-size: var(--discern-font-size-sm);
+  margin: 0;
+}
+.discern-signature-support .discern-card h3 {
+  font-family: var(--discern-font-ui);
+  font-size: var(--discern-font-size-lg);
+}
+.discern-signature-support .discern-card p {
+  color: var(--discern-color-ink-muted);
+  margin: 0;
+}
+.discern-signature-everyday {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+.discern-signature-everyday > .discern-stack {
+  position: relative;
+  z-index: 1;
+}
+.discern-signature-everyday h3 {
+  font: 600 1.3rem/1.2 var(--discern-font-ui);
+  margin: 0;
+}
+.discern-signature-kicker {
+  color: var(--discern-color-ink-muted);
+  font: var(--discern-font-size-xs)/1.5 var(--discern-font-ui);
+  margin: 0 0 var(--discern-space-2);
+}
+.discern-signature-arrival {
+  position: relative;
+  overflow: hidden;
+  padding: var(--discern-space-4);
+  border: 1px solid var(--discern-color-border);
+  border-radius: var(--discern-radius-sm);
+}
+.discern-signature-arrival > .discern-icon {
+  margin-inline-end: var(--discern-space-2);
+}
+.discern-signature-arrival strong {
+  font: 600 var(--discern-font-size-sm)/1.4 var(--discern-font-ui);
+}
+.discern-signature-arrival p {
+  margin: var(--discern-space-2) 0 0;
+  font-size: var(--discern-font-size-sm);
+  color: var(--discern-color-ink-muted);
+}
+.discern-signature-control-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--discern-space-2);
+  align-items: center;
+}
+.discern-signature-control-row > span {
+  flex: 1;
+  color: var(--discern-color-ink-muted);
+  font-size: var(--discern-font-size-xs);
+}
+.discern-signature-task-body {
+  padding: var(--discern-space-8);
+}
+.discern-signature-task-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--discern-space-6);
+  margin-block-end: var(--discern-space-8);
+}
+.discern-signature-task-heading p {
+  color: var(--discern-color-ink-muted);
+  margin-block-end: 0;
+}
+.discern-signature-task-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--discern-space-6);
+}
+.discern-signature-task-tools {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: var(--discern-space-5);
+}
+.discern-signature-task-tools > * {
+  flex: 1;
+  min-inline-size: 12rem;
+}
+.discern-signature-task-aside {
+  display: grid;
+  align-content: start;
+  gap: var(--discern-space-6);
+}
+.discern-signature-task-aside h2 {
+  font: 600 var(--discern-font-size-lg) var(--discern-font-ui);
+}
+.discern-signature-task-layout .discern-table table {
+  min-inline-size: 35rem;
+}
+.discern-signature-task-layout .discern-badge {
+  white-space: nowrap;
+}
+
+.discern-signature-reading-layout {
+  display: grid;
+  grid-template-columns: 11rem minmax(0, 1fr);
+  gap: var(--discern-space-10);
+  max-inline-size: 64rem;
+  margin-inline: auto;
+  padding: var(--discern-space-10) var(--discern-space-6)
+    var(--discern-space-20);
+  align-items: start;
+}
+.discern-signature-reading-layout .discern-docs-nav {
+  position: sticky;
+  inset-block-start: var(--discern-space-6);
+}
+.discern-signature-reading-layout > * {
+  min-inline-size: 0;
+}
+/* Selected composition layout. Material, typography and controls are package-owned. */
+.discern-signature-benefits {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.discern-signature-benefits h3 {
+  font-size: 1.1rem;
+  letter-spacing: -.02em;
+}
+.discern-signature-aside {
+  padding-block: calc(var(--discern-space-12) + var(--discern-space-2));
+}
+.discern-signature-task-heading h1 {
+  font: 600 clamp(1.6rem, 3cqi, 2rem)/1.15 var(--discern-font-ui);
+  letter-spacing: -.035em;
+}
+.discern-signature-specimen[data-discern-review-motion=reduced] *,
+.discern-signature-specimen[data-discern-review-motion=reduced] *::before,
+.discern-signature-specimen[data-discern-review-motion=reduced] *::after {
+  animation: none !important;
+  transition: none !important;
+}
+@container discern-signature (min-width: 58rem) {
+  .discern-signature-task-layout {
+    grid-template-columns: minmax(0, 1fr) 19rem;
+  }
+}
+@container discern-signature (max-width: 42rem) {
+  .discern-signature-reading-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--discern-space-6);
+  }
+  .discern-signature-reading-layout .discern-docs-nav {
+    position: static;
+  }
+  .discern-signature-task-body {
+    padding: var(--discern-space-5);
+  }
+  .discern-signature-benefits {
+    grid-template-columns: 1fr;
+    gap: var(--discern-space-6);
+  }
+  .discern-signature-benefits > div {
+    display: grid;
+    grid-template-columns: 3rem minmax(0,1fr);
+    column-gap: var(--discern-space-4);
+    align-items: center;
+  }
+  .discern-signature-benefits h3 {
+    margin: 0 0 var(--discern-space-1);
+  }
+  .discern-signature-benefits .discern-icon {
+    grid-row: span 2;
+  }
+  .discern-signature-benefits p {
+    grid-column: 2;
+  }
+}
+@media (max-width: 42rem) {
+  .discern-signature-review {
+    padding: 12px;
+  }
+  .discern-signature-review__header {
+    flex-direction: column;
+    align-items: start;
+    gap: 12px;
+  }
+}

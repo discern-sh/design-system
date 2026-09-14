@@ -1,5 +1,6 @@
 import type { ComponentType, ReactNode } from "react";
 import { VerificationReport } from "../src/components/agents/verification-report/verification-report.tsx";
+import { Stack } from "../src/components/layout/stack/stack.tsx";
 import { Button } from "../src/components/core/button/button.tsx";
 import { ClosingStatement } from "../src/components/marketing/closing-statement/closing-statement.tsx";
 import { EditorialHero } from "../src/components/marketing/editorial-hero/editorial-hero.tsx";
@@ -340,6 +341,7 @@ const failureTriageRecipe = defineRecipe({
   description:
     "Explain why a run failed, what evidence matters, and when it is safe to try again.",
   components: [
+    "stack",
     "result-summary",
     "diagnostic",
     "raw-output",
@@ -355,7 +357,7 @@ const failureTriageRecipe = defineRecipe({
   },
   definition: failureTriage,
   render: (definition) => (
-    <div className="discern-example-stack">
+    <Stack gap={6}>
       <ResultSummary
         state="failed"
         fact={definition.result.fact}
@@ -380,10 +382,10 @@ const failureTriageRecipe = defineRecipe({
         safeToRetry={definition.retry.safeToRetry}
         reason={definition.retry.reason}
       />
-    </div>
+    </Stack>
   ),
   source: (definition) =>
-    `<div className="discern-example-stack">
+    `<Stack gap={6}>
   <ResultSummary
     state="failed"
     fact={${value(definition.result.fact)}}
@@ -412,7 +414,7 @@ const failureTriageRecipe = defineRecipe({
     safeToRetry={${value(definition.retry.safeToRetry)}}
     reason={${value(definition.retry.reason)}}
   />
-</div>`,
+</Stack>`,
 });
 
 const handoffVerificationReport = {
@@ -442,10 +444,10 @@ const handoffVerificationReportRecipe = defineRecipe({
   title: "Handoff verification report",
   description:
     "Hand off a completed check with compact proof and the artifact another person can inspect.",
-  components: ["verification-report", "artifact-card"],
+  components: ["stack", "verification-report", "artifact-card"],
   definition: handoffVerificationReport,
   render: (definition) => (
-    <div className="discern-example-stack">
+    <Stack gap={6}>
       <VerificationReport
         title={definition.report.title}
         stamp="pass"
@@ -461,10 +463,10 @@ const handoffVerificationReportRecipe = defineRecipe({
         ownership="generated"
         provenance={definition.artifact.provenance}
       />
-    </div>
+    </Stack>
   ),
   source: (definition) =>
-    `<div className="discern-example-stack">
+    `<Stack gap={6}>
   <VerificationReport
     title={${value(definition.report.title)}}
     stamp="pass"
@@ -480,7 +482,7 @@ const handoffVerificationReportRecipe = defineRecipe({
     ownership="generated"
     provenance={${value(definition.artifact.provenance)}}
   />
-</div>`,
+</Stack>`,
 });
 
 const surveyArtifacts = {
@@ -527,7 +529,7 @@ const surveyArtifactsRecipe = defineRecipe({
   title: "Survey artifacts",
   description:
     "Make changed files and their ownership legible before a review or handoff.",
-  components: ["artifact-tree", "file-change", "ownership-badge"],
+  components: ["stack", "artifact-tree", "file-change", "ownership-badge"],
   journey: {
     stages: [
       ".discern-artifact-tree",
@@ -537,7 +539,7 @@ const surveyArtifactsRecipe = defineRecipe({
   },
   definition: surveyArtifacts,
   render: (definition) => (
-    <div className="discern-example-stack">
+    <Stack gap={6}>
       <ArtifactTree label="Project artifacts" nodes={definition.tree} />
       <section
         className="discern-artifact-survey__changes"
@@ -572,10 +574,10 @@ const surveyArtifactsRecipe = defineRecipe({
           ))}
         </dl>
       </section>
-    </div>
+    </Stack>
   ),
   source: (definition) =>
-    `<div className="discern-example-stack">
+    `<Stack gap={6}>
   <ArtifactTree label="Project artifacts" nodes={${value(definition.tree)}} />
   <section
     className="discern-artifact-survey__changes"
@@ -610,7 +612,7 @@ const surveyArtifactsRecipe = defineRecipe({
       ))}
     </dl>
   </section>
-</div>`,
+</Stack>`,
 });
 
 const readingFirstLanding = {

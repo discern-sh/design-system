@@ -101,6 +101,23 @@ Deno.test("defineRecipe projects one definition into its preview and adaptable s
   assertEquals(recipe.status.label, "Illustrative pattern");
 });
 
+Deno.test("portable recipe layout never depends on Catalogue example helpers", () => {
+  const helpers = (source: string) =>
+    [...source.matchAll(/\bdiscern-example-[\w-]+/gu)].map(([name]) => name);
+  assertEquals(
+    helpers('<div className="discern-example-future-layout">'),
+    ["discern-example-future-layout"],
+  );
+  for (const recipe of [...compositionRecipes, futureRecipe()]) {
+    assertEquals(helpers(recipe.source), [], `${recipe.id} adaptable source`);
+    assertEquals(
+      helpers(renderToStaticMarkup(createElement(recipe.Example))),
+      [],
+      `${recipe.id} preview`,
+    );
+  }
+});
+
 Deno.test("defineRecipe refuses dead or duplicated Component membership", () => {
   const definition = {
     id: "invalid-pattern",
