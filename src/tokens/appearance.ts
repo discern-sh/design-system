@@ -582,6 +582,7 @@ const weightedMix = (
   position: numberNode(toWeight),
 });
 
+const crossoverLightness = numberNode(Math.cbrt(APPEARANCE_POLARITY_CROSSOVER));
 const lightPolarityProgress = clamp(binary(
   "divide",
   axisNodes.darkness,
@@ -597,24 +598,50 @@ const darkPolarityProgress = clamp(binary(
   numberNode(1 - APPEARANCE_POLARITY_CROSSOVER_DARKNESS),
 ));
 
+// Semantic text reaches its strongest endpoint at the actual tinted crossover.
+const textPolarityProgress = [
+  clamp(
+    binary(
+      "divide",
+      binary("subtract", paperLightness, appearanceCanvasLightnessExpression),
+      binary("subtract", paperLightness, crossoverLightness),
+    ),
+  ),
+  clamp(
+    binary(
+      "divide",
+      binary(
+        "subtract",
+        crossoverLightness,
+        appearanceCanvasLightnessExpression,
+      ),
+      binary("subtract", crossoverLightness, inkLightness),
+    ),
+  ),
+] as const;
+
 function polarCurve(
   lightPole: number,
   lightCrossover: number,
   darkCrossover: number,
   darkPole: number,
+  progress: readonly [AppearanceExpression, AppearanceExpression] = [
+    lightPolarityProgress,
+    darkPolarityProgress,
+  ],
 ): AppearanceExpression {
   return rounded(polaritySelection(
     {
       kind: "lerp",
       from: numberNode(lightPole),
       to: numberNode(lightCrossover),
-      position: lightPolarityProgress,
+      position: progress[0],
     },
     {
       kind: "lerp",
       from: numberNode(darkCrossover),
       to: numberNode(darkPole),
-      position: darkPolarityProgress,
+      position: progress[1],
     },
   ));
 }
@@ -623,18 +650,19 @@ function accentProjection(
   lightness: readonly [number, number, number, number],
   chroma: readonly [number, number, number, number],
   hue: AppearanceExpression,
-  emphasis = true,
+  options: { readonly chromaFloor?: number; readonly text?: boolean } = {},
 ): AccentColorProjection {
-  const baseChroma = polarCurve(...chroma);
+  const progress = options.text ? textPolarityProgress : undefined;
+  const baseChroma = polarCurve(...chroma, progress);
+  const strength: AppearanceExpression = options.chromaFloor === undefined
+    ? axisNodes.emphasis
+    : {
+      kind: "max",
+      values: [numberNode(options.chromaFloor), axisNodes.emphasis],
+    };
   return Object.freeze({
-    lightness: polarCurve(...lightness),
-    chroma: emphasis
-      ? rounded(bounded(
-        0,
-        binary("multiply", baseChroma, axisNodes.emphasis),
-        0.28,
-      ))
-      : baseChroma,
+    lightness: polarCurve(...lightness, progress),
+    chroma: rounded(bounded(0, binary("multiply", baseChroma, strength), 0.28)),
     hue,
     alpha: one,
   });
@@ -661,7 +689,7 @@ const accent400Projection = accentProjection(
   accentHueAxis,
 );
 const accent500Projection = accentProjection(
-  [0.55, 0.5, 0.64, 0.67],
+  [0.52, 0.49, 0.65, 0.7],
   [0.185, 0.19, 0.175, 0.165],
   accentHueAxis,
 );
@@ -684,7 +712,20 @@ const actionProjection = accentProjection(
   [0.4, 0.34, 0.82, 0.8],
   [0.16, 0.16, 0.13, 0.13],
   accentHueAxis,
+  { chromaFloor: 0.8 },
 );
+const ambientExpression = scaledCurve(
+  [0.075, 0.08, 0.09, 0.12, 0.14],
+  "emphasis",
+);
+const ambientProjection = {
+  ...accentProjection(
+    [0.35, 0.28, 0.86, 0.9],
+    [0.045, 0.04, 0.035, 0.03],
+    accentHueAxis,
+  ),
+  alpha: ambientExpression,
+};
 const successHue = numberNode(152);
 const warningHue = polarCurve(74, 78, 82, 82);
 const dangerHue = numberNode(28);
@@ -692,6 +733,7 @@ const successProjection = accentProjection(
   [0.64, 0.6, 0.56, 0.58],
   [0.165, 0.17, 0.17, 0.155],
   successHue,
+  { chromaFloor: 0.5 },
 );
 const successSoftProjection = accentProjection(
   [0.95, 0.92, 0.26, 0.29],
@@ -699,14 +741,16 @@ const successSoftProjection = accentProjection(
   successHue,
 );
 const successDeepProjection = accentProjection(
-  [0.37, 0.32, 0.92, 0.88],
-  [0.09, 0.095, 0.105, 0.1],
+  [0.37, 0, 1, 0.88],
+  [0.09, 0, 0, 0.1],
   successHue,
+  { text: true },
 );
 const warningProjection = accentProjection(
   [0.64, 0.6, 0.58, 0.6],
   [0.14, 0.145, 0.14, 0.13],
   warningHue,
+  { chromaFloor: 0.5 },
 );
 const warningSoftProjection = accentProjection(
   [0.96, 0.92, 0.27, 0.3],
@@ -714,14 +758,16 @@ const warningSoftProjection = accentProjection(
   warningHue,
 );
 const warningDeepProjection = accentProjection(
-  [0.5, 0.42, 0.9, 0.86],
-  [0.12, 0.12, 0.105, 0.1],
+  [0.5, 0, 1, 0.86],
+  [0.12, 0, 0, 0.1],
   warningHue,
+  { text: true },
 );
 const dangerProjection = accentProjection(
-  [0.42, 0.3, 0.84, 0.82],
-  [0.19, 0.195, 0.18, 0.17],
+  [0.42, 0, 1, 0.82],
+  [0.19, 0, 0, 0.17],
   dangerHue,
+  { text: true },
 );
 const dangerSoftProjection = accentProjection(
   [0.96, 0.92, 0.26, 0.29],
@@ -748,6 +794,14 @@ const inkExpression: AppearanceExpression = {
 };
 const inkMutedExpression = polarCurve(0.68, 1, 1, 0.74);
 const inkFaintExpression = polarCurve(0.55, 0.72, 0.72, 0.55);
+/** Text and focus retain their ink rung while Emphasis adjusts state strength. */
+const readableInk = (
+  expression: AppearanceExpression,
+  floor: AppearanceExpression = inkExpression,
+): AppearanceExpression => ({
+  kind: "max",
+  values: [floor, expression],
+});
 const accent100Expression = rounded(clamp(binary(
   "multiply",
   polarCurve(0.05, 0, 0, 0.06),
@@ -761,51 +815,92 @@ const accent300Expression = scaledCurve(
   [0.17, 0.22, 0.28, 0.22, 0.18],
   "emphasis",
 );
-const accent500Expression = boundedScaledCurve(
-  [0.52, 0.68, 0.8, 0.66, 0.55],
-  "emphasis",
-  0.5,
-  0.9,
+const accent500Expression = readableInk(
+  boundedScaledCurve(
+    [0.52, 0.68, 0.8, 0.66, 0.55],
+    "emphasis",
+    0.5,
+    0.9,
+  ),
+  inkFaintExpression,
 );
-const accent600Expression = boundedScaledCurve(
-  [0.82, 0.86, 0.75, 0.86, 0.85],
-  "emphasis",
-  0.5,
-  0.86,
+// The admitted crossover envelope separates composited state markers when
+// low/high Emphasis compresses their alpha ladder. Pigment poles stay unchanged.
+const markerCrossoverWeight = clamp(
+  binary(
+    "subtract",
+    one,
+    binary("divide", {
+      kind: "abs",
+      value: binary(
+        "subtract",
+        appearanceCanvasLightnessExpression,
+        crossoverLightness,
+      ),
+    }, numberNode(0.25)),
+  ),
 );
-const accent700Expression = boundedScaledCurve(
+const separatedMarker = (
+  expression: AppearanceExpression,
+  crossover: number,
+): AppearanceExpression =>
+  rounded({
+    kind: "lerp",
+    from: expression,
+    to: numberNode(crossover),
+    position: markerCrossoverWeight,
+  });
+const dangerExpression = separatedMarker(
+  readableInk(boundedScaledCurve(
+    [1, 1, 1, 1, 1],
+    "emphasis",
+    0.7,
+    1,
+  )),
+  1,
+);
+const accent600Expression = separatedMarker(
+  boundedScaledCurve(
+    [0.82, 0.86, 0.75, 0.86, 0.85],
+    "emphasis",
+    0.5,
+    0.86,
+  ),
+  0.68,
+);
+const accent700Expression = readableInk(boundedScaledCurve(
   [0.93, 0.96, 1, 0.96, 0.94],
   "emphasis",
   0.82,
   1,
-);
+));
 const borderStrongExpression = scaledCurve(
   [0.3, 0.34, 0.4, 0.35, 0.32],
   "structure",
 );
-const accent800Expression = boundedScaledCurve(
+const accent800Expression = readableInk(boundedScaledCurve(
   [1, 1, 1, 1, 1],
   "emphasis",
   0.86,
   1,
+));
+const warningExpression = separatedMarker(
+  boundedScaledCurve(
+    [0.62, 0.6, 0.58, 0.62, 0.66],
+    "emphasis",
+    0.35,
+    0.72,
+  ),
+  0.42,
 );
-const successExpression = boundedScaledCurve(
-  [0.44, 0.38, 0.34, 0.42, 0.48],
-  "emphasis",
-  0.2,
-  0.55,
-);
-const warningExpression = boundedScaledCurve(
-  [0.62, 0.6, 0.58, 0.62, 0.66],
-  "emphasis",
-  0.35,
-  0.72,
-);
-const dangerExpression = boundedScaledCurve(
-  [1, 1, 1, 1, 1],
-  "emphasis",
-  0.7,
-  1,
+const successExpression = separatedMarker(
+  boundedScaledCurve(
+    [0.44, 0.38, 0.34, 0.42, 0.48],
+    "emphasis",
+    0.2,
+    0.55,
+  ),
+  0.18,
 );
 const warningSoftExpression = rounded(clamp(binary(
   "multiply",
@@ -1021,6 +1116,34 @@ export const appearanceColorRoleLaws: readonly AppearanceColorRoleLaw[] = Object
         undefined,
       ),
       role(
+        "--discern-color-material-shade",
+        "Quiet ink-pigment shading for an explicitly selected material surface.",
+        "ink-pigment",
+        scaledCurve([0.035, 0.05, 0.075, 0.11, 0.16], "structure"),
+        undefined,
+      ),
+      role(
+        "--discern-color-material-highlight",
+        "Paper-pigment grazing highlight, balanced across canvas polarity.",
+        "paper-pigment",
+        scaledCurve([0.7, 0.3, 0.2, 0.18, 0.16], "structure"),
+        undefined,
+      ),
+      role(
+        "--discern-color-relief-shadow",
+        "Ink-pigment contact shade for optional large graphic relief.",
+        "ink-pigment",
+        scaledCurve([0.18, 0.2, 0.26, 0.3, 0.34], "structure"),
+        undefined,
+      ),
+      role(
+        "--discern-color-ambient",
+        "Decorative illumination; neutral by default, restrained hue within an Accent scope.",
+        "active-ink",
+        ambientExpression,
+        ambientProjection,
+      ),
+      role(
         "--discern-color-success",
         "Successful outcome hierarchy; meaning also requires a non-colour witness.",
         "active-ink",
@@ -1038,7 +1161,7 @@ export const appearanceColorRoleLaws: readonly AppearanceColorRoleLaw[] = Object
         "--discern-color-success-deep",
         "Successful-outcome text on its wash.",
         "active-ink",
-        scaledCurve([0.82, 0.86, 0.9, 0.9, 0.9], "emphasis"),
+        readableInk(scaledCurve([0.82, 0.86, 0.9, 0.9, 0.9], "emphasis")),
         successDeepProjection,
       ),
       role(
@@ -1059,7 +1182,7 @@ export const appearanceColorRoleLaws: readonly AppearanceColorRoleLaw[] = Object
         "--discern-color-warning-deep",
         "Warning text on its wash.",
         "active-ink",
-        scaledCurve([0.78, 0.82, 0.86, 0.86, 0.86], "emphasis"),
+        readableInk(scaledCurve([0.78, 0.82, 0.86, 0.86, 0.86], "emphasis")),
         warningDeepProjection,
       ),
       role(
