@@ -52,6 +52,7 @@
     display: inline-flex;
     flex: none;
     align-items: center;
+    min-block-size: 1.5rem;
     gap: var(--discern-space-3);
     color: var(--discern-color-ink);
     font-size: 1.15rem;

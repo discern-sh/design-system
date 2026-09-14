@@ -22,7 +22,7 @@ Each release is cut from a green run of the full release gate — formatting, li
 - Builder exposes singleton string/number literal props as bounded choices, including Card's optional shimmer arrival, and preserves the unset default. LightBackdrop uses the documented backdrop interface form so generated adoption controls and consumer exports do not invent a children slot.
 - Keep static Component review specimens keyboard-scrollable with named frames and shared visible focus. The review page loads its signature stylesheet through a direct stable link, including during accessibility inspection.
 - Make the complete Quiet Instrument marketing, reading and operational examples discoverable through the ordinary Compositions gallery, sidebar and search. They share the selected specimens with the review instrument, retain working controls and supply copyable entry, shared TSX and layout CSS files derived from the authored examples.
-- SiteHeader wraps its brand, navigation and actions against its allocated width, including embedded layouts and Catalogue width presets. Its narrow navigation opt-out follows that same local allocation; full-width page behaviour is retained.
+- SiteHeader wraps its brand, navigation and actions against its allocated width, including embedded layouts and Catalogue width presets. Its narrow navigation opt-out follows that same local allocation; full-width page behaviour is retained. Text-only brand links retain the minimum target height without needing a mark.
 - ArticleHeader preserves its visual title size when consumers choose semantic heading level 2 for an embedded article opening.
 
 ## 0.31.0
