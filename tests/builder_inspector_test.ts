@@ -189,6 +189,37 @@ Deno.test("prop controls derive from documented props and variants", () => {
   assertEquals(defaults.layout, undefined);
 });
 
+Deno.test("singleton literals expose one valid choice and preserve optional omission", () => {
+  for (const value of ["settled", 42]) {
+    for (const required of [false, true]) {
+      const controls = deriveControls({
+        reactExport: "FutureWidget",
+        propDocumentation: {
+          status: "available",
+          typeName: "FutureWidgetProps",
+          inheritedTypes: [],
+          props: [{ name: "mode", type: JSON.stringify(value), required }],
+        },
+        variants: [],
+      });
+      const control = controls[0];
+      assert(control?.control === "select");
+      assertEquals(control.options, [value]);
+      const selected = typeof value === "number"
+        ? { kind: "number" as const, value }
+        : { kind: "string" as const, value };
+      assertEquals(defaultProps(controls), required ? { mode: selected } : {});
+      if (!required) {
+        assertEquals(
+          effectiveControlValue(control, undefined).value,
+          "Not set",
+        );
+        assert(effectiveControlValue(control, selected).resettable);
+      }
+    }
+  }
+});
+
 Deno.test("opaque specs use source-backed JSON defaults without weakening their prop type", () => {
   const source: ControlSource = {
     reactExport: "Diagram",
@@ -1558,12 +1589,15 @@ Deno.test("every catalogue component yields controls, a default instance, and ex
   // Inline string-literal unions must survive extraction as select controls.
   const texture = controlsBySlug("card").find(({ name }) => name === "texture");
   assert(texture?.control === "select");
-  assertEquals(texture.options, ["plain", "dots"]);
+  assertEquals(texture.options, ["plain", "dots", "shaded"]);
+  const arrival = controlsBySlug("card").find(({ name }) => name === "arrival");
+  assert(arrival?.control === "select");
+  assertEquals(arrival.options, ["shimmer"]);
   const layout = controlsBySlug("hero-block").find(({ name }) =>
     name === "layout"
   );
   assert(layout?.control === "select");
-  assertEquals(layout.options, ["split", "centered", "showcase"]);
+  assertEquals(layout.options, ["split", "centered", "showcase", "statement"]);
 
   // Unions imported from sibling components resolve through shared variants.
   const status = controlsBySlug("agent-persona").find(({ name }) =>
@@ -1850,6 +1884,12 @@ Deno.test("every Component class exports formatted, type-correct consumer TSX", 
         const instance = registryIndex.instantiateComponent(entry.meta.slug);
         const props = { ...instance.props };
         for (const control of registryIndex.controlsBySlug(entry.meta.slug)) {
+          if (control.control === "select" && control.options.length === 1) {
+            const value = control.options[0]!;
+            props[control.name] = typeof value === "number"
+              ? { kind: "number", value }
+              : { kind: "string", value };
+          }
           if (
             control.required && control.control === "slot" &&
             control.elementOnly

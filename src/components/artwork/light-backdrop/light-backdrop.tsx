@@ -5,7 +5,7 @@ import { Backdrop } from "../backdrop/backdrop.tsx";
 import type { BackdropProps } from "../backdrop/backdrop.tsx";
 
 /** Props for the {@linkcode LightBackdrop} component. */
-export type LightBackdropProps = Omit<BackdropProps, "children">;
+export interface LightBackdropProps extends Omit<BackdropProps, "children"> {}
 
 /** Quiet illumination for a deliberately selected surface; still unless motion is requested. */
 export const LightBackdrop: DiscernComponent<

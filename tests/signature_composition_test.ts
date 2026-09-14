@@ -3,6 +3,7 @@ import { toFileUrl } from "@std/path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { launchBrowser } from "../scripts/browser.ts";
+import { withViewport } from "../scripts/viewport.ts";
 import { buildSignatureConsumer } from "../scripts/signature-consumer.tsx";
 import { emitDesignSystemRuntime } from "../src/runtime.ts";
 import { componentGroups } from "../src/types/component-meta.ts";
@@ -36,22 +37,23 @@ Deno.test("complete purpose specimens fit their allocation with enlarged fallbac
       }));
       for (const theme of ["light", "dark"]) {
         for (const width of [390, 720, 1120]) {
-          await page.setViewportSize({ width, height: 900 });
-          // No font asset is selected: these are the actual public fallbacks.
-          await page.setContent(
-            `<html data-discern-root data-discern-theme="${theme}">
+          await withViewport(page, { width, height: 900 }, async () => {
+            // No font asset is selected: these are the actual public fallbacks.
+            await page.setContent(
+              `<html data-discern-root data-discern-theme="${theme}">
             <style>${css}${compositionCss}html{font-size:24px}</style>
             <body><div class="discern-signature-specimen">${html}</div></body></html>`,
-          );
-          const geometry = await page.locator("html").evaluate((root) => ({
-            available: root.clientWidth,
-            content: root.scrollWidth,
-          }));
-          assertEquals(
-            geometry.content,
-            geometry.available,
-            `${purpose}/${theme}/${width}`,
-          );
+            );
+            const geometry = await page.locator("html").evaluate((root) => ({
+              available: root.clientWidth,
+              content: root.scrollWidth,
+            }));
+            assertEquals(
+              geometry.content,
+              geometry.available,
+              `${purpose}/${theme}/${width}`,
+            );
+          });
         }
       }
     }
