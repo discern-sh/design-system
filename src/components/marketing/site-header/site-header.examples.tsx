@@ -11,7 +11,7 @@ function StandardHeaderState() {
       brandTypeface="ui"
       brandMarkTreatment="plain"
       navItems={[
-        { label: "Overview", href: "#overview" },
+        { label: "Overview", href: "#overview", current: "page" },
         { label: "Principles", href: "#principles" },
         { label: "Resources", href: "#resources" },
       ]}
@@ -34,7 +34,7 @@ function CampaignHeaderState() {
       brandMarkTreatment="plain"
       navItems={[
         { label: "How it works", href: "#method" },
-        { label: "What returns", href: "#evidence" },
+        { label: "What returns", href: "#evidence", current: "section" },
         { label: "Trust", href: "#trust" },
       ]}
       actions={<Button href="#start" size="sm">Start a project</Button>}

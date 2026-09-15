@@ -130,8 +130,14 @@
   .discern-site-header--campaign .discern-site-header__nav a {
     font-size: var(--discern-font-size-sm);
   }
-  .discern-site-header__nav a:is(:hover, :focus-visible) {
+  .discern-site-header__nav a:is(:hover, :focus-visible, [aria-current]) {
     color: var(--discern-color-ink);
+  }
+  .discern-site-header__nav a[aria-current="page"] {
+    text-decoration-line: underline;
+    text-decoration-color: var(--discern-color-accent-500);
+    text-decoration-thickness: 0.125rem;
+    text-underline-offset: 0.35em;
   }
   .discern-site-header__actions {
     display: flex;

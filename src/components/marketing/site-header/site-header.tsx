@@ -4,11 +4,22 @@ import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { useInitialFragmentTarget } from "../../use-initial-fragment-target.ts";
 
+/** How one navigation destination relates to the page being read. */
+export type SiteHeaderNavCurrent = "page" | "section";
+
 /** One nav item entry rendered by the Site header component. */
 export interface SiteHeaderNavItem {
   readonly label: ReactNode;
   readonly href: string;
+  /**
+   * Relationship between this destination and the page being read: `page` is
+   * the exact destination and `section` is the branch containing it. Route
+   * matching stays with the caller.
+   */
+  readonly current?: SiteHeaderNavCurrent;
 }
+
+const NAV_CURRENT = { page: "page", section: "true" } as const;
 
 /** Visual treatments available to a Site header. */
 export type SiteHeaderVariant = "standard" | "campaign";
@@ -102,7 +113,15 @@ export const SiteHeader: DiscernComponent<HTMLElement, SiteHeaderProps> =
             ? (
               <nav className="discern-site-header__nav" aria-label={navLabel}>
                 {navItems.map((item) => (
-                  <a href={item.href} key={item.href}>{item.label}</a>
+                  <a
+                    href={item.href}
+                    key={item.href}
+                    aria-current={item.current === undefined
+                      ? undefined
+                      : NAV_CURRENT[item.current]}
+                  >
+                    {item.label}
+                  </a>
                 ))}
               </nav>
             )
