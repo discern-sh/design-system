@@ -47,5 +47,18 @@ export * from "./signals.ts";
 export * from "./textarea-request.ts";
 export * from "./types.ts";
 
-export * from "./application-model.ts";
+export {
+  renderTerminalApplication,
+  TERMINAL_APPLICATION_MINIMUM,
+  transitionTerminalApplication,
+  updateTerminalApplication,
+} from "./application-model.ts";
+export type {
+  TerminalApplicationAction,
+  TerminalApplicationFrame,
+  TerminalApplicationPosition,
+  TerminalApplicationRegion,
+  TerminalApplicationState,
+  TerminalApplicationView,
+} from "./application-model.ts";
 export * from "./application.ts";
