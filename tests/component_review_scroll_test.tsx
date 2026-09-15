@@ -1,10 +1,16 @@
 import { assert, assertEquals } from "@std/assert";
+import { Buffer } from "node:buffer";
 import { renderToStaticMarkup } from "react-dom/server";
 import { launchBrowser } from "../scripts/browser.ts";
 import {
+  addPageFailureListeners,
   clampedScrollPosition,
+  loadReadyBrowserPage,
+  scanBrowserAccessibility,
   waitForStableWindowScroll,
 } from "../scripts/browser-conformance-support.ts";
+import { buildDesignSystem } from "../scripts/build.ts";
+import server from "../scripts/serve.ts";
 import {
   cssDeclarations,
   cssQualifiedRuleBlocks,
@@ -43,6 +49,90 @@ async function reviewStyles(directory: URL): Promise<string[]> {
   }
   return styles;
 }
+
+Deno.test("live review frames preserve keyboard scrolling and stylesheet URLs during accessibility scans", async () => {
+  await buildDesignSystem();
+  const browser = await launchBrowser();
+  try {
+    const context = await browser.newContext({
+      viewport: { width: 1440, height: 1000 },
+      reducedMotion: "reduce",
+    });
+    await context.route("http://component-review.test/**", async (route) => {
+      const response = await server.fetch(new Request(route.request().url()));
+      await route.fulfill({
+        status: response.status,
+        headers: Object.fromEntries(response.headers),
+        body: Buffer.from(await response.arrayBuffer()),
+      });
+    });
+    const page = await context.newPage();
+    const failures: string[] = [];
+    addPageFailureListeners(page, failures);
+    await loadReadyBrowserPage(
+      page,
+      "http://component-review.test/catalogue/reviews/components/?group=Core&width=medium&theme=light&accent=none&motion=reduced&mode=contact",
+      'html[data-discern-review-status="ready"]',
+    );
+    const scan = await scanBrowserAccessibility(page, ".discern-review-shell");
+    assertEquals({
+      failures,
+      violations: scan.violations.map(({ id, nodes }) => ({
+        id,
+        targets: nodes.map(({ target }) => target),
+      })),
+    }, { failures: [], violations: [] });
+    const viewports = page.locator(".discern-review-scroller");
+    assert(await viewports.count() > 0);
+    for (const viewport of await viewports.all()) {
+      await viewport.focus();
+      const state = await viewport.evaluate((element) => ({
+        tabindex: (element as HTMLElement).tabIndex,
+        role: element.getAttribute("role"),
+        label: element.getAttribute("aria-label"),
+        focused: element.ownerDocument.activeElement === element,
+        outline: Number.parseFloat(getComputedStyle(element).outlineWidth),
+      }));
+      assertEquals(state.tabindex, 0);
+      assertEquals(state.role, "group");
+      assert(state.label !== null && state.label.trim() !== "");
+      assert(state.focused && state.outline >= 2);
+    }
+    const first = viewports.first();
+    assert(
+      await first.evaluate((element) =>
+        element.scrollWidth > element.clientWidth
+      ),
+    );
+    await first.evaluate((element) => {
+      element.scrollLeft = 0;
+    });
+    assertEquals(await first.evaluate((element) => element.scrollLeft), 0);
+    await first.press("ArrowRight");
+    await page.waitForFunction(() =>
+      document.querySelector(".discern-review-scroller")!.scrollLeft > 0
+    );
+    await page.emulateMedia({ forcedColors: "active" });
+    await first.focus();
+    assert(
+      await first.evaluate((element) =>
+        Number.parseFloat(getComputedStyle(element).outlineWidth) >= 2
+      ),
+    );
+
+    // A new static overflow region must fail without adding its name to a list.
+    await page.setContent(
+      '<main id="future"><div class="archive-window" style="width:100px;overflow:auto"><p style="width:400px">Archive excerpt</p></div></main>',
+    );
+    const future = await scanBrowserAccessibility(page, "#future");
+    assert(
+      future.violations.some(({ id }) => id === "scrollable-region-focusable"),
+    );
+    await context.close();
+  } finally {
+    await browser.close();
+  }
+});
 
 Deno.test("review layout leaves vertical scrolling with the document", async () => {
   const styles = await reviewStyles(

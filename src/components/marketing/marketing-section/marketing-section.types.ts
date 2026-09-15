@@ -8,7 +8,7 @@
 export type MarketingSectionFrame = "standard" | "wide";
 
 /** Vertical rhythm presets available to a Marketing section. */
-export type MarketingSectionSpacing = "standard" | "spacious";
+export type MarketingSectionSpacing = "standard" | "spacious" | "compact";
 
 /** Semantic surfaces available to a Marketing section. */
 export type MarketingSectionSurface =

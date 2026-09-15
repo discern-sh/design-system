@@ -24,6 +24,9 @@
     margin-inline: auto;
   }
   .discern-metrics-band__header h2 {
+    font-family: var(--discern-font-marketing);
+    font-weight: var(--discern-font-weight-marketing);
+    letter-spacing: -0.055em;
     max-width: 11ch;
     margin: 0;
     font-size: var(--discern-font-size-display-md);

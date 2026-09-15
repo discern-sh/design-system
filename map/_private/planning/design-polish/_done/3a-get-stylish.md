@@ -1,6 +1,8 @@
 # 3A - Give discern a distinctive visual character
 
-Status: pending
+Status: implementation and final visual review complete; awaiting acceptance.
+
+Completion evidence and remaining acceptance boundary: [3A review record](../3a-review.md).
 
 ## Goal
 
@@ -15,7 +17,7 @@ Begin with `discern_status` at `/Users/jack/Sites/discern-design-system`. Resume
 Record the starting commit and inspect the landed contracts you will build on. Verify these worktree-relative anchors against live code:
 
 - `AGENTS.md` and `map/_private/planning/design-polish/README.md`;
-- this brief's [visual references and owner decisions](3a-references/README.md), including both saved studies;
+- this brief's [visual references and owner decisions](../3a-references/README.md), including both saved studies;
 - `map/00-orientation/design-principles.md` and `map/10-tokens-themes/README.md`;
 - `map/20-components/README.md` and `map/20-components/marketing-composition.md`;
 - `map/60-catalogue/visual-review.md`;

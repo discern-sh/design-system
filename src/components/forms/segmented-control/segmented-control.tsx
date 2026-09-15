@@ -25,6 +25,8 @@ export interface SegmentedControlProps extends
   /** Shared radio name and form submission key; unique within the form. */
   readonly name: string;
   readonly items: readonly SegmentedControlItem[];
+  /** Fill the allocation (default), or use equal segments sized to the widest label. */
+  readonly sizing?: "fill" | "content";
   /** Controlled adapter selection. Static HTML remains natively selectable. */
   readonly value?: string;
   /** Initial native selection; otherwise the first enabled item is selected. */
@@ -44,6 +46,7 @@ export const SegmentedControl: DiscernComponent<
       label,
       name,
       items,
+      sizing = "fill",
       value,
       defaultValue,
       onValueChange,
@@ -65,7 +68,11 @@ export const SegmentedControl: DiscernComponent<
         ref={ref}
         disabled={disabled}
         form={form}
-        className={classNames("discern-segmented-control", className)}
+        className={classNames(
+          "discern-segmented-control",
+          sizing === "content" && "discern-segmented-control--content",
+          className,
+        )}
       >
         <legend className="discern-segmented-control__legend">{label}</legend>
         <div className="discern-segmented-control__items">

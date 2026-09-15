@@ -1,5 +1,6 @@
 import type { Locator, Page } from "playwright-core";
 import { compositionRecipes } from "../../../catalogue/compositions.tsx";
+import type { CompositionRecipe } from "../../../catalogue/compositions.tsx";
 import {
   compositionRecipeNeighbours,
   compositionWidthPresets,
@@ -30,6 +31,105 @@ export interface CompositionsCatalogueEvidence {
   readonly accessibilityScans: number;
   readonly copyChecks: number;
   readonly keyboardChecks: number;
+  readonly interactionChecks: number;
+}
+
+async function verifyLivePageControls(detail: Locator): Promise<void> {
+  const light = detail.locator(".discern-light-backdrop__light");
+  if (await light.count() === 0) return;
+  invariant(
+    await detail.getByRole("checkbox", { name: "Allow ambient motion" })
+      .count() === 0,
+    "Complete pages follow browser motion preferences without a composition toggle",
+  );
+  const motionAllowed = await detail.evaluate(() =>
+    !matchMedia("(prefers-reduced-motion: reduce)").matches &&
+    !matchMedia("(forced-colors: active)").matches
+  );
+  await eventually(
+    async () =>
+      (await light.evaluateAll((nodes) =>
+        nodes.map((node) =>
+          node.getAnimations().some((animation) =>
+            animation.playState === "running"
+          )
+        )
+      )).every((moving) => moving === motionAllowed),
+    "Selected ambient light must start moving while respecting browser opt-outs",
+  );
+
+  await detail.getByRole("radio", { name: "Details", exact: true }).check();
+  invariant(
+    await detail.getByText("Keep the reasons close", { exact: true })
+      .isVisible(),
+    "The project view control did not reveal its details",
+  );
+  await detail.getByRole("button", { name: "Pin view", exact: true }).click();
+  invariant(
+    await detail.getByText("Pinned to this project", { exact: true })
+      .isVisible(),
+    "Pinning did not update the example's state",
+  );
+  const search = detail.getByRole("textbox", {
+    name: "Find a task",
+    exact: true,
+  });
+  if (await search.count() === 0) return;
+  const rows = detail.locator(".discern-table tbody tr");
+  const count = await rows.count();
+  await search.fill("research");
+  invariant(
+    await rows.count() === 1 &&
+      await rows.first().getByText("Review the research notes", { exact: true })
+        .isVisible(),
+    "Task search did not filter the task list",
+  );
+  await search.fill("");
+  invariant(
+    await rows.count() === count,
+    "Clearing task search did not restore the list",
+  );
+  await detail.getByRole("radio", { name: "By status", exact: true }).check();
+  const statuses = await rows.locator("td:first-of-type").allTextContents();
+  invariant(
+    statuses.join("|") ===
+      statuses.toSorted((a, b) => a.localeCompare(b)).join("|"),
+    "The task view did not group by status",
+  );
+  await detail.getByRole("button", { name: "Save this view", exact: true })
+    .click();
+  invariant(
+    await detail.getByRole("button", { name: "View saved", exact: true })
+      .getAttribute("aria-pressed") === "true",
+    "Saving the task view did not confirm its state",
+  );
+  invariant(
+    await detail.getByText("Changes stay in this example.", { exact: true })
+      .isVisible(),
+    "Saving the view incorrectly confirmed the checklist",
+  );
+  await detail.getByRole("button", { name: "View saved", exact: true }).click();
+  await detail.getByRole("button", { name: "Save checklist", exact: true })
+    .click();
+  invariant(
+    await detail.getByText("Saved for this review.", { exact: true })
+      .isVisible(),
+    "Saving the checklist did not confirm its state",
+  );
+  invariant(
+    await detail.getByRole("button", { name: "Save this view", exact: true })
+      .getAttribute("aria-pressed") === "false",
+    "Saving the checklist incorrectly saved the view",
+  );
+  await detail.getByRole("checkbox", {
+    name: "The next owner is named",
+    exact: true,
+  }).check();
+  invariant(
+    await detail.getByText("Changes stay in this example.", { exact: true })
+      .isVisible(),
+    "An edited checklist retained its stale saved confirmation",
+  );
 }
 
 async function fitGeometry(
@@ -191,6 +291,7 @@ export async function verifyCompositionsCatalogue(
     let accessibilityScans = 0;
     let copyChecks = 0;
     let keyboardChecks = 0;
+    let interactionChecks = 0;
     const reviewWidths = compositionWidthPresets.filter(({ id }) =>
       id === "narrow" || id === "wide"
     );
@@ -234,6 +335,13 @@ export async function verifyCompositionsCatalogue(
           const actualWidth = await detail.locator(
             ".discern-catalogue-pattern__viewport",
           ).evaluate((node) => node.getBoundingClientRect().width);
+          const overflow = await detail.locator(
+            ".discern-catalogue-pattern__viewport",
+          ).evaluate((node) => node.scrollWidth - node.clientWidth);
+          invariant(
+            overflow <= 1,
+            `${recipe.title} / ${width.label} content escapes its allocation by ${overflow}px`,
+          );
           invariant(
             Math.abs(actualWidth - width.pixels) < 0.5,
             `${recipe.title} / ${width.label} scaled to ${actualWidth}px instead of rendering at ${width.pixels}px`,
@@ -296,6 +404,30 @@ export async function verifyCompositionsCatalogue(
           );
 
           if (width.id === "narrow") {
+            if (
+              await detail.locator(".discern-signature-specimen").count() > 0
+            ) {
+              invariant(
+                await detail.locator(".discern-signature-specimen").evaluate((
+                  node,
+                ) => getComputedStyle(node).containerName) ===
+                  "discern-signature",
+                "The complete page's shared layout stylesheet did not apply",
+              );
+              await verifyLivePageControls(detail);
+              interactionChecks += 1;
+              const accessibility = await scanBrowserAccessibility(
+                page,
+                ".discern-catalogue-pattern__viewport",
+              );
+              invariant(
+                accessibility.violations.length === 0,
+                `${recipe.title} / ${theme} example has accessibility violations: ${
+                  accessibility.violations.map(({ id }) => id).join(", ")
+                }`,
+              );
+              accessibilityScans += 1;
+            }
             for (
               const selector of [
                 ".discern-catalogue-pattern__header",
@@ -347,8 +479,8 @@ export async function verifyCompositionsCatalogue(
       );
       keyboardChecks += 1;
 
-      await sourceCopyCheck(page, detail, recipe.source);
-      copyChecks += 1;
+      await sourceCopyCheck(page, detail, recipe);
+      copyChecks += recipe.sourceFiles?.length ?? 1;
       await page.reload({ waitUntil: "networkidle" });
       invariant(
         new URL(page.url()).searchParams.get("width") === "standard" &&
@@ -357,7 +489,9 @@ export async function verifyCompositionsCatalogue(
       );
     }
 
-    const fitWitness = compositionRecipes[0];
+    const fitWitness = compositionRecipes.find(({ sourceFiles }) =>
+      sourceFiles === undefined
+    );
     invariant(fitWitness !== undefined, "Fit review needs one pattern");
     const witnessDetail = page.locator(
       `[data-discern-composition-detail="${fitWitness.id}"]`,
@@ -428,7 +562,7 @@ export async function verifyCompositionsCatalogue(
         "The narrow Composition gallery overflowed the document",
       );
 
-      const witness = compositionRecipes[0];
+      const witness = fitWitness;
       invariant(witness !== undefined, "Composition cue needs one pattern");
       const detailUrl = new URL(compositionRecipePath(witness.id), origin);
       detailUrl.searchParams.set("width", "standard");
@@ -471,6 +605,7 @@ export async function verifyCompositionsCatalogue(
       accessibilityScans,
       copyChecks,
       keyboardChecks,
+      interactionChecks,
     };
   });
 }
@@ -478,7 +613,7 @@ export async function verifyCompositionsCatalogue(
 async function sourceCopyCheck(
   page: Page,
   detail: Locator,
-  expected: string,
+  recipe: CompositionRecipe,
 ): Promise<void> {
   await detail.locator(".discern-catalogue-pattern__source > summary").click();
   await detail.getByRole("button", {
@@ -486,7 +621,15 @@ async function sourceCopyCheck(
   }).click();
   const copied = await page.evaluate(() => navigator.clipboard.readText());
   invariant(
-    copied === expected,
+    copied === recipe.source,
     "Adaptable source copy differed from its recipe",
   );
+  for (const file of recipe.sourceFiles?.slice(1) ?? []) {
+    await detail.getByRole("button", { name: `Copy ${file.name}`, exact: true })
+      .click();
+    invariant(
+      await page.evaluate(() => navigator.clipboard.readText()) === file.source,
+      `${recipe.title} did not copy the exact ${file.name} source`,
+    );
+  }
 }

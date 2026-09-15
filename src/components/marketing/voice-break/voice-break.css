@@ -63,26 +63,31 @@
   }
   .discern-voice-break__quote {
     position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: calc(var(--discern-space-1) / 2);
     max-inline-size: 24ch;
     margin: 0;
     color: var(--discern-color-ink);
     font-family: var(--discern-font-display);
-    font-size: clamp(2.65rem, 5.2cqi, 5.75rem);
+    font-size: clamp(var(--discern-font-size-display-md), 4.5cqi,
+      var(--discern-font-size-display-lg));
     font-weight: var(--discern-font-weight-display);
     letter-spacing: -0.04em;
-    line-height: 0.98;
+    line-height: var(--discern-leading-snug);
     text-wrap: balance;
   }
-  .discern-voice-break__quote::before {
-    position: absolute;
-    inset-block-start: calc(-1 * var(--discern-space-1));
-    inset-inline-start: calc(-1 * var(--discern-space-2));
+  .discern-voice-break__mark {
     color: var(--discern-marketing-accent-ink,
       var(--discern-color-accent-700));
-    content: "“";
-    font-size: 1.35em;
-    line-height: 1;
+    align-self: start;
     opacity: 0.5;
+  }
+  .discern-voice-break__text > :first-child {
+    margin-block-start: 0;
+  }
+  .discern-voice-break__text > :last-child {
+    margin-block-end: 0;
   }
   .discern-voice-break--end .discern-voice-break__statement {
     justify-items: end;
@@ -91,9 +96,6 @@
   }
   .discern-voice-break--end .discern-voice-break__quote {
     margin-inline-start: auto;
-  }
-  .discern-voice-break--end .discern-voice-break__quote::before {
-    inset-inline: auto calc(-1 * var(--discern-space-2));
   }
   @container (max-width: 47.5rem) {
     .discern-voice-break__figure {
@@ -107,11 +109,6 @@
       grid-column: 1;
       grid-row: 2;
       max-inline-size: 24rem;
-    }
-  }
-  @container (max-width: 32.5rem) {
-    .discern-voice-break__quote {
-      font-size: clamp(2.45rem, 12cqi, 4rem);
     }
   }
 }

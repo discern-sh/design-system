@@ -7,6 +7,38 @@ import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { fixtureCopy } from "../../../fixtures/content.ts";
 import meta, { componentExampleVocabulary } from "./card.meta.ts";
 import { Card } from "./card.tsx";
+import { useState } from "react";
+
+function ShadedExample() {
+  return (
+    <Card texture="shaded" raised>
+      <h4>A little material presence</h4>
+      <p>Shading is static. Elevation remains an independent choice.</p>
+    </Card>
+  );
+}
+
+function ArrivalExample() {
+  const [revision, setRevision] = useState(0);
+  return (
+    <Stack gap={4}>
+      <Card
+        key={revision}
+        {...(revision > 0 ? { arrival: "shimmer" as const } : {})}
+      >
+        <h4>Project notes</h4>
+        <p>
+          {revision > 0
+            ? "The updated notes are ready to read."
+            : "The notes are ready to read."}
+        </p>
+      </Card>
+      <Button variant="secondary" onClick={() => setRevision(revision + 1)}>
+        Refresh notes
+      </Button>
+    </Stack>
+  );
+}
 
 function PlainExample() {
   return (
@@ -82,6 +114,8 @@ export const catalogueExamples = defineCatalogueExamples(
     { id: "raised", Example: RaisedExample },
     { id: "dotted", Example: DottedExample },
     { id: "crowded", Example: CrowdedExample },
+    { id: "shaded", Example: ShadedExample },
+    { id: "arrival", Example: ArrivalExample },
   ],
 );
 
@@ -110,5 +144,25 @@ export const reviewPostures = defineComponentReviewPostures(
         label: "Names, current state, and actions remain visible",
       },
     }],
+  }, {
+    id: "content-arrival",
+    label: "Meaningful content arrival",
+    example: "arrival",
+    category: "motion",
+    requirements: { reducedMotion: false },
+    sequence: [{
+      action: "click",
+      target: { role: "button", name: "Refresh notes" },
+    }, { checkpoint: { id: "notes-arrived", label: "Updated notes" } }],
+  }, {
+    id: "arrival-reduced",
+    label: "Reduced-motion arrival",
+    example: "arrival",
+    category: "motion",
+    requirements: { reducedMotion: true },
+    sequence: [{
+      action: "click",
+      target: { role: "button", name: "Refresh notes" },
+    }, { checkpoint: { id: "notes-still", label: "Complete updated notes" } }],
   }],
 );

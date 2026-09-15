@@ -1,5 +1,6 @@
 import type { ComponentType, ReactNode } from "react";
 import { VerificationReport } from "../src/components/agents/verification-report/verification-report.tsx";
+import { Stack } from "../src/components/layout/stack/stack.tsx";
 import { Button } from "../src/components/core/button/button.tsx";
 import { ClosingStatement } from "../src/components/marketing/closing-statement/closing-statement.tsx";
 import { EditorialHero } from "../src/components/marketing/editorial-hero/editorial-hero.tsx";
@@ -19,6 +20,12 @@ import { RawOutput } from "../src/components/workflow/raw-output/raw-output.tsx"
 import { ResultSummary } from "../src/components/workflow/result-summary/result-summary.tsx";
 import { RetryNotice } from "../src/components/workflow/retry-notice/retry-notice.tsx";
 import { registry } from "./generated/registry.ts";
+import {
+  SignatureComposition,
+  signaturePageIdentity,
+} from "./compositions/signature-specimens.tsx";
+import type { SignaturePurpose } from "./compositions/signature-specimens.tsx";
+import { signatureCompositionFiles } from "./generated/signature-composition-sources.ts";
 
 /** Catalogue posture shared by every Composition projection. */
 export const illustrativePatternStatus = Object.freeze(
@@ -43,6 +50,18 @@ export interface CompositionExampleProps {
   readonly rootHeadingLevel?: 1 | 2;
 }
 
+/** One supplied file needed to adapt a multi-file illustrative pattern. */
+export interface CompositionSourceFile {
+  readonly name: string;
+  readonly language: "tsx" | "css";
+  readonly source: string;
+}
+
+type CompositionSourceFiles = readonly [
+  CompositionSourceFile,
+  ...CompositionSourceFile[],
+];
+
 /** A Catalogue-only composition with a preview and source built from one definition. */
 export interface CompositionRecipe {
   readonly id: string;
@@ -54,6 +73,7 @@ export interface CompositionRecipe {
   readonly journey?: JourneyContract;
   readonly Example: ComponentType<CompositionExampleProps>;
   readonly source: string;
+  readonly sourceFiles?: CompositionSourceFiles;
 }
 
 interface RecipeDefinition<Definition> {
@@ -68,7 +88,7 @@ interface RecipeDefinition<Definition> {
     definition: Definition,
     context: Required<CompositionExampleProps>,
   ) => ReactNode;
-  readonly source: (definition: Definition) => string;
+  readonly source: (definition: Definition) => string | CompositionSourceFiles;
 }
 
 /** One registry-backed constituent suitable for links and source projection. */
@@ -135,6 +155,10 @@ export function defineRecipe<Definition>(
   const components = Object.freeze([...recipe.components]);
   const identity = { id: recipe.id, components };
   compositionConstituents(identity);
+  const authoredSource = recipe.source(recipe.definition);
+  const source = typeof authoredSource === "string"
+    ? `${compositionExampleImport(identity)}\n\n${authoredSource.trim()}`
+    : authoredSource[0].source;
 
   function Example(
     { rootHeadingLevel = 1 }: CompositionExampleProps,
@@ -153,9 +177,10 @@ export function defineRecipe<Definition>(
     components,
     ...(recipe.journey === undefined ? {} : { journey: recipe.journey }),
     Example,
-    source: `${compositionExampleImport(identity)}\n\n${
-      recipe.source(recipe.definition).trim()
-    }`,
+    source,
+    ...(typeof authoredSource === "string"
+      ? {}
+      : { sourceFiles: authoredSource }),
   };
 }
 
@@ -340,6 +365,7 @@ const failureTriageRecipe = defineRecipe({
   description:
     "Explain why a run failed, what evidence matters, and when it is safe to try again.",
   components: [
+    "stack",
     "result-summary",
     "diagnostic",
     "raw-output",
@@ -355,7 +381,7 @@ const failureTriageRecipe = defineRecipe({
   },
   definition: failureTriage,
   render: (definition) => (
-    <div className="discern-example-stack">
+    <Stack gap={6}>
       <ResultSummary
         state="failed"
         fact={definition.result.fact}
@@ -380,10 +406,10 @@ const failureTriageRecipe = defineRecipe({
         safeToRetry={definition.retry.safeToRetry}
         reason={definition.retry.reason}
       />
-    </div>
+    </Stack>
   ),
   source: (definition) =>
-    `<div className="discern-example-stack">
+    `<Stack gap={6}>
   <ResultSummary
     state="failed"
     fact={${value(definition.result.fact)}}
@@ -412,7 +438,7 @@ const failureTriageRecipe = defineRecipe({
     safeToRetry={${value(definition.retry.safeToRetry)}}
     reason={${value(definition.retry.reason)}}
   />
-</div>`,
+</Stack>`,
 });
 
 const handoffVerificationReport = {
@@ -442,10 +468,10 @@ const handoffVerificationReportRecipe = defineRecipe({
   title: "Handoff verification report",
   description:
     "Hand off a completed check with compact proof and the artifact another person can inspect.",
-  components: ["verification-report", "artifact-card"],
+  components: ["stack", "verification-report", "artifact-card"],
   definition: handoffVerificationReport,
   render: (definition) => (
-    <div className="discern-example-stack">
+    <Stack gap={6}>
       <VerificationReport
         title={definition.report.title}
         stamp="pass"
@@ -461,10 +487,10 @@ const handoffVerificationReportRecipe = defineRecipe({
         ownership="generated"
         provenance={definition.artifact.provenance}
       />
-    </div>
+    </Stack>
   ),
   source: (definition) =>
-    `<div className="discern-example-stack">
+    `<Stack gap={6}>
   <VerificationReport
     title={${value(definition.report.title)}}
     stamp="pass"
@@ -480,7 +506,7 @@ const handoffVerificationReportRecipe = defineRecipe({
     ownership="generated"
     provenance={${value(definition.artifact.provenance)}}
   />
-</div>`,
+</Stack>`,
 });
 
 const surveyArtifacts = {
@@ -527,7 +553,7 @@ const surveyArtifactsRecipe = defineRecipe({
   title: "Survey artifacts",
   description:
     "Make changed files and their ownership legible before a review or handoff.",
-  components: ["artifact-tree", "file-change", "ownership-badge"],
+  components: ["stack", "artifact-tree", "file-change", "ownership-badge"],
   journey: {
     stages: [
       ".discern-artifact-tree",
@@ -537,7 +563,7 @@ const surveyArtifactsRecipe = defineRecipe({
   },
   definition: surveyArtifacts,
   render: (definition) => (
-    <div className="discern-example-stack">
+    <Stack gap={6}>
       <ArtifactTree label="Project artifacts" nodes={definition.tree} />
       <section
         className="discern-artifact-survey__changes"
@@ -572,10 +598,10 @@ const surveyArtifactsRecipe = defineRecipe({
           ))}
         </dl>
       </section>
-    </div>
+    </Stack>
   ),
   source: (definition) =>
-    `<div className="discern-example-stack">
+    `<Stack gap={6}>
   <ArtifactTree label="Project artifacts" nodes={${value(definition.tree)}} />
   <section
     className="discern-artifact-survey__changes"
@@ -610,7 +636,7 @@ const surveyArtifactsRecipe = defineRecipe({
       ))}
     </dl>
   </section>
-</div>`,
+</Stack>`,
 });
 
 const readingFirstLanding = {
@@ -784,7 +810,143 @@ const readingFirstLandingRecipe = defineRecipe({
 </div>`,
 });
 
+const signaturePages = [
+  {
+    purpose: "marketing",
+    ...signaturePageIdentity.marketing,
+    description:
+      "An immediate product opening, expressive symbols, quiet material surfaces, and a working project view.",
+    components: [
+      "site-header",
+      "button",
+      "hero-block",
+      "light-backdrop",
+      "grid",
+      "icon",
+      "marketing-section",
+      "marketing-intro",
+      "card",
+      "voice-break",
+      "stack",
+      "segmented-control",
+      "icon-button",
+      "cta-band",
+      "checkbox",
+    ],
+    stages: [
+      ".discern-hero-block",
+      ".discern-signature-overview",
+      ".discern-voice-break",
+      ".discern-signature-everyday",
+      ".discern-cta-band",
+    ],
+  },
+  {
+    purpose: "reading",
+    ...signaturePageIdentity.reading,
+    description:
+      "A sustained editorial page with local navigation, a figure, code, and a clear reading rhythm.",
+    components: [
+      "site-header",
+      "article-header",
+      "button",
+      "docs-nav",
+      "prose",
+      "data-figure",
+      "grid",
+      "stack",
+      "icon",
+      "code-block",
+    ],
+    stages: [
+      ".discern-article-header",
+      ".discern-signature-reading-layout",
+      ".discern-data-figure",
+      ".discern-code-block",
+    ],
+  },
+  {
+    purpose: "operations",
+    ...signaturePageIdentity.operations,
+    description:
+      "A dense task list with working search, status grouping, verification, a checklist, and precise everyday controls.",
+    components: [
+      "site-header",
+      "badge",
+      "button",
+      "stack",
+      "input",
+      "segmented-control",
+      "card",
+      "table",
+      "verification-report",
+      "artifact-card",
+      "light-backdrop",
+      "icon",
+      "icon-button",
+      "checkbox",
+    ],
+    stages: [
+      ".discern-signature-task-heading",
+      ".discern-signature-task-tools",
+      ".discern-table",
+      ".discern-verification-report",
+      ".discern-signature-task-aside",
+    ],
+  },
+] as const satisfies readonly {
+  readonly purpose: SignaturePurpose;
+  readonly id: string;
+  readonly title: string;
+  readonly description: string;
+  readonly components: readonly string[];
+  readonly stages: readonly string[];
+}[];
+
+const signatureRecipes = signaturePages.map((page) => {
+  const id = page.id;
+  return defineRecipe({
+    id,
+    title: page.title,
+    description: page.description,
+    stage: "full-bleed",
+    components: page.components,
+    journey: { stages: page.stages },
+    definition: { purpose: page.purpose, id },
+    render: ({ purpose, id }, { rootHeadingLevel }) => (
+      <SignatureComposition
+        purpose={purpose}
+        id={id}
+        rootHeadingLevel={rootHeadingLevel}
+        verification={<handoffVerificationReportRecipe.Example />}
+      />
+    ),
+    source: ({ purpose, id }) => {
+      const report = purpose === "operations"
+        ? `${
+          compositionExampleImport(handoffVerificationReportRecipe)
+        }\n\nfunction Verification() {\n  return (${
+          handoffVerificationReportRecipe.source.slice(
+            compositionExampleImport(handoffVerificationReportRecipe).length,
+          ).trim()
+        });\n}\n\n`
+        : "";
+      return [{
+        name: "page.tsx",
+        language: "tsx",
+        source:
+          `import { SignatureComposition } from "./page-composition.tsx";\n${report}\n// Load page-composition.css after the emitted package CSS and fonts.\nexport default function Page() {\n  return (\n    <SignatureComposition\n      purpose="${purpose}"\n      id="${id}"${
+            purpose === "operations"
+              ? "\n      verification={<Verification />}"
+              : ""
+          }\n    />\n  );\n}\n`,
+      }, ...signatureCompositionFiles];
+    },
+  });
+});
+
 export const compositionRecipes: readonly CompositionRecipe[] = [
+  ...signatureRecipes,
   documentationTaskRecipe,
   nextActionRecipe,
   failureTriageRecipe,

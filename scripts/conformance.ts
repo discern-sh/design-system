@@ -113,6 +113,7 @@ const emptyGlyphsEvidence: GlyphsCatalogueEvidence = {
   forcedColorChecks: 0,
 };
 const emptyCompositionsEvidence: CompositionsCatalogueEvidence = {
+  interactionChecks: 0,
   patterns: 0,
   widthChecks: 0,
   fitChecks: 0,

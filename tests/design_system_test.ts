@@ -2099,7 +2099,7 @@ Deno.test("landing-scale marketing layouts keep optional structure honest", asyn
   );
   assertMatch(
     headerCss,
-    /@media \(max-width: 30rem\)[\s\S]*\.discern-site-header--collapse-nav \.discern-site-header__nav\s*\{[^}]*display:\s*none;/,
+    /@container \(max-width: 30rem\)[\s\S]*\.discern-site-header--collapse-nav \.discern-site-header__nav\s*\{[^}]*display:\s*none;/,
   );
 
   const metricsCss = await Deno.readTextFile(

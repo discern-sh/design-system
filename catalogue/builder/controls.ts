@@ -192,7 +192,6 @@ function literalUnionOptions(
   typeText: string,
 ): readonly (string | number)[] | undefined {
   const members = typeText.split(" | ");
-  if (members.length < 2) return undefined;
   const options: (string | number)[] = [];
   for (const member of members) {
     if (/^"(?:[^"\\]|\\.)*"$/.test(member)) {

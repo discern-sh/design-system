@@ -1,0 +1,128 @@
+/* Review controls and frames; selected page layout lives with Compositions. */
+.discern-signature-review {
+  padding: 24px;
+  min-block-size: 100vh;
+}
+.discern-signature-review__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: end;
+  margin-block-end: 20px;
+}
+.discern-signature-review__header h1 {
+  font: 600 1.65rem/1.2 var(--discern-font-ui);
+  letter-spacing: -.035em;
+  margin: 0;
+}
+.discern-signature-review__header p {
+  margin: 0 0 4px;
+  font: var(--discern-font-size-xs)/1.5 var(--discern-font-ui);
+  color: var(--discern-color-ink-muted);
+}
+.discern-signature-controls {
+  border-block: 1px solid var(--discern-color-border);
+  padding-block: 12px;
+  margin-block-end: 20px;
+}
+.discern-signature-controls__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  align-items: end;
+}
+.discern-signature-controls__row > label {
+  display: grid;
+  gap: 4px;
+  flex: 1;
+  min-inline-size: 140px;
+  font: var(--discern-font-size-xs)/1.4 var(--discern-font-ui);
+}
+.discern-signature-controls__treatments {
+  align-items: center;
+  padding-block: 9px;
+}
+.discern-signature-controls__treatments > label {
+  display: inline-flex;
+  flex: none;
+  min-inline-size: auto;
+  min-block-size: 32px;
+  align-items: center;
+  gap: 8px;
+}
+.discern-signature-controls input[type=checkbox] {
+  accent-color: var(--discern-color-ink);
+  width: 16px;
+  height: 16px;
+}
+.discern-signature-controls button {
+  padding: 8px 12px;
+  color: var(--discern-color-ink);
+  background: var(--discern-color-surface);
+  border: 1px solid var(--discern-color-border-strong);
+  border-radius: var(--discern-radius-sm);
+  font: var(--discern-font-size-xs) var(--discern-font-ui);
+  cursor: pointer;
+}
+.discern-signature-controls > p,
+.discern-signature-controls summary {
+  font-size: var(--discern-font-size-xs);
+  margin: 0;
+  color: var(--discern-color-ink-muted);
+}
+.discern-signature-controls summary {
+  cursor: pointer;
+  padding-block-start: 8px;
+}
+.discern-signature-controls details[open] .discern-signature-controls__row {
+  padding-block: 10px;
+}
+.discern-signature-comparison {
+  display: grid;
+  gap: 24px;
+}
+.discern-signature-comparison__item {
+  min-inline-size: 0;
+}
+.discern-signature-comparison__item > header {
+  margin-block-end: 12px;
+}
+.discern-signature-comparison__item > header h2 {
+  font: 600 1.125rem var(--discern-font-ui);
+  margin-block-end: 3px;
+}
+.discern-signature-comparison__item > header p {
+  margin: 0;
+  font-size: var(--discern-font-size-xs);
+  color: var(--discern-color-ink-muted);
+}
+.discern-signature-frame {
+  border: 1px solid var(--discern-color-border);
+  margin-block-end: 24px;
+  border-radius: var(--discern-radius-lg);
+  overflow: hidden;
+}
+.discern-signature-frame__caption {
+  padding: 7px 14px;
+  background: var(--discern-color-surface-sunken);
+  border-block-end: 1px solid var(--discern-color-border);
+  font: var(--discern-font-size-xs) var(--discern-font-ui);
+}
+.discern-signature-frame__scroller {
+  overflow: auto;
+}
+.discern-signature-frame__viewport {
+  display: block;
+  border: 0;
+  margin-inline: auto;
+}
+@media (max-width: 42rem) {
+  .discern-signature-review {
+    padding: 12px;
+  }
+  .discern-signature-review__header {
+    flex-direction: column;
+    align-items: start;
+    gap: 12px;
+  }
+}

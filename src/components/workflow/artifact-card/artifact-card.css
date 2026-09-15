@@ -26,6 +26,7 @@
   }
   .discern-artifact-card__header h3 {
     margin: 0;
+    font-family: var(--discern-font-ui);
     font-size: var(--discern-font-size-card-title);
     line-height: var(--discern-leading-tight);
   }

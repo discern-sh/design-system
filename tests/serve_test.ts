@@ -229,6 +229,53 @@ Deno.test("Catalogue source actions open TypeScript as readable browser text", a
   }
 });
 
+Deno.test("Catalogue entry styles and assets inside route families retain their file response", async () => {
+  for (
+    const entry of [
+      "catalogue/index.html",
+      "catalogue/reviews/components/index.html",
+    ]
+  ) {
+    const html = await Deno.readTextFile(
+      new URL(`../${entry}`, import.meta.url),
+    );
+    for (
+      const match of html.matchAll(/<link rel="stylesheet" href="([^"]+)"/gu)
+    ) {
+      const pathname = match[1]!;
+      if (
+        !pathname.startsWith("/catalogue/") ||
+        /\/(?:dist|assets)\//u.test(pathname)
+      ) continue;
+      const response = await server.fetch(
+        new Request(`http://127.0.0.1:8010${pathname}`),
+      );
+      assertEquals(response.status, 200, pathname);
+      assertStringIncludes(
+        response.headers.get("content-type") ?? "",
+        "text/css",
+        pathname,
+      );
+      assertEquals(
+        await response.text(),
+        await Deno.readTextFile(new URL(`..${pathname}`, import.meta.url)),
+        pathname,
+      );
+    }
+  }
+  for (const { path } of catalogueNavigation) {
+    for (const extension of ["css", "js", "svg", "json"]) {
+      const url = `http://127.0.0.1:8010${path}future-resource.${extension}`;
+      const response = await server.fetch(new Request(url));
+      assertEquals(
+        response.status,
+        404,
+        `${url} must remain an absent asset, not become a shell route`,
+      );
+    }
+  }
+});
+
 Deno.test("Catalogue explorer routes serve one canonical shell", async () => {
   const shellPaths = [
     ...catalogueNavigation.map(({ path }) => path),

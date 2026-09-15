@@ -9,6 +9,10 @@
   .discern-marketing-section--space-spacious {
     --discern-marketing-section-space: clamp(6rem, 11vw, 10rem);
   }
+  .discern-marketing-section--space-compact {
+    --discern-marketing-section-space: clamp(calc(var(--discern-space-12) +
+      var(--discern-space-2)), 7vw, var(--discern-space-20));
+  }
   .discern-marketing-section--frame-wide {
     --discern-marketing-section-max: 86rem;
   }

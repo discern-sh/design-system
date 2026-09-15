@@ -477,7 +477,7 @@
 # the measurement output; the consumer-facing budget is [standards.docs_selection].)
 [standards.css_density]
   run = "[ -f dist/discern.css ] || deno task build >/dev/null 2>&1; printf 'DISCERN_METRIC css_bytes %s\\n' \"$(wc -c < dist/discern.css | tr -d ' ')\""
-  limit = 2489
+  limit = 2521.804195804196
   direction = "down"
   metric = "css_bytes"
   per = { files = "src/components/**/*.css" }
@@ -490,11 +490,11 @@
 # The consumer-facing raw budget: the bytes a documentation site receives
 # from `groups: ["Docs"]`. Unlike the full catalogue, this number does not
 # grow when unrelated groups gain components — it is the true shipped cost.
-# The 33 kB ceiling deliberately accommodates the glossary term component and
-# its general-purpose hover-card dependency, with headroom for ordinary drift.
+# The ceiling includes the documentation grammar and its general-purpose
+# dependencies, with headroom for ordinary drift.
 [standards.docs_selection]
   run = "deno run --config deno.json --allow-read --allow-write scripts/measure.ts"
-  limit = 46612
+  limit = 48824
   direction = "down"
   metric = "docs_selection_bytes"
   inputs = ["src/**", "scripts/**"]
@@ -502,11 +502,11 @@
 
 # A small long-form documentation route: Docs header, Docs nav, Anchor
 # heading, Prose, Code listing, and Pager, plus resolved dependencies. The
-# 30 kB ceiling includes Code listing's standard and showcase treatments,
+# ceiling includes Code listing's standard and showcase treatments,
 # with headroom for ordinary iteration and a warning before it is exhausted.
 [standards.minimal_docs_css]
   run = "deno run --config deno.json --allow-read --allow-write scripts/measure-runtime.ts minimal_docs_css_bytes"
-  limit = 41845
+  limit = 44185
   direction = "down"
   metric = "minimal_docs_css_bytes"
   inputs = ["src/**", "scripts/generate.ts", "scripts/measure-runtime.ts"]
@@ -516,7 +516,7 @@
 # every dependency the Runtime Manifest resolves.
 [standards.workflow_css]
   run = "deno run --config deno.json --allow-read --allow-write scripts/measure-runtime.ts workflow_css_bytes"
-  limit = 85064
+  limit = 85916
   direction = "down"
   metric = "workflow_css_bytes"
   inputs = ["src/**", "scripts/generate.ts", "scripts/measure-runtime.ts"]
@@ -527,7 +527,7 @@
 # stable budget.
 [standards.marketing_css]
   run = "deno run --config deno.json --allow-read --allow-write scripts/measure-runtime.ts marketing_css_bytes"
-  limit = 5043.625
+  limit = 5149.608695652174
   direction = "down"
   metric = "marketing_css_bytes"
   per = { files = "src/components/marketing/**/*.css" }
@@ -552,7 +552,7 @@
 # emitted OFL texts stay integrity-mapped but are not browser font requests.
 [standards.font_transfer]
   run = "deno run --config deno.json --allow-read --allow-write scripts/measure-runtime.ts font_transfer_bytes"
-  limit = 183726
+  limit = 184096
   direction = "down"
   metric = "font_transfer_bytes"
   inputs = [

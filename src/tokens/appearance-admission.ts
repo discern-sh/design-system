@@ -99,6 +99,17 @@ export const APPEARANCE_ADMISSION_POINTS: readonly AppearanceAdmissionPoint[] =
       density: 1.2,
     }),
     point("dark pole", { darkness: 1 }),
+    ...[
+      0,
+      APPEARANCE_POLARITY_CROSSOVER_DARKNESS - 0.0001,
+      APPEARANCE_POLARITY_CROSSOVER_DARKNESS + 0.0001,
+      0.5,
+      1,
+    ].flatMap((darkness) =>
+      [0, 2].map((emphasis) =>
+        point(`emphasis ${emphasis} at ${darkness}`, { darkness, emphasis })
+      )
+    ),
     point("low emphasis", { darkness: 0.25, emphasis: 0.5 }),
     point("high emphasis", { darkness: 0.75, emphasis: 1.5 }),
     point("low structure", { darkness: 0.25, structure: 0 }),
@@ -365,16 +376,25 @@ export function proveAppearanceAdmission(
           3,
         );
       }
-      record(
-        appearanceLabel,
-        sample.label,
-        "danger on danger-soft",
-        oklabContrast(
-          opaque("--discern-color-danger"),
-          opaque("--discern-color-danger-soft"),
-        ),
-        4.5,
-      );
+      for (const role of semanticRoles) {
+        const name = `--discern-color-${role}${
+          role === "danger" ? "" : "-deep"
+        }`;
+        const text = requiredPaint(values, name);
+        for (const background of ["canvas", `${role}-soft`]) {
+          const surface = opaque(`--discern-color-${background}`);
+          record(
+            appearanceLabel,
+            sample.label,
+            `${name} on ${background}`,
+            oklabContrast(
+              compositeOklab(text.color, text.alpha, surface),
+              surface,
+            ),
+            4.5,
+          );
+        }
+      }
 
       const accent = opaque("--discern-color-accent-600");
       const semantics = semanticRoles.map((role) =>

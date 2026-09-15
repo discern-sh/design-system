@@ -1,8 +1,10 @@
 import { assert, assertEquals } from "@std/assert";
 import { fromFileUrl, join, relative } from "@std/path";
 import type { Locator, Page } from "playwright-core";
+import { launchBrowser } from "../scripts/browser.ts";
 import {
   clampedScrollPosition,
+  visibleEnabledTargets,
   waitForPaintedFrames,
   waitForStableWindowScroll,
 } from "../scripts/browser-conformance-support.ts";
@@ -11,6 +13,84 @@ import { trackedTypeScriptSources } from "./support/tracked-typescript.ts";
 const PACKAGE_ROOT = fromFileUrl(new URL("../", import.meta.url));
 const SCRIPTS_ROOT = join(PACKAGE_ROOT, "scripts");
 const AXE_AUTHORITY = "browser-conformance-support.ts";
+
+Deno.test("sequential focus predictions match native radio traversal and live selection", async () => {
+  const browser = await launchBrowser();
+  try {
+    const page = await browser.newPage();
+    await page.setContent(`
+      <form id="external"><input type="radio" name="shared" checked></form>
+      <input type="radio" name="spanning">
+      <button id="before">Before</button>
+      <main id="fixture">
+        <input id="first" type="radio" name="chosen">
+        <button id="middle">Between group members</button>
+        <input id="second" type="radio" name="chosen" checked>
+        <input id="unselected" type="radio" name="unselected">
+        <input type="radio" name="unselected">
+        <input type="radio" name="disabled" checked disabled>
+        <input id="enabled" type="radio" name="disabled">
+        <input type="radio" name="hidden" checked hidden>
+        <input id="shown" type="radio" name="hidden">
+        <input type="radio" name="negative" checked tabindex="-1">
+        <input id="sequential" type="radio" name="negative">
+        <fieldset disabled><input type="radio" name="fieldset" checked></fieldset>
+        <input id="outside-fieldset" type="radio" name="fieldset">
+        <div inert><input type="radio" name="inert" checked></div>
+        <input id="outside-inert" type="radio" name="inert">
+        <form id="one">
+          <input id="one-selected" type="radio" name="shared" checked>
+          <input type="radio" name="shared">
+          <input type="radio" name="shared" form="external">
+        </form>
+        <form id="two"><input id="two-selected" type="radio" name="shared" checked></form>
+        <input type="radio" name="shared" form="two">
+        <input id="local-spanning" type="radio" name="spanning">
+        <input type="radio" name="spanning">
+        <input id="unnamed-one" type="radio"><input id="unnamed-two" type="radio" name="">
+        <span id="custom-one" role="radio" tabindex="0">Custom one</span>
+        <span id="custom-two" role="radio" tabindex="0">Custom two</span>
+      </main>
+      <button id="after">After</button>
+    `);
+    for (const selection of ["second", "first"]) {
+      await page.locator(`#${selection}`).check();
+      const predicted = await visibleEnabledTargets(page.locator("#fixture"));
+      await page.locator("#before").focus();
+      const actual = [];
+      for (let index = 0; index < 30; index += 1) {
+        await page.keyboard.press("Tab");
+        const id = await page.evaluate(() => document.activeElement?.id ?? "");
+        if (id === "after") break;
+        actual.push(id);
+      }
+      assertEquals(actual, [
+        ...(selection === "second"
+          ? ["middle", "second"]
+          : ["first", "middle"]),
+        "unselected",
+        "enabled",
+        "shown",
+        "sequential",
+        "outside-fieldset",
+        "outside-inert",
+        "one-selected",
+        "two-selected",
+        "local-spanning",
+        "unnamed-one",
+        "unnamed-two",
+        "custom-one",
+        "custom-two",
+      ]);
+      assertEquals(
+        await Promise.all(predicted.map((node) => node.getAttribute("id"))),
+        actual,
+      );
+    }
+  } finally {
+    await browser.close();
+  }
+});
 
 async function typescriptFiles(directory: string): Promise<string[]> {
   const files: string[] = [];

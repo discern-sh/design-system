@@ -1,0 +1,26 @@
+@layer discern.components {
+  .discern-light-backdrop {
+    border-radius: inherit;
+  }
+  .discern-light-backdrop__light {
+    position: absolute;
+    /* The complete gradient plane covers its clip at both translation extremes. */
+    inset: -35%;
+    background:
+      radial-gradient(ellipse at 32% 24%, var(--discern-color-ambient),
+      transparent 52%),
+      linear-gradient(118deg, transparent 25%,
+      color-mix(in oklab, var(--discern-color-material-highlight) 28%,
+      transparent) 45%, transparent 66%);
+    opacity: var(--discern-backdrop-gain);
+    transform: translateX(-4%);
+    animation: discern-light-backdrop-drift calc(var(--discern-backdrop-beat) *
+      10)
+      var(--discern-backdrop-ease-drift) infinite alternate;
+  }
+  @keyframes discern-light-backdrop-drift {
+    to {
+      transform: translateX(18%);
+    }
+  }
+}

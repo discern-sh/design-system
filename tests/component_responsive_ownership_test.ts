@@ -122,6 +122,7 @@ Deno.test("page-scale review allocation follows the page while embedded evidence
   assertEquals(componentReviewResponsiveAllocation("hover-card"), "local");
   assertEquals(componentReviewResponsiveAllocation("future-grid"), "local");
   assertEquals(componentReviewResponsiveAllocation("article-layout"), "local");
+  assertEquals(componentReviewResponsiveAllocation("site-header"), "local");
   assertEquals(
     componentReviewInlineSize({
       slug: "future-grid",

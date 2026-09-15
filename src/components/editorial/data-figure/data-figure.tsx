@@ -20,6 +20,7 @@ export interface DataFigureProps
   extends Omit<HTMLAttributes<HTMLElement>, "title"> {
   readonly eyebrow?: ReactNode;
   readonly title: ReactNode;
+  /** Content owns its intrinsic or explicit height; the figure adds framing and padding. */
   readonly visual: ReactNode;
   readonly legend?: readonly DataFigureLegendItem[];
   readonly caption: ReactNode;

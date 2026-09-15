@@ -66,6 +66,9 @@ Deno.test("Composition status, membership, source, and order share the recipe au
   assertEquals(
     compositionRecipes.map(({ id }) => id),
     [
+      "workspace-marketing",
+      "fieldnotes-reading",
+      "facet-operations",
       "documentation-task",
       "next-action",
       "failure-triage",
@@ -81,11 +84,23 @@ Deno.test("Composition status, membership, source, and order share the recipe au
       recipe.components,
     );
     assertEquals(new Set(recipe.components).size, recipe.components.length);
-    assertEquals(
-      recipe.source.startsWith(`${compositionExampleImport(recipe)}\n\n`),
-      true,
+    if (recipe.sourceFiles === undefined) {
+      assertEquals(
+        recipe.source.startsWith(`${compositionExampleImport(recipe)}\n\n`),
+        true,
+      );
+    } else {
+      assertEquals(recipe.sourceFiles[0].source, recipe.source);
+      assertEquals(
+        new Set(recipe.sourceFiles.map(({ name }) => name)).size,
+        recipe.sourceFiles.length,
+      );
+    }
+    assertStringIncludes(
+      recipe.sourceFiles?.map(({ source }) => source).join("\n") ??
+        recipe.source,
+      "@discern-sh/design-system/react",
     );
-    assertStringIncludes(recipe.source, "@discern-sh/design-system/react");
   }
 });
 
@@ -99,6 +114,23 @@ Deno.test("defineRecipe projects one definition into its preview and adaptable s
   assertStringIncludes(recipe.source, 'title={"One structured definition"}');
   assertEquals(recipe.components, ["branch-choice"]);
   assertEquals(recipe.status.label, "Illustrative pattern");
+});
+
+Deno.test("portable recipe layout never depends on Catalogue example helpers", () => {
+  const helpers = (source: string) =>
+    [...source.matchAll(/\bdiscern-example-[\w-]+/gu)].map(([name]) => name);
+  assertEquals(
+    helpers('<div className="discern-example-future-layout">'),
+    ["discern-example-future-layout"],
+  );
+  for (const recipe of [...compositionRecipes, futureRecipe()]) {
+    assertEquals(helpers(recipe.source), [], `${recipe.id} adaptable source`);
+    assertEquals(
+      helpers(renderToStaticMarkup(createElement(recipe.Example))),
+      [],
+      `${recipe.id} preview`,
+    );
+  }
 });
 
 Deno.test("defineRecipe refuses dead or duplicated Component membership", () => {

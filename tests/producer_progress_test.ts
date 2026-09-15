@@ -204,25 +204,47 @@ Deno.test("unit wrapper forwards cancellation and retains incomplete counts", as
       stdout: "piped",
       stderr: "piped",
     }).spawn();
-    const output = child.output();
+    let reportedPass = false;
+    const stderr = (async () => {
+      let text = "";
+      for await (
+        const chunk of child.stderr.pipeThrough(new TextDecoderStream())
+      ) {
+        text += chunk;
+        reportedPass ||= text.split("\n").slice(0, -1).some((line) =>
+          line.startsWith("DISCERN_PROGRESS ") &&
+          (JSON.parse(line.slice(17)) as ProgressReport).results?.passed === 1
+        );
+      }
+      return text;
+    })();
+    const output = Promise.all([
+      child.status,
+      new Response(child.stdout).text(),
+      stderr,
+    ]).then(([status, stdout, stderr]) => ({ ...status, stdout, stderr }));
     let runner: number | undefined;
     try {
       const deadline = performance.now() + 3000;
-      while (runner === undefined && performance.now() < deadline) {
+      // Cancellation preserves results the wrapper has actually observed.
+      while (
+        (runner === undefined || !reportedPass) && performance.now() < deadline
+      ) {
         try {
           runner = Number(await Deno.readTextFile(`${directory}/ready`));
         } catch (error) {
           if (!(error instanceof Deno.errors.NotFound)) throw error;
         }
-        if (runner === undefined) {
+        if (runner === undefined || !reportedPass) {
           await new Promise((resolve) => setTimeout(resolve, 10));
         }
       }
       assert(runner !== undefined, "Fixture runner did not become ready");
+      assert(reportedPass, "The wrapper did not report the completed fixture");
       child.kill("SIGTERM");
       const result = await output;
       assert(!result.success);
-      const reports: ProgressReport[] = new TextDecoder().decode(result.stderr)
+      const reports: ProgressReport[] = result.stderr
         .split("\n").filter((x) => x.startsWith("DISCERN_PROGRESS ")).map((x) =>
           JSON.parse(x.slice(17))
         );

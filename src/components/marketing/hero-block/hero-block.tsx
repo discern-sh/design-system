@@ -22,7 +22,7 @@ export interface HeroBlockProps
   readonly surface?: HeroBlockSurface;
 }
 
-/** High-impact opening section with split and centered compositions, flexible actions, proof, and visual slots. */
+/** Marketing opening with split, centered, showcase, or concise statement composition. */
 export const HeroBlock: DiscernComponent<HTMLElement, HeroBlockProps> =
   forwardRef<HTMLElement, HeroBlockProps>(function HeroBlock(
     {

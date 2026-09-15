@@ -7,11 +7,12 @@ const meta = {
   group: "Marketing",
   order: 20,
   description:
-    "High-impact opening section with split, centered, and showcase compositions plus flexible action, proof, visual, and decorative-backdrop slots.",
+    "Marketing opening with split, centered, showcase, and concise statement layouts, plus action, visual, and decorative-backdrop slots.",
   cli: { stance: "rendered" },
   purposes: ["marketing-site"],
   useWhen: [
     "A campaign needs one opening promise with actions and optional visual evidence; use showcase with the atmospheric surface for publication-scale launches.",
+    "Use statement for a left-aligned benefit, immediate action and recognisable supporting symbols before detailed mechanisms.",
   ],
   accessibility: [
     "The heading level is explicit so the block can open a page or a nested campaign.",
@@ -24,6 +25,7 @@ const meta = {
 export const componentExampleVocabulary = [
   { id: "split", label: "Split accent" },
   { id: "showcase", label: "Showcase" },
+  { id: "statement", label: "Clear statement" },
   {
     id: "backdrop",
     label: "Artwork backdrop",

@@ -23,6 +23,42 @@
   .discern-card--raised {
     box-shadow: var(--discern-shadow-card);
   }
+  .discern-card--shaded {
+    background-image: linear-gradient(155deg,
+      var(--discern-color-material-highlight), transparent 28%,
+      var(--discern-color-material-shade));
+  }
+  .discern-card--shimmer {
+    position: relative;
+    isolation: isolate;
+  }
+  .discern-card--shimmer::after {
+    content: "";
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background-image: linear-gradient(112deg, transparent 30%,
+      var(--discern-color-ambient) 50%, transparent 70%);
+    background-size: 300% 100%;
+    opacity: 0;
+    animation: discern-card-shimmer var(--discern-duration-reveal)
+      var(--discern-ease-out);
+  }
+  @keyframes discern-card-shimmer {
+    0% {
+      background-position: 100% 0;
+      opacity: 0;
+    }
+    28% {
+      opacity: 0.6;
+    }
+    100% {
+      background-position: 0% 0;
+      opacity: 0;
+    }
+  }
   .discern-card :where(.discern-card) {
     border: 0;
     box-shadow: none;
@@ -45,5 +81,10 @@
   }
   .discern-card--pad-lg {
     padding: var(--discern-space-8);
+  }
+  @media (prefers-reduced-motion: reduce), (forced-colors: active) {
+    .discern-card--shimmer::after {
+      display: none;
+    }
   }
 }

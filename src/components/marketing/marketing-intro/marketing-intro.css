@@ -1,13 +1,13 @@
 @layer discern.components {
   .discern-marketing-intro {
-    --discern-marketing-intro-title-size: clamp(var(--discern-font-size-display-md), 5cqi, var(--discern-font-size-display-lg));
+    --discern-marketing-intro-title-size: clamp(2rem, 4cqi, 2.75rem);
     --discern-marketing-intro-title-leading: var(--discern-leading-tight);
-    --discern-marketing-intro-title-tracking: -0.014em;
+    --discern-marketing-intro-title-tracking: -0.055em;
     container: discern-marketing-intro / inline-size;
     inline-size: 100%;
     max-inline-size: 47rem;
-    margin-block-end: clamp(var(--discern-space-10), 6cqi,
-      calc(var(--discern-space-16) + var(--discern-space-3)));
+    margin-block-end: clamp(var(--discern-space-8), 4cqi,
+      var(--discern-space-10));
     color: var(--discern-color-ink);
   }
   .discern-marketing-intro--editorial {
@@ -30,6 +30,8 @@
       var(--discern-color-accent-600));
   }
   .discern-marketing-intro__title {
+    font-family: var(--discern-font-marketing);
+    font-weight: var(--discern-font-weight-marketing);
     min-inline-size: 0;
     overflow-wrap: anywhere;
     margin: 0;

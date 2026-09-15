@@ -38,6 +38,19 @@
   src: url("./fonts/inter.woff2") format("woff2");
 }
 
+/* Marketing only: calt contextual alternates; dlig discretionary ligatures;
+ * tnum tabular numbers; ss01 alternate digits; ss02 Disambiguation;
+ * ss03 round quotes & comma. Features stay with this face. */
+@font-face {
+  font-family: "Discern Inter Marketing";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  font-feature-settings:
+    "calt" 1, "dlig" 1, "tnum" 1, "ss01" 1, "ss02" 1, "ss03" 1;
+  src: url("./fonts/inter.woff2") format("woff2");
+}
+
 @font-face {
   font-family: "JetBrains Mono";
   font-style: normal;
@@ -148,6 +161,9 @@
     "Discern Inter Fallback Arial", "Helvetica Neue", Arial, system-ui,
     sans-serif;
   --discern-font-ui: "Discern Inter UI", "Inter",
+    "Discern Inter Fallback Helvetica", "Discern Inter Fallback Arial",
+    "Helvetica Neue", Arial, system-ui, sans-serif;
+  --discern-font-marketing: "Discern Inter Marketing", "Inter",
     "Discern Inter Fallback Helvetica", "Discern Inter Fallback Arial",
     "Helvetica Neue", Arial, system-ui, sans-serif;
   --discern-font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo,

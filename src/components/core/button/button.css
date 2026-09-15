@@ -6,11 +6,10 @@
       var(--discern-color-action) 88%, var(--discern-color-on-action));
     --discern-color-button-edge: var(--discern-color-action-edge);
     --discern-button-text: var(--discern-color-on-action);
-    --discern-shadow-button: calc(var(--discern-space-1) / 2)
+    --discern-shadow-button: 0
       calc(var(--discern-space-1) / 2) 0
       var(--discern-color-action-shadow);
-    --discern-shadow-button-pressed: calc(var(--discern-space-1) / 4)
-      calc(var(--discern-space-1) / 4) 0
+    --discern-shadow-button-pressed: 0 0 0
       var(--discern-color-action-shadow);
     position: relative;
     display: inline-flex;
@@ -21,7 +20,7 @@
     gap: var(--discern-space-2);
     min-block-size: var(--discern-control-size-md);
     padding: var(--discern-space-1) var(--discern-button-padding-inline);
-    border: 0.125rem solid var(--discern-color-button-edge);
+    border: 1px solid var(--discern-color-button-edge);
     border-radius: var(--discern-radius-md);
     background: var(--discern-button-fill);
     box-shadow: var(--discern-shadow-button);
@@ -39,10 +38,7 @@
     background: var(--discern-button-fill-hover);
   }
   .discern-button:active:not(:disabled):not([aria-disabled="true"]) {
-    transform: translate(
-      calc(var(--discern-space-1) / 2),
-      calc(var(--discern-space-1) / 2)
-    );
+    transform: translateY(calc(var(--discern-space-1) / 2));
     box-shadow: var(--discern-shadow-button-pressed);
   }
   .discern-button:focus-visible {

@@ -634,6 +634,7 @@ Deno.test("Glyph rendering comparison derives every live browser font-stack role
       "--discern-font-body",
       "--discern-font-mono",
       "--discern-font-ui",
+      "--discern-font-marketing",
     ],
   );
   const future = {

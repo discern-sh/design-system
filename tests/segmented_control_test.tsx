@@ -261,6 +261,108 @@ Deno.test("SegmentedControl CLI retains supplied selection and disabled meaning 
   assert(!frame.includes("(*) Every day"));
 });
 
+Deno.test("content-sized segments share the widest label's width and fit narrow enlarged allocations", async () => {
+  const browser = await launchBrowser();
+  const output = await Deno.makeTempDir();
+  try {
+    await emitDesignSystemRuntime({
+      outputRoot: toFileUrl(`${output}/`),
+      components: ["segmented-control"],
+    });
+    const css = await Deno.readTextFile(`${output}/discern.css`);
+    const page = await browser.newPage();
+    const observed = new Map<string, number>();
+    for (const rootSize of [16, 24]) {
+      for (const width of [180, 300, 600, 900]) {
+        for (
+          const label of [
+            "Details",
+            "Supporting details",
+            "AContinuousLabelThatMustWrapWithoutClipping",
+          ]
+        ) {
+          const html = renderToStaticMarkup(
+            <SegmentedControl
+              sizing="content"
+              label="Project view"
+              name="view"
+              items={[
+                { value: "plan", label: "Plan" },
+                { value: "details", label },
+              ]}
+            />,
+          );
+          await page.setContent(
+            `<html data-discern-root><style>${css}html{font-size:${rootSize}px}</style><body><main style="width:${width}px">${html}</main></body></html>`,
+          );
+          const facts = await page.locator("fieldset").evaluate((root) => {
+            const group = root.querySelector(
+              ".discern-segmented-control__items",
+            )!;
+            const box = group.getBoundingClientRect();
+            return {
+              group: box.width,
+              start: box.left - root.getBoundingClientRect().left,
+              scroll: root.scrollWidth,
+              controls: [...root.querySelectorAll("input")].map((node) => ({
+                width: node.getBoundingClientRect().width,
+                height: node.getBoundingClientRect().height,
+              })),
+              labels: [
+                ...root.querySelectorAll(".discern-segmented-control__surface"),
+              ].map((node) => ({
+                content: node.scrollWidth,
+                width: node.clientWidth,
+              })),
+            };
+          });
+          assert(
+            facts.scroll <= width + 1 && facts.group <= width + 1,
+            JSON.stringify(facts),
+          );
+          assert(
+            Math.abs(facts.start) < 1,
+            "the compact group stays at the start of its allocation",
+          );
+          assert(
+            Math.abs(facts.controls[0]!.width - facts.controls[1]!.width) < 1,
+            "segments must have equal widths",
+          );
+          assert(
+            facts.controls.every(({ width, height }) =>
+              width >= 24 && height >= 24
+            ),
+          );
+          assert(
+            facts.labels.every(({ content, width }) => content <= width + 1),
+            "long labels wrap without clipping",
+          );
+          observed.set(`${rootSize}/${width}/${label}`, facts.group);
+          await page.keyboard.press("Tab");
+          await page.keyboard.press("ArrowRight");
+          assert(
+            await page.getByRole("radio", { name: label, exact: true })
+              .isChecked(),
+          );
+        }
+      }
+      assertEquals(
+        observed.get(`${rootSize}/600/Details`),
+        observed.get(`${rootSize}/900/Details`),
+        "extra parent space must not stretch a compact group",
+      );
+      assert(
+        observed.get(`${rootSize}/900/Supporting details`)! >
+          observed.get(`${rootSize}/900/Details`)!,
+        "the longest label determines intrinsic group width",
+      );
+    }
+  } finally {
+    await browser.close();
+    await Deno.remove(output, { recursive: true });
+  }
+});
+
 Deno.test("repeated SegmentedControl canonical examples retain independent native groups", async () => {
   const browser = await launchBrowser();
   try {

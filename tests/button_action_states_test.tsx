@@ -45,6 +45,7 @@ Deno.test("Action matrix preserves meaning, size floors, icon slots and unavaila
   const browser = await launchBrowser();
   const output = await Deno.makeTempDir();
   try {
+    const isolated = await browser.newPage();
     for (const action of ["button", "icon-button"]) {
       await emitDesignSystemRuntime({
         outputRoot: toFileUrl(`${output}/`),
@@ -55,11 +56,26 @@ Deno.test("Action matrix preserves meaning, size floors, icon slots and unavaila
         selectedCss.includes("@keyframes discern-icon-busy"),
         `${action} alone includes its loading ring motion`,
       );
-      assert(
-        selectedCss.includes(".discern-icon > svg"),
-        `${action} alone includes its loading ring stroke`,
+      await isolated.setContent(
+        `<html data-discern-root><style>${selectedCss}</style>${
+          renderToStaticMarkup(
+            action === "button"
+              ? <Button busy>Continue</Button>
+              : <IconButton busy label="Continue" icon="+" />,
+          )
+        }</html>`,
+      );
+      assertEquals(
+        await isolated.locator(".discern-icon--busy path").evaluate((path) => {
+          const paint = getComputedStyle(path);
+          return paint.fill === "none" && paint.stroke !== "none" &&
+            parseFloat(paint.strokeWidth) > 0;
+        }),
+        true,
+        `${action} alone paints its loading ring`,
       );
     }
+    await isolated.close();
     await emitDesignSystemRuntime({
       outputRoot: toFileUrl(`${output}/`),
       components: ["button", "icon-button", "icon"],

@@ -45,6 +45,16 @@ Completed and omitted from dispatch: **A1, A2, A3, A4, A5**.
 
 Deferred and omitted from these briefs: **R2, R4, R5, C3, C5, D1, D2, E1, E2, F5, H4, I1, I3, I4, J4, L2, L3, L4, L5, M2, M5, N4, N5, O4, P4, Q2, Q3, Q4, Q5**. Their meanings and pickup evidence live in the TODO ledger; R4 consolidates the existing signed-bar/ramp entries, and R5 consolidates the existing Builder document-management entry. Q1 and O5 retain their existing open-defect entries until their implementation briefs resolve them.
 
+## 3A follow-up
+
+With wave 2 landed, the owner dispatched one further effort for distinctive Web character. It does not reopen the original proposal programme.
+
+| Key | Brief                                                                  | Prerequisite    | State                                                                   |
+| --- | ---------------------------------------------------------------------- | --------------- | ----------------------------------------------------------------------- |
+| 3A  | [Give discern a distinctive visual character](_done/3a-get-stylish.md) | Wave 2 complete | Implementation and final rendered preview approved; awaiting acceptance |
+
+The [3A review record](3a-review.md) contains the selected direction, public boundaries, family review and visual evidence. Archival records completion of the implementation and owner review; it does not assert landing.
+
 ## Scheduling and useful starting batches
 
 Ready immediately after this planning package lands: **1A, 1B, 1C, 2A, 2B, 2D, 2E, 2H, 2I, 2J, 2O, 2Q**. The feature briefs with no prerequisites can proceed while any needed enablers are built.

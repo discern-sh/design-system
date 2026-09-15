@@ -136,11 +136,8 @@
   .discern-terminal--showcase .discern-terminal__body:focus-visible {
     outline-color: var(--discern-color-inverse-ink);
   }
-  .discern-terminal--showcase .discern-terminal__command-prefix {
-    color: var(--discern-color-accent-400);
-  }
-  .discern-terminal--showcase .discern-terminal__success {
-    color: var(--discern-color-success);
+  .discern-terminal--showcase :is(.discern-terminal__command-prefix, .discern-terminal__success) {
+    color: var(--discern-color-inverse-ink);
   }
   .discern-terminal--showcase .discern-terminal__footer > * {
     border: 1px solid color-mix(in oklab,

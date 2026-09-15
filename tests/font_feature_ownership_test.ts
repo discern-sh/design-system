@@ -116,67 +116,83 @@ Deno.test("font-specific OpenType features stay bound to their font face", async
   );
 });
 
-Deno.test("the bundled UI face owns the Inter feature bundle", async () => {
-  const fontCss = await Deno.readTextFile(
-    join(PACKAGE_ROOT, "assets", "fonts.css"),
-  );
-  const parsed = cssAtRuleBlocks(fontCss, "font-face");
-  assertEquals(parsed.failures, []);
-  const uiFaces = parsed.blocks.map(({ block }) => cssDeclarations(block))
-    .filter((declarations) =>
-      declarations.some(({ name, value }) =>
-        name === "font-family" && value === INTER_UI_FAMILY
-      )
+for (
+  const { family, features, role } of [
+    {
+      family: INTER_UI_FAMILY,
+      features: INTER_UI_FEATURE_SETTINGS,
+      role: "ui",
+    },
+    {
+      family: '"Discern Inter Marketing"',
+      features: '"calt" 1, "dlig" 1, "tnum" 1, "ss01" 1, "ss02" 1, "ss03" 1',
+      role: "marketing",
+    },
+  ]
+) {
+  Deno.test(`the bundled ${role} face owns its Inter feature bundle`, async () => {
+    const fontCss = await Deno.readTextFile(
+      join(PACKAGE_ROOT, "assets", "fonts.css"),
     );
-  assertEquals(
-    uiFaces.length,
-    1,
-    "the bundled UI face must have one authority",
-  );
-  const uiFace = uiFaces[0];
-  assert(uiFace !== undefined);
-  const descriptor = (name: string): string | undefined =>
-    uiFace.findLast((declaration) => declaration.name === name)?.value;
-  assertStringIncludes(descriptor("src") ?? "", "./fonts/inter.woff2");
-  assertEquals(
-    descriptor("font-feature-settings"),
-    INTER_UI_FEATURE_SETTINGS,
-  );
+    const parsed = cssAtRuleBlocks(fontCss, "font-face");
+    assertEquals(parsed.failures, []);
+    const uiFaces = parsed.blocks.map(({ block }) => cssDeclarations(block))
+      .filter((declarations) =>
+        declarations.some(({ name, value }) =>
+          name === "font-family" && value === family
+        )
+      );
+    assertEquals(
+      uiFaces.length,
+      1,
+      "the bundled face must have one authority",
+    );
+    const uiFace = uiFaces[0];
+    assert(uiFace !== undefined);
+    const descriptor = (name: string): string | undefined =>
+      uiFace.findLast((declaration) => declaration.name === name)?.value;
+    assertStringIncludes(descriptor("src") ?? "", "./fonts/inter.woff2");
+    assertEquals(
+      descriptor("font-feature-settings"),
+      features,
+    );
 
-  const rootRules = cssQualifiedRuleBlocks(fontCss).rules
-    .filter(({ selector }) => selector === ":where([data-discern-root])")
-    .map(({ block }) => cssDeclarations(block));
-  assertEquals(
-    rootRules.length,
-    1,
-    "the font asset must have one Root override",
-  );
-  const rootRule = rootRules[0];
-  assert(rootRule !== undefined);
-  const uiFamily = rootRule.findLast(({ name }) => name === "--discern-font-ui")
-    ?.value;
-  assert(
-    uiFamily?.startsWith(`${INTER_UI_FAMILY}, "Inter",`) === true,
-    "the optional UI font role must select the face that owns its features",
-  );
-  assertEquals(
-    [...fontSpecificFeatureTokens(baseTokens)],
-    [],
-    "font-specific features must not remain available as inheritable tokens",
-  );
-});
-
-Deno.test("the browser applies the feature bundle through the dedicated Inter face", async () => {
-  const fontBytes = await Deno.readFile(
-    join(PACKAGE_ROOT, "assets", "fonts", "inter.woff2"),
-  );
-  const fontSource = `data:font/woff2;base64,${fontBytes.toBase64()}`;
-  const browser = await launchBrowser();
-  const page = await browser.newPage({
-    viewport: { width: 1000, height: 500 },
+    const rootRules = cssQualifiedRuleBlocks(fontCss).rules
+      .filter(({ selector }) => selector === ":where([data-discern-root])")
+      .map(({ block }) => cssDeclarations(block));
+    assertEquals(
+      rootRules.length,
+      1,
+      "the font asset must have one Root override",
+    );
+    const rootRule = rootRules[0];
+    assert(rootRule !== undefined);
+    const uiFamily = rootRule.findLast(({ name }) =>
+      name === `--discern-font-${role}`
+    )
+      ?.value;
+    assert(
+      uiFamily?.startsWith(`${family}, "Inter",`) === true,
+      "the optional font role must select the face that owns its features",
+    );
+    assertEquals(
+      [...fontSpecificFeatureTokens(baseTokens)],
+      [],
+      "font-specific features must not remain available as inheritable tokens",
+    );
   });
-  try {
-    await page.setContent(`
+
+  Deno.test(`the browser applies the ${role} feature bundle through its Inter face`, async () => {
+    const fontBytes = await Deno.readFile(
+      join(PACKAGE_ROOT, "assets", "fonts", "inter.woff2"),
+    );
+    const fontSource = `data:font/woff2;base64,${fontBytes.toBase64()}`;
+    const browser = await launchBrowser();
+    const page = await browser.newPage({
+      viewport: { width: 1000, height: 500 },
+    });
+    try {
+      await page.setContent(`
       <style>
         @font-face {
           font-family: "Plain Inter";
@@ -185,10 +201,10 @@ Deno.test("the browser applies the feature bundle through the dedicated Inter fa
           src: url("${fontSource}") format("woff2");
         }
         @font-face {
-          font-family: ${INTER_UI_FAMILY};
+          font-family: ${family};
           font-style: normal;
           font-weight: 400 700;
-          font-feature-settings: ${INTER_UI_FEATURE_SETTINGS};
+          font-feature-settings: ${features};
           src: url("${fontSource}") format("woff2");
         }
         .sample {
@@ -203,36 +219,37 @@ Deno.test("the browser applies the feature bundle through the dedicated Inter fa
           line-height: 1;
           white-space: nowrap;
         }
-        #face { font-family: ${INTER_UI_FAMILY}; }
+        #face { font-family: ${family}; }
         #explicit {
           font-family: "Plain Inter";
-          font-feature-settings: ${INTER_UI_FEATURE_SETTINGS};
+          font-feature-settings: ${features};
         }
         #normal {
           font-family: "Plain Inter";
           font-feature-settings: normal;
         }
       </style>
-      <div id="face" class="sample">sS 00000 123456789</div>
-      <div id="explicit" class="sample">sS 00000 123456789</div>
-      <div id="normal" class="sample">sS 00000 123456789</div>
+      <div id="face" class="sample">Il1 00 1234 “sS,”</div>
+      <div id="explicit" class="sample">Il1 00 1234 “sS,”</div>
+      <div id="normal" class="sample">Il1 00 1234 “sS,”</div>
     `);
-    await page.evaluate(async () => await document.fonts.ready);
-    const face = new Uint8Array(await page.locator("#face").screenshot());
-    const explicit = new Uint8Array(
-      await page.locator("#explicit").screenshot(),
-    );
-    const normal = new Uint8Array(await page.locator("#normal").screenshot());
-    assertEquals(
-      face,
-      explicit,
-      "the face descriptor must render like the same explicit Inter features",
-    );
-    assert(
-      face.some((byte, index) => byte !== normal[index]),
-      "the feature-owning face must render differently from plain Inter",
-    );
-  } finally {
-    await browser.close();
-  }
-});
+      await page.evaluate(async () => await document.fonts.ready);
+      const face = new Uint8Array(await page.locator("#face").screenshot());
+      const explicit = new Uint8Array(
+        await page.locator("#explicit").screenshot(),
+      );
+      const normal = new Uint8Array(await page.locator("#normal").screenshot());
+      assertEquals(
+        face,
+        explicit,
+        "the face descriptor must render like the same explicit Inter features",
+      );
+      assert(
+        face.some((byte, index) => byte !== normal[index]),
+        "the feature-owning face must render differently from plain Inter",
+      );
+    } finally {
+      await browser.close();
+    }
+  });
+}

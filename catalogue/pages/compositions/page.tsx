@@ -174,7 +174,10 @@ function CompositionDetail(
     readonly currentUrl: URL;
   },
 ) {
-  const { id, title, description, journey, Example, source } = recipe;
+  const { id, title, description, journey, Example, source, sourceFiles } =
+    recipe;
+  const files = sourceFiles ??
+    [{ name: "Example TSX", language: "tsx", source }];
   const [width, setWidth] = useState<CompositionWidthChoice>(
     () => compositionWidthChoice(currentUrl.searchParams.get("width")),
   );
@@ -292,27 +295,45 @@ function CompositionDetail(
         <summary>View adaptable example source</summary>
         <div>
           <p>{recipe.status.sourceGuidance}</p>
-          <div className="discern-catalogue-pattern__source-heading">
-            <span>Example TSX</span>
-            <CopyButton
-              value={source}
-              label="Copy adaptable example source"
-              copiedLabel="Adaptable example source copied"
-            />
-          </div>
-          <OverflowCue
-            axis="both"
-            scrollContainer="descendant"
-            className="discern-catalogue-pattern__source-cue"
-          >
-            <pre
-              className="discern-mono"
-              role="region"
-              aria-label="Adaptable example source"
-              tabIndex={0}
-              data-discern-overflow-cue-target=""
-            ><code>{source}</code></pre>
-          </OverflowCue>
+          {sourceFiles && (
+            <p>
+              Copy all {files.length}{" "}
+              files into the same directory. Load the example CSS after the
+              emitted package CSS and fonts. The shared TSX contains the working
+              controls for all three page purposes.
+            </p>
+          )}
+          {files.map((file, index) => (
+            <div key={file.name} data-discern-composition-source={file.name}>
+              <div className="discern-catalogue-pattern__source-heading">
+                <span>{file.name}</span>
+                <CopyButton
+                  value={file.source}
+                  label={index === 0
+                    ? "Copy adaptable example source"
+                    : `Copy ${file.name}`}
+                  copiedLabel={index === 0
+                    ? "Adaptable example source copied"
+                    : `${file.name} copied`}
+                />
+              </div>
+              <OverflowCue
+                axis="both"
+                scrollContainer="descendant"
+                className="discern-catalogue-pattern__source-cue"
+              >
+                <pre
+                  className="discern-mono"
+                  role="region"
+                  aria-label={index === 0
+                    ? "Adaptable example source"
+                    : `Source: ${file.name}`}
+                  tabIndex={0}
+                  data-discern-overflow-cue-target=""
+                ><code className={`language-${file.language}`}>{file.source}</code></pre>
+              </OverflowCue>
+            </div>
+          ))}
         </div>
       </details>
       <nav
