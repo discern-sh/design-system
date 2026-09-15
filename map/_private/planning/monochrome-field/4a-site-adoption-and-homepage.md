@@ -12,7 +12,7 @@ From `/Users/jack/Sites/discern`, call `discern_status`. Verify that the named r
 
 Only after re-rooting, read:
 
-- that repository's `AGENTS.md` and instruction sources, its design principles, and its brand documents, especially `project/map/_internal/brand/visual-identity.md` and the registry that generates it under `scripts/brand/`, plus `_private/brand/website-brief.md` for the artifact-first rule and the imagery exclusions;
+- that repository's `AGENTS.md` and instruction sources, its design principles, and its brand documents, especially `project/map/_internal/brand/visual-identity.md` and the registry that generates it under `scripts/brand/`.;
 - `site/design_system.ts`, `site/theme.ts`, `site/page-src/landing.tsx` and `clarity-first.tsx` with their CSS and script, the docs and map page renderers, and the SEO and smoke checks;
 - `/Users/jack/Sites/discern-design-system/map/_adr/0040-derive-the-theme-from-a-monochrome-field.md`, the replacement appearance ADR referenced by the completed field-appearance 1A brief, and the token/CLI map pages of the pinned release, for the mid-field recipe, scoped appearance contract, terminal opt-in, and browser support floor.
 
@@ -54,7 +54,5 @@ Update that repository's map and changelog as its instructions require, and note
 ## Definition of done
 
 - The brand record names monochrome as the identity and is regenerated, not hand-edited.
-- The site pins the release, selects the achromatic default, and passes its crawl, SEO, and accessibility checks at both poles.
+- The site selects the achromatic default, and passes its crawl, SEO, and accessibility checks at both poles.
 - The homepage drives darkness from scroll with a truthful reduced-motion posture and artifact-first content, and reads as discern's rather than as a generic editorial page.
-- That repository's gate is green on the clean committed HEAD, and its landing rule is followed: run `discern_accept`; a task grant recorded at that repository's desk may land the submitted green commit. Without one, report the Proof line and the `field-4a` branch and worktree, then stop for owner review.
-- In the final commit, move this brief from `/Users/jack/Sites/discern-design-system/map/_private/planning/monochrome-field/4a-site-adoption-and-homepage.md` to that folder's `_done/`; because the brief lives in the design-system repository, land that move as a small separate worktree there, or ask the maintainer to move it.
