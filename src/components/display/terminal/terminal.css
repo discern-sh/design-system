@@ -1,9 +1,5 @@
 @layer discern.components {
   .discern-terminal {
-    --discern-code-comment: var(--discern-terminal-muted);
-    --discern-code-punctuation: color-mix(in oklab,
-      var(--discern-terminal-muted) 72%, transparent);
-    --discern-code-literal: var(--discern-color-accent-700);
     --discern-terminal-surface: var(--discern-color-surface-sunken);
     --discern-terminal-chrome: var(--discern-color-surface);
     --discern-terminal-text: var(--discern-color-ink);
@@ -97,6 +93,7 @@
     background: var(--discern-terminal-chrome);
   }
   .discern-terminal--showcase {
+    --discern-code-literal: var(--discern-color-inverse-ink);
     --discern-terminal-surface: var(--discern-color-inverse-surface);
     --discern-terminal-chrome: color-mix(in oklab,
       var(--discern-color-inverse-ink) 6%,
