@@ -3,6 +3,13 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { CopyButton } from "../../docs/copy-button/copy-button.tsx";
 import { classNames } from "../../class-names.ts";
+import { renderCodeRuns } from "../../code-runs.tsx";
+import {
+  type CodeDialect,
+  projectCodeRuns,
+  resolveCodeDialect,
+  splitCodeRunsByLine,
+} from "../../../internal/code-emphasis.ts";
 
 /** Visual treatments available to a Code listing. */
 export type CodeListingVariant = "standard" | "showcase";
@@ -12,7 +19,10 @@ export interface CodeListingProps
   extends Omit<HTMLAttributes<HTMLElement>, "title"> {
   readonly title?: ReactNode;
   readonly filename?: ReactNode;
+  /** Optional source-language label shown in the header and used to select a dialect. */
   readonly language?: string;
+  /** Delimiter family the browser emphasis scanner reads with; defaults to the family implied by `language`. Use `"plain"` to render without emphasis. No CLI effect. */
+  readonly dialect?: CodeDialect;
   /** Exact source authority for display and copying. */
   readonly code: string;
   /** Wrap browser lines visually; false keeps horizontal scrolling (default). No CLI effect. */
@@ -32,6 +42,7 @@ export const CodeListing: DiscernComponent<HTMLElement, CodeListingProps> =
       title,
       filename,
       language,
+      dialect,
       code,
       wrap = false,
       copyable = true,
@@ -43,7 +54,10 @@ export const CodeListing: DiscernComponent<HTMLElement, CodeListingProps> =
     },
     ref,
   ) {
-    const lines = code.split("\n");
+    const resolvedDialect = dialect ?? resolveCodeDialect(language);
+    const lines = splitCodeRunsByLine(
+      projectCodeRuns(code, resolvedDialect),
+    );
     return (
       <figure
         ref={ref}
@@ -86,7 +100,7 @@ export const CodeListing: DiscernComponent<HTMLElement, CodeListingProps> =
                 data-line={index + 1}
                 key={index}
               >
-                {line}{index < lines.length - 1 ? "\n" : ""}
+                {renderCodeRuns(line)}{index < lines.length - 1 ? "\n" : ""}
               </span>
             ))}
           </code>

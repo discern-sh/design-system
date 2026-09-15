@@ -5,6 +5,7 @@ import {
   assertStringIncludes,
 } from "@std/assert";
 import { renderToStaticMarkup } from "react-dom/server";
+import { unwrapEmphasisSpans } from "./support/code-emphasis.ts";
 import { stripAnsi } from "../src/cli/ansi.ts";
 import { testTerminalCapabilities } from "../src/cli/interactive/testing.ts";
 import { renderMarkdownCli } from "../src/cli/mod.ts";
@@ -391,7 +392,9 @@ Deno.test("shared fixture documents retain the same semantic facts in React and 
 
     const facts: string[] = [];
     for (const block of document.children) collectBlockFacts(block, facts);
-    const browserFingerprint = semanticFingerprint(decodeHtmlText(html));
+    const browserFingerprint = semanticFingerprint(
+      decodeHtmlText(unwrapEmphasisSpans(html)),
+    );
     const terminalFingerprint = semanticFingerprint(stripAnsi(terminal));
     for (const rawFact of new Set(facts)) {
       const fact = semanticFingerprint(rawFact);

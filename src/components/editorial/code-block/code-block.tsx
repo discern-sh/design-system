@@ -2,7 +2,14 @@ import { forwardRef } from "react";
 import type { HTMLAttributes } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
-import { projectTerminalTextRuns } from "../../../cli/projection.ts";
+import { renderCodeRuns } from "../../code-runs.tsx";
+import {
+  type CodeDialect,
+  projectCodeRuns,
+  resolveCodeDialect,
+} from "../../../internal/code-emphasis.ts";
+
+export type { CodeDialect };
 
 /** Props for the {@linkcode CodeBlock} component. */
 export interface CodeBlockProps
@@ -11,8 +18,10 @@ export interface CodeBlockProps
   readonly code: string;
   /** Wrap browser lines visually; false keeps horizontal scrolling (default). Independent of CLI widthPolicy. */
   readonly wrap?: boolean;
-  /** Optional source-language hint exposed as a namespaced data hook. */
+  /** Optional source-language label, exposed as a namespaced data hook and used to select a dialect. */
   readonly language?: string;
+  /** Delimiter family the browser emphasis scanner reads with; defaults to the family implied by `language`. Use `"plain"` to render without emphasis. No CLI effect. */
+  readonly dialect?: CodeDialect;
   /** Optional parser information exposed as a namespaced data hook. */
   readonly info?: string;
 }
@@ -20,12 +29,13 @@ export interface CodeBlockProps
 /** Literal, non-line-numbered preformatted code without an editorial figure frame. */
 export const CodeBlock: DiscernComponent<HTMLPreElement, CodeBlockProps> =
   forwardRef<HTMLPreElement, CodeBlockProps>(function CodeBlock(
-    { code, wrap = false, language, info, className, ...props },
+    { code, wrap = false, language, dialect, info, className, ...props },
     ref,
   ) {
     const accessibleContext = [language?.trim(), info?.trim()]
       .filter(Boolean)
       .join(" · ");
+    const resolvedDialect = dialect ?? resolveCodeDialect(language);
 
     return (
       <pre
@@ -46,26 +56,10 @@ export const CodeBlock: DiscernComponent<HTMLPreElement, CodeBlockProps> =
       >
         <code
           data-discern-code-block-language={language}
+          data-discern-code-block-dialect={resolvedDialect}
           data-discern-code-block-info={info}
         >
-          {projectTerminalTextRuns(code).map((run, index) =>
-            run.columns === undefined
-              ? run.text
-              : (
-                <span
-                  data-discern-terminal-cell={run.columns}
-                  style={{
-                    display: "inline-block",
-                    width: `${run.columns}ch`,
-                    textAlign: "center",
-                    verticalAlign: "baseline",
-                  }}
-                  key={index}
-                >
-                  {run.text}
-                </span>
-              )
-          )}
+          {renderCodeRuns(projectCodeRuns(code, resolvedDialect))}
         </code>
       </pre>
     );

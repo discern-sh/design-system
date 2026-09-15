@@ -412,16 +412,15 @@ export function emphasiseCode(
  *
  * Non-ASCII graphemes keep the measured width that stops fallback-font
  * advances from shifting later cells, and are never split across an emphasis
- * boundary. Passing `emphasis: false` yields width runs alone, so the same
+ * boundary. The `plain` dialect yields width runs alone, so the same
  * projection serves both the emphasised and unemphasised renderings.
  */
 export function projectCodeRuns(
   source: string,
   dialect: CodeDialect,
-  emphasis: boolean,
 ): readonly CodeTextRun[] {
   const textRuns = projectTerminalTextRuns(source);
-  if (!emphasis || dialect === "plain") return textRuns;
+  if (dialect === "plain") return textRuns;
 
   const emphasisRuns = emphasisRunQueue(emphasiseCode(source, dialect));
   const merged: CodeTextRun[] = [];
@@ -464,6 +463,39 @@ export function projectCodeRuns(
   }
 
   return merged;
+}
+
+/** Copy one run, replacing its text and preserving any optional fields. */
+function withText(run: CodeTextRun, text: string): CodeTextRun {
+  if (run.columns === undefined) {
+    return run.emphasis === undefined ? { text } : { text, emphasis: run.emphasis };
+  }
+  return run.emphasis === undefined
+    ? { text, columns: run.columns }
+    : { text, columns: run.columns, emphasis: run.emphasis };
+}
+
+/**
+ * Split projected runs into one array per logical line.
+ *
+ * Line separators are dropped, so a caller that numbers lines re-emits them
+ * itself and every logical line keeps one stable number however many visual
+ * rows it wraps onto. A measured grapheme never contains a line separator, so
+ * its run is never split.
+ */
+export function splitCodeRunsByLine(
+  runs: readonly CodeTextRun[],
+): readonly (readonly CodeTextRun[])[] {
+  const lines: CodeTextRun[][] = [[]];
+  for (const run of runs) {
+    const parts = run.text.split("\n");
+    for (const [index, part] of parts.entries()) {
+      if (index > 0) lines.push([]);
+      if (part === "") continue;
+      lines[lines.length - 1]?.push(withText(run, part));
+    }
+  }
+  return lines;
 }
 
 /** Cursor over emphasis runs, handing out tiers by character length. */

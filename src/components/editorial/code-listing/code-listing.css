@@ -1,5 +1,9 @@
 @layer discern.components {
   .discern-code-listing {
+    --discern-code-comment: var(--discern-color-ink-faint);
+    --discern-code-punctuation: color-mix(in oklab,
+      var(--discern-color-ink-faint) 72%, transparent);
+    --discern-code-literal: var(--discern-color-accent-700);
     margin-block: var(--discern-space-10);
     margin-inline: 0;
     min-width: 0;

@@ -7,6 +7,7 @@ import {
 import { renderToStaticMarkup } from "react-dom/server";
 import { CodeBlock } from "../src/components/editorial/code-block/code-block.tsx";
 import codeBlockMeta from "../src/components/editorial/code-block/code-block.meta.ts";
+import { unwrapEmphasisSpans } from "./support/code-emphasis.ts";
 
 Deno.test("Code block renders literal source as native preformatted code", () => {
   const code = "\n\tconst markup = `<tag>&`;\n\n";
@@ -27,9 +28,12 @@ Deno.test("Code block renders literal source as native preformatted code", () =>
   assertStringIncludes(html, 'data-reading-order="first"');
   assertStringIncludes(
     html,
-    '<code data-discern-code-block-language="html" data-discern-code-block-info="example">',
+    '<code data-discern-code-block-language="html" data-discern-code-block-dialect="sgml" data-discern-code-block-info="example">',
   );
-  assertStringIncludes(html, "\n\tconst markup = `&lt;tag&gt;&amp;`;\n\n");
+  assertStringIncludes(
+    unwrapEmphasisSpans(html),
+    "\n\tconst markup = `&lt;tag&gt;&amp;`;\n\n",
+  );
   assert(!html.includes("<figure"));
   assert(!html.includes("data-line"));
   assertMatch(html, /<pre [^>]*><code [^>]*>[\s\S]*<\/code><\/pre>$/);
@@ -38,7 +42,7 @@ Deno.test("Code block renders literal source as native preformatted code", () =>
 Deno.test("Code block keeps empty source in its named keyboard viewport", () => {
   assertEquals(
     renderToStaticMarkup(<CodeBlock code="" />),
-    '<pre class="discern-code-block" role="group" aria-label="Scrollable code block" tabindex="0"><code></code></pre>',
+    '<pre class="discern-code-block" role="group" aria-label="Scrollable code block" tabindex="0"><code data-discern-code-block-dialect="generic"></code></pre>',
   );
 });
 

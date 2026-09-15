@@ -5,6 +5,7 @@ import {
   emphasiseCode,
   projectCodeRuns,
   resolveCodeDialect,
+  splitCodeRunsByLine,
 } from "../src/internal/code-emphasis.ts";
 
 const DIALECTS: readonly CodeDialect[] = [
@@ -63,14 +64,10 @@ Deno.test("every dialect reproduces its input exactly", () => {
 Deno.test("projected runs reproduce their input exactly", () => {
   const source = 'const label = "中文 🎚️"; // note\nconst n = 42;';
   for (const dialect of DIALECTS) {
-    for (const emphasis of [true, false]) {
-      assertEquals(
-        projectCodeRuns(source, dialect, emphasis).map((run) => run.text).join(
-          "",
-        ),
-        source,
-      );
-    }
+    assertEquals(
+      projectCodeRuns(source, dialect).map((run) => run.text).join(""),
+      source,
+    );
   }
 });
 
@@ -197,7 +194,7 @@ Deno.test("language labels resolve to a delimiter family", () => {
 // ── Merging with measured terminal cells ────────────────────────────────────
 
 Deno.test("a measured grapheme is never split across an emphasis boundary", () => {
-  const runs = projectCodeRuns('"中文" + x', "c-family", true);
+  const runs = projectCodeRuns('"中文" + x', "c-family");
   const wide = runs.filter((run) => run.columns !== undefined);
   assert(wide.length > 0, "the sample must contain a measured grapheme");
   for (const run of wide) {
@@ -215,7 +212,34 @@ Deno.test("adjacent runs sharing a tier are merged", () => {
   assertEquals(runs[1]?.text, ";;;;");
 });
 
-Deno.test("disabling emphasis yields width runs with no tier", () => {
-  const runs = projectCodeRuns('const a = "b";', "c-family", false);
+// ── Splitting into numbered lines ───────────────────────────────────────────
+
+Deno.test("splitting by line preserves every character and its tier", () => {
+  const source = 'a = "one";\n// two\nb = 3;';
+  const lines = splitCodeRunsByLine(projectCodeRuns(source, "c-family"));
+  assertEquals(lines.length, 3);
+  assertEquals(
+    lines.map((line) => line.map((run) => run.text).join("")).join("\n"),
+    source,
+  );
+  assertEquals(lines[1]?.map((run) => run.emphasis), ["comment"]);
+});
+
+Deno.test("splitting never lets a run straddle a line boundary", () => {
+  const lines = splitCodeRunsByLine(projectCodeRuns("`a\nb`", "c-family"));
+  assertEquals(lines.length, 2);
+  for (const line of lines) {
+    for (const run of line) {
+      assert(!run.text.includes("\n"), "no run may contain a line separator");
+    }
+  }
+});
+
+Deno.test("a trailing separator yields a final empty line", () => {
+  assertEquals(splitCodeRunsByLine(projectCodeRuns("a\n", "generic")).length, 2);
+});
+
+Deno.test("the plain dialect yields width runs with no tier", () => {
+  const runs = projectCodeRuns('const a = "b";', "plain");
   assertEquals(runs.filter((run) => run.emphasis !== undefined), []);
 });

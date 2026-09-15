@@ -76,6 +76,18 @@
     animation: discern-reveal-in var(--discern-duration-reveal)
       var(--discern-ease-out) both;
   }
+  /* Code emphasis tiers. One hue carries salience, not category: source
+     surfaces set these three properties from their own palette, and a
+     surface that sets none renders every run at its base ink. */
+  [data-discern-emphasis="comment"] {
+    color: var(--discern-code-comment, currentColor);
+  }
+  [data-discern-emphasis="literal"] {
+    color: var(--discern-code-literal, currentColor);
+  }
+  [data-discern-emphasis="punctuation"] {
+    color: var(--discern-code-punctuation, currentColor);
+  }
   @keyframes discern-reveal-in {
     from {
       opacity: 0;
