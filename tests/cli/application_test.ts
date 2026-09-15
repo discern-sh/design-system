@@ -453,3 +453,38 @@ Deno.test("application search owns typing, retains its query through updates and
   assertEquals(edited.positions.list?.query, "");
   assertEquals(edited.positions.list?.selectedId, "qr");
 });
+
+Deno.test("peer application regions receive equal usable width", () => {
+  for (const kind of ["choices", "reading"] as const) {
+    const label = "A long recognizable item shared by both panes";
+    const region = (id: string) =>
+      kind === "choices"
+        ? { kind, id, title: id, entries: [{ id, label, value: id }] }
+        : {
+          kind,
+          id,
+          title: id,
+          content: createCliBlock(renderMarkdownCli, { source: label }),
+        };
+    for (const columns of [110, 120, 140]) {
+      const io = new FakeTerminalIO([], {
+        columns,
+        rows: 30,
+        colorDepth: "none",
+      });
+      const result = renderTerminalApplication(
+        updateTerminalApplication({
+          title: "Peer regions",
+          regions: [region("First"), region("Second")],
+        }),
+        io.size(),
+        io.capabilities(),
+      );
+      const rows = stripAnsi(result.frame).split("\n");
+      assert(
+        rows.some((row) => row.split(label).length === 3),
+        `${kind} at ${columns} columns must show both peer labels intact`,
+      );
+    }
+  }
+});

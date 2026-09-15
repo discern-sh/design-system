@@ -449,10 +449,20 @@ export function renderTerminalApplication<Action>(
   const focusedIndex = regions[0].id === source.focusedRegionId ? 0 : 1;
   if (regions.length === 2 && columns >= 100) {
     layout = "columns";
-    sizes = allocateTerminalPanes(columns - 1, 36, 40, focusedIndex);
+    sizes = allocateTerminalPanes(
+      columns - 1,
+      regions[0].kind === regions[1].kind ? Math.floor((columns - 1) / 2) : 36,
+      40,
+      focusedIndex,
+    );
   } else if (regions.length === 2 && rows >= 32) {
     layout = "rows";
-    sizes = allocateTerminalPanes(paneRows, 7, 8, focusedIndex);
+    sizes = allocateTerminalPanes(
+      paneRows,
+      regions[0].kind === regions[1].kind ? Math.floor(paneRows / 2) : 7,
+      8,
+      focusedIndex,
+    );
   }
   const visible = layout === "single" ? [regions[focusedIndex]!] : [...regions];
   const positions = { ...source.positions };

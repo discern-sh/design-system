@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Give peer application regions equal space. Two choice lists or two readers no longer reserve most of the viewport for the second region; mixed choice/reading applications retain their existing allocation.
+
 - Application choice regions support local search using the shared Unicode editor. Search state survives updates and foreground work; typing is isolated from caller shortcuts. Applications may supply key-map help.
 
 Releases follow [SemVer](https://semver.org). JSR versions are immutable: a published version is never edited or replaced, and a bad release is superseded by a new version (or yanked) rather than rewritten. Before 1.0, minor versions may still change the public contract; every breaking change is recorded here.
