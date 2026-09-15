@@ -4,6 +4,16 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
+## Unreleased
+
+### Public API and migration
+
+- Add single-hue lexical emphasis to the browser source surfaces. One hue encodes salience, not category, so emphasis recedes the scaffolding — comments and punctuation — and lifts string and numeric literals to the selected accent; names and keywords stay at base ink. It adds no dependency and no colour token: the tiers derive from each surface's own palette, so consumer branding and the showcase treatments carry through, and a Root with no accent degrades to pure ink lightness.
+- **Breaking visual contract:** CodeBlock and CodeListing emphasise their source by default, and CodeBlock exposes the resolved family as `data-discern-code-block-dialect`. Emitted markup gains presentation-only spans carrying `data-discern-emphasis`; readable text, logical line numbers, highlighted lines, and the exact copied string are unchanged. Set `dialect="plain"` to render without emphasis.
+- Add the `dialect` prop to CodeBlock, CodeListing, Terminal, and RawOutput. A dialect names a family of comment and string delimiters — `c-family`, `css`, `generic`, `hash`, `plain`, `sgml`, `sql` — never a language, and the closed set is deliberate: the scanner recognises no keywords and parses no grammar. CodeBlock and CodeListing default it from their existing `language` label, so no existing authoring changes. Terminal and RawOutput opt in by naming one, because neither renders source by default; content that is not a plain string passes through untouched.
+- Emphasis fails closed: any construct the scanner cannot confidently terminate reverts to base ink, so a mis-closed string never takes the rest of a listing with it.
+- No terminal bytes change. `dialect` does not enter either CLI renderer. CodeBlock gains a configuration example in a second delimiter family on both surfaces.
+
 ## 0.33.0
 
 - Give peer application regions equal space. Two choice lists or two readers no longer reserve most of the viewport for the second region; mixed choice/reading applications retain their existing allocation.
