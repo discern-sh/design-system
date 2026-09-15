@@ -3273,6 +3273,14 @@ export const componentExampleRegistry = {
       ],
     },
     {
+      "id": "configuration",
+      "label": "Configuration dialect",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
+    {
       "id": "preserved-width",
       "label": "Preserved long line",
       "surfaces": [

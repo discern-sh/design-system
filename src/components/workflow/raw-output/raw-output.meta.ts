@@ -8,7 +8,7 @@ const meta = {
   order: 230,
   cli: { stance: "rendered" },
   description:
-    "Native disclosure for machine-oriented detail, with subject, line count or authored extent, optional reported outcome, and precise browser content.",
+    "Native disclosure for machine-oriented detail, with subject, line count or authored extent, optional reported outcome, opt-in lexical emphasis, and precise browser content.",
   purposes: ["building-documentation", "displaying-tool-output"],
   useWhen: [
     "Machine-oriented detail should remain available without competing with the human-readable result or diagnostic.",

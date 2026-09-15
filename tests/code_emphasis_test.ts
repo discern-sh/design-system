@@ -29,7 +29,10 @@ function classify(source: string, dialect: CodeDialect): string {
     .join("");
 }
 
-function tiersOf(source: string, dialect: CodeDialect): readonly CodeEmphasis[] {
+function tiersOf(
+  source: string,
+  dialect: CodeDialect,
+): readonly CodeEmphasis[] {
   return emphasiseCode(source, dialect)
     .flatMap((run) => run.emphasis === undefined ? [] : [run.emphasis]);
 }
@@ -43,10 +46,10 @@ Deno.test("every dialect reproduces its input exactly", () => {
     "/* unterminated block",
     '"unterminated string\nnext line',
     "-- sql comment\nSELECT 'it''s';",
-    "<!-- markup -->\n<p class=\"x\">y</p>",
+    '<!-- markup -->\n<p class="x">y</p>',
     ".a { --b: 1px; /* c */ }",
     "\t\n  mixed \r\n whitespace \t",
-    "emoji 🎚️ and 中文 in \"a string 🎚️\"",
+    'emoji 🎚️ and 中文 in "a string 🎚️"',
     "",
     "'''triple'''\n#after",
   ];
@@ -143,7 +146,10 @@ Deno.test("backslash escapes stay inside their literal", () => {
 });
 
 Deno.test("sgml does not treat a backslash as an escape", () => {
-  assertEquals(classify('<a b="c\\">d', "sgml"), '[p:<]a b[p:=][l:"c\\"][p:>]d');
+  assertEquals(
+    classify('<a b="c\\">d', "sgml"),
+    '[p:<]a b[p:=][l:"c\\"][p:>]d',
+  );
 });
 
 Deno.test("a template literal may span lines but a quoted one may not", () => {
@@ -236,7 +242,10 @@ Deno.test("splitting never lets a run straddle a line boundary", () => {
 });
 
 Deno.test("a trailing separator yields a final empty line", () => {
-  assertEquals(splitCodeRunsByLine(projectCodeRuns("a\n", "generic")).length, 2);
+  assertEquals(
+    splitCodeRunsByLine(projectCodeRuns("a\n", "generic")).length,
+    2,
+  );
 });
 
 Deno.test("the plain dialect yields width runs with no tier", () => {

@@ -7,7 +7,7 @@ const meta = {
   group: "Display",
   order: 80,
   description:
-    "Framed monospace surface for commands and terminal output, including a stable dark campaign showcase.",
+    "Framed monospace surface for commands and terminal output, with opt-in lexical emphasis for plain-string content and a stable dark campaign showcase.",
   cli: { stance: "rendered" },
   purposes: ["displaying-tool-output", "marketing-site"],
   useWhen: [

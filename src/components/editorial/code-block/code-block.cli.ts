@@ -47,6 +47,14 @@ const cliExampleImplementations = [
     },
   },
   {
+    name: "configuration",
+    props: {
+      language: "toml",
+      code:
+        '# A small configuration, read without a parser.\n[listing]\n  title = "Reading time"\n  languages = ["typescript", "toml"]\n  measure = 68\n  wrap = false',
+    },
+  },
+  {
     name: "preserved-width",
     props: {
       language: "text",

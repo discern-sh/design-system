@@ -2,6 +2,11 @@ import { forwardRef } from "react";
 import type { CSSProperties, HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import { renderCodeRuns } from "../../code-runs.tsx";
+import {
+  type CodeDialect,
+  projectCodeRuns,
+} from "../../../internal/code-emphasis.ts";
 
 /** Visual treatments available to a Terminal. */
 export type TerminalVariant = "standard" | "showcase";
@@ -15,6 +20,8 @@ export interface TerminalProps
   readonly bodyStyle?: CSSProperties;
   /** Optional contextual content beneath the terminal output. */
   readonly footer?: ReactNode;
+  /** Delimiter family for optional lexical emphasis of plain-string content. Omit to render content unchanged; ANSI-coloured output should stay unemphasised. */
+  readonly dialect?: CodeDialect;
   /** Theme-responsive utility frame or a stable dark campaign showcase. */
   readonly variant?: TerminalVariant;
   readonly children: ReactNode;
@@ -29,6 +36,7 @@ export const Terminal: DiscernComponent<HTMLElement, TerminalProps> =
         actions,
         bodyStyle,
         footer,
+        dialect,
         variant = "standard",
         className,
         children,
@@ -71,7 +79,11 @@ export const Terminal: DiscernComponent<HTMLElement, TerminalProps> =
               : "Scrollable terminal output"}
             tabIndex={0}
           >
-          <code>{children}</code>
+          <code>
+            {typeof children === "string" && dialect !== undefined
+              ? renderCodeRuns(projectCodeRuns(children, dialect))
+              : children}
+          </code>
           </pre>
           {footer
             ? (

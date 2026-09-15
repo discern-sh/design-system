@@ -3,8 +3,12 @@ import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import meta, { componentExampleVocabulary } from "./code-listing.meta.ts";
 import { CodeListing } from "./code-listing.tsx";
 
-const example = `function readingTime(words: number): number {
-  return Math.ceil(words / 220);
+const example = `// Average adult reading pace, in words per minute.
+const PACE = 220;
+
+function readingTime(words: number): string {
+  const minutes = Math.ceil(words / PACE);
+  return minutes === 1 ? "1 minute" : \`\${minutes} minutes\`;
 }
 
 console.log(readingTime(1540));`;

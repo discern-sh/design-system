@@ -80,50 +80,51 @@ const BASE: Omit<DialectProfile, "lineComments" | "quotes"> = {
  * `generic` deliberately omits `#`, which is a comment in some families but a
  * colour, an identifier, a preprocessor directive, or a fragment in others.
  */
-const PROFILES: Readonly<Record<Exclude<CodeDialect, "plain">, DialectProfile>> =
-  {
-    "c-family": {
-      ...BASE,
-      lineComments: ["//"],
-      blockComment: ["/*", "*/"],
-      quotes: ['"', "'", "`"],
-      multilineQuotes: ["`"],
-    },
-    css: {
-      ...BASE,
-      lineComments: [],
-      blockComment: ["/*", "*/"],
-      quotes: ['"', "'"],
-      leadingDashIdentifiers: true,
-    },
-    generic: {
-      ...BASE,
-      lineComments: ["//"],
-      blockComment: ["/*", "*/"],
-      quotes: ['"', "'"],
-    },
-    hash: {
-      ...BASE,
-      lineComments: ["#"],
-      quotes: ['"', "'"],
-      tripleQuotes: true,
-    },
-    sgml: {
-      ...BASE,
-      lineComments: [],
-      blockComment: ["<!--", "-->"],
-      quotes: ['"', "'"],
-      backslashEscapes: false,
-    },
-    sql: {
-      ...BASE,
-      lineComments: ["--"],
-      blockComment: ["/*", "*/"],
-      quotes: ["'"],
-      backslashEscapes: false,
-      doubledQuoteEscapes: true,
-    },
-  };
+const PROFILES: Readonly<
+  Record<Exclude<CodeDialect, "plain">, DialectProfile>
+> = {
+  "c-family": {
+    ...BASE,
+    lineComments: ["//"],
+    blockComment: ["/*", "*/"],
+    quotes: ['"', "'", "`"],
+    multilineQuotes: ["`"],
+  },
+  css: {
+    ...BASE,
+    lineComments: [],
+    blockComment: ["/*", "*/"],
+    quotes: ['"', "'"],
+    leadingDashIdentifiers: true,
+  },
+  generic: {
+    ...BASE,
+    lineComments: ["//"],
+    blockComment: ["/*", "*/"],
+    quotes: ['"', "'"],
+  },
+  hash: {
+    ...BASE,
+    lineComments: ["#"],
+    quotes: ['"', "'"],
+    tripleQuotes: true,
+  },
+  sgml: {
+    ...BASE,
+    lineComments: [],
+    blockComment: ["<!--", "-->"],
+    quotes: ['"', "'"],
+    backslashEscapes: false,
+  },
+  sql: {
+    ...BASE,
+    lineComments: ["--"],
+    blockComment: ["/*", "*/"],
+    quotes: ["'"],
+    backslashEscapes: false,
+    doubledQuoteEscapes: true,
+  },
+};
 
 /**
  * Free-form language labels mapped onto the delimiter family they belong to.
@@ -468,7 +469,9 @@ export function projectCodeRuns(
 /** Copy one run, replacing its text and preserving any optional fields. */
 function withText(run: CodeTextRun, text: string): CodeTextRun {
   if (run.columns === undefined) {
-    return run.emphasis === undefined ? { text } : { text, emphasis: run.emphasis };
+    return run.emphasis === undefined
+      ? { text }
+      : { text, emphasis: run.emphasis };
   }
   return run.emphasis === undefined
     ? { text, columns: run.columns }

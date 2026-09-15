@@ -3,6 +3,11 @@ import type { DetailsHTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { outputExtent } from "./raw-output.types.ts";
 import { classNames } from "../../class-names.ts";
+import { renderCodeRuns } from "../../code-runs.tsx";
+import {
+  type CodeDialect,
+  projectCodeRuns,
+} from "../../../internal/code-emphasis.ts";
 
 /** Props for the {@linkcode RawOutput} component. */
 export interface RawOutputProps
@@ -13,6 +18,8 @@ export interface RawOutputProps
   readonly outcome?: ReactNode;
   /** Authored extent for rich content; plain strings derive their line count. */
   readonly extent?: ReactNode;
+  /** Delimiter family for optional lexical emphasis of plain-string content. Omit to render content unchanged; ANSI-coloured output should stay unemphasised. */
+  readonly dialect?: CodeDialect;
 }
 
 /** Native disclosure for machine-oriented detail with a visible open or closed state. */
@@ -23,6 +30,7 @@ export const RawOutput: DiscernComponent<HTMLDetailsElement, RawOutputProps> =
       children,
       outcome,
       extent,
+      dialect,
       className,
       ...props
     },
@@ -61,7 +69,11 @@ export const RawOutput: DiscernComponent<HTMLDetailsElement, RawOutputProps> =
             : "Scrollable raw output"}
           tabIndex={0}
         >
-          <code>{children}</code>
+          <code>
+            {typeof children === "string" && dialect !== undefined
+              ? renderCodeRuns(projectCodeRuns(children, dialect))
+              : children}
+          </code>
         </pre>
       </details>
     );
