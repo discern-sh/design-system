@@ -1,19 +1,18 @@
 # Changelog
 
-## Unreleased
+Releases follow [SemVer](https://semver.org). JSR versions are immutable: a published version is never edited or replaced, and a bad release is superseded by a new version (or yanked) rather than rewritten. Before 1.0, minor versions may still change the public contract; every breaking change is recorded here.
+
+Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
+
+## 0.33.0
 
 - Give peer application regions equal space. Two choice lists or two readers no longer reserve most of the viewport for the second region; mixed choice/reading applications retain their existing allocation.
 
 - Application choice regions support local search using the shared Unicode editor. Search state survives updates and foreground work; typing is isolated from caller shortcuts. Applications may supply key-map help.
 
-Releases follow [SemVer](https://semver.org). JSR versions are immutable: a published version is never edited or replaced, and a bad release is superseded by a new version (or yanked) rather than rewritten. Before 1.0, minor versions may still change the public contract; every breaking change is recorded here.
-
-Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
-
-## Unreleased
-
 - Add `PtyProcessOptions.readinessTimeoutMs` so consumers can select an input-readiness allowance independently of the post-input completion timeout. Both keep their 15-second defaults, reject non-positive or non-finite values before launch, and timeout errors identify the phase and actual budget that expired.
 - Export `observeTerminalIO` and `TerminalIOObservation` from `./cli/interactive` without capture or PTY dependencies. The testing entrypoint retains the same exports and implementation. Observation preserves pending-read cancellation, the source receiver, and optional resize support.
+
 ## 0.32.0
 
 - Keep semantic/deep text and focus legible at low Emphasis. Shared Appearance laws retain state-marker separation near the polarity crossover, preserve necessary semantic/action chroma, and taper chromatic semantic text towards neutral contrast at the actual tinted crossover. Admission checks semantic text against canvas and its composited wash and covers both Emphasis bounds. Web Terminal showcase command prefixes and success text use the fixed inverse foreground; existing terminal pole colours and renderers are retained.
