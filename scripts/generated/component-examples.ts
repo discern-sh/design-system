@@ -3163,6 +3163,15 @@ export const componentExampleRegistry = {
       ],
     },
     {
+      "id": "placed-document",
+      "label": "Placed documents",
+      "surfaces": [
+        "web",
+      ],
+      "reason":
+        "A terminal frame renders one document at a time and carries no page destinations, so heading placement and id scoping have nothing to resolve against.",
+    },
+    {
       "id": "hostile-source",
       "label": "Inert hostile source",
       "surfaces": [

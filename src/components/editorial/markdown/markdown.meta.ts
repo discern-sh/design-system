@@ -22,6 +22,7 @@ const meta = {
   accessibility: [
     "Native headings, lists, quotations, tables, code, images, and end-note relationships preserve the document hierarchy in source order.",
     "Heading ids are stable and duplicate-safe; footnote references and returns are descriptive keyboard-reachable links.",
+    "A document context nests headings beneath a surrounding page heading and scopes every destination, so repeated documents on one page keep unique ids and working local links.",
     "Raw HTML is inert, unsafe destinations remain visible but non-clickable, and source controls become visible notation.",
     "Admitted isolated diagram and chart images must use the spec-derived alternative and matching optional summary title; drift rejects the whole document.",
   ],
@@ -34,6 +35,13 @@ export const componentExampleVocabulary = [
   { id: "reading-hierarchy", label: "Reading hierarchy" },
   { id: "diagram-resource", label: "Diagram resource" },
   { id: "chart-resource", label: "Chart resource" },
+  {
+    id: "placed-document",
+    label: "Placed documents",
+    only: "web",
+    reason:
+      "A terminal frame renders one document at a time and carries no page destinations, so heading placement and id scoping have nothing to resolve against.",
+  },
   { id: "hostile-source", label: "Inert hostile source" },
   { id: "narrow-layout", label: "Narrow layout" },
 ] as const;

@@ -454,3 +454,54 @@ Deno.test("empty or whitespace-only Markdown renders no browser wrapper", () => 
     "",
   );
 });
+
+Deno.test("two placed documents share one page without colliding", () => {
+  const source = `# Release
+
+Jump to [the changes](#changes) and read [the archive](/releases/).
+
+## Changes
+
+Detail[^proof] and detail again[^proof].
+
+[^proof]: Measured.`;
+  const html = renderToStaticMarkup(
+    <article>
+      <h2 id="releases">Releases</h2>
+      <Markdown source={source} baseHeadingLevel={3} idPrefix="release-2-0" />
+      <Markdown source={source} baseHeadingLevel={3} idPrefix="release-1-9" />
+    </article>,
+  );
+  const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]);
+  assertEquals(new Set(ids).size, ids.length);
+  for (const scope of ["release-2-0", "release-1-9"]) {
+    assertStringIncludes(
+      html,
+      `<h3 class="discern-heading" id="${scope}-release"`,
+    );
+    assertStringIncludes(
+      html,
+      `<h4 class="discern-heading" id="${scope}-changes"`,
+    );
+    assertStringIncludes(html, `href="#${scope}-changes"`);
+    assertStringIncludes(html, `id="${scope}-fnref-1"`);
+    assertStringIncludes(html, `id="${scope}-fnref-1-2"`);
+    assertStringIncludes(html, `id="${scope}-fn-1"`);
+    assertStringIncludes(html, `href="#${scope}-fn-1"`);
+    assertStringIncludes(html, `href="#${scope}-fnref-1-2"`);
+  }
+  // A destination outside the document keeps its meaning in both copies.
+  assertEquals(html.match(/href="\/releases\/"/g)?.length, 2);
+});
+
+Deno.test("an unplaced document keeps repository levels and unscoped destinations", () => {
+  const source = `## Heading
+
+Body[^proof].
+
+[^proof]: Measured.`;
+  const html = renderToStaticMarkup(<Markdown source={source} />);
+  assertStringIncludes(html, '<h2 class="discern-heading" id="heading"');
+  assertStringIncludes(html, 'id="fnref-1"');
+  assertStringIncludes(html, 'id="fn-1"');
+});

@@ -22,6 +22,7 @@ import type { ProseMeasure } from "../prose/prose.types.ts";
 import {
   type MarkdownBlock,
   type MarkdownDocument,
+  type MarkdownDocumentContext,
   MarkdownParseError,
   parseMarkdown,
 } from "./markdown.model.ts";
@@ -32,6 +33,7 @@ export { MarkdownParseError } from "./markdown.model.ts";
 
 /** Props for the {@linkcode Markdown} component. */
 export interface MarkdownProps extends
+  MarkdownDocumentContext,
   Omit<
     HTMLAttributes<HTMLDivElement>,
     "children" | "dangerouslySetInnerHTML"
@@ -48,7 +50,8 @@ export interface MarkdownProps extends
 
 interface ReactProjectionContext {
   readonly referenceCounts: Map<string, number>;
-  readonly headingDestinations: ReadonlyMap<string, string>;
+  /** Model-owned return destinations, in reference order, for each note. */
+  readonly returnIds: ReadonlyMap<string, readonly string[]>;
 }
 
 const SOFT_BREAK_TEXT = "\n";
@@ -117,9 +120,8 @@ function renderInlineNode(
         1;
       context.referenceCounts.set(node.identifier, occurrence);
       const label = node.label ?? node.identifier;
-      const referenceId = occurrence === 1
-        ? `fnref-${label}`
-        : `fnref-${label}-${occurrence}`;
+      const referenceId = context.returnIds.get(node.identifier)
+        ?.[occurrence - 1];
       return (
         <sup
           className="discern-markdown__footnote-reference"
@@ -166,9 +168,8 @@ function renderBlock(
         </Paragraph>
       );
     case "heading": {
-      const id = context.headingDestinations.get(block.id) ?? block.id;
       return (
-        <Heading level={block.level} id={id} tabIndex={-1} key={key}>
+        <Heading level={block.level} id={block.id} tabIndex={-1} key={key}>
           {renderInline(block.content, context, `${key}-inline`)}
         </Heading>
       );
@@ -303,49 +304,15 @@ function renderBlock(
   }
 }
 
-function headingIds(blocks: readonly MarkdownBlock[]): readonly string[] {
-  return blocks.flatMap((block) => {
-    switch (block.kind) {
-      case "heading":
-        return [block.id];
-      case "blockquote":
-      case "callout":
-        return headingIds(block.children);
-      case "list":
-        return block.items.flatMap((item) => headingIds(item.blocks));
-      case "footnotes":
-        return block.items.flatMap((item) => headingIds(item.children));
-      default:
-        return [];
-    }
-  });
-}
-
 function renderDocument(document: MarkdownDocument): readonly ReactNode[] {
-  // The document model appends its resolved note definitions at the root.
-  // Reserve their destinations before projecting any headings.
-  const noteDestinations = new Set(
-    document.children.flatMap((block) =>
-      block.kind === "footnotes"
-        ? block.items.flatMap((item) => [item.id, ...item.returnIds])
-        : []
-    ),
-  );
-  const headings = headingIds(document.children);
-  const destinationIds = new Set([...noteDestinations, ...headings]);
-  const headingDestinations = new Map<string, string>();
-  for (const original of headings) {
-    if (!noteDestinations.has(original)) continue;
-    let id = original;
-    for (let suffix = 1; destinationIds.has(id); suffix += 1) {
-      id = `${original}-${suffix}`;
-    }
-    destinationIds.add(id);
-    headingDestinations.set(original, id);
+  const returnIds = new Map<string, readonly string[]>();
+  for (const block of document.children) {
+    if (block.kind !== "footnotes") continue;
+    for (const item of block.items) returnIds.set(item.id, item.returnIds);
   }
   const context: ReactProjectionContext = {
     referenceCounts: new Map(),
-    headingDestinations,
+    returnIds,
   };
   return document.children.map((block, index) =>
     renderBlock(block, context, `markdown-block-${index}`)
@@ -358,12 +325,23 @@ function renderDocument(document: MarkdownDocument): readonly ReactNode[] {
  */
 export const Markdown: DiscernComponent<HTMLDivElement, MarkdownProps> =
   forwardRef<HTMLDivElement, MarkdownProps>(function Markdown(
-    { source, measure = "default", diagrams, charts, className, ...props },
+    {
+      source,
+      measure = "default",
+      diagrams,
+      charts,
+      baseHeadingLevel,
+      idPrefix,
+      className,
+      ...props
+    },
     ref,
   ) {
     const document = parseMarkdown(source, {
       ...(diagrams === undefined ? {} : { diagrams }),
       ...(charts === undefined ? {} : { charts }),
+      ...(baseHeadingLevel === undefined ? {} : { baseHeadingLevel }),
+      ...(idPrefix === undefined ? {} : { idPrefix }),
     });
     if (document.children.length === 0) return null;
     return (

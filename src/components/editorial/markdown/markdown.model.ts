@@ -220,8 +220,29 @@ export const MARKDOWN_BLOCK_KINDS = [
   "chart",
 ] as const satisfies readonly MarkdownBlock["kind"][];
 
+/**
+ * Where one document sits inside the surrounding page. Both facts are inert by
+ * default, so a document parsed without them keeps repository heading levels
+ * and unscoped destinations.
+ */
+export interface MarkdownDocumentContext {
+  /**
+   * Level rendered for the document's shallowest heading; deeper headings keep
+   * their relative depth and stop at level 6. Name the level below an existing
+   * page heading to nest a document under it.
+   */
+  readonly baseHeadingLevel?: HeadingLevel;
+  /**
+   * Scope joined by a hyphen to every id this document owns — heading
+   * destinations, note targets, and reference returns — so several documents
+   * share one page without colliding. Local fragment links that resolve inside
+   * this document follow their destination; every other link is untouched.
+   */
+  readonly idPrefix?: string;
+}
+
 /** Optional neutral resolution facts applied after Markdown parsing. */
-export interface ParseMarkdownOptions {
+export interface ParseMarkdownOptions extends MarkdownDocumentContext {
   /** Explicit image-source to DiagramSpec resources; valid unused entries are allowed. */
   readonly diagrams?: readonly MarkdownDiagramResource[];
   /** Explicit image-source to ChartSpec resources; valid unused entries are allowed. */
@@ -1238,6 +1259,219 @@ function resolveMarkdownResources(
   });
 }
 
+const ID_PREFIX = /^[A-Za-z][A-Za-z0-9_-]*$/u;
+
+/** Resolved placement applied to every destination and heading in one document. */
+interface DocumentPlacement {
+  /** Source destination to page destination, for headings, notes, and returns. */
+  readonly destinations: ReadonlyMap<string, string>;
+  /** Final id for each heading, which a note destination can push off its slug. */
+  readonly headingIds: ReadonlyMap<MarkdownHeadingBlock, string>;
+  readonly levelShift: number;
+}
+
+function documentScope(idPrefix: string | undefined): (id: string) => string {
+  if (idPrefix === undefined || idPrefix === "") return (id) => id;
+  if (!ID_PREFIX.test(idPrefix)) {
+    return fail(
+      `Markdown id prefix ${
+        JSON.stringify(idPrefix)
+      } must start with a letter and hold only letters, digits, hyphens, and underscores`,
+    );
+  }
+  return (id) => `${idPrefix}-${id}`;
+}
+
+function documentHeadings(
+  blocks: readonly MarkdownBlock[],
+): readonly MarkdownHeadingBlock[] {
+  return blocks.flatMap((block) => {
+    switch (block.kind) {
+      case "heading":
+        return [block];
+      case "blockquote":
+      case "callout":
+        return documentHeadings(block.children);
+      case "list":
+        return block.items.flatMap((item) => documentHeadings(item.blocks));
+      case "footnotes":
+        return block.items.flatMap((item) => documentHeadings(item.children));
+      default:
+        return [];
+    }
+  });
+}
+
+function resolveDocumentPlacement(
+  document: MarkdownDocument,
+  context: MarkdownDocumentContext,
+): DocumentPlacement {
+  const scope = documentScope(context.idPrefix);
+  const headings = documentHeadings(document.children);
+  const destinations = new Map<string, string>();
+  const taken = new Set<string>();
+  // The document model appends its resolved note definitions at the root, and
+  // those destinations outrank a heading slug that happens to read the same.
+  for (const block of document.children) {
+    if (block.kind !== "footnotes") continue;
+    for (const item of block.items) {
+      for (const id of [item.id, ...item.returnIds]) {
+        destinations.set(id, scope(id));
+        taken.add(scope(id));
+      }
+    }
+  }
+  // Reserve every heading's own scope first, so displacing one never lands on
+  // a destination a later heading in the same document already answers to.
+  for (const heading of headings) taken.add(scope(heading.id));
+  const headingIds = new Map<MarkdownHeadingBlock, string>();
+  for (const heading of headings) {
+    const scoped = scope(heading.id);
+    if (!destinations.has(heading.id)) {
+      headingIds.set(heading, scoped);
+      destinations.set(heading.id, scoped);
+      continue;
+    }
+    let id = scoped;
+    for (let suffix = 1; taken.has(id); suffix += 1) id = `${scoped}-${suffix}`;
+    taken.add(id);
+    headingIds.set(heading, id);
+  }
+  const shallowest = headings.reduce<number>(
+    (level, heading) => Math.min(level, heading.level),
+    6,
+  );
+  return {
+    destinations,
+    headingIds,
+    levelShift: context.baseHeadingLevel === undefined
+      ? 0
+      : context.baseHeadingLevel - shallowest,
+  };
+}
+
+function placedLevel(
+  level: HeadingLevel,
+  placement: DocumentPlacement,
+): HeadingLevel {
+  return Math.min(6, Math.max(1, level + placement.levelShift)) as HeadingLevel;
+}
+
+function placeInlineNode(
+  node: SemanticInlineNode,
+  placement: DocumentPlacement,
+): SemanticInlineNode {
+  switch (node.kind) {
+    case "emphasis":
+    case "strong":
+    case "strikethrough":
+      return { ...node, content: placeInline(node.content, placement) };
+    case "link": {
+      const label = placeInline(node.label, placement);
+      const destination = node.destination.startsWith("#")
+        ? placement.destinations.get(node.destination.slice(1))
+        : undefined;
+      return destination === undefined
+        ? { ...node, label }
+        : { ...node, label, destination: `#${destination}` };
+    }
+    case "footnote-reference":
+      return {
+        ...node,
+        identifier: placement.destinations.get(node.identifier) ??
+          node.identifier,
+      };
+    default:
+      return node;
+  }
+}
+
+function placeInline(
+  content: SemanticInlineContent,
+  placement: DocumentPlacement,
+): SemanticInlineContent {
+  if (typeof content === "string") return content;
+  return content.map((node) =>
+    typeof node === "string" ? node : placeInlineNode(node, placement)
+  );
+}
+
+function placeBlock(
+  block: MarkdownBlock,
+  placement: DocumentPlacement,
+): MarkdownBlock {
+  switch (block.kind) {
+    case "paragraph":
+      return { ...block, content: placeInline(block.content, placement) };
+    case "heading":
+      return {
+        ...block,
+        level: placedLevel(block.level, placement),
+        id: placement.headingIds.get(block) ?? block.id,
+        content: placeInline(block.content, placement),
+      };
+    case "list":
+      return {
+        ...block,
+        items: block.items.map((item) => ({
+          ...item,
+          ...(item.content === undefined
+            ? {}
+            : { content: placeInline(item.content, placement) }),
+          blocks: item.blocks.map((child) => placeBlock(child, placement)),
+        })),
+      };
+    case "blockquote":
+    case "callout":
+      return {
+        ...block,
+        children: block.children.map((child) => placeBlock(child, placement)),
+      };
+    case "table":
+      return {
+        ...block,
+        columns: block.columns.map((column) => ({
+          ...column,
+          header: placeInline(column.header, placement),
+        })),
+        rows: block.rows.map((row) =>
+          row.map((cell) => placeInline(cell, placement))
+        ),
+      };
+    case "footnotes":
+      return {
+        ...block,
+        items: block.items.map((item) => ({
+          ...item,
+          id: placement.destinations.get(item.id) ?? item.id,
+          returnIds: item.returnIds.map((id) =>
+            placement.destinations.get(id) ?? id
+          ),
+          children: item.children.map((child) => placeBlock(child, placement)),
+        })),
+      };
+    default:
+      return block;
+  }
+}
+
+/**
+ * Resolve every destination this document owns and place its headings beneath
+ * the surrounding page. Both projections read the result, so no surface
+ * rewrites ids or levels after rendering.
+ */
+function placeDocument(
+  document: MarkdownDocument,
+  context: MarkdownDocumentContext,
+): MarkdownDocument {
+  if (document.children.length === 0) return document;
+  const placement = resolveDocumentPlacement(document, context);
+  return {
+    kind: "document",
+    children: document.children.map((block) => placeBlock(block, placement)),
+  };
+}
+
 /** Parse untrusted source into the one internal document consumed by both projections. */
 export function parseMarkdown(
   source: string,
@@ -1285,7 +1519,7 @@ export function parseMarkdown(
     const footnotes = adaptFootnotes(context);
     if (footnotes !== null) children.push(footnotes);
     return resolveMarkdownResources(
-      { kind: "document", children },
+      placeDocument({ kind: "document", children }, options),
       admittedResources,
     );
   } catch (cause) {

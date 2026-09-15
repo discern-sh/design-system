@@ -113,6 +113,26 @@ await Deno.writeTextFile(
 
 Serve `public/` over HTTPS or localhost. The browser receives no React bundle or hydration code. Copy uses the exact authored string, including whitespace and newlines. Success appears only after the clipboard write succeeds; unavailable or denied access shows manual-copy guidance. Without the script, the button stays inert and visibly unavailable: keep the source selectable. Consumer `preventDefault()` and disabled state cancel activation. A live React host must load the same runtime; CopyButton no longer owns a React clipboard handler. See [the copy contract](map/40-runtime-emitter/static-copy.md) for markup ownership and teardown.
 
+## Several Markdown documents on one page
+
+`Markdown` owns where a document sits in the surrounding page, so a caller never rewrites rendered HTML. `baseHeadingLevel` renders the document's shallowest heading at that level and keeps deeper headings at their relative depth, stopping at level 6. `idPrefix` scopes every destination the document owns — heading anchors, note targets, and reference returns — and follows local fragment links to their scoped destination:
+
+```tsx
+<article>
+  <h2 id="releases">Releases</h2>
+  {editions.map((edition) => (
+    <Markdown
+      key={edition.version}
+      source={edition.notes}
+      baseHeadingLevel={3}
+      idPrefix={`edition-${edition.version}`}
+    />
+  ))}
+</article>;
+```
+
+Both facts are inert by default, so existing callers keep repository heading levels and unscoped ids. A link to another document, an external destination, or a fragment this document does not answer to is left exactly as authored. The prefix must start with a letter and hold only letters, digits, hyphens, and underscores; anything else fails the whole document rather than emitting an unreachable destination. `parseMarkdown` accepts the same two facts for callers composing the neutral model directly. Terminal rendering has no page around it, so `renderMarkdownCli` takes neither.
+
 ## Optional assets
 
 No asset is copied by default. Asset selections are independent:

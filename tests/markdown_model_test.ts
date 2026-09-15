@@ -373,3 +373,115 @@ Deno.test("the complete pinned Markdown parser graph remains MIT licensed", asyn
     assertStringIncludes(text, "Permission is hereby granted");
   }
 });
+
+function headingFacts(blocks: readonly MarkdownBlock[]): readonly string[] {
+  return blocks.flatMap((block) => {
+    switch (block.kind) {
+      case "heading":
+        return [`h${block.level}#${block.id}`];
+      case "blockquote":
+      case "callout":
+        return headingFacts(block.children);
+      case "list":
+        return block.items.flatMap((item) => headingFacts(item.blocks));
+      case "footnotes":
+        return block.items.flatMap((item) => headingFacts(item.children));
+      default:
+        return [];
+    }
+  });
+}
+
+Deno.test("a document context nests headings and scopes every destination it owns", () => {
+  const source = `# Overview
+
+Read [the detail](#detail), [another release](#other-detail), and
+[the manual](https://example.com/#detail).
+
+## Detail
+
+Body[^note] and again[^note].
+
+### Deeper
+
+[^note]: Evidence.`;
+  const document = parseMarkdown(source, {
+    baseHeadingLevel: 3,
+    idPrefix: "release-2-0",
+  });
+  assertEquals(headingFacts(document.children), [
+    "h3#release-2-0-overview",
+    "h4#release-2-0-detail",
+    "h5#release-2-0-deeper",
+  ]);
+  const notes = document.children.at(-1);
+  assert(notes?.kind === "footnotes");
+  assertEquals(notes.items[0]?.id, "release-2-0-fn-1");
+  assertEquals(notes.items[0]?.returnIds, [
+    "release-2-0-fnref-1",
+    "release-2-0-fnref-1-2",
+  ]);
+  const json = JSON.stringify(document);
+  // A local fragment follows its scoped destination; every other link is left
+  // exactly as the author wrote it.
+  assertStringIncludes(json, '"destination":"#release-2-0-detail"');
+  assertStringIncludes(json, '"destination":"#other-detail"');
+  assertStringIncludes(json, '"destination":"https://example.com/#detail"');
+  assertStringIncludes(json, '"identifier":"release-2-0-fn-1"');
+});
+
+Deno.test("document context holds repeated, Unicode, nested, and empty documents apart", () => {
+  const source = `## Café ☕
+
+> ### Café ☕
+
+- Item
+
+  #### Café ☕
+`;
+  const document = parseMarkdown(source, { idPrefix: "doc" });
+  assertEquals(headingFacts(document.children), [
+    "h2#doc-café",
+    "h3#doc-café-1",
+    "h4#doc-café-2",
+  ]);
+  assertEquals(
+    parseMarkdown("   ", { idPrefix: "doc", baseHeadingLevel: 4 }),
+    { kind: "document", children: [] },
+  );
+});
+
+Deno.test("heading placement clamps at level 6 and stays inert without a context", () => {
+  const source = `# One
+
+### Three
+
+###### Six`;
+  assertEquals(headingFacts(parseMarkdown(source).children), [
+    "h1#one",
+    "h3#three",
+    "h6#six",
+  ]);
+  assertEquals(
+    headingFacts(parseMarkdown(source, { baseHeadingLevel: 5 }).children),
+    [
+      "h5#one",
+      "h6#three",
+      "h6#six",
+    ],
+  );
+});
+
+Deno.test("an id prefix that cannot form a destination fails the whole document", () => {
+  for (const idPrefix of ["2-0", "release 2", "release#2", "-release"]) {
+    assertThrows(
+      () => parseMarkdown("# Heading", { idPrefix }),
+      MarkdownParseError,
+      "id prefix",
+    );
+  }
+  assertEquals(
+    headingFacts(parseMarkdown("# Heading", { idPrefix: "" }).children),
+    ["h1#heading"],
+  );
+});

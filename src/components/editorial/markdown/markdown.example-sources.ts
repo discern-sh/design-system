@@ -75,6 +75,19 @@ export const markdownReadingHierarchyExampleSource = [
   "###### Supporting note",
 ].join("\n");
 
+/** One entry placed twice on a page, exercising scoped destinations. */
+export const markdownPlacedExampleSource = [
+  "# Release summary",
+  "",
+  "Skip to [the changes](#changes) or open the [full archive](/releases/).",
+  "",
+  "## Changes",
+  "",
+  "Destinations stay inside their own entry[^measure].",
+  "",
+  "[^measure]: Measured against the previous edition.",
+].join("\n");
+
 /** Unsafe constructs that must remain inert and visibly represented. */
 export const markdownHostileExampleSource = [
   '<script>alert("inert")</script>',
