@@ -11,7 +11,7 @@
     display: flex;
     gap: var(--discern-space-5);
     align-items: center;
-    max-inline-size: var(--discern-page-max);
+    max-inline-size: var(--discern-docs-header-max, var(--discern-page-max));
     min-block-size: 3.25rem;
     margin-inline: auto;
     padding: var(--discern-space-2) var(--discern-space-5);

@@ -13,6 +13,7 @@ const meta = {
   accessibility: [
     "The header element is a banner landmark; slotted controls keep their own semantics and focus outlines.",
     "The translucent surface keeps token-driven text contrast over scrolled content in both themes.",
+    "The inner row measures against --discern-docs-header-max, falling back to --discern-page-max, so a shell whose columns run wider than an article widens the bar without re-pointing the page token.",
   ],
 } satisfies ComponentMeta;
 

@@ -23,3 +23,17 @@ Deno.test("Pager names the reading sequence with rel on both links", () => {
     'rel="next"',
   );
 });
+
+Deno.test("Docs header measures its row against a component token before the page maximum", async () => {
+  const css = await Deno.readTextFile(
+    new URL(
+      "../src/components/docs/docs-header/docs-header.css",
+      import.meta.url,
+    ),
+  );
+  assertStringIncludes(
+    css,
+    "max-inline-size: var(--discern-docs-header-max, var(--discern-page-max));",
+  );
+  assertEquals(css.match(/--discern-page-max/g)?.length, 1);
+});
