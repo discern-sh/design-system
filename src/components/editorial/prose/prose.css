@@ -13,7 +13,7 @@
     & > :where(figure, blockquote):not(.discern-pull-quote--wide) {
       margin-inline: 0;
     }
-    & > :where(blockquote, figure, aside, section, pre, h3),
+    & > :where(blockquote, figure, aside, section, pre, h3, .discern-anchor-heading:has(> h3)),
     & > :where(blockquote, figure, aside, section, pre) + * {
       --discern-prose-gap: var(--discern-space-8);
     }
@@ -21,18 +21,18 @@
     & :where(sup[id], sup > a[id]) {
       scroll-margin-block-start: var(--discern-space-4);
     }
-    & > h2 {
+    & > :where(h2, .discern-anchor-heading:has(> h2)) {
       --discern-prose-gap: var(--discern-rhythm-section);
       padding-block-start: var(--discern-space-5);
       border-block-start: 1px solid var(--discern-color-border-strong);
     }
-    & > :where(h1, h2, h3, h4, h5, h6) + * {
+    & > :where(h1, h2, h3, h4, h5, h6, .discern-anchor-heading) + * {
       --discern-prose-gap: var(--discern-space-4);
     }
     & > :first-child {
       --discern-prose-gap: 0px;
     }
-    & > h2:first-child {
+    & > :where(h2, .discern-anchor-heading:has(> h2)):first-child {
       padding-block-start: 0;
       border-block-start: 0;
     }

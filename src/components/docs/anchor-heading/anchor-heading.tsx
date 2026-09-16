@@ -8,13 +8,21 @@ import type { AnchorHeadingLevel } from "./anchor-heading.types.ts";
 /** Props for the {@linkcode AnchorHeading} component. */
 export interface AnchorHeadingProps
   extends Omit<HTMLAttributes<HTMLHeadingElement>, "id"> {
+  /** Document-unique fragment destination carried by the heading element. */
   readonly id: string;
   readonly level?: AnchorHeadingLevel;
+  /** Accessible name of the self link, which never joins the heading's name. */
   readonly anchorLabel?: string;
   readonly children: ReactNode;
 }
 
-/** Heading with a hover-revealed self link, so any section can be linked to directly. */
+/**
+ * Heading with a hover-revealed self link, so any section can be linked to
+ * directly. The heading and the link are siblings inside one row, so
+ * assistive technology reads the heading text alone. `className` names the
+ * row; every other attribute and the forwarded ref address the heading
+ * element, which keeps the id and the fragment focus target.
+ */
 export const AnchorHeading: DiscernComponent<
   HTMLHeadingElement,
   AnchorHeadingProps
@@ -30,15 +38,10 @@ export const AnchorHeading: DiscernComponent<
   ref,
 ) {
   return (
-    <Heading
-      ref={ref}
-      level={level}
-      id={id}
-      tabIndex={-1}
-      className={classNames("discern-anchor-heading", className)}
-      {...props}
-    >
-      {children}
+    <div className={classNames("discern-anchor-heading", className)}>
+      <Heading ref={ref} level={level} id={id} tabIndex={-1} {...props}>
+        {children}
+      </Heading>
       <a
         className="discern-anchor-heading__anchor"
         href={`#${encodeURIComponent(id)}`}
@@ -46,6 +49,6 @@ export const AnchorHeading: DiscernComponent<
       >
         §
       </a>
-    </Heading>
+    </div>
   );
 });

@@ -1,6 +1,13 @@
 @layer discern.components {
   .discern-anchor-heading {
-    position: relative;
+    display: flex;
+    gap: var(--discern-space-2);
+    align-items: baseline;
+  }
+  .discern-anchor-heading > :is(h1, h2, h3, h4, h5, h6) {
+    flex: 1;
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
     scroll-margin-block-start: var(--discern-space-4);
   }
   .discern-anchor-heading__anchor {
@@ -8,7 +15,6 @@
     place-items: center;
     min-inline-size: 1.5rem;
     min-block-size: 1.5rem;
-    margin-inline-start: var(--discern-space-2);
     color: var(--discern-color-accent-600);
     font-weight: var(--discern-font-weight-body);
     text-decoration: none;
