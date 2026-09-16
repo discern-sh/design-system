@@ -14,7 +14,11 @@ import {
   componentAuthorGuide,
   componentMetadata,
 } from "../src/component-metadata.ts";
-import { componentReactPropsName } from "../scripts/component-author-guide.ts";
+import {
+  componentReactExportName,
+  componentReactPropsName,
+} from "../scripts/component-author-guide.ts";
+import { loadComponentSources } from "../scripts/generate.ts";
 
 const IMPLEMENTATION = "file:///checkout/src/components/probe/probe.tsx";
 const TYPES = "file:///checkout/src/components/probe/probe.types.ts";
@@ -120,6 +124,73 @@ const graph: DocumentedGraph = {
           }],
         },
         {
+          name: "Probe",
+          declarations: [{
+            kind: "variable",
+            declarationKind: "export",
+            location: { filename: IMPLEMENTATION },
+            def: {
+              tsType: typeRef("DiscernComponent", { kind: "import" }, [
+                typeRef("HTMLElement"),
+                typeRef("ProbeProps", { kind: "local" }),
+              ]),
+            },
+          }],
+        },
+        {
+          name: "ProbeRow",
+          declarations: [{
+            kind: "variable",
+            declarationKind: "export",
+            location: { filename: IMPLEMENTATION },
+            jsDoc: { doc: "One row inside a Probe." },
+            def: {
+              tsType: typeRef("DiscernComponent", { kind: "import" }, [
+                typeRef("HTMLLIElement"),
+                typeRef("ProbeRowProps", { kind: "local" }),
+              ]),
+            },
+          }],
+        },
+        {
+          name: "ProbeRowProps",
+          declarations: [{
+            kind: "interface",
+            declarationKind: "export",
+            location: { filename: IMPLEMENTATION },
+            jsDoc: { doc: "Props for the {@linkcode ProbeRow} companion." },
+            def: {
+              properties: [
+                {
+                  name: "item",
+                  readonly: true,
+                  tsType: typeRef("ProbeItem", { kind: "local" }),
+                  jsDoc: { doc: "The entry this row presents." },
+                },
+                {
+                  name: "tone",
+                  readonly: true,
+                  optional: true,
+                  tsType: typeRef("ProbeTone", {
+                    kind: "import",
+                    specifier: "./probe.types.ts",
+                    name: "ProbeTone",
+                  }),
+                },
+              ],
+            },
+          }],
+        },
+        {
+          name: "probeHelper",
+          declarations: [{
+            kind: "variable",
+            declarationKind: "export",
+            location: { filename: IMPLEMENTATION },
+            def: { tsType: keyword("string") },
+          }],
+        },
+        {
           name: "ProbeItem",
           declarations: [{
             kind: "interface",
@@ -169,7 +240,7 @@ const graph: DocumentedGraph = {
   },
 };
 
-Deno.test("the props guide states the declaration, each property, and referenced package types", () => {
+Deno.test("the props guide states the declaration, each property, referenced package types, and every companion adapter", () => {
   const lines = renderComponentPropsGuide(
     new DocumentedSymbolIndex(graph),
     "Probe",
@@ -182,7 +253,58 @@ Deno.test("the props guide states the declaration, each property, and referenced
     "- onSelect?: (item: ProbeItem) => void",
     "- ProbeItem: { id: string; detail?: { count: number } } — One probe entry.",
     '- ProbeTone: "calm" | "alert" — Tone shared by web and CLI.',
+    "Companion `ProbeRow` props: `ProbeRowProps`.",
+    "- item: ProbeItem — The entry this row presents.",
+    "- tone?: ProbeTone",
   ]);
+});
+
+Deno.test("the props guide refuses a companion adapter whose props type is undocumented", () => {
+  const orphaned: DocumentedGraph = {
+    nodes: {
+      ...graph.nodes,
+      [IMPLEMENTATION]: {
+        symbols: (graph.nodes[IMPLEMENTATION]?.symbols ?? []).filter((
+          symbol,
+        ) => symbol.name !== "ProbeRowProps"),
+      },
+    },
+  };
+  assertThrows(
+    () =>
+      renderComponentPropsGuide(new DocumentedSymbolIndex(orphaned), "Probe"),
+    Error,
+    "ProbeRowProps is not documented",
+  );
+});
+
+Deno.test("the committed guide documents every companion adapter an implementation exports", async () => {
+  const sources = await loadComponentSources();
+  for (const meta of componentMetadata) {
+    const source = sources.find((candidate) =>
+      candidate.meta.slug === meta.slug
+    );
+    if (source === undefined) throw new Error(`${meta.slug} has no source`);
+    const implementation = await Deno.readTextFile(source.implementationUrl);
+    const adapters = [
+      ...implementation.matchAll(/^export const (\w+): DiscernComponent</gmu),
+    ].map((match) => match[1]);
+    const heading = `\n### ${meta.name} (\`${meta.slug}\`)\n`;
+    const start = componentAuthorGuide.indexOf(heading);
+    const end = componentAuthorGuide.indexOf("\n### ", start + heading.length);
+    const section = componentAuthorGuide.slice(
+      start,
+      end === -1 ? undefined : end,
+    );
+    for (const adapter of adapters) {
+      if (adapter === componentReactExportName(meta.slug)) continue;
+      assertStringIncludes(
+        section,
+        `\nCompanion \`${adapter}\` props: \`${adapter}Props\``,
+        `${meta.slug} exports ${adapter} without a guide block`,
+      );
+    }
+  }
 });
 
 Deno.test("the props guide refuses a Component whose adapter exports no props type", () => {

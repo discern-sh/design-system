@@ -244,6 +244,25 @@ export class DocumentedSymbolIndex {
     }
   }
 
+  /**
+   * The companion adapters a Component's implementation exports beside the
+   * main one: every exported `DiscernComponent` variable in that module
+   * other than the named adapter, in declaration order.
+   */
+  companions(filename: string, pascal: string): readonly string[] {
+    const module = this.#byModule.get(filename);
+    if (module === undefined) return [];
+    return [...module.entries()]
+      .filter(([name, declaration]) =>
+        name !== pascal && declaration.kind === "variable" &&
+        declaration.declarationKind === "export" &&
+        declaration.def?.tsType?.kind === "typeRef" &&
+        (declaration.def.tsType.value as TypeRefValue).typeName ===
+          "DiscernComponent"
+      )
+      .map(([name]) => name);
+  }
+
   /** Resolve a reference in its own module first, then anywhere by name. */
   resolve(reference: Reference): DocumentedDeclaration | undefined {
     if (reference.filename !== undefined) {
@@ -290,22 +309,16 @@ function declarationLine(
 }
 
 /**
- * Render the props block for one Component: the props declaration, every
- * property with its type and doc, then each referenced package type.
- * Throws when the documented surface lacks the props type, so a Component
- * whose adapter stops exporting `<Pascal>Props` fails generation.
+ * Render one props declaration under its label, every property with its
+ * type and doc, then each referenced package type not rendered before.
  */
-export function renderComponentPropsGuide(
+function renderPropsBlock(
   index: DocumentedSymbolIndex,
-  pascal: string,
+  label: string,
+  props: DocumentedDeclaration,
+  propsName: string,
+  rendered: Set<string>,
 ): readonly string[] {
-  const propsName = `${pascal}Props`;
-  const props = index.resolve({ name: propsName });
-  if (props === undefined) {
-    throw new Error(
-      `${propsName} is not documented on the React surface; every Component adapter exports <Pascal>Props`,
-    );
-  }
   const filename = props.location.filename;
   const def = props.def ?? {};
   const lines: string[] = [];
@@ -313,7 +326,7 @@ export function renderComponentPropsGuide(
   if (props.kind === "interface") {
     const extended = (def.extends ?? []).map(formatDocumentedType);
     lines.push(
-      `Props: \`${propsName}\`${
+      `${label}: \`${propsName}\`${
         extended.length === 0 ? "" : ` extends ${extended.join(", ")}`
       }.`,
     );
@@ -329,11 +342,11 @@ export function renderComponentPropsGuide(
     }
   } else {
     lines.push(
-      `Props: \`${propsName}\` is ${formatDocumentedType(def.tsType)}.`,
+      `${label}: \`${propsName}\` is ${formatDocumentedType(def.tsType)}.`,
     );
     referencesIn(def.tsType, filename, pending);
   }
-  const rendered = new Set<string>([propsName]);
+  rendered.add(propsName);
   let depth = 0;
   let frontier = pending;
   while (frontier.length > 0 && depth < MAXIMUM_DEPTH) {
@@ -355,6 +368,53 @@ export function renderComponentPropsGuide(
     }
     frontier = next;
     depth += 1;
+  }
+  return lines;
+}
+
+/**
+ * Render the props block for one Component: the props declaration, every
+ * property with its type and doc, then each referenced package type; then
+ * the same for every companion adapter the implementation exports beside
+ * it, labelled with the adapter it belongs to. Throws when the documented
+ * surface lacks a props type, so a Component whose adapter stops exporting
+ * `<Pascal>Props` fails generation.
+ */
+export function renderComponentPropsGuide(
+  index: DocumentedSymbolIndex,
+  pascal: string,
+): readonly string[] {
+  const propsName = `${pascal}Props`;
+  const props = index.resolve({ name: propsName });
+  if (props === undefined) {
+    throw new Error(
+      `${propsName} is not documented on the React surface; every Component adapter exports <Pascal>Props`,
+    );
+  }
+  const rendered = new Set<string>();
+  const lines = [
+    ...renderPropsBlock(index, "Props", props, propsName, rendered),
+  ];
+  for (const companion of index.companions(props.location.filename, pascal)) {
+    const companionProps = `${companion}Props`;
+    const declaration = index.resolve({
+      name: companionProps,
+      filename: props.location.filename,
+    });
+    if (declaration === undefined) {
+      throw new Error(
+        `${companionProps} is not documented on the React surface; every companion adapter exports <Name>Props`,
+      );
+    }
+    lines.push(
+      ...renderPropsBlock(
+        index,
+        `Companion \`${companion}\` props`,
+        declaration,
+        companionProps,
+        rendered,
+      ),
+    );
   }
   return lines;
 }
