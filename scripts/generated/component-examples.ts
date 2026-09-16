@@ -2624,6 +2624,15 @@ export const componentExampleRegistry = {
       "reason":
         "Modal focus management, query input, and result activation belong to an interactive terminal driver.",
     },
+    {
+      "id": "static",
+      "label": "Static markup",
+      "surfaces": [
+        "web",
+      ],
+      "reason":
+        "The static contract exists so a consumer script can drive markup that shipped without hydration; a terminal renderer has no dialog to drive.",
+    },
   ],
   "anchor-heading": [
     {

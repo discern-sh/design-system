@@ -84,9 +84,10 @@
     padding: var(--discern-space-3) var(--discern-space-4);
     border-radius: var(--discern-radius-sm);
     color: var(--discern-color-ink);
+    cursor: pointer;
     text-decoration: none;
   }
-  .discern-search-palette__result:is(:hover, :focus-visible) {
+  .discern-search-palette__result:is(:hover, :focus-visible, [aria-selected="true"]) {
     background: var(--discern-color-accent-100);
     color: var(--discern-color-accent-700);
   }

@@ -11,6 +11,14 @@ import { launchBrowser } from "../scripts/browser.ts";
 import { testTerminalCapabilities } from "../src/cli/interactive/testing.ts";
 import { AnchorHeading } from "../src/components/docs/anchor-heading/anchor-heading.tsx";
 import { Pager } from "../src/components/docs/pager/pager.tsx";
+import {
+  SearchPalette,
+  SearchPaletteEmpty,
+  SearchPaletteList,
+  SearchPaletteOption,
+  SearchPaletteResult,
+  SearchPaletteStatus,
+} from "../src/components/docs/search-palette/search-palette.tsx";
 import { Prose } from "../src/components/editorial/prose/prose.tsx";
 import renderTableOfContentsCli from "../src/components/editorial/table-of-contents/table-of-contents.cli.ts";
 import { TableOfContents } from "../src/components/editorial/table-of-contents/table-of-contents.tsx";
@@ -160,4 +168,87 @@ Deno.test("Table of contents honours authored numbers and counts only the sequen
     "  A  Appendix",
     "  02 Apply",
   ]);
+});
+
+Deno.test("Search palette keeps its controlled markup and gains hooks only in static mode", () => {
+  const results = (
+    <ul className="discern-search-palette__list">
+      <li>
+        <SearchPaletteResult href="#a" title="A" context="B" />
+      </li>
+    </ul>
+  );
+  const controlled = renderToStaticMarkup(
+    <SearchPalette
+      open={false}
+      onOpenChange={() => undefined}
+      value="q"
+      onValueChange={() => undefined}
+      icon="⌕"
+      hint="hint"
+      id="palette"
+      className="consumer"
+      inputProps={{ id: "field" }}
+    >
+      {results}
+    </SearchPalette>,
+  );
+  assertEquals(
+    controlled,
+    '<dialog aria-label="Search" class="discern-search-palette consumer" id="palette" data-discern-floating-surface="surface"><div class="discern-search-palette__field"><span class="discern-search-palette__icon" aria-hidden="true">⌕</span><input class="discern-search-palette__input" type="search" aria-label="Search" placeholder="Type to search…" autofocus="" id="field" value="q"/><button class="discern-search-palette__close" type="button" aria-label="Close search">Close</button></div><div class="discern-search-palette__results"><ul class="discern-search-palette__list"><li><a class="discern-search-palette__result" href="#a"><span class="discern-search-palette__result-title">A</span><span class="discern-search-palette__result-context">B</span></a></li></ul></div><div class="discern-search-palette__hint">hint</div></dialog>',
+  );
+
+  const html = renderToStaticMarkup(
+    <SearchPalette
+      label="the manual"
+      closeAriaLabel="Close search"
+      inputProps={{ role: "combobox", "aria-controls": "results" }}
+    >
+      <SearchPaletteList id="results" data-consumer-list="">
+        <SearchPaletteOption id="r0" title="First" context="Where" selected />
+        <SearchPaletteOption id="r1" title="Second" />
+      </SearchPaletteList>
+      <SearchPaletteEmpty data-consumer-empty="">
+        Nothing yet.
+      </SearchPaletteEmpty>
+      <SearchPaletteStatus data-consumer-status="" />
+    </SearchPalette>,
+  );
+  assertMatch(
+    html,
+    /^<dialog aria-label="the manual" class="discern-search-palette" data-discern-search-palette="" data-discern-floating-surface="surface">/,
+  );
+  assertMatch(
+    html,
+    /<input class="discern-search-palette__input" type="search" aria-label="the manual" placeholder="Type to search…" data-discern-search-palette-input="" role="combobox" aria-controls="results"\/>/,
+  );
+  assertMatch(
+    html,
+    /<button class="discern-search-palette__close" type="button" aria-label="Close search" data-discern-search-palette-close="">Close<\/button>/,
+  );
+  assertMatch(
+    html,
+    /<ul role="listbox" aria-label="Search results" class="discern-search-palette__list" id="results" data-consumer-list=""><li role="option" aria-selected="true" class="discern-search-palette__result" id="r0"><span class="discern-search-palette__result-title">First<\/span><span class="discern-search-palette__result-context">Where<\/span><\/li><li role="option" aria-selected="false" class="discern-search-palette__result" id="r1">/,
+  );
+  assertStringIncludes(
+    html,
+    '<p hidden="" class="discern-search-palette__empty" data-consumer-empty="">Nothing yet.</p>',
+  );
+  assertStringIncludes(
+    html,
+    '<div role="status" aria-live="polite" aria-atomic="true" class="discern-search-palette__status discern-visually-hidden" data-consumer-status=""></div>',
+  );
+  for (const forbidden of ["autofocus", " open", "value="]) {
+    assertEquals(
+      html.includes(forbidden),
+      false,
+      `static mode emits ${forbidden}`,
+    );
+  }
+  assertEquals(
+    renderToStaticMarkup(<SearchPalette>{null}</SearchPalette>).includes(
+      'aria-label="Close search"',
+    ),
+    true,
+  );
 });

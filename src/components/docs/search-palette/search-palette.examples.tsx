@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useId, useRef, useState } from "react";
+import type { MouseEvent } from "react";
 import {
   type ConformanceScenario,
   defineCatalogueExamples,
@@ -7,7 +8,14 @@ import { defineComponentReviewPostures } from "../../../../catalogue/review-post
 import { Button } from "../../core/button/button.tsx";
 import { Kbd } from "../kbd/kbd.tsx";
 import meta, { componentExampleVocabulary } from "./search-palette.meta.ts";
-import { SearchPalette, SearchPaletteResult } from "./search-palette.tsx";
+import {
+  SearchPalette,
+  SearchPaletteEmpty,
+  SearchPaletteList,
+  SearchPaletteOption,
+  SearchPaletteResult,
+  SearchPaletteStatus,
+} from "./search-palette.tsx";
 
 const DESTINATIONS = [
   {
@@ -65,7 +73,85 @@ export const conformance = [{
     { expect: "hidden", target: { role: "dialog", name: "Search" } },
     { expect: "focused", target: { role: "button", name: "Open search" } },
   ],
+}, {
+  example: "static",
+  name:
+    "static markup opens, closes, and restores focus under the consumer's own script",
+  steps: [
+    { action: "click", target: { role: "button", name: "Open static search" } },
+    { expect: "visible", target: { role: "dialog", name: "Search" } },
+    { expect: "focused", target: { role: "combobox", name: "Search" } },
+    {
+      expect: "attribute",
+      target: { role: "combobox", name: "Search" },
+      attribute: "data-discern-search-palette-input",
+      value: "",
+    },
+    { expect: "visible", target: { role: "listbox", name: "Search results" } },
+    { action: "press", key: "Escape" },
+    { expect: "hidden", target: { role: "dialog", name: "Search" } },
+    {
+      expect: "focused",
+      target: { role: "button", name: "Open static search" },
+    },
+    { action: "click", target: { role: "button", name: "Open static search" } },
+    { action: "click", target: { role: "button", name: "Dismiss search" } },
+    { expect: "hidden", target: { role: "dialog", name: "Search" } },
+  ],
 }] satisfies readonly ConformanceScenario[];
+
+/**
+ * The static contract: the palette renders closed with bindable hooks, and
+ * the two handlers here stand in for the consumer script that owns opening
+ * and dismissal on a page without hydration; a modal dialog focuses its
+ * first focusable control, the field, natively.
+ */
+function StaticSearchPaletteExample() {
+  const dialog = useRef<HTMLDialogElement>(null);
+  const listId = `results-${useId()}`;
+  const open = () => dialog.current?.showModal();
+  const dismiss = (event: MouseEvent<HTMLDivElement>) => {
+    if (
+      event.target instanceof Element &&
+      event.target.closest("[data-discern-search-palette-close]")
+    ) dialog.current?.close();
+  };
+  return (
+    <div onClick={dismiss}>
+      <Button onClick={open}>Open static search</Button>
+      <SearchPalette
+        ref={dialog}
+        closeAriaLabel="Dismiss search"
+        inputProps={{
+          role: "combobox",
+          "aria-controls": listId,
+          "aria-expanded": true,
+          "aria-autocomplete": "list",
+          "aria-activedescendant": `${listId}-0`,
+        }}
+        hint={
+          <span>
+            <Kbd>Esc</Kbd> close
+          </span>
+        }
+      >
+        <SearchPaletteList id={listId}>
+          {DESTINATIONS.map((destination, index) => (
+            <SearchPaletteOption
+              key={destination.href}
+              id={`${listId}-${index}`}
+              title={destination.title}
+              context={destination.context}
+              selected={index === 0}
+            />
+          ))}
+        </SearchPaletteList>
+        <SearchPaletteEmpty>No matches.</SearchPaletteEmpty>
+        <SearchPaletteStatus>3 search results</SearchPaletteStatus>
+      </SearchPalette>
+    </div>
+  );
+}
 
 export default function SearchPaletteExamples() {
   const [open, setOpen] = useState(false);
@@ -126,6 +212,13 @@ export const catalogueExamples = defineCatalogueExamples(
     Example: SearchPaletteExamples,
     capture: {
       prepare: [{ action: "click", selector: ":scope > .discern-button" }],
+      selectors: [".discern-search-palette"],
+    },
+  }, {
+    id: "static",
+    Example: StaticSearchPaletteExample,
+    capture: {
+      prepare: [{ action: "click", selector: ".discern-button" }],
       selectors: [".discern-search-palette"],
     },
   }],
