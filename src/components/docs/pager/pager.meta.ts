@@ -12,6 +12,7 @@ const meta = {
   accessibility: [
     "A configurable label names the navigation landmark, distinct from the page's primary navigation.",
     "Direction words are real text inside each link, so the announced name carries both direction and destination.",
+    "Each link carries rel=\"prev\" or rel=\"next\", so user agents and crawlers read the sequence without parsing the labels.",
   ],
 } satisfies ComponentMeta;
 

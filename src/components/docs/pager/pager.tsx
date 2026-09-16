@@ -49,6 +49,7 @@ export const Pager: DiscernComponent<HTMLElement, PagerProps> = forwardRef<
           <a
             className="discern-pager__link discern-pager__link--previous"
             href={previous.href}
+            rel="prev"
           >
             <span className="discern-pager__direction">{previousLabel}</span>
             <span className="discern-pager__title">{previous.label}</span>
@@ -59,6 +60,7 @@ export const Pager: DiscernComponent<HTMLElement, PagerProps> = forwardRef<
         <a
           className="discern-pager__link discern-pager__link--next"
           href={next.href}
+          rel="next"
         >
           <span className="discern-pager__direction">{nextLabel}</span>
           <span className="discern-pager__title">{next.label}</span>
