@@ -145,7 +145,7 @@ import meta141 from "../components/editorial/footnotes/footnotes.meta.ts";
 import meta142 from "../components/editorial/related-content/related-content.meta.ts";
 
 /** The package version these facts were generated from. */
-export const packageVersion = "0.33.0";
+export const packageVersion = "0.34.0";
 
 /** Canonical public Metadata for every built-in Component, in Catalogue order. */
 export const componentMetadata = [
