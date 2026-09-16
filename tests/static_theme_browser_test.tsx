@@ -79,8 +79,15 @@ Deno.test("static Theme toggles activate, agree, and stay inside their own root"
     const rootTheme = (id: string) =>
       page.locator(`#${id}`).getAttribute("data-discern-theme");
     const visibleGlyph = (id: string) =>
-      page.locator(`#${id} [data-discern-theme-destination]:not([hidden])`)
-        .getAttribute("data-discern-theme-destination");
+      page.evaluate(
+        (button: string) =>
+          [...document.querySelectorAll<HTMLElement>(
+            `#${button} [data-discern-theme-destination]`,
+          )]
+            .filter((glyph) => glyph.checkVisibility())
+            .map((glyph) => glyph.dataset.discernThemeDestination),
+        id,
+      );
 
     await page.waitForFunction(
       () => !(document.getElementById("primary") as HTMLElement).inert,
@@ -88,7 +95,9 @@ Deno.test("static Theme toggles activate, agree, and stay inside their own root"
       { timeout: 2000 },
     );
     assertEquals(await label("primary"), "Switch to the dark theme");
-    assertEquals(await visibleGlyph("primary"), "dark");
+    // Exactly one glyph reaches the reader, whatever the stylesheet says about
+    // the element's display.
+    assertEquals(await visibleGlyph("primary"), ["dark"]);
     // A control outside every opted-in root is never activated.
     assertEquals(
       await page.locator("#outside-root").evaluate((element: HTMLElement) =>
@@ -108,7 +117,7 @@ Deno.test("static Theme toggles activate, agree, and stay inside their own root"
     // Every control in the root agrees, whatever was pressed.
     for (const id of ["primary", "secondary", "cancelled"]) {
       assertEquals(await label(id), "Switch to the light theme");
-      assertEquals(await visibleGlyph(id), "light");
+      assertEquals(await visibleGlyph(id), ["light"]);
     }
     assertEquals(
       await page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY),

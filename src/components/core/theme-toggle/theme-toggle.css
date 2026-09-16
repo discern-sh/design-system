@@ -49,7 +49,7 @@
       transparent);
     background: transparent;
   }
-  .discern-theme-toggle__glyph {
+  .discern-theme-toggle__glyph:not([hidden]) {
     display: inline-flex;
     align-items: center;
   }

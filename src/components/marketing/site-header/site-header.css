@@ -133,11 +133,15 @@
   .discern-site-header__nav a:is(:hover, :focus-visible, [aria-current]) {
     color: var(--discern-color-ink);
   }
-  .discern-site-header__nav a[aria-current="page"] {
+  .discern-site-header__nav a[aria-current] {
     text-decoration-line: underline;
     text-decoration-color: var(--discern-color-accent-500);
     text-decoration-thickness: 0.125rem;
     text-underline-offset: 0.35em;
+  }
+  .discern-site-header__nav a[aria-current="true"] {
+    text-decoration-style: dotted;
+    text-decoration-color: var(--discern-color-ink-faint);
   }
   .discern-site-header__actions {
     display: flex;

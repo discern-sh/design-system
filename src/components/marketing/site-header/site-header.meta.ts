@@ -19,7 +19,7 @@ const meta = {
   ],
   accessibility: [
     "Navigation has a configurable accessible label.",
-    "A navigation item marked current renders aria-current: page for the exact destination and true for the section containing it, so the treatment is never colour alone.",
+    "A navigation item marked current renders aria-current: page for the exact destination and true for the section containing it; a solid accent rule and a quiet dotted one keep the two distinct without relying on colour.",
     "At narrow widths links remain available in a horizontally scrollable row in both variants.",
   ],
 } satisfies ComponentMeta;
