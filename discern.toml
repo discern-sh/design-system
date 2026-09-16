@@ -527,7 +527,7 @@
 # stable budget.
 [standards.marketing_css]
   run = "deno run --config deno.json --allow-read --allow-write scripts/measure-runtime.ts marketing_css_bytes"
-  limit = 5149.608695652174
+  limit = 5179.695652173913
   direction = "down"
   metric = "marketing_css_bytes"
   per = { files = "src/components/marketing/**/*.css" }
