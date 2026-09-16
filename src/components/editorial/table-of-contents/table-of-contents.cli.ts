@@ -20,13 +20,16 @@ import {
   terminalToneColor,
 } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./table-of-contents.meta.ts";
+import {
+  type TableOfContentsNumbering,
+  tableOfContentsNumbers,
+} from "./table-of-contents.numbers.ts";
 
 /** One terminal Table of contents destination. */
-export interface TableOfContentsCliItem {
+export interface TableOfContentsCliItem extends TableOfContentsNumbering {
   readonly label: string;
   readonly href: string;
   readonly current?: boolean;
-  readonly nested?: boolean;
 }
 
 /** Inputs accepted by the terminal Table of contents renderer. */
@@ -48,6 +51,27 @@ const cliExampleImplementations = [{
       { label: "Notes and sources", href: "#notes" },
     ],
     progress: "12 minute read · 1 of 4",
+  },
+}, {
+  name: "authored-numbers",
+  props: {
+    items: [
+      { label: "Starting state", href: "#starting-state", number: false },
+      { label: "Find the source", href: "#find-the-source", number: "1" },
+      { label: "Write the rule", href: "#write-the-rule", number: "2" },
+      { label: "Check the result", href: "#check-the-result", nested: true },
+      { label: "Completion", href: "#completion", number: false },
+    ],
+  },
+}, {
+  name: "mixed-numbers",
+  props: {
+    items: [
+      { label: "Overview", href: "#overview", number: false },
+      { label: "Prepare", href: "#prepare" },
+      { label: "Appendix", href: "#appendix", number: "A" },
+      { label: "Apply", href: "#apply", current: true },
+    ],
   },
 }] as const satisfies readonly CliExample<TableOfContentsCliProps>[];
 defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
@@ -83,9 +107,9 @@ const renderTableOfContentsCli: CliRenderer<TableOfContentsCliProps> = (
     ...theme.typography.strong,
     color: terminalToneColor(theme, "accent"),
   }, capabilities)];
-  let section = 0;
+  const numbers = tableOfContentsNumbers(props.items);
   for (const [index, item] of props.items.entries()) {
-    if (item.nested !== true) section += 1;
+    const number = numbers[index];
     const marker = item.current === true
       ? triangleGlyph(TRIANGLES.filled.right, capabilities.unicode)
       : " ";
@@ -93,9 +117,9 @@ const renderTableOfContentsCli: CliRenderer<TableOfContentsCliProps> = (
     const branch = capabilities.unicode
       ? (hasFollowingNestedItem ? "├─" : "└─")
       : (hasFollowingNestedItem ? "+-" : "\\-");
-    const prefix = item.nested === true
+    const prefix = number === undefined
       ? `${marker} ${branch} `
-      : `${marker} ${String(section).padStart(2, "0")} `;
+      : `${marker} ${number.padEnd(2)} `;
     const target = props.showTargets === true ? ` (${item.href})` : "";
     const line = hanging(prefix, `${item.label}${target}`, width);
     blocks.push(

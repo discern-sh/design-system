@@ -3,6 +3,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { useInitialFragmentTarget } from "../../use-initial-fragment-target.ts";
+import { tableOfContentsNumbers } from "./table-of-contents.numbers.ts";
 
 /** One item entry rendered by the Table of contents component. */
 export interface TableOfContentsItem {
@@ -10,6 +11,13 @@ export interface TableOfContentsItem {
   readonly href: string;
   readonly current?: boolean;
   readonly nested?: boolean;
+  /**
+   * Authored number for a top-level item: a string renders verbatim in the
+   * number slot without advancing the sequence, `false` leaves the slot
+   * empty for a framing section, and `undefined` takes the next
+   * sequential number.
+   */
+  readonly number?: string | false;
 }
 
 /** Props for the {@linkcode TableOfContents} component. */
@@ -37,7 +45,7 @@ export const TableOfContents: DiscernComponent<
   ref,
 ) {
   useInitialFragmentTarget();
-  let sectionNumber = 0;
+  const numbers = tableOfContentsNumbers(items);
   return (
     <nav
       ref={ref}
@@ -47,8 +55,8 @@ export const TableOfContents: DiscernComponent<
     >
       <strong className="discern-table-of-contents__title">{title}</strong>
       <ol>
-        {items.map((item) => {
-          const number = item.nested ? undefined : ++sectionNumber;
+        {items.map((item, index) => {
+          const number = numbers[index];
           return (
             <li
               className={classNames(
@@ -61,9 +69,7 @@ export const TableOfContents: DiscernComponent<
                 href={item.href}
                 aria-current={item.current ? "location" : undefined}
               >
-                {number === undefined
-                  ? null
-                  : <span>{String(number).padStart(2, "0")}</span>}
+                {number === undefined ? null : <span>{number}</span>}
                 {item.label}
               </a>
             </li>

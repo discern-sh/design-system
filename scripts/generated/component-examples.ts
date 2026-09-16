@@ -3103,6 +3103,22 @@ export const componentExampleRegistry = {
         "cli",
       ],
     },
+    {
+      "id": "authored-numbers",
+      "label": "Authored numbers",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
+    {
+      "id": "mixed-numbers",
+      "label": "Mixed numbering",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
   ],
   "prose": [
     {

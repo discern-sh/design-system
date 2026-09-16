@@ -8,9 +8,12 @@ import { assertEquals, assertMatch, assertStringIncludes } from "@std/assert";
 import { toFileUrl } from "@std/path";
 import { renderToStaticMarkup } from "react-dom/server";
 import { launchBrowser } from "../scripts/browser.ts";
+import { testTerminalCapabilities } from "../src/cli/interactive/testing.ts";
 import { AnchorHeading } from "../src/components/docs/anchor-heading/anchor-heading.tsx";
 import { Pager } from "../src/components/docs/pager/pager.tsx";
 import { Prose } from "../src/components/editorial/prose/prose.tsx";
+import renderTableOfContentsCli from "../src/components/editorial/table-of-contents/table-of-contents.cli.ts";
+import { TableOfContents } from "../src/components/editorial/table-of-contents/table-of-contents.tsx";
 import { emitDesignSystemRuntime } from "../src/runtime.ts";
 
 Deno.test("Pager names the reading sequence with rel on both links", () => {
@@ -125,4 +128,36 @@ Deno.test("Prose gives an anchor-heading row the rhythm and section rule of a ba
     await browser.close();
     await Deno.remove(output, { recursive: true });
   }
+});
+
+const numberedItems = [
+  { label: "Starting state", href: "#start", number: false },
+  { label: "Find the source", href: "#find", number: "1" },
+  { label: "A closer look", href: "#look", nested: true },
+  { label: "Prepare", href: "#prepare" },
+  { label: "Appendix", href: "#appendix", number: "A" },
+  { label: "Apply", href: "#apply" },
+] as const;
+
+Deno.test("Table of contents honours authored numbers and counts only the sequential items", () => {
+  const html = renderToStaticMarkup(<TableOfContents items={numberedItems} />);
+  const slots = [
+    ...html.matchAll(/<li[^>]*><a [^>]*>(?:<span>([^<]*)<\/span>)?/g),
+  ]
+    .map((match) => match[1]);
+  assertEquals(slots, ["", "1", undefined, "01", "A", "02"]);
+  assertEquals(html.match(/__item--nested/g)?.length, 1);
+
+  const terminal = renderTableOfContentsCli(
+    { items: numberedItems },
+    testTerminalCapabilities({ columns: 60, unicode: false }),
+  ).split("\n").slice(1);
+  assertEquals(terminal, [
+    "     Starting state",
+    "  1  Find the source",
+    "  \\- A closer look",
+    "  01 Prepare",
+    "  A  Appendix",
+    "  02 Apply",
+  ]);
 });
