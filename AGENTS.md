@@ -40,7 +40,7 @@ Keep one worktree for the whole effort, through review feedback and resumed sess
 ### Finishing an effort
 
 1. Run **`discern_prepare`**, review its changes, and commit the intended work for this effort. `prepare` may rewrite files; staging and committing remain your responsibility. Commit each logical change separately.
-2. Run **`discern_done`** on the clean, committed final tree; it refuses uncommitted work, includes the complete test stage, and reuses passing evidence whose inputs are unchanged, so a final gate needs no standalone test preflight; `discern_test` runs the complete test stage on demand when that stage is itself the requested task. Before any expensive repeat, name what changed or what new evidence it will obtain. Diagnose a timeout at the layer whose named budget fired; never raise a limit to pass.
+2. After the final commit, call **`discern_done`** directly on the clean, committed final tree. `discern_done` includes the complete test stage; the final gate needs no standalone test preflight. Use `discern_test` only when its complete test stage is the requested result; it publishes no reusable completion evidence. Before an expensive repeat, name what changed or what it will prove. Diagnose a timeout at the named budget; never raise a limit to pass.
 3. Read the completion evidence and landing-authority result. **Proof** records what the configured gate established for the exact validated commit. Later edits require renewed verification.
 4. Report what changed, what was verified, and anything still unresolved. End with the returned Proof line verbatim.
 
@@ -54,7 +54,7 @@ Standards protect measured limits: minimums may rise and maximums may fall. **`d
 
 **Never loosen or delete a limit to make a change pass.** Investigate the measured regression and try reasonable remedies within the authorized task. If satisfying the requested outcome requires changing a limit, explain the evidence, alternatives, and recommendation to the owner.
 
-After owner agreement, use **`discern_standards_propose`** and follow its procedure for measuring and recording the proposed limit. A general permission to land does not approve a standard-limit change.
+After owner agreement and the final ordinary commit, call **`discern_standards`** with `action: "propose"` and all simultaneously approved breaches in one `proposals` array. Give technical reasons, not authority claims. Changed values or reasons need fresh agreement; landing permission does not approve limits.
 
 When a measure improves, offer to preserve the gain by tightening its limit through **`discern_standards`** with `pin`.
 
@@ -72,11 +72,15 @@ When a session yields a durable lesson — a correction, a hard-won procedure, a
 
 ## The Map & decisions
 
-`map/` is the agent-maintained **map**, browsable with **`discern_map`**. Agents use the map to learn and navigate the project; humans use the map to audit agent understanding. Update the map when the reader's mental model, a durable boundary, a supported workflow, or a product behavior changes.
+`map/` is the **map**, browsable with **`discern_map`**: maintained explanations for agents and an account of their understanding for humans.
 
-Staleness is a defect, so keep the map current — a page is current when nothing in it is false. A map page must **reduce** the total amount of repository reading required to make a correct decision, so it should never restate what code, tests, or config already express — link the authority instead. Do not use the map to maintain independently mechanically derivable facts.
+Keep affected pages accurate when behavior, boundaries, constraints, or workflows change. Keep the map in the present, not as change history; remove resolved-bug narratives. Explain what readers need for correct changes; link supporting code, tests, configuration, and requirements. Useful implementation summaries belong here. Name functions for entry points or contracts; never transcribe every method or duplicate derivable inventories.
 
-The map records what the code cannot say (boundaries, invariants, intent, where to start). The map should read in the present, not as change history. Significant, hard-to-reverse decisions belong as ADRs instead — save **Architecture Decision Records** under `map/_adr/`.
+Extend existing sections first. Split pages for distinct reader tasks; create folders with READMEs for durable responsibilities. Keep the root for overview and navigation. Follow existing ordering; numbers are optional.
+
+Link relevant instructions, skills, checks, checkpoints, and ADRs; each keeps its own authority.
+
+Separate current behavior, agreed requirements, and open questions. Put concrete open work in `discern/TODO.md`. Preserve significant architectural rationale as **Architecture Decision Records** under `map/_adr/`. ADRs record decisions; they cannot authorize exceptions to agreed requirements.
 
 - `00-orientation` — Orientation
 - `10-tokens-themes` — Tokens & themes
@@ -91,7 +95,7 @@ The map records what the code cannot say (boundaries, invariants, intent, where 
 - `70-cli` — CLI rendering
 - `80-development` — Working on this project
 
-Stuck or missing context? Call `discern_map` with `search` in task language, then retrieve the best result using its returned `target`.
+Find context with `discern_map` `search` in task language, then retrieve the returned `target`.
 
 ---
 
