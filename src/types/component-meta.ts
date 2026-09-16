@@ -61,6 +61,7 @@ export const componentBehaviors = [
   "overflow-cue",
   "copy-button",
   "article-navigation",
+  "theme-toggle",
 ] as const;
 /** One selection-scoped browser behavior. */
 export type ComponentBehavior = (typeof componentBehaviors)[number];
@@ -79,6 +80,7 @@ export const componentBehaviorOptIns = {
     "prose",
     "footnotes",
   ],
+  "theme-toggle": ["theme-toggle"],
 } as const satisfies Readonly<Record<ComponentBehavior, readonly string[]>>;
 
 /** CLI stance for a component with a package-owned pure renderer. */

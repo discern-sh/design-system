@@ -34,6 +34,10 @@
   .discern-theme-toggle:focus-visible {
     color: var(--discern-color-ink);
   }
+  .discern-theme-toggle[inert] {
+    border-color: var(--discern-color-border);
+    color: var(--discern-color-ink-faint);
+  }
   .discern-theme-toggle:disabled {
     border-color: var(--discern-color-border);
     background: var(--discern-color-surface-sunken);

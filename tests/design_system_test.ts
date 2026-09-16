@@ -2310,9 +2310,27 @@ Deno.test("branding and hover-card adapters preserve their semantic relationship
     quietToggle,
     'data-discern-to-dark-label="Switch to the dark theme"',
   );
-  assertStringIncludes(quietToggle, 'data-discern-light-glyph="☀"');
-  assertStringIncludes(quietToggle, 'data-discern-dark-glyph="☾"');
+  // Both destination glyphs ship so a behavior swaps visibility rather than
+  // replacing authored nodes; only the destination one is visible.
+  assertStringIncludes(
+    quietToggle,
+    '<span class="discern-theme-toggle__glyph" aria-hidden="true" data-discern-theme-destination="dark">\u263e</span>',
+  );
+  assertStringIncludes(
+    quietToggle,
+    'data-discern-theme-destination="light" hidden',
+  );
   assert(!quietToggle.includes("aria-pressed"));
+  // A controlled toggle carries no static opt-in, so the behavior never sees
+  // the activation React already owns.
+  assert(!quietToggle.includes("data-discern-theme-toggle"));
+  assert(!quietToggle.includes("inert"));
+
+  const staticToggle = renderToStaticMarkup(createElement(ThemeToggle, {}));
+  assertStringIncludes(staticToggle, 'data-discern-theme-toggle=""');
+  assertStringIncludes(staticToggle, 'inert=""');
+  assertStringIncludes(staticToggle, 'aria-label="Switch to the dark theme"');
+  assert(!staticToggle.includes("onclick"));
 
   const hoverCard = renderToStaticMarkup(
     createElement(HoverCard, {

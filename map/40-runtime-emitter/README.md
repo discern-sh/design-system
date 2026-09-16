@@ -12,4 +12,4 @@ Selecting the Diagram Component emits its token-driven CSS through the ordinary 
 | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [Select a Runtime per route](route-selection.md) | How to combine Groups and Components per route, inspect resolved dependencies in the Manifest, price Optional Assets, and read the governed reference profiles. |
 
-[Static copy actions](static-copy.md) describes exact data transport, script adoption, truthful feedback, and the shared static/live lifecycle.
+[Static copy actions](static-copy.md) describes exact data transport, script adoption, truthful feedback, and the shared static/live lifecycle. [Static theme preference](static-theme.md) describes the two Theme toggle modes, who owns the first paint and the storage key, and how one activation is never handled twice.

@@ -436,7 +436,7 @@ export async function verifyLandingPage(
       mains: document.querySelectorAll("main").length,
       root: document.documentElement.hasAttribute("data-discern-root"),
       themeToggle: document.querySelectorAll(
-        "[data-discern-theme-control]",
+        "[data-discern-theme-toggle]",
       ).length,
       overflowCues: document.querySelectorAll(
         "[data-discern-landing-overflow-target][data-discern-overflow-cue-enhanced]",
@@ -503,7 +503,7 @@ export async function verifyLandingPage(
   }
   await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
   await page.goto(`${origin}/`, { waitUntil: "networkidle" });
-  const themeControl = page.locator("[data-discern-theme-control]");
+  const themeControl = page.locator("[data-discern-theme-toggle]");
   const themeBefore = await page.locator("[data-discern-root]").getAttribute(
     "data-discern-theme",
   );
@@ -512,9 +512,11 @@ export async function verifyLandingPage(
     "data-discern-theme",
   );
   const destinationAfter = await themeControl.getAttribute("aria-label");
-  if (themeBefore !== "light" || themeAfter !== "dark") {
+  // Nothing is saved yet, so the page leaves the root unstamped and the
+  // emitted CSS follows the media query; the first activation stamps a choice.
+  if (themeBefore !== null || themeAfter !== "dark") {
     failures.push(
-      `landing/theme: expected light → dark, observed ${themeBefore} → ${themeAfter}`,
+      `landing/theme: expected unstamped → dark, observed ${themeBefore} → ${themeAfter}`,
     );
   }
   if (destinationAfter !== "Switch to the light theme") {

@@ -140,7 +140,11 @@ Deno.test("the landing page is deterministic HTML with its exact behavior select
   assert(html.includes(`v${facts.version}`));
   assert(html.includes('class="discern-skip-link" href="#main-content"'));
   assert(html.includes('<main id="main-content"'));
+  // The page owns first paint only: its theme control is the package's static
+  // contract, activated by the selected behavior rather than a page script.
   assert(html.includes("discern-theme-toggle"));
+  assert(html.includes('data-discern-theme-toggle=""'));
+  assert(!html.includes("data-discern-theme-control"));
   assert(html.includes("Browser components."));
   assert(html.includes("Terminal renderers."));
   assert(html.includes("Author the meaning. Let the system draw it."));

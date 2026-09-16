@@ -84,6 +84,21 @@ Most components remain static HTML and CSS. When a Selection resolves a componen
 
 `HoverCard` and `Tooltip` use this shared behavior to promote their panels into the browser's top layer, position them against their trigger, keep them inside the viewport, and preserve hover, focus, outside-press, nested-scroll, resize, and Escape behavior. The enhancer observes later DOM additions, so client-rendered instances use the same contract. Without the script or the Popover API, their static CSS fallback remains keyboard and pointer reachable, but an ancestor that clips overflow can still clip the panel.
 
+### Theme preference in static HTML
+
+`ThemeToggle` has two modes, chosen by `onThemeChange`. With it, controlled React owns resolution, persistence, and root application. Without it, the markup carries the static contract the selected behavior activates, so a build-time page gets a working control with no hydration and no handler that does nothing:
+
+```tsx
+<html lang="en" data-discern-root data-discern-theme-storage-key="site-theme">
+  …
+  <ThemeToggle variant="quiet" />
+</html>;
+```
+
+The behavior themes the opted-in root that contains the control, so putting `data-discern-root` on `<html>` themes the page and a nested root moves on its own. `data-discern-theme-storage-key` on that root names a `localStorage` key; without one a change lasts for the visit, and the package never invents a key or a policy. A saved preference outranks the markup and is restored on load; while nothing is saved the root stays unstamped and the emitted CSS follows `prefers-color-scheme`, with the control's name keeping up as the system changes.
+
+The emitted script is a deferred module, so it cannot paint the first frame: apply a saved preference yourself in the head if the page must not flash the other theme. Without the script the control stays inert — visibly unavailable and out of the accessibility tree — because nothing could act on it. Only the static mode carries the behavior's opt-in attribute, so a controlled control in the same document is never touched and one activation is never handled twice. See [the theme contract](map/40-runtime-emitter/static-theme.md) for markup ownership and teardown.
+
 ### Copy actions in static HTML
 
 `CopyButton` and Components that compose it use the selected script in both static and live React hosts. Build the page and its dedicated runtime together:

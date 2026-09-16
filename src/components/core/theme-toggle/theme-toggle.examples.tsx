@@ -68,6 +68,20 @@ function QuietExample() {
   return <ToggleExample initialTheme="dark" variant="quiet" />;
 }
 
+function StaticExample() {
+  // The behavior themes the opted-in root containing the control, so a nested
+  // root keeps this demonstration to its own box.
+  return (
+    <div
+      className="discern-example-row"
+      data-discern-root=""
+      data-discern-theme="light"
+    >
+      <ThemeToggle />
+    </div>
+  );
+}
+
 export const catalogueExamples = defineCatalogueExamples(
   meta,
   componentExampleVocabulary,
@@ -79,6 +93,7 @@ export const catalogueExamples = defineCatalogueExamples(
     },
     { id: "quiet", Example: QuietExample },
     { id: "from-dark", Example: FromDarkExample },
+    { id: "static", Example: StaticExample },
   ],
 );
 

@@ -117,6 +117,15 @@ export const componentExampleRegistry = {
         "cli",
       ],
     },
+    {
+      "id": "static",
+      "label": "Static enhancement",
+      "surfaces": [
+        "web",
+      ],
+      "reason":
+        "The static contract exists so a browser script can activate markup that shipped without hydration; a terminal renderer has no document to enhance.",
+    },
   ],
   "theme-switcher": [
     {

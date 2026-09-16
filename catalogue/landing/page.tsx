@@ -889,12 +889,7 @@ export function LandingPage({ facts }: { readonly facts: LandingFacts }) {
         data-discern-catalogue-navigation="landing-header"
         actions={
           <>
-            <ThemeToggle
-              theme="light"
-              onThemeChange={() => undefined}
-              variant="quiet"
-              data-discern-theme-control=""
-            />
+            <ThemeToggle variant="quiet" />
             <Button href={findAComponentHref} size="sm">
               Find a Component
             </Button>
