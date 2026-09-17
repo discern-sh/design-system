@@ -16,7 +16,7 @@ The **deferred-work ledger**: the agent-maintained record of outstanding work �
 
 `discern setup` lays the map at `map/` as a skeleton: `00-orientation/` and the numbered subsystem subtrees (`10-…` onward) ship as stubs, still to be written from the code. Filling them is the one piece of work a fresh project starts out owing.
 
-- [ ] **Document each numbered doc subtree.** Use the `discern-document-subsystem` skill — one run per subsystem — to write that subtree's `README.md` and its leaves from the real code, replacing the placeholder stubs setup laid. Delete each subtree's line as you fill it, and delete this whole section once the tree is complete.
+- [ ] **Document each numbered doc subtree.** One documenter pass per subsystem to write that subtree's `README.md` and its leaves from the real code, replacing the placeholder stubs setup laid. Delete each subtree's line as you fill it, and delete this whole section once the tree is complete.
   - [ ] `map/10-tokens-themes/` — Tokens, Theme roles, the Preset, foundations
   - [ ] `map/20-components/` — Component anatomy, Groups, Owned Classes
   - [ ] `map/30-codegen/` — generate.ts and the generated surfaces
