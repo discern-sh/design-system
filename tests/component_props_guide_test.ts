@@ -204,6 +204,7 @@ const graph: DocumentedGraph = {
                   name: "detail",
                   readonly: true,
                   optional: true,
+                  jsDoc: { doc: "Optional measured detail." },
                   tsType: {
                     kind: "typeLiteral",
                     value: {
@@ -252,6 +253,7 @@ Deno.test("the props guide states the declaration, each property, referenced pac
     "- tone?: ProbeTone",
     "- onSelect?: (item: ProbeItem) => void",
     "- ProbeItem: { id: string; detail?: { count: number } } — One probe entry.",
+    "  - detail?: { count: number } — Optional measured detail.",
     '- ProbeTone: "calm" | "alert" — Tone shared by web and CLI.',
     "Companion `ProbeRow` props: `ProbeRowProps`.",
     "- item: ProbeItem — The entry this row presents.",

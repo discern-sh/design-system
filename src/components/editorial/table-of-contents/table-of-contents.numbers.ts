@@ -8,9 +8,7 @@
 export interface TableOfContentsNumbering {
   readonly nested?: boolean;
   /**
-   * Authored number for a top-level item: a string renders verbatim without
-   * advancing the sequence, `false` leaves the number slot empty for a
-   * framing section, and `undefined` takes the next sequential number.
+   * Authored number for a top-level item; a string renders verbatim without advancing the sequence, `false` keeps an empty slot for a framing section, and `undefined` takes the next sequential number.
    */
   readonly number?: string | false;
 }

@@ -309,6 +309,23 @@ function declarationLine(
 }
 
 /**
+ * The documented properties of a referenced interface, indented beneath its
+ * shape line, so a prop's doc reaches the guide even when the props type
+ * refers to it rather than declaring it.
+ */
+function documentedPropertyLines(
+  declaration: DocumentedDeclaration,
+): readonly string[] {
+  if (declaration.kind !== "interface") return [];
+  return (declaration.def?.properties ?? []).flatMap((property) => {
+    const doc = firstSentence(property.jsDoc?.doc);
+    return doc === undefined
+      ? []
+      : [`  - ${formatProperty(property)} — ${doc}`];
+  });
+}
+
+/**
  * Render one props declaration under its label, every property with its
  * type and doc, then each referenced package type not rendered before.
  */
@@ -357,6 +374,7 @@ function renderPropsBlock(
       const declaration = index.resolve(reference);
       if (declaration === undefined) continue;
       lines.push(declarationLine(reference.name, declaration));
+      lines.push(...documentedPropertyLines(declaration));
       const inner = declaration.def ?? {};
       for (const extend of inner.extends ?? []) {
         referencesIn(extend, declaration.location.filename, next);
