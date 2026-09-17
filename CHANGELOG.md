@@ -6,7 +6,7 @@ Each release is cut from a green run of the full release gate — formatting, li
 
 ## 0.35.0
 
-A static, server-rendered documentation site can now compose its complete reading shell — header, navigation drawer, breadcrumbs, contents rail, pager, search palette, and permalinked headings — from the Docs adapters and the emitted runtime, write no package class of its own, and pass a modal drawer and search contract without a line of layout or drawer script.
+A static server-rendered documentation site can now compose its complete reading shell — header, navigation drawer, breadcrumbs, contents rail, pager, search palette, and permalinked headings — from the Docs adapters and the emitted runtime, write no package class of its own, and pass a modal drawer and search contract without a line of layout or drawer script.
 
 ### Public API and migration
 
