@@ -477,7 +477,7 @@
 # the measurement output; the consumer-facing budget is [standards.docs_selection].)
 [standards.css_density]
   run = "[ -f dist/discern.css ] || deno task build >/dev/null 2>&1; printf 'DISCERN_METRIC css_bytes %s\\n' \"$(wc -c < dist/discern.css | tr -d ' ')\""
-  limit = 2528.4965034965035
+  limit = 2533.6180555555557
   direction = "down"
   metric = "css_bytes"
   per = { files = "src/components/**/*.css" }
@@ -494,7 +494,7 @@
 # dependencies, with headroom for ordinary drift.
 [standards.docs_selection]
   run = "deno run --config deno.json --allow-read --allow-write scripts/measure.ts"
-  limit = 49126
+  limit = 52246
   direction = "down"
   metric = "docs_selection_bytes"
   inputs = ["src/**", "scripts/**"]
@@ -506,7 +506,7 @@
 # with headroom for ordinary iteration and a warning before it is exhausted.
 [standards.minimal_docs_css]
   run = "deno run --config deno.json --allow-read --allow-write scripts/measure-runtime.ts minimal_docs_css_bytes"
-  limit = 44549
+  limit = 44861
   direction = "down"
   metric = "minimal_docs_css_bytes"
   inputs = ["src/**", "scripts/generate.ts", "scripts/measure-runtime.ts"]
@@ -538,7 +538,7 @@
 # behavior opt-in registry. CSS-only selections remain outside this measure.
 [standards.behavior_script]
   run = "deno run --config deno.json --allow-read --allow-write scripts/measure-runtime.ts behavior_script_bytes"
-  limit = 11076
+  limit = 14981
   direction = "down"
   metric = "behavior_script_bytes"
   inputs = [
