@@ -1,0 +1,81 @@
+@layer discern.components {
+  .discern-docs-layout {
+    --discern-docs-layout-max: calc(var(--discern-page-max) + 10rem);
+    --discern-docs-layout-navigation-size: 16.5rem;
+    --discern-docs-layout-rail-size: 14.5rem;
+    --discern-docs-layout-sticky-offset: 3.25rem;
+    container: discern-docs-layout / inline-size;
+    width: min(100% - 2 * var(--discern-space-5),
+      var(--discern-docs-layout-max));
+    margin-inline: auto;
+  }
+  .discern-docs-layout__columns {
+    display: flex;
+    flex-direction: column;
+    gap: 0 clamp(var(--discern-space-6), 4cqi, var(--discern-space-12));
+  }
+  .discern-docs-layout__main {
+    flex: 1;
+    min-inline-size: 0;
+    padding-block: var(--discern-space-8) var(--discern-space-20);
+  }
+  .discern-docs-layout__rail {
+    display: none;
+  }
+  .discern-docs-layout__veil {
+    position: fixed;
+    inset: 0;
+    z-index: 25;
+    background: var(--discern-color-overlay);
+  }
+  [data-discern-docs-drawer-toggle][hidden] {
+    display: none;
+  }
+  @container discern-docs-layout (max-width: 55.999rem) {
+    .discern-docs-layout__navigation {
+      --discern-docs-layout-drawer: 1;
+    }
+    :where([data-discern-docs-drawer-enhanced]) .discern-docs-layout__navigation {
+      position: fixed;
+      inset-block: var(--discern-docs-layout-sticky-offset) 0;
+      inset-inline-start: 0;
+      z-index: 26;
+      inline-size: min(19rem, 84vw);
+      padding: var(--discern-space-4) var(--discern-space-5);
+      overflow-y: auto;
+      border-inline-end: 1px solid var(--discern-color-border);
+      background: var(--discern-color-canvas);
+      translate: -103% 0;
+    }
+    [data-discern-docs-drawer] .discern-docs-layout__navigation {
+      transition: translate var(--discern-duration-medium)
+        var(--discern-ease-out);
+    }
+    [data-discern-docs-drawer="open"] .discern-docs-layout__navigation {
+      translate: none;
+      box-shadow: var(--discern-shadow-pop);
+    }
+  }
+  @container discern-docs-layout (min-width: 56rem) {
+    .discern-docs-layout__columns {
+      flex-direction: row;
+      align-items: start;
+    }
+    .discern-docs-layout__navigation,
+    .discern-docs-layout__rail {
+      position: sticky;
+      inset-block-start: var(--discern-docs-layout-sticky-offset);
+      flex: none;
+      inline-size: var(--discern-docs-layout-navigation-size);
+      max-block-size: calc(100dvh - var(--discern-docs-layout-sticky-offset));
+      padding-block: var(--discern-space-8) var(--discern-space-4);
+      overflow-y: auto;
+    }
+  }
+  @container discern-docs-layout (min-width: 76rem) {
+    .discern-docs-layout__rail {
+      display: block;
+      inline-size: var(--discern-docs-layout-rail-size);
+    }
+  }
+}

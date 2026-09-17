@@ -37,6 +37,18 @@ const descendantFocusPolicies = new Map<string, string>([
     "Search results are reached through the search field and result links.",
   ],
   [
+    "src/components/docs/docs-layout/docs-layout.css::.discern-docs-layout__navigation",
+    "The navigation slot holds site navigation whose links are the focus route; open as a drawer it traps focus among them.",
+  ],
+  [
+    "src/components/docs/docs-layout/docs-layout.css:::where([data-discern-docs-drawer-enhanced]) .discern-docs-layout__navigation",
+    "The off-canvas drawer is the same navigation slot with the same link focus route.",
+  ],
+  [
+    "src/components/docs/docs-layout/docs-layout.css::.discern-docs-layout__rail",
+    "The rail slot holds a contents list whose links are the focus route.",
+  ],
+  [
     "src/components/layout/overflow-cue/overflow-cue.css::.discern-overflow-cue__viewport",
     "OverflowCue owns its conditional region label and keyboard viewport contract.",
   ],

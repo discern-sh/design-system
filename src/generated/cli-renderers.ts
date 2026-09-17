@@ -153,6 +153,8 @@ export { default as renderAgentHandoffCli, cliExamples as agentHandoffCliExample
 export type { AgentHandoffCliProps } from "../components/workflow/agent-handoff/agent-handoff.cli.ts";
 export { default as renderDocsHeaderCli, cliExamples as docsHeaderCliExamples } from "../components/docs/docs-header/docs-header.cli.ts";
 export type { DocsHeaderCliProps } from "../components/docs/docs-header/docs-header.cli.ts";
+export { default as renderDocsLayoutCli, cliExamples as docsLayoutCliExamples } from "../components/docs/docs-layout/docs-layout.cli.ts";
+export type { DocsLayoutCliProps } from "../components/docs/docs-layout/docs-layout.cli.ts";
 export { default as renderDocsNavCli, cliExamples as docsNavCliExamples } from "../components/docs/docs-nav/docs-nav.cli.ts";
 export type { DocsNavCliProps } from "../components/docs/docs-nav/docs-nav.cli.ts";
 export { default as renderPagerCli, cliExamples as pagerCliExamples } from "../components/docs/pager/pager.cli.ts";

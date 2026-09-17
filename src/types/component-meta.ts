@@ -62,6 +62,7 @@ export const componentBehaviors = [
   "copy-button",
   "article-navigation",
   "theme-toggle",
+  "docs-drawer",
 ] as const;
 /** One selection-scoped browser behavior. */
 export type ComponentBehavior = (typeof componentBehaviors)[number];
@@ -81,6 +82,7 @@ export const componentBehaviorOptIns = {
     "footnotes",
   ],
   "theme-toggle": ["theme-toggle"],
+  "docs-drawer": ["docs-layout"],
 } as const satisfies Readonly<Record<ComponentBehavior, readonly string[]>>;
 
 /** CLI stance for a component with a package-owned pure renderer. */

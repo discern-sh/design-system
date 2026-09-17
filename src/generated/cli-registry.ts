@@ -97,6 +97,7 @@ export const cliComponentRegistry = {
   "agent-handoff": { stance: "rendered", modulePath: "../components/workflow/agent-handoff/agent-handoff.cli.ts" },
   "skip-link": { stance: "exempt", reason: "Browser focus-bypass navigation has no terminal document equivalent because terminal output is already linear." },
   "docs-header": { stance: "rendered", modulePath: "../components/docs/docs-header/docs-header.cli.ts" },
+  "docs-layout": { stance: "rendered", modulePath: "../components/docs/docs-layout/docs-layout.cli.ts" },
   "docs-nav": { stance: "rendered", modulePath: "../components/docs/docs-nav/docs-nav.cli.ts" },
   "pager": { stance: "rendered", modulePath: "../components/docs/pager/pager.cli.ts" },
   "search-palette": { stance: "exempt", reason: "Modal focus management, query input, and result activation belong to an interactive terminal driver." },

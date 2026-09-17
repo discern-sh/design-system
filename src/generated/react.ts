@@ -93,6 +93,7 @@ export * from "../components/workflow/task-metadata/mod.ts";
 export * from "../components/workflow/agent-handoff/mod.ts";
 export * from "../components/docs/skip-link/mod.ts";
 export * from "../components/docs/docs-header/mod.ts";
+export * from "../components/docs/docs-layout/mod.ts";
 export * from "../components/docs/docs-nav/mod.ts";
 export * from "../components/docs/pager/mod.ts";
 export * from "../components/docs/search-palette/mod.ts";

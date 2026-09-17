@@ -1,6 +1,6 @@
 # Static theme preference
 
-ThemeToggle has two modes and `onThemeChange` chooses between them, the same way `Tag`'s `onRemove` decides whether a remove control exists at all. Supplying it keeps controlled React in charge of resolution, persistence, and root application, and `theme` is required alongside it. Omitting it emits build-time markup the selected behaviour activates, so static HTML gets a working control without hydration and without a handler that does nothing. Only the static mode carries `data-discern-theme-toggle`, which is how one activation is never handled twice: the behaviour cannot see a controlled control, and React owns no click in the static one.
+ThemeToggle has two modes and `onThemeChange` chooses between them, the same way `Tag`'s `onRemove` decides whether a remove control exists at all; [ADR-0047](../_adr/0047-select-static-modes-by-omitting-the-handler-and-mark-enhancement-on-the-root.md) makes that selection rule the pattern every two-mode Component follows. Supplying it keeps controlled React in charge of resolution, persistence, and root application, and `theme` is required alongside it. Omitting it emits build-time markup the selected behaviour activates, so static HTML gets a working control without hydration and without a handler that does nothing. Only the static mode carries `data-discern-theme-toggle`, which is how one activation is never handled twice: the behaviour cannot see a controlled control, and React owns no click in the static one.
 
 ## Who owns what
 

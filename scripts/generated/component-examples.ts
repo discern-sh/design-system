@@ -2586,6 +2586,24 @@ export const componentExampleRegistry = {
       ],
     },
   ],
+  "docs-layout": [
+    {
+      "id": "default",
+      "label": "Documentation shell",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
+    {
+      "id": "plain",
+      "label": "Document and rail",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
+  ],
   "docs-nav": [
     {
       "id": "default",
