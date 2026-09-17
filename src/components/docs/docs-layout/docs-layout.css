@@ -48,12 +48,19 @@
       translate: -103% 0;
     }
     [data-discern-docs-drawer] .discern-docs-layout__navigation {
-      transition: translate var(--discern-duration-medium)
-        var(--discern-ease-out);
+      transition:
+        translate var(--discern-duration-medium) var(--discern-ease-out),
+        display var(--discern-duration-medium) allow-discrete;
+    }
+    [data-discern-docs-drawer="closed"] .discern-docs-layout__navigation {
+      display: none;
     }
     [data-discern-docs-drawer="open"] .discern-docs-layout__navigation {
       translate: none;
       box-shadow: var(--discern-shadow-pop);
+      @starting-style {
+        translate: -103% 0;
+      }
     }
   }
   @container discern-docs-layout (min-width: 56rem) {

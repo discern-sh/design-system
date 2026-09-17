@@ -240,7 +240,7 @@ Deno.test("the docs drawer performs the complete modal focus contract", async ()
     // Activation snaps the navigation off-canvas: in the frame the behaviour
     // makes it inert, nothing is sliding and the marker is already stamped.
     const activation = await page.evaluate(() =>
-      new Promise<{ right: number; animations: number; enhanced: boolean }>(
+      new Promise<{ right: number; sliding: boolean; enhanced: boolean }>(
         (resolve) => {
           const nav = document.getElementById("navigation") as HTMLElement;
           const check = () => {
@@ -250,7 +250,7 @@ Deno.test("the docs drawer performs the complete modal focus contract", async ()
             }
             resolve({
               right: nav.getBoundingClientRect().right,
-              animations: nav.getAnimations().length,
+              sliding: nav.getAnimations().length > 0,
               enhanced: document.getElementById("layout")?.hasAttribute(
                 "data-discern-docs-drawer-enhanced",
               ) === true,
@@ -261,8 +261,8 @@ Deno.test("the docs drawer performs the complete modal focus contract", async ()
       )
     );
     assertEquals(
-      [activation.right <= 0, activation.animations, activation.enhanced],
-      [true, 0, true],
+      [activation.right <= 0, activation.sliding, activation.enhanced],
+      [true, false, true],
       `activation animated the navigation away: ${JSON.stringify(activation)}`,
     );
     assertEquals(await state(page), { ...CLOSED_NARROW, active: "" });

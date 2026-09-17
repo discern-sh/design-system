@@ -129,11 +129,13 @@
       };
       entries.set(toggle, entry);
       layout.setAttribute("data-discern-docs-drawer-enhanced", "");
-      // Settle the off-canvas position before the state arms the slide, so
-      // activation snaps the navigation out instead of animating it away.
-      void getComputedStyle(navigation).translate;
       resizes.observe(layout);
+      // Activation snaps the navigation into its resting state; the slide
+      // arms only for the changes a reader makes afterwards.
+      navigation.style.transition = "none";
       sync(entry);
+      void getComputedStyle(navigation).display;
+      navigation.style.transition = "";
     }
   };
   const click = (event) => {
