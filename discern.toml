@@ -57,7 +57,7 @@
   #   - the in-flight check on the contained-worktree offer
   #   - observed checkpoint economics (`discern checkpoints`)
   #   - Logbook storage checks in `discern doctor`
-  logbook = true
+  record_logbook = true
 
   # Which agent integrations to enable: claude_code, codex, gemini, cursor,
   # copilot. Omit the key for the default pair (claude_code, codex); an
@@ -89,7 +89,7 @@
   # "local" records landed proof notes in this clone only; "fetch" adds a
   # fetch-only mapping per remote so ordinary fetches carry them. Publishing
   # stays an explicit `git push <remote> refs/notes/discern`.
-  proof_notes = "local"
+  proof_notes_mode = "local"
 
   # Idempotent commands that make any checkout usable for its tracked tree,
   # such as installing dependencies from a lockfile. They run in order on every
@@ -272,7 +272,7 @@
   paths = [
     "discern/instructions.md",
     "${map.dir}",
-    "${skills.dir}/",
+    "${skills.dir}",
     "${project.todo}",
     "discern/brief.md",
     ".claude/skills/",
@@ -288,7 +288,7 @@
 [scopes.instructions]
   paths = [
     "discern/instructions.md",
-    "${skills.dir}/",
+    "${skills.dir}",
     ".claude/skills/",
     ".agents/skills/",
   ]
@@ -362,12 +362,12 @@
   # Record each worktree's deterministic dev-server port in its env files, for
   # tooling that reads DISCERN_WORKTREE_PORT. `discern identity --port` reports
   # it either way.
-  port = true
+  export_port = true
 
   # Track ignored files at worktree setup and report the top-level ignored
   # paths that changed before the worktree is removed. Turn it off when ignored
   # outputs churn too much to be useful.
-  ignored_file_drift = true
+  track_ignored_drift = true
 
   # ───────────────────────────────────────────────────────────────────────────
   # [worktree.resources.<name>]
@@ -388,7 +388,7 @@
   #   @worktree@      this worktree's base handle (slug-id)
   #   @resource@      this resource's handle (slug-id-name)
   #
-  # Params:  create, destroy, ensure, required, retries, gc
+  # Params:  create, destroy, ensure, required, retries, prunable
   # Help:    `discern config explain worktree.resources`
   # ───────────────────────────────────────────────────────────────────────────
 
@@ -805,7 +805,7 @@
   # false groups each job's complete output in a static transcript; true
   # streams prefixed lines. Live terminals always show the Gate frame's bounded
   # tail; CI, pipes, and --plain are static.
-  stream = false
+  stream_output = false
 
   # Cancel the in-flight sibling commands the moment one fails; an agent-driven
   # Gate wants a fast abort. false runs every job and shows all failures in one
@@ -838,7 +838,7 @@
   # Surface coupling findings as trailing hints in `discern done` and `discern
   # prepare`, while the change is hot. false keeps coupling available through
   # `discern coupling` alone.
-  in_gate = true
+  report_in_gate = true
 
 # ─────────────────────────────────────────────────────────────────────────────
 # [scripts]
@@ -860,7 +860,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # [meta]
 #
-# What:    Installer bookkeeping.
+# What:    Project setup and adoption evidence.
 # Why:     discern writes these keys while setting up or upgrading the project.
 #          They record schema and setup evidence; nothing here needs
 #          hand-editing.
@@ -869,6 +869,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
 
 [meta]
+  managed_version = "1.0.0"
   bootstrapped = true
   setup_model = "claude-fable-5"
   setup_version = "1.0.0"
