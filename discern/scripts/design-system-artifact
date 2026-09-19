@@ -1,0 +1,5 @@
+#!/bin/sh
+# desc: Generate the Claude Design "Design System" artifact files into dist/design-system-artifact (maintainer convenience)
+set -eu
+cd "${DISCERN_ROOT:-$(dirname "$0")/../..}"
+exec deno run --config deno.json --allow-read --allow-write --allow-env=NODE_ENV --allow-run=deno,git scripts/design-system-artifact/mod.ts "$@"
