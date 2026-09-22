@@ -18,7 +18,12 @@
     margin-inline: auto;
   }
   :where(.discern-site-footer--columns) .discern-site-footer__inner {
-    grid-template-columns: minmax(12rem, 0.45fr) minmax(0, 1.55fr);
+    display: flex;
+    flex-wrap: wrap;
+    row-gap: var(--discern-space-10);
+  }
+  .discern-site-footer--columns .discern-site-footer__brand-column {
+    flex: 1 1 12rem;
   }
   .discern-site-footer__brand-column {
     max-width: 24rem;
@@ -104,9 +109,15 @@
     --discern-site-footer-track: calc((100% -
       (var(--discern-site-footer-columns, 4) - 1) * var(--discern-space-6)) /
       var(--discern-site-footer-columns, 4));
+    flex: 3 1 calc(var(--discern-site-footer-columns, 4) * 8rem +
+      (var(--discern-site-footer-columns, 4) - 1) * var(--discern-space-6));
+    min-inline-size: 0;
     gap: var(--discern-space-6);
     grid-template-columns: repeat(auto-fit,
       minmax(max(8rem, var(--discern-site-footer-track)), 1fr));
+  }
+  .discern-site-footer--columns .discern-site-footer__base {
+    flex-basis: 100%;
   }
   .discern-site-footer__nav h2 {
     margin-block-end: var(--discern-space-4);

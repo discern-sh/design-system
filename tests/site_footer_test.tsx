@@ -71,7 +71,8 @@ Deno.test("Site footer columns hold one row when there is room and never squeeze
         });
         assertEquals(facts.overflow, false, `${width}px overflows`);
         assert(facts.narrowest >= 8 - 0.01, `${width}px squeezes a group`);
-        if (width >= 1100) assertEquals(facts.rows, 1, `${width}px wraps`);
+        // Four groups fit on one row beside the brand, or on one row beneath it.
+        if (width >= 800) assertEquals(facts.rows, 1, `${width}px wraps`);
       });
     }
   } finally {

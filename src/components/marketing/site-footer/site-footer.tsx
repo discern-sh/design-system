@@ -31,8 +31,9 @@ export interface SiteFooterProps extends HTMLAttributes<HTMLElement> {
   /** Lay content out at the editorial page measure or the wider campaign frame. */
   readonly frame?: MarketingFrame;
   /**
-   * Most navigation groups set side by side; the brand column narrows to make
-   * room, and fewer columns form whenever each would fall below its minimum.
+   * Navigation groups set side by side: beside the brand while that many fit,
+   * otherwise beneath it at full width, and fewer only when even that is too
+   * narrow for each group's minimum.
    */
   readonly columns?: number;
 }
