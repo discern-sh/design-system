@@ -13,6 +13,7 @@ export type {
   MarketingSectionSpacing,
   MarketingSectionSurface,
 } from "./marketing-section.types.ts";
+export type { MarketingFrame } from "../frame.ts";
 
 /** Props for the {@linkcode MarketingSection} component. */
 export interface MarketingSectionProps extends HTMLAttributes<HTMLElement> {
