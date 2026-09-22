@@ -14,7 +14,7 @@ When a Docs layout drawer in the same root is open, the palette closes it throug
 
 ## Without `showModal()`
 
-A reader whose dialog lacks `showModal()` gets the same contract by other means: the behaviour sets `open` and `data-discern-search-palette-fallback`, makes every element outside the palette inert, wraps Tab and Shift+Tab within it, and closes on Escape. The stylesheet fixes the fallback palette to the viewport and draws the overlay as a spread shadow, so no separate backdrop element is needed.
+A reader whose dialog lacks `showModal()` gets the same contract by other means: the behaviour sets `open` and `data-discern-search-palette-fallback`, makes every element outside the palette inert, wraps Tab and Shift+Tab within it, and closes on Escape. The stylesheet fixes the fallback palette to the viewport and draws the overlay as a wide outline in the overlay colour, so no separate backdrop element is needed.
 
 Evaluating the behaviour again does not bind twice. For document-wide teardown, dispatch `document.dispatchEvent(new Event("discern:search-palette:teardown"))`; it closes an open palette without moving focus and removes every listener. Re-evaluate the emitted behaviour to initialise again.
 
