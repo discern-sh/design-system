@@ -2951,6 +2951,15 @@ export const componentExampleRegistry = {
       "reason":
         "This is browser page chrome for grouped site links, legal copy, and a responsive colophon; a CLI owns shell help and exit context instead of rendering a website footer.",
     },
+    {
+      "id": "campaign-row",
+      "label": "Campaign row",
+      "surfaces": [
+        "web",
+      ],
+      "reason":
+        "This is browser page chrome for grouped site links, legal copy, and a responsive colophon; a CLI owns shell help and exit context instead of rendering a website footer.",
+    },
   ],
   "marketing-stage": [
     {

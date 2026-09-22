@@ -1,5 +1,5 @@
 import { forwardRef } from "react";
-import type { HTMLAttributes, ReactNode } from "react";
+import type { CSSProperties, HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { useInitialFragmentTarget } from "../../use-initial-fragment-target.ts";
@@ -30,6 +30,11 @@ export interface SiteFooterProps extends HTMLAttributes<HTMLElement> {
   readonly meta?: ReactNode;
   /** Lay content out at the editorial page measure or the wider campaign frame. */
   readonly frame?: MarketingFrame;
+  /**
+   * Most navigation groups set side by side; the brand column narrows to make
+   * room, and fewer columns form whenever each would fall below its minimum.
+   */
+  readonly columns?: number;
 }
 
 /** Responsive page colophon with product context, grouped navigation, legal copy, and a compact metadata rail. */
@@ -46,12 +51,21 @@ export const SiteFooter: DiscernComponent<HTMLElement, SiteFooterProps> =
       legal,
       meta,
       frame = "standard",
+      columns,
       className,
+      style,
       ...props
     },
     ref,
   ) {
     useInitialFragmentTarget();
+    if (
+      columns !== undefined && (!Number.isSafeInteger(columns) || columns < 1)
+    ) {
+      throw new RangeError(
+        `Site footer columns must be a positive integer; received ${columns}`,
+      );
+    }
     const resolvedMarkShape = brandMarkShape ??
       (brandMarkTreatment === "tile" ? "square" : "natural");
     return (
@@ -60,8 +74,13 @@ export const SiteFooter: DiscernComponent<HTMLElement, SiteFooterProps> =
         className={classNames(
           "discern-site-footer",
           frame === "wide" && "discern-site-footer--frame-wide",
+          columns !== undefined && "discern-site-footer--columns",
           className,
         )}
+        style={columns === undefined ? style : {
+          "--discern-site-footer-columns": columns,
+          ...style,
+        } as CSSProperties}
         {...props}
       >
         <div className="discern-site-footer__inner">

@@ -17,6 +17,9 @@
     width: min(100%, var(--discern-site-footer-max));
     margin-inline: auto;
   }
+  :where(.discern-site-footer--columns) .discern-site-footer__inner {
+    grid-template-columns: minmax(12rem, 0.45fr) minmax(0, 1.55fr);
+  }
   .discern-site-footer__brand-column {
     max-width: 24rem;
   }
@@ -96,6 +99,14 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
     gap: var(--discern-space-8);
+  }
+  .discern-site-footer--columns .discern-site-footer__nav {
+    --discern-site-footer-track: calc((100% -
+      (var(--discern-site-footer-columns, 4) - 1) * var(--discern-space-6)) /
+      var(--discern-site-footer-columns, 4));
+    gap: var(--discern-space-6);
+    grid-template-columns: repeat(auto-fit,
+      minmax(max(8rem, var(--discern-site-footer-track)), 1fr));
   }
   .discern-site-footer__nav h2 {
     margin-block-end: var(--discern-space-4);

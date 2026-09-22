@@ -20,11 +20,10 @@ const meta = {
   ],
 } satisfies ComponentMeta;
 
-export const componentExampleVocabulary = [{
-  id: "default",
-  label: "Link groups",
-  only: "web",
-}] as const;
+export const componentExampleVocabulary = [
+  { id: "default", label: "Link groups", only: "web" },
+  { id: "campaign-row", label: "Campaign row", only: "web" },
+] as const;
 defineComponentExampleVocabulary(meta, componentExampleVocabulary);
 
 export default meta;
