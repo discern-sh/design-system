@@ -216,6 +216,9 @@
     border-block-start: 1px solid var(--discern-color-border);
     padding-block-start: calc(var(--discern-space-8) + var(--discern-space-2));
   }
+  .discern-hero-block--statement:has(> .discern-hero-block__backdrop) .discern-hero-block__visual {
+    border-block-start: 0;
+  }
   @container discern-hero-block (max-width: 51.25rem) {
     .discern-hero-block__inner {
       grid-template-columns: 1fr;
