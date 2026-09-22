@@ -1,8 +1,8 @@
 import { forwardRef, useId } from "react";
 import type { ReactNode, TextareaHTMLAttributes } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
-import { classNames } from "../../class-names.ts";
 import { Field, fieldDescriptionId } from "../field/field.tsx";
+import { controlClassName } from "../input/input.tsx";
 
 /** Props for the {@linkcode Textarea} component. */
 export interface TextareaProps
@@ -41,7 +41,7 @@ export const Textarea: DiscernComponent<HTMLTextAreaElement, TextareaProps> =
         required={required}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy}
-        className={classNames("discern-control", "discern-textarea", className)}
+        className={controlClassName("discern-textarea", className)}
         {...props}
       />
     );

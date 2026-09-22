@@ -4,6 +4,17 @@ import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { Field, fieldDescriptionId } from "../field/field.tsx";
 
+/**
+ * Compose the shared form-control surface class with any further classes.
+ * Select and Textarea render the same surface, so they compose it here and
+ * carry Input's stylesheet with them.
+ */
+export function controlClassName(
+  ...names: readonly (string | false | null | undefined)[]
+): string {
+  return classNames("discern-control", ...names);
+}
+
 /** Props for the {@linkcode Input} component. */
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   readonly label?: ReactNode;
@@ -40,7 +51,7 @@ export const Input: DiscernComponent<HTMLInputElement, InputProps> = forwardRef<
       required={required}
       aria-invalid={error ? true : undefined}
       aria-describedby={describedBy}
-      className={classNames("discern-control", className)}
+      className={controlClassName(className)}
       {...props}
     />
   );

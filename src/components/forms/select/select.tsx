@@ -1,8 +1,8 @@
 import { forwardRef, useId } from "react";
 import type { ReactNode, SelectHTMLAttributes } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
-import { classNames } from "../../class-names.ts";
 import { Field, fieldDescriptionId } from "../field/field.tsx";
+import { controlClassName } from "../input/input.tsx";
 
 /** One option entry rendered by the Select component. */
 export interface SelectOption {
@@ -48,7 +48,7 @@ export const Select: DiscernComponent<HTMLSelectElement, SelectProps> =
           required={required}
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
-          className={classNames("discern-control", className)}
+          className={controlClassName(className)}
           {...props}
         >
           {options

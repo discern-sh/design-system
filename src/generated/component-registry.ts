@@ -469,7 +469,7 @@ export const componentRegistry = [
   {
     meta: meta40,
     css: "@layer discern.components {\n  .discern-textarea {\n    display: block;\n    min-block-size: 6.75rem;\n    resize: vertical;\n  }\n}\n",
-    dependencies: ["field"],
+    dependencies: ["field","input"],
     behaviors: [],
     ownedClasses: ["discern-textarea"],
     publicTokenNames: [],
@@ -477,7 +477,7 @@ export const componentRegistry = [
   {
     meta: meta41,
     css: "@layer discern.components {\n  .discern-select {\n    position: relative;\n    display: block;\n  }\n  .discern-select .discern-control {\n    appearance: none;\n    padding-inline-end: var(--discern-space-10);\n  }\n  .discern-select__chevron {\n    position: absolute;\n    top: 50%;\n    right: var(--discern-space-4);\n    inline-size: 0.5rem;\n    block-size: 0.5rem;\n    border-inline-end: 0.09375rem solid var(--discern-color-ink-muted);\n    border-block-end: 0.09375rem solid var(--discern-color-ink-muted);\n    pointer-events: none;\n    rotate: 45deg;\n    translate: 0 -70%;\n  }\n}\n",
-    dependencies: ["field"],
+    dependencies: ["field","input"],
     behaviors: [],
     ownedClasses: ["discern-select","discern-select__chevron"],
     publicTokenNames: ["--discern-color-ink-muted","--discern-space-10","--discern-space-4"],
