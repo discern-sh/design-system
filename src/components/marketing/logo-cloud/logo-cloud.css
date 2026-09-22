@@ -125,7 +125,14 @@
     .discern-logo-cloud--strip .discern-logo-cloud__list {
       display: flex;
     }
+    .discern-logo-cloud--start.discern-logo-cloud--strip .discern-logo-cloud__label {
+      text-align: center;
+    }
+    .discern-logo-cloud--start.discern-logo-cloud--strip .discern-logo-cloud__list {
+      justify-content: center;
+    }
     .discern-logo-cloud--strip .discern-logo-cloud__list li {
+      flex: 1 1 7.5rem;
       min-inline-size: 7.5rem;
       border: 0;
     }
