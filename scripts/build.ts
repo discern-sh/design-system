@@ -447,8 +447,29 @@ function extractPropDocumentation(
   };
 }
 
-function literalUnionValues(value: unknown): readonly string[] | undefined {
+/** The values of a named literal union an alias refers to, when known. */
+type VariantReference = (typeName: string) => readonly string[] | undefined;
+
+function referencedUnionValues(
+  type: Record<string, unknown>,
+  reference: VariantReference | undefined,
+): readonly string[] | undefined {
+  const target = asRecord(type.value, "variant type reference");
+  return reference === undefined || typeof target.typeName !== "string"
+    ? undefined
+    : reference(target.typeName);
+}
+
+/**
+ * Literal values of a union, following member and whole-alias references to
+ * other literal unions so shared vocabulary composes without restating it.
+ */
+function literalUnionValues(
+  value: unknown,
+  reference?: VariantReference,
+): readonly string[] | undefined {
   const type = asRecord(value, "variant type");
+  if (type.kind === "typeRef") return referencedUnionValues(type, reference);
   if (type.kind !== "union") return undefined;
   const values: string[] = [];
   for (
@@ -456,6 +477,12 @@ function literalUnionValues(value: unknown): readonly string[] | undefined {
       .entries()
   ) {
     const member = asRecord(memberValue, `variant member ${index}`);
+    if (member.kind === "typeRef") {
+      const referenced = referencedUnionValues(member, reference);
+      if (referenced === undefined) return undefined;
+      values.push(...referenced);
+      continue;
+    }
     if (member.kind !== "literal") return undefined;
     const literal = asRecord(member.value, `variant member ${index}.value`);
     if (typeof literal.string === "string") values.push(literal.string);
@@ -502,18 +529,35 @@ function indexedConstUnionValues(
   return literalUnionValues(arrayType.value);
 }
 
-function extractVariants(symbols: readonly unknown[]): CatalogueVariant[] {
-  const variants: CatalogueVariant[] = [];
-  for (const typeName of exportedSymbolNames(symbols)) {
-    if (typeName.endsWith("Props")) continue;
+/**
+ * Exported literal-union aliases of one symbol set. A reference resolves
+ * through the set's own aliases first, then through `outer` (the shared
+ * modules' variants), so `type Frame = SharedFrame | "fill"` is a variant.
+ */
+function extractVariants(
+  symbols: readonly unknown[],
+  outer?: VariantReference,
+): CatalogueVariant[] {
+  const resolving = new Set<string>();
+  const valuesOf = (typeName: string): readonly string[] | undefined => {
     const declaration = symbolDeclaration(symbols, typeName);
-    if (declaration?.kind !== "typeAlias") continue;
+    if (declaration?.kind !== "typeAlias") return outer?.(typeName);
+    if (resolving.has(typeName)) return undefined;
+    resolving.add(typeName);
     const definition = asRecord(
       declaration.def,
       `deno doc declaration ${typeName}.def`,
     );
-    const values = literalUnionValues(definition.tsType) ??
+    const values = literalUnionValues(definition.tsType, valuesOf) ??
       indexedConstUnionValues(definition.tsType, symbols);
+    resolving.delete(typeName);
+    return values;
+  };
+  const variants: CatalogueVariant[] = [];
+  for (const typeName of exportedSymbolNames(symbols)) {
+    if (typeName.endsWith("Props")) continue;
+    if (symbolDeclaration(symbols, typeName)?.kind !== "typeAlias") continue;
+    const values = valuesOf(typeName);
     if (values !== undefined && values.length > 0) {
       variants.push({ typeName, values });
     }
@@ -683,6 +727,12 @@ async function enrichComponentSources(
       `deno doc symbols for ${url.pathname}`,
     );
 
+  const sharedVariants = sharedModules.flatMap((url) =>
+    extractVariants(moduleSymbols(url))
+  );
+  const sharedReference: VariantReference = (typeName) =>
+    sharedVariants.find((variant) => variant.typeName === typeName)?.values;
+
   const sources = paths.map((source, index) => {
     const meta = metadata[index];
     if (meta === undefined) {
@@ -691,6 +741,10 @@ async function enrichComponentSources(
     const reactExport = pascalCase(meta.slug);
     const symbols = moduleSymbols(source.componentUrl);
     const vocabularySymbols = source.vocabularyUrls.flatMap(moduleSymbols);
+    const vocabularyVariants = extractVariants(
+      vocabularySymbols,
+      sharedReference,
+    );
     if (symbolDeclaration(symbols, reactExport) === undefined) {
       throw new TypeError(
         `${source.componentUrl.pathname} does not export the registry-derived adapter name ${reactExport}`,
@@ -705,8 +759,13 @@ async function enrichComponentSources(
         `${reactExport}Props`,
       ),
       variants: [
-        ...extractVariants(symbols),
-        ...extractVariants(vocabularySymbols),
+        ...extractVariants(
+          symbols,
+          (typeName) =>
+            vocabularyVariants.find((variant) => variant.typeName === typeName)
+              ?.values ?? sharedReference(typeName),
+        ),
+        ...vocabularyVariants,
       ],
       objectTypes: [
         ...extractObjectTypes(symbols, [...symbols, ...vocabularySymbols]),
@@ -719,9 +778,7 @@ async function enrichComponentSources(
   });
 
   const shared: SharedTypeFacts = {
-    variants: sharedModules.flatMap((url) =>
-      extractVariants(moduleSymbols(url))
-    ),
+    variants: sharedVariants,
     objectTypes: sharedModules.flatMap((url) =>
       extractObjectTypes(moduleSymbols(url))
     ),
