@@ -22,8 +22,8 @@ export const compactFlowLightSvg =
   .discern-diagram__text--quiet-annotation, .discern-diagram__text--connector-label { fill: oklch(0% 0 0 / 0.68); }
   .discern-diagram__connector--primary { stroke: oklch(0% 0 0 / 0.68); }
   .discern-diagram__arrowhead--primary { fill: oklch(0% 0 0 / 0.68); }
-  .discern-diagram__connector--secondary { stroke: oklch(0% 0 0 / 0.55); stroke-dasharray: 8 6; }
-  .discern-diagram__arrowhead--secondary { fill: oklch(0% 0 0 / 0.55); }
+  .discern-diagram__connector--secondary { stroke: oklch(0% 0 0 / 0.58); stroke-dasharray: 8 6; }
+  .discern-diagram__arrowhead--secondary { fill: oklch(0% 0 0 / 0.58); }
   .discern-diagram__connector--return { stroke: oklch(0% 0 0 / 0.93); stroke-dasharray: 2 6; }
   .discern-diagram__arrowhead--return { fill: oklch(0% 0 0 / 0.93); }
   </style>
