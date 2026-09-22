@@ -1055,6 +1055,7 @@
         "Cites at least one Metadata fact for Search palette — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
         "Uses the attached canonical example only as supporting evidence for density or hierarchy; imagery does not override Metadata guidance.",
         "States that Search palette is CLI-exempt and follows its Metadata reason instead of inventing a terminal renderer.",
+        "Selects `search-palette` through the Runtime emitter and relies on its generated browser behavior instead of wiring package-internal JavaScript by hand.",
         "States the exact package version or checkout the answer was authored against."
       ]
     },

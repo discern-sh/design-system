@@ -63,6 +63,7 @@ export const componentBehaviors = [
   "article-navigation",
   "theme-toggle",
   "docs-drawer",
+  "search-palette",
 ] as const;
 /** One selection-scoped browser behavior. */
 export type ComponentBehavior = (typeof componentBehaviors)[number];
@@ -83,6 +84,7 @@ export const componentBehaviorOptIns = {
   ],
   "theme-toggle": ["theme-toggle"],
   "docs-drawer": ["docs-layout"],
+  "search-palette": ["search-palette"],
 } as const satisfies Readonly<Record<ComponentBehavior, readonly string[]>>;
 
 /** CLI stance for a component with a package-owned pure renderer. */

@@ -50,6 +50,7 @@ export type ControlledSearchPaletteProps =
     readonly onOpenChange: (open: boolean) => void;
     readonly onValueChange?: (value: string) => void;
     readonly closeOnBackdrop?: boolean;
+    readonly shortcuts?: never;
   };
 
 /** Static props options for the Search palette component. */
@@ -61,6 +62,8 @@ export type StaticSearchPaletteProps =
     readonly onOpenChange?: never;
     readonly onValueChange?: never;
     readonly closeOnBackdrop?: never;
+    /** Let ⌘K or Ctrl+K toggle this palette, and `/` open it outside a field; one palette per page. */
+    readonly shortcuts?: boolean;
   };
 
 /** Props options for the Search palette component. */
@@ -75,9 +78,12 @@ export type SearchPaletteProps =
  * field. Without it, the dialog renders closed with no effects or handlers
  * and stamps `data-discern-search-palette` on the dialog,
  * `data-discern-search-palette-input` on the field, and
- * `data-discern-search-palette-close` on the close control, so a consumer
- * script can bind the open, close, and query behaviour it owns; only the
- * static mode carries those hooks, so one activation is never handled twice.
+ * `data-discern-search-palette-close` on the close control. The selected
+ * `search-palette` behaviour then opens it from any control carrying
+ * `data-discern-search-palette-open`, and owns dismissal, focus, and the
+ * fallback for a reader without `showModal()`; the consumer's script keeps
+ * the query and results. Only the static mode carries those hooks, so one
+ * activation is never handled twice.
  */
 export const SearchPalette: DiscernComponent<
   HTMLDialogElement,
@@ -95,6 +101,7 @@ export const SearchPalette: DiscernComponent<
     closeLabel = "Close",
     closeAriaLabel,
     closeOnBackdrop = true,
+    shortcuts = false,
     inputProps,
     className,
     children,
@@ -147,7 +154,10 @@ export const SearchPalette: DiscernComponent<
           },
           onMouseDown: handleBackdrop,
         }
-        : { "data-discern-search-palette": "" })}
+        : {
+          "data-discern-search-palette": "",
+          ...(shortcuts ? { "data-discern-search-palette-shortcuts": "" } : {}),
+        })}
       {...props}
       data-discern-floating-surface="surface"
     >

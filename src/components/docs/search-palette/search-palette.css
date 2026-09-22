@@ -16,6 +16,14 @@
     background: var(--discern-color-overlay);
     backdrop-filter: blur(0.125rem);
   }
+  .discern-search-palette[data-discern-search-palette-fallback] {
+    position: fixed;
+    inset-block-start: 0;
+    inset-inline: 0;
+    z-index: 60;
+    box-shadow: var(--discern-shadow-pop), 0 0 0 100vmax
+      var(--discern-color-overlay);
+  }
   .discern-search-palette[open] {
     animation: discern-search-palette-enter var(--discern-duration-medium)
       var(--discern-ease-out) both;

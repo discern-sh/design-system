@@ -1,5 +1,4 @@
-import { useId, useRef, useState } from "react";
-import type { MouseEvent } from "react";
+import { useId, useState } from "react";
 import {
   type ConformanceScenario,
   defineCatalogueExamples,
@@ -76,11 +75,17 @@ export const conformance = [{
 }, {
   example: "static",
   name:
-    "static markup opens, closes, and restores focus under the consumer's own script",
+    "static markup opens, closes, and restores focus under the emitted behaviour",
   steps: [
     { action: "click", target: { role: "button", name: "Open static search" } },
     { expect: "visible", target: { role: "dialog", name: "Search" } },
     { expect: "focused", target: { role: "combobox", name: "Search" } },
+    {
+      expect: "attribute",
+      target: { role: "combobox", name: "Search" },
+      attribute: "aria-expanded",
+      value: "true",
+    },
     {
       expect: "attribute",
       target: { role: "combobox", name: "Search" },
@@ -102,30 +107,29 @@ export const conformance = [{
 
 /**
  * The static contract: the palette renders closed with bindable hooks, and
- * the two handlers here stand in for the consumer script that owns opening
- * and dismissal on a page without hydration; a modal dialog focuses its
- * first focusable control, the field, natively.
+ * the emitted `search-palette` behaviour opens it from the control that names
+ * it and owns dismissal and focus; a consumer's own script answers its open
+ * and close events with the query and results.
  */
 function StaticSearchPaletteExample() {
-  const dialog = useRef<HTMLDialogElement>(null);
+  const paletteId = `search-${useId()}`;
   const listId = `results-${useId()}`;
-  const open = () => dialog.current?.showModal();
-  const dismiss = (event: MouseEvent<HTMLDivElement>) => {
-    if (
-      event.target instanceof Element &&
-      event.target.closest("[data-discern-search-palette-close]")
-    ) dialog.current?.close();
-  };
   return (
-    <div onClick={dismiss}>
-      <Button onClick={open}>Open static search</Button>
+    <>
+      <Button
+        data-discern-search-palette-open=""
+        aria-controls={paletteId}
+        aria-haspopup="dialog"
+      >
+        Open static search
+      </Button>
       <SearchPalette
-        ref={dialog}
+        id={paletteId}
         closeAriaLabel="Dismiss search"
         inputProps={{
           role: "combobox",
           "aria-controls": listId,
-          "aria-expanded": true,
+          "aria-expanded": false,
           "aria-autocomplete": "list",
           "aria-activedescendant": `${listId}-0`,
         }}
@@ -149,7 +153,7 @@ function StaticSearchPaletteExample() {
         <SearchPaletteEmpty>No matches.</SearchPaletteEmpty>
         <SearchPaletteStatus>3 search results</SearchPaletteStatus>
       </SearchPalette>
-    </div>
+    </>
   );
 }
 
