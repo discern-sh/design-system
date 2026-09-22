@@ -278,7 +278,7 @@ Deno.test("theme Token poles pin representative monochrome emission", () => {
     "oklch(100% 0 0 / 0.74)",
   ]);
   assertEquals(pairs["--discern-color-ink-faint"], [
-    "oklch(0% 0 0 / 0.55)",
+    "oklch(0% 0 0 / 0.58)",
     "oklch(100% 0 0 / 0.55)",
   ]);
   assertEquals(pairs["--discern-color-inverse-surface"], [

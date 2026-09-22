@@ -793,7 +793,7 @@ const inkExpression: AppearanceExpression = {
   ],
 };
 const inkMutedExpression = polarCurve(0.68, 1, 1, 0.74);
-const inkFaintExpression = polarCurve(0.55, 0.72, 0.72, 0.55);
+const inkFaintExpression = polarCurve(0.58, 0.72, 0.72, 0.55);
 /** Text and focus retain their ink rung while Emphasis adjusts state strength. */
 const readableInk = (
   expression: AppearanceExpression,
@@ -1351,13 +1351,39 @@ export const APPEARANCE_CONTRAST_SAMPLE_DARKNESSES = [
   1,
 ] as const;
 
-/** Contrast floors for the three legibility rungs. */
+/**
+ * Contrast floors for the three legibility rungs on the canvas at every
+ * darkness, each capped by the most contrast the canvas admits.
+ */
 export const APPEARANCE_INK_CONTRAST_FLOORS = Object.freeze(
   [
     ["--discern-color-ink", 7],
     ["--discern-color-ink-muted", 4.5],
     ["--discern-color-ink-faint", 3],
   ] as const satisfies readonly (readonly [AppearanceColorRoleName, number])[],
+);
+
+/**
+ * Text-grade floors every legibility rung holds on each neutral text surface
+ * at the light and dark poles, at any paper or ink tint. Between the poles the
+ * ladder compresses toward the polarity crossover, where even primary ink
+ * nears 4.5:1, and the rungs keep {@linkcode APPEARANCE_INK_CONTRAST_FLOORS}.
+ */
+export const APPEARANCE_POLE_INK_CONTRAST_FLOORS = Object.freeze(
+  [
+    ["--discern-color-ink", 7],
+    ["--discern-color-ink-muted", 4.5],
+    ["--discern-color-ink-faint", 4.5],
+  ] as const satisfies readonly (readonly [AppearanceColorRoleName, number])[],
+);
+
+/** Neutral surfaces that carry text, each composited over the canvas. */
+export const APPEARANCE_TEXT_SURFACE_ROLES = Object.freeze(
+  [
+    "--discern-color-canvas",
+    "--discern-color-surface",
+    "--discern-color-surface-sunken",
+  ] as const satisfies readonly AppearanceColorRoleName[],
 );
 
 /**

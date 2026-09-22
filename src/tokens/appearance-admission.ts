@@ -18,6 +18,8 @@ import {
   type Appearance,
   APPEARANCE_INK_CONTRAST_FLOORS,
   APPEARANCE_POLARITY_CROSSOVER_DARKNESS,
+  APPEARANCE_POLE_INK_CONTRAST_FLOORS,
+  APPEARANCE_TEXT_SURFACE_ROLES,
   type AppearanceAxes,
   appearanceColorRoleLaws,
   appearancePigmentLaws,
@@ -114,6 +116,23 @@ export const APPEARANCE_ADMISSION_POINTS: readonly AppearanceAdmissionPoint[] =
     point("high emphasis", { darkness: 0.75, emphasis: 1.5 }),
     point("low structure", { darkness: 0.25, structure: 0 }),
     point("high structure", { darkness: 0.75, structure: 2 }),
+    ...Array.from({ length: 12 }, (_, step) => step * 30).flatMap((hue) =>
+      [0, 1].flatMap((darkness) => {
+        const pole = darkness === 0 ? "light" : "dark";
+        return [
+          point(`ink-tinted ${pole} pole at hue ${hue}`, {
+            darkness,
+            inkTint: 1,
+            inkTintHue: hue,
+          }),
+          point(`paper-tinted ${pole} pole at hue ${hue}`, {
+            darkness,
+            paperTint: 1,
+            paperTintHue: hue,
+          }),
+        ];
+      })
+    ),
     ...Array.from({ length: 12 }, (_, step) => step * 30).flatMap((hue) => [
       point(`tinted light pole at hue ${hue}`, {
         darkness: 0,
@@ -308,6 +327,24 @@ export function proveAppearanceAdmission(
           oklabContrast(opaque(name), canvas),
           Math.min(authoredFloor, maximumInkContrast),
         );
+      }
+      if (sample.point.darkness === 0 || sample.point.darkness === 1) {
+        for (const surfaceName of APPEARANCE_TEXT_SURFACE_ROLES) {
+          const surface = opaque(surfaceName);
+          for (const [name, floor] of APPEARANCE_POLE_INK_CONTRAST_FLOORS) {
+            const ink = requiredPaint(values, name);
+            record(
+              appearanceLabel,
+              sample.label,
+              `${name} on ${surfaceName}`,
+              oklabContrast(
+                compositeOklab(ink.color, ink.alpha, surface),
+                surface,
+              ),
+              floor,
+            );
+          }
+        }
       }
 
       const inverseSurface = opaque("--discern-color-inverse-surface");

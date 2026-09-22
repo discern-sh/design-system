@@ -1618,9 +1618,9 @@ Deno.test("a consumer green theme shares component CSS and preserves state seman
     const pairs = [
       ["--discern-color-ink", "--discern-color-canvas", 7],
       ["--discern-color-ink-muted", "--discern-color-canvas", 4.5],
-      ["--discern-color-ink-faint", "--discern-color-canvas", 3],
-      ["--discern-color-ink-faint", "--discern-color-surface", 3],
-      ["--discern-color-ink-faint", "--discern-color-surface-sunken", 3],
+      ["--discern-color-ink-faint", "--discern-color-canvas", 4.5],
+      ["--discern-color-ink-faint", "--discern-color-surface", 4.5],
+      ["--discern-color-ink-faint", "--discern-color-surface-sunken", 4.5],
       ["--discern-color-ink-faint", "--discern-color-accent-100", 3],
       ["--discern-color-accent-700", "--discern-color-accent-100", 4.5],
       ["--discern-color-accent-800", "--discern-color-accent-100", 4.5],
