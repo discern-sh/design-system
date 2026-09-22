@@ -30,6 +30,7 @@ const meta = {
 export const componentExampleVocabulary = [
   { id: "lead-matrix", label: "Lead matrix", only: "web" },
   { id: "vertical-matrix", label: "Vertical matrix", only: "web" },
+  { id: "copy-led-matrix", label: "Copy-led matrix", only: "web" },
 ] as const;
 defineComponentExampleVocabulary(meta, componentExampleVocabulary);
 

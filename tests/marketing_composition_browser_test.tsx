@@ -202,3 +202,67 @@ Deno.test("Workshop page and canonical bentos retain content and reading order a
     await Deno.remove(output, { recursive: true });
   }
 });
+
+Deno.test("End-aligned bento copy keeps its icon at the top and its copy at the tile's end", async () => {
+  const output = await Deno.makeTempDir();
+  const browser = await launchBrowser();
+  try {
+    await emitDesignSystemRuntime({
+      outputRoot: toFileUrl(`${output}/`),
+      components: ["feature-bento"],
+    });
+    const css = await Deno.readTextFile(`${output}/discern.css`);
+    const example = bentoExamples.find(({ id }) => id === "copy-led-matrix");
+    assert(example !== undefined, "the copy-led bento example is missing");
+    const markup = renderToStaticMarkup(<example.Example />);
+    const page = await browser.newPage();
+    for (const width of [390, 1120, 1440]) {
+      await withViewport(page, { width, height: 1000 }, async () => {
+        await page.setContent(
+          `<html data-discern-root><style>${css}</style><style>body{margin:0}</style><body>${markup}</body></html>`,
+        );
+        const facts = await page.locator(
+          ".discern-feature-bento__item--align-end",
+        ).evaluate((tile) => {
+          const box = (selector: string) =>
+            tile.querySelector(selector)!.getBoundingClientRect();
+          const copy = tile.querySelector(".discern-feature-bento__copy")!;
+          const style = getComputedStyle(copy);
+          const icon = box(".discern-feature-bento__icon");
+          const heading = box("h3");
+          const lastParagraph = [...copy.querySelectorAll("p")].at(-1)!;
+          const tileBox = tile.getBoundingClientRect();
+          return {
+            iconInset: icon.top - tileBox.top,
+            copyInset: tileBox.bottom -
+              lastParagraph.getBoundingClientRect().bottom,
+            iconGap: heading.top - icon.bottom,
+            paddingStart: parseFloat(style.paddingBlockStart),
+            paddingEnd: parseFloat(style.paddingBlockEnd),
+            iconMargin: parseFloat(
+              getComputedStyle(
+                copy.querySelector(".discern-feature-bento__icon")!,
+              ).marginBlockEnd,
+            ),
+          };
+        });
+        const edge = 2;
+        assert(
+          Math.abs(facts.iconInset - facts.paddingStart) <= edge,
+          `${width}: the icon left the top of its tile (${facts.iconInset}px)`,
+        );
+        assert(
+          Math.abs(facts.copyInset - facts.paddingEnd) <= edge,
+          `${width}: the copy left the end of its tile (${facts.copyInset}px)`,
+        );
+        assert(
+          facts.iconGap >= facts.iconMargin - 1,
+          `${width}: the copy rose into the icon's space (${facts.iconGap}px)`,
+        );
+      });
+    }
+  } finally {
+    await browser.close();
+    await Deno.remove(output, { recursive: true });
+  }
+});

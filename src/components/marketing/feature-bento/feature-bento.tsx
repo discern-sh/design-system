@@ -34,6 +34,8 @@ export interface FeatureBentoItem {
   /** Fixed matrix footprint: standard 1×1, wide 2×1, tall 1×2, or large 2×2. */
   readonly size?: FeatureBentoSize;
   readonly tone?: "plain" | "accent" | "sunken";
+  /** Keep the copy at the top of its tile, or keep the icon there and set the copy against the tile's end. */
+  readonly align?: "start" | "end";
 }
 
 /** Props for the {@linkcode FeatureBento} component. */
@@ -115,6 +117,8 @@ export const FeatureBento: DiscernComponent<HTMLElement, FeatureBentoProps> =
                     "discern-feature-bento__item",
                     `discern-feature-bento__item--${item.size ?? "standard"}`,
                     `discern-feature-bento__item--${item.tone ?? "plain"}`,
+                    item.align === "end" &&
+                      "discern-feature-bento__item--align-end",
                   )}
                   style={itemStyle}
                   key={index}

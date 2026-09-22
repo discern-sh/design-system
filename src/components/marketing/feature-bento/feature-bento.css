@@ -90,6 +90,15 @@
   .discern-feature-bento__copy > :last-child > :last-child {
     margin-block-end: 0;
   }
+  .discern-feature-bento__item--align-end .discern-feature-bento__copy {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+  .discern-feature-bento__item--align-end .discern-feature-bento__icon + * {
+    margin-block-start: auto;
+  }
   .discern-feature-bento__icon {
     display: grid;
     place-items: center;

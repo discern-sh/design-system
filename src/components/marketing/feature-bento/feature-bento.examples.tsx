@@ -165,12 +165,66 @@ function VerticalMatrixState() {
   );
 }
 
+function CopyLedMatrixState() {
+  return (
+    <FeatureBento
+      eyebrow="How the session runs"
+      title="A short agenda keeps the discussion moving."
+      items={[
+        {
+          title: "Open with the question",
+          description: (
+            <>
+              <p>
+                Read the decision aloud and confirm everyone understands what is
+                in scope before anyone argues for an option.
+              </p>
+              <p>
+                Note the constraints the group already agreed, so the discussion
+                spends its time on the choices that remain.
+              </p>
+            </>
+          ),
+          icon: <ExampleIcon name="spark" />,
+          size: "large",
+          tone: "accent",
+          align: "end",
+        },
+        {
+          title: "Hear every viewpoint",
+          description: (
+            <p>
+              Go around the group once before debate begins, so quieter
+              contributors are heard early.
+            </p>
+          ),
+          icon: <ExampleIcon name="info" />,
+          size: "wide",
+        },
+        {
+          title: "Compare the options",
+          description: <p>Weigh each option against the agreed criteria.</p>,
+          icon: <ExampleIcon name="arrow" />,
+        },
+        {
+          title: "Decide",
+          description: (
+            <p>State the choice and the reason for it in one sentence.</p>
+          ),
+          icon: <ExampleIcon name="check" />,
+        },
+      ]}
+    />
+  );
+}
+
 export const catalogueExamples = defineCatalogueExamples(
   meta,
   componentExampleVocabulary,
   [
     { id: "lead-matrix", Example: LeadMatrixState },
     { id: "vertical-matrix", Example: VerticalMatrixState },
+    { id: "copy-led-matrix", Example: CopyLedMatrixState },
   ],
 );
 

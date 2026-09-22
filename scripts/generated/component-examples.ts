@@ -2851,6 +2851,15 @@ export const componentExampleRegistry = {
       "reason":
         "Its distinguishing contract is a strict responsive size-and-media matrix; flattening it to terminal text would discard the component's defining structure.",
     },
+    {
+      "id": "copy-led-matrix",
+      "label": "Copy-led matrix",
+      "surfaces": [
+        "web",
+      ],
+      "reason":
+        "Its distinguishing contract is a strict responsive size-and-media matrix; flattening it to terminal text would discard the component's defining structure.",
+    },
   ],
   "split-feature": [
     {
