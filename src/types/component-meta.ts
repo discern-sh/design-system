@@ -118,4 +118,10 @@ export interface ComponentMeta {
   readonly cli: ComponentCliStance;
   readonly behaviors?: readonly ComponentBehavior[];
   readonly accessibility?: readonly string[];
+  /**
+   * Class blocks this Component owns beyond its own slug: shared anatomy whose
+   * name carries no Component slug, such as a surface several Components
+   * render. Each block has exactly one owner.
+   */
+  readonly classBlocks?: readonly string[];
 }

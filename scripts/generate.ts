@@ -497,13 +497,59 @@ export async function loadDiagramKindSources(
   ) as DiagramKindSource[];
 }
 
-/** Decoded Component-owned class names recorded in the generated registry. */
-export function componentOwnedClassNames(
-  source: string,
-): `discern-${string}`[] {
+/** Decoded `discern-*` class names a stylesheet targets. */
+export function stylesheetClassNames(source: string): `discern-${string}`[] {
   return cssClassNames(source).filter(
     (name): name is `discern-${string}` => name.startsWith("discern-"),
   );
+}
+
+/** A class name's block: the text between `discern-` and its first `__` or `--`. */
+export function classBlock(name: `discern-${string}`): string {
+  return name.slice("discern-".length).split(/__|--/)[0] ?? "";
+}
+
+/**
+ * The one Component that owns each class block: every Component owns the
+ * block named by its slug, plus any shared block its Metadata declares.
+ */
+export function classBlockOwners(
+  metas: readonly ComponentMeta[],
+): ReadonlyMap<string, string> {
+  const owners = new Map(metas.map(({ slug }) => [slug, slug]));
+  for (const { slug, classBlocks = [] } of metas) {
+    for (const block of classBlocks) {
+      const owner = owners.get(block);
+      if (owner !== undefined) {
+        throw new Error(
+          `${slug} declares the class block ${block}, which ${owner} already owns`,
+        );
+      }
+      owners.set(block, slug);
+    }
+  }
+  return owners;
+}
+
+/**
+ * The classes a Component's stylesheet targets whose block it owns, recorded
+ * in the generated registry. A stylesheet may style another Component's
+ * class it recognises, but may not target a block no Component owns.
+ */
+export function componentOwnedClassNames(
+  source: string,
+  slug: string,
+  owners: ReadonlyMap<string, string>,
+): `discern-${string}`[] {
+  const names = stylesheetClassNames(source);
+  for (const name of names) {
+    if (!owners.has(classBlock(name))) {
+      throw new Error(
+        `${slug} styles ${name}, whose block no Component owns; declare the block in its owner's classBlocks`,
+      );
+    }
+  }
+  return names.filter((name) => owners.get(classBlock(name)) === slug);
 }
 
 function cssTokenNames(source: string): `--discern-${string}`[] {
@@ -548,6 +594,7 @@ async function generateComponentRegistry(): Promise<string> {
     'import type { ComponentRegistryEntry } from "../registry-types.ts";',
   ];
   const entries: string[] = [];
+  const owners = classBlockOwners(components.map(({ meta }) => meta));
   for (const [index, component] of components.entries()) {
     imports.push(
       `import meta${index} from ${
@@ -569,7 +616,9 @@ async function generateComponentRegistry(): Promise<string> {
       )
     },
     behaviors: ${JSON.stringify(component.meta.behaviors ?? [])},
-    ownedClasses: ${JSON.stringify(componentOwnedClassNames(css))},
+    ownedClasses: ${
+      JSON.stringify(componentOwnedClassNames(css, component.meta.slug, owners))
+    },
     publicTokenNames: ${JSON.stringify(cssTokenNames(css))},
   },`);
   }

@@ -13,6 +13,7 @@ const meta = {
     "Labels and messages use deterministic control IDs.",
     "An error keeps the hint readable; the control's described-by names the error first, then the hint.",
   ],
+  classBlocks: ["field-row"],
 } satisfies ComponentMeta;
 
 export const componentExampleVocabulary = [

@@ -9,6 +9,7 @@ const meta = {
   description:
     "Native input with typed label, help, required, and invalid relationships.",
   cli: { stance: "rendered" },
+  classBlocks: ["control"],
 } satisfies ComponentMeta;
 
 export const componentExampleVocabulary = [

@@ -9,6 +9,7 @@ const meta = {
   description:
     "Native checkbox with an associated visible label and optional description.",
   cli: { stance: "rendered" },
+  classBlocks: ["choice"],
 } satisfies ComponentMeta;
 
 export const componentExampleVocabulary = [

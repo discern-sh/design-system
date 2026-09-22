@@ -16,6 +16,7 @@ const meta = {
     "Use Article layout when the reading column needs navigation or a contextual rail beside it.",
     "Use Section for a full-bleed region with its own surface, and place a Container inside it to bound the content.",
   ],
+  classBlocks: ["container-box"],
 } satisfies ComponentMeta;
 
 export const componentExampleVocabulary = [

@@ -598,6 +598,8 @@ Deno.test("every file disposition has its complete semantic token mapping", asyn
       '[class="future-entry discern-file-change__future"] {} ' +
         "[CLASS=discern-file-change--exact] {} " +
         '[data-tags~="discern-file-change__foreign"] {}',
+      "file-change",
+      new Map([["file-change", "file-change"]]),
     ),
     ["discern-file-change--exact", "discern-file-change__future"],
   );

@@ -13,6 +13,7 @@ const meta = {
     "Danger uses alert semantics; other tones use status semantics.",
     "Auto-dismiss is opt-in.",
   ],
+  classBlocks: ["toast-region"],
 } satisfies ComponentMeta;
 
 export const componentExampleVocabulary = [

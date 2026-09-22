@@ -38,7 +38,7 @@ A Component's `*.meta.ts` file: name, slug, Group, catalogue order, description,
 
 ### Owned Classes
 
-The `discern-*` class names a Component's stylesheet claims, recorded per Component in the Manifest. Consumer styles may add their own composition classes but must never target another party's Owned Classes.
+The `discern-*` class names a Component's stylesheet claims, recorded per Component in the Manifest. Each class has exactly one owner: the Component whose slug names the class's block (the text before `__` or `--`), or the one whose Metadata declares a shared block in `classBlocks`, such as Input's `control` surface. A stylesheet may style another Component's class it recognises without claiming it, and a Component that renders another's class depends on that owner, so a Selection never emits the markup without its stylesheet. Consumer styles may add their own composition classes but must never target another party's Owned Classes.
 
 ---
 
