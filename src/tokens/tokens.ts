@@ -301,6 +301,12 @@ export const baseTokens: readonly DesignToken[] = [
     "Layout",
     "Maximum editorial page width.",
   ),
+  token(
+    "--discern-page-max-wide",
+    "86rem",
+    "Layout",
+    "Maximum campaign page width, shared by wide Marketing blocks and campaign chrome.",
+  ),
   token("--discern-measure", "62ch", "Layout", "Readable prose measure."),
   ...([
     ["xs", "1.5rem"],

@@ -1,11 +1,16 @@
 @layer discern.components {
   .discern-comparison-table {
+    --discern-comparison-table-max: var(--discern-page-max);
     container: discern-comparison-table / inline-size;
     padding-block: var(--discern-section-space);
     background: var(--discern-color-surface-sunken);
   }
+  .discern-comparison-table--frame-wide {
+    --discern-comparison-table-max: var(--discern-page-max-wide);
+  }
   .discern-comparison-table__inner {
-    width: min(100% - 2 * var(--discern-space-6), var(--discern-page-max));
+    width: min(100% - 2 * var(--discern-space-6),
+      var(--discern-comparison-table-max));
     margin-inline: auto;
   }
   .discern-comparison-table__header {

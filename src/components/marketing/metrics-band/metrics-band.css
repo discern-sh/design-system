@@ -1,10 +1,14 @@
 @layer discern.components {
   .discern-metrics-band {
+    --discern-metrics-band-max: var(--discern-page-max);
     container: discern-metrics-band / inline-size;
     padding-block: clamp(calc(var(--discern-space-12) + var(--discern-space-2)),
       7cqi, calc(var(--discern-space-20) + var(--discern-space-2)));
     border-block: 1px solid var(--discern-color-border);
     background: var(--discern-color-surface);
+  }
+  .discern-metrics-band--frame-wide {
+    --discern-metrics-band-max: var(--discern-page-max-wide);
   }
   .discern-metrics-band--accent {
     border-color: var(--discern-color-accent-300);
@@ -20,7 +24,8 @@
     grid-template-columns: minmax(12rem, 0.65fr) minmax(0, 1.35fr);
     gap: var(--discern-space-12);
     align-items: end;
-    width: min(100% - 2 * var(--discern-space-6), var(--discern-page-max));
+    width: min(100% - 2 * var(--discern-space-6),
+      var(--discern-metrics-band-max));
     margin-inline: auto;
   }
   .discern-metrics-band__header h2 {

@@ -1,11 +1,16 @@
 @layer discern.components {
   .discern-audience-grid {
+    --discern-audience-grid-max: var(--discern-page-max);
     container: discern-audience-grid / inline-size;
     padding-block: var(--discern-section-space);
     background: var(--discern-color-canvas);
   }
+  .discern-audience-grid--frame-wide {
+    --discern-audience-grid-max: var(--discern-page-max-wide);
+  }
   .discern-audience-grid__inner {
-    width: min(100% - 2 * var(--discern-space-6), var(--discern-page-max));
+    width: min(100% - 2 * var(--discern-space-6),
+      var(--discern-audience-grid-max));
     margin-inline: auto;
   }
   .discern-audience-grid__header {

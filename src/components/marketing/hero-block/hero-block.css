@@ -1,11 +1,15 @@
 @layer discern.components {
   .discern-hero-block {
+    --discern-hero-block-max: var(--discern-page-max);
     container: discern-hero-block / inline-size;
     position: relative;
     isolation: isolate;
     overflow: hidden;
     border-block-end: 1px solid var(--discern-color-border);
     background: var(--discern-color-canvas);
+  }
+  .discern-hero-block--frame-wide {
+    --discern-hero-block-max: var(--discern-page-max-wide);
   }
   .discern-hero-block--sunken {
     background: var(--discern-color-surface-sunken);
@@ -41,7 +45,8 @@
     gap: clamp(var(--discern-space-12), 8cqi,
       calc(var(--discern-space-24) + var(--discern-space-4)));
     align-items: center;
-    width: min(100% - 2 * var(--discern-space-6), var(--discern-page-max));
+    width: min(100% - 2 * var(--discern-space-6),
+      var(--discern-hero-block-max));
     min-height: min(47.5rem, calc(100vh - 4.25rem));
     margin-inline: auto;
     padding-block: clamp(var(--discern-space-20), 10cqi,
@@ -116,11 +121,10 @@
     max-width: 15ch;
   }
   .discern-hero-block--showcase .discern-hero-block__inner {
-    grid-template-columns: minmax(0, 86rem);
+    grid-template-columns: minmax(0, 1fr);
     justify-content: center;
     gap: clamp(calc(var(--discern-space-16) + var(--discern-space-2)), 9cqi,
       calc(var(--discern-space-24) + var(--discern-space-8)));
-    width: min(100% - 2 * var(--discern-space-6), 86rem);
     min-height: auto;
     padding-block:
       clamp(var(--discern-space-20), 9cqi,
@@ -222,7 +226,8 @@
       margin-inline: auto;
     }
     .discern-hero-block--showcase .discern-hero-block__inner {
-      width: min(100% - 2 * var(--discern-space-4), 86rem);
+      width: min(100% - 2 * var(--discern-space-4),
+        var(--discern-hero-block-max));
       padding-block-start:
         calc(var(--discern-space-16) + var(--discern-space-2));
     }

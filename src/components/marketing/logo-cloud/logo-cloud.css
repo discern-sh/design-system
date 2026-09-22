@@ -1,10 +1,15 @@
 @layer discern.components {
   .discern-logo-cloud {
     --discern-logo-cloud-mark-mask: none;
+    --discern-logo-cloud-max: var(--discern-page-max);
     container: discern-logo-cloud / inline-size;
-    width: min(100% - 2 * var(--discern-space-6), var(--discern-page-max));
+    width: min(100% - 2 * var(--discern-space-6),
+      var(--discern-logo-cloud-max));
     margin-inline: auto;
     padding-block: var(--discern-space-10);
+  }
+  .discern-logo-cloud--frame-wide {
+    --discern-logo-cloud-max: var(--discern-page-max-wide);
   }
   .discern-logo-cloud__label,
   .discern-logo-cloud__list li {
@@ -72,8 +77,11 @@
     opacity: var(--discern-brand-artwork-opacity);
   }
   .discern-logo-cloud--strip {
-    width: min(100% - 2 * var(--discern-space-6), 86rem);
     padding-block: var(--discern-space-20);
+  }
+  .discern-logo-cloud--frame-fill {
+    width: 100%;
+    padding-block: 0;
   }
   .discern-logo-cloud--strip .discern-logo-cloud__label {
     margin-block-end: var(--discern-space-5);

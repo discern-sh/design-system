@@ -6,6 +6,7 @@ import {
   createFeatureBentoLayout,
   type FeatureBentoSize,
 } from "./feature-bento-layout.ts";
+import type { MarketingFrame } from "../frame.ts";
 
 export type { FeatureBentoSize } from "./feature-bento-layout.ts";
 
@@ -42,12 +43,22 @@ export interface FeatureBentoProps
   readonly title: ReactNode;
   readonly description?: ReactNode;
   readonly items: readonly FeatureBentoItem[];
+  /** Lay content out at the editorial page measure or the wider campaign frame. */
+  readonly frame?: MarketingFrame;
 }
 
 /** Strict rectangular feature matrix with intentional size, surface, icon, and visual slots. */
 export const FeatureBento: DiscernComponent<HTMLElement, FeatureBentoProps> =
   forwardRef<HTMLElement, FeatureBentoProps>(function FeatureBento(
-    { eyebrow, title, description, items, className, ...props },
+    {
+      eyebrow,
+      title,
+      description,
+      items,
+      frame = "standard",
+      className,
+      ...props
+    },
     ref,
   ) {
     const sizes = items.map((item) => item.size ?? "standard");
@@ -61,7 +72,11 @@ export const FeatureBento: DiscernComponent<HTMLElement, FeatureBentoProps> =
     return (
       <section
         ref={ref}
-        className={classNames("discern-feature-bento", className)}
+        className={classNames(
+          "discern-feature-bento",
+          frame === "wide" && "discern-feature-bento--frame-wide",
+          className,
+        )}
         {...props}
       >
         <div className="discern-feature-bento__inner">

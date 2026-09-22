@@ -4,8 +4,10 @@
  * @module
  */
 
+import type { MarketingFrame } from "../frame.ts";
+
 /** Content-frame widths available to a Marketing section. */
-export type MarketingSectionFrame = "standard" | "wide";
+export type MarketingSectionFrame = MarketingFrame;
 
 /** Vertical rhythm presets available to a Marketing section. */
 export type MarketingSectionSpacing = "standard" | "spacious" | "compact";

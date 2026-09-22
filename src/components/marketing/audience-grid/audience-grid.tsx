@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import type { MarketingFrame } from "../frame.ts";
 
 /** One item entry rendered by the Audience grid component. */
 export interface AudienceGridItem {
@@ -22,18 +23,32 @@ export interface AudienceGridProps
   readonly title: ReactNode;
   readonly description?: ReactNode;
   readonly items: readonly AudienceGridItem[];
+  /** Lay content out at the editorial page measure or the wider campaign frame. */
+  readonly frame?: MarketingFrame;
 }
 
 /** Persona-led card grid for explaining one product through the outcomes different audiences care about. */
 export const AudienceGrid: DiscernComponent<HTMLElement, AudienceGridProps> =
   forwardRef<HTMLElement, AudienceGridProps>(function AudienceGrid(
-    { eyebrow, title, description, items, className, ...props },
+    {
+      eyebrow,
+      title,
+      description,
+      items,
+      frame = "standard",
+      className,
+      ...props
+    },
     ref,
   ) {
     return (
       <section
         ref={ref}
-        className={classNames("discern-audience-grid", className)}
+        className={classNames(
+          "discern-audience-grid",
+          frame === "wide" && "discern-audience-grid--frame-wide",
+          className,
+        )}
         {...props}
       >
         <div className="discern-audience-grid__inner">

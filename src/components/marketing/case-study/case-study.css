@@ -1,8 +1,12 @@
 @layer discern.components {
   .discern-case-study {
+    --discern-case-study-max: var(--discern-page-max);
     container: discern-case-study / inline-size;
     padding-block: var(--discern-section-space);
     background: var(--discern-color-canvas);
+  }
+  .discern-case-study--frame-wide {
+    --discern-case-study-max: var(--discern-page-max-wide);
   }
   .discern-case-study__inner {
     display: grid;
@@ -10,7 +14,8 @@
     gap: clamp(var(--discern-space-12), 8cqi,
       calc(var(--discern-space-24) + var(--discern-space-4)));
     align-items: center;
-    width: min(100% - 2 * var(--discern-space-6), var(--discern-page-max));
+    width: min(100% - 2 * var(--discern-space-6),
+      var(--discern-case-study-max));
     margin-inline: auto;
   }
   .discern-case-study--reverse .discern-case-study__story {

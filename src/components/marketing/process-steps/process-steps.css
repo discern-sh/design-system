@@ -1,12 +1,17 @@
 @layer discern.components {
   .discern-process-steps {
+    --discern-process-steps-max: var(--discern-page-max);
     --discern-process-steps-marker-size: 2.8rem;
     container: discern-process-steps / inline-size;
     padding-block: var(--discern-section-space);
     background: var(--discern-color-canvas);
   }
+  .discern-process-steps--frame-wide {
+    --discern-process-steps-max: var(--discern-page-max-wide);
+  }
   .discern-process-steps__inner {
-    width: min(100% - 2 * var(--discern-space-6), var(--discern-page-max));
+    width: min(100% - 2 * var(--discern-space-6),
+      var(--discern-process-steps-max));
     margin-inline: auto;
   }
   .discern-process-steps__header {

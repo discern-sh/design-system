@@ -1,14 +1,18 @@
 @layer discern.components {
   .discern-cta-band {
+    --discern-cta-band-max: var(--discern-page-max);
     container: discern-cta-band / inline-size;
     padding: var(--discern-space-6);
     background: var(--discern-color-canvas);
+  }
+  .discern-cta-band--frame-wide {
+    --discern-cta-band-max: var(--discern-page-max-wide);
   }
   .discern-cta-band__inner {
     position: relative;
     isolation: isolate;
     overflow: hidden;
-    width: min(100%, var(--discern-page-max));
+    width: min(100%, var(--discern-cta-band-max));
     margin-inline: auto;
     padding: clamp(var(--discern-space-12), 8cqi,
       calc(var(--discern-space-24) + var(--discern-space-2)));

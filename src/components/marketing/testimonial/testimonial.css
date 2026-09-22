@@ -1,15 +1,19 @@
 @layer discern.components {
   .discern-testimonial {
+    --discern-testimonial-max: var(--discern-page-max);
     container: discern-testimonial / inline-size;
     padding: var(--discern-section-space) var(--discern-space-6);
     background: var(--discern-color-canvas);
+  }
+  .discern-testimonial--frame-wide {
+    --discern-testimonial-max: var(--discern-page-max-wide);
   }
   .discern-testimonial__frame {
     position: relative;
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(10rem, 0.28fr);
     gap: var(--discern-space-10);
-    width: min(100%, var(--discern-page-max));
+    width: min(100%, var(--discern-testimonial-max));
     margin: 0 auto;
     overflow: hidden;
     padding: clamp(var(--discern-space-8), 6cqi,

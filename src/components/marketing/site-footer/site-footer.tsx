@@ -3,6 +3,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { useInitialFragmentTarget } from "../../use-initial-fragment-target.ts";
+import type { MarketingFrame } from "../frame.ts";
 
 /** One link entry rendered by the Site footer component. */
 export interface SiteFooterLink {
@@ -27,6 +28,8 @@ export interface SiteFooterProps extends HTMLAttributes<HTMLElement> {
   readonly groups?: readonly SiteFooterGroup[];
   readonly legal?: ReactNode;
   readonly meta?: ReactNode;
+  /** Lay content out at the editorial page measure or the wider campaign frame. */
+  readonly frame?: MarketingFrame;
 }
 
 /** Responsive page colophon with product context, grouped navigation, legal copy, and a compact metadata rail. */
@@ -42,6 +45,7 @@ export const SiteFooter: DiscernComponent<HTMLElement, SiteFooterProps> =
       groups = [],
       legal,
       meta,
+      frame = "standard",
       className,
       ...props
     },
@@ -53,7 +57,11 @@ export const SiteFooter: DiscernComponent<HTMLElement, SiteFooterProps> =
     return (
       <footer
         ref={ref}
-        className={classNames("discern-site-footer", className)}
+        className={classNames(
+          "discern-site-footer",
+          frame === "wide" && "discern-site-footer--frame-wide",
+          className,
+        )}
         {...props}
       >
         <div className="discern-site-footer__inner">

@@ -3,6 +3,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import type { CtaBandAlign, CtaBandTone } from "./cta-band.types.ts";
+import type { MarketingFrame } from "../frame.ts";
 
 export type { CtaBandAlign, CtaBandTone } from "./cta-band.types.ts";
 
@@ -17,6 +18,8 @@ export interface CtaBandProps
   readonly visual?: ReactNode;
   readonly tone?: CtaBandTone;
   readonly align?: CtaBandAlign;
+  /** Lay content out at the editorial page measure or the wider campaign frame. */
+  readonly frame?: MarketingFrame;
 }
 
 /** High-emphasis closing invitation with centered or split layouts, three surface treatments, and a visual slot. */
@@ -33,6 +36,7 @@ export const CtaBand: DiscernComponent<HTMLElement, CtaBandProps> = forwardRef<
     visual,
     tone = "accent",
     align = "center",
+    frame = "standard",
     className,
     ...props
   },
@@ -43,6 +47,7 @@ export const CtaBand: DiscernComponent<HTMLElement, CtaBandProps> = forwardRef<
       ref={ref}
       className={classNames(
         "discern-cta-band",
+        frame === "wide" && "discern-cta-band--frame-wide",
         `discern-cta-band--${tone}`,
         `discern-cta-band--${align}`,
         Boolean(visual) && "discern-cta-band--with-visual",

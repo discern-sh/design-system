@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import type { MarketingFrame } from "../frame.ts";
 
 /** One stat entry rendered by the Case study component. */
 export interface CaseStudyStat {
@@ -20,6 +21,8 @@ export interface CaseStudyProps
   readonly media?: ReactNode;
   readonly action?: ReactNode;
   readonly reverse?: boolean;
+  /** Lay content out at the editorial page measure or the wider campaign frame. */
+  readonly frame?: MarketingFrame;
 }
 
 /** Long-form proof block pairing a customer narrative with visual evidence and compact outcome metrics. */
@@ -34,6 +37,7 @@ export const CaseStudy: DiscernComponent<HTMLElement, CaseStudyProps> =
       media,
       action,
       reverse = false,
+      frame = "standard",
       className,
       ...props
     },
@@ -44,6 +48,7 @@ export const CaseStudy: DiscernComponent<HTMLElement, CaseStudyProps> =
         ref={ref}
         className={classNames(
           "discern-case-study",
+          frame === "wide" && "discern-case-study--frame-wide",
           reverse && "discern-case-study--reverse",
           className,
         )}

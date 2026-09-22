@@ -2,9 +2,9 @@ import { forwardRef } from "react";
 import type { CSSProperties, HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
-import type { LogoCloudVariant } from "./logo-cloud.types.ts";
+import type { LogoCloudFrame, LogoCloudVariant } from "./logo-cloud.types.ts";
 
-export type { LogoCloudVariant } from "./logo-cloud.types.ts";
+export type { LogoCloudFrame, LogoCloudVariant } from "./logo-cloud.types.ts";
 
 /** One item entry rendered by the Logo cloud component. */
 export interface LogoCloudItem {
@@ -21,6 +21,8 @@ export interface LogoCloudProps extends HTMLAttributes<HTMLElement> {
   readonly align?: "start" | "center";
   /** Divided trust grid or the looser campaign-page provider strip. */
   readonly variant?: LogoCloudVariant;
+  /** Page measure, wider campaign frame, or the containing slot; the strip defaults to wide. */
+  readonly frame?: LogoCloudFrame;
 }
 
 /** Quiet trust band for customer, partner, integration, or publication marks without requiring image assets. */
@@ -31,6 +33,7 @@ export const LogoCloud: DiscernComponent<HTMLElement, LogoCloudProps> =
       items,
       align = "center",
       variant = "grid",
+      frame = variant === "strip" ? "wide" : "standard",
       className,
       ...props
     },
@@ -43,6 +46,7 @@ export const LogoCloud: DiscernComponent<HTMLElement, LogoCloudProps> =
           "discern-logo-cloud",
           `discern-logo-cloud--${align}`,
           variant === "strip" && "discern-logo-cloud--strip",
+          frame !== "standard" && `discern-logo-cloud--frame-${frame}`,
           className,
         )}
         {...props}

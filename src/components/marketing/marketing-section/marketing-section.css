@@ -14,7 +14,7 @@
       var(--discern-space-2)), 7vw, var(--discern-space-20));
   }
   .discern-marketing-section--frame-wide {
-    --discern-marketing-section-max: 86rem;
+    --discern-marketing-section-max: var(--discern-page-max-wide);
   }
   .discern-marketing-section--canvas {
     background: var(--discern-color-canvas);

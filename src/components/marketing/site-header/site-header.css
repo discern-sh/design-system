@@ -1,9 +1,13 @@
 @layer discern.components {
   .discern-site-header {
+    --discern-site-header-max: var(--discern-page-max);
     container-type: inline-size;
     z-index: 30;
     border-block-end: 1px solid var(--discern-color-border);
     background: var(--discern-color-surface);
+  }
+  .discern-site-header--frame-wide {
+    --discern-site-header-max: var(--discern-page-max-wide);
   }
   .discern-site-header--sticky {
     position: sticky;
@@ -40,12 +44,12 @@
     display: flex;
     align-items: center;
     gap: var(--discern-space-6);
-    width: min(100% - 2 * var(--discern-space-6), var(--discern-page-max));
+    width: min(100% - 2 * var(--discern-space-6),
+      var(--discern-site-header-max));
     min-height: 4.25rem;
     margin-inline: auto;
   }
   .discern-site-header--campaign .discern-site-header__inner {
-    width: min(100% - 2 * var(--discern-space-6), 86rem);
     min-block-size: 4.25rem;
   }
   .discern-site-header__brand {
@@ -171,7 +175,8 @@
       margin-inline-start: auto;
     }
     .discern-site-header--campaign .discern-site-header__inner {
-      width: min(100% - 2 * var(--discern-space-4), 86rem);
+      width: min(100% - 2 * var(--discern-space-4),
+        var(--discern-site-header-max));
     }
   }
   @container (max-width: 30rem) {

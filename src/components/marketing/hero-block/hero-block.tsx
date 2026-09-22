@@ -3,6 +3,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import type { HeroBlockLayout, HeroBlockSurface } from "./hero-block.types.ts";
+import type { MarketingFrame } from "../frame.ts";
 
 export type { HeroBlockLayout, HeroBlockSurface } from "./hero-block.types.ts";
 
@@ -20,6 +21,8 @@ export interface HeroBlockProps
   readonly backdrop?: ReactNode;
   readonly layout?: HeroBlockLayout;
   readonly surface?: HeroBlockSurface;
+  /** Lay content out at the editorial page measure or the wider campaign frame; the showcase layout defaults to wide. */
+  readonly frame?: MarketingFrame;
 }
 
 /** Marketing opening with split, centered, showcase, or concise statement composition. */
@@ -36,6 +39,7 @@ export const HeroBlock: DiscernComponent<HTMLElement, HeroBlockProps> =
       backdrop,
       layout = "split",
       surface = "canvas",
+      frame = layout === "showcase" ? "wide" : "standard",
       className,
       ...props
     },
@@ -49,6 +53,7 @@ export const HeroBlock: DiscernComponent<HTMLElement, HeroBlockProps> =
           "discern-hero-block",
           `discern-hero-block--${layout}`,
           `discern-hero-block--${surface}`,
+          frame === "wide" && "discern-hero-block--frame-wide",
           !visual && "discern-hero-block--without-visual",
           className,
         )}

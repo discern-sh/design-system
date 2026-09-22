@@ -3,6 +3,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import type { TestimonialLayout } from "./testimonial.types.ts";
+import type { MarketingFrame } from "../frame.ts";
 
 export type { TestimonialLayout } from "./testimonial.types.ts";
 
@@ -17,6 +18,8 @@ export interface TestimonialProps extends HTMLAttributes<HTMLElement> {
   readonly metricLabel?: ReactNode;
   readonly mark?: ReactNode;
   readonly layout?: TestimonialLayout;
+  /** Lay content out at the editorial page measure or the wider campaign frame. */
+  readonly frame?: MarketingFrame;
 }
 
 /** Editorial customer quote with attribution, optional portrait, and an adjacent measurable outcome. */
@@ -32,6 +35,7 @@ export const Testimonial: DiscernComponent<HTMLElement, TestimonialProps> =
       metricLabel,
       mark = "“",
       layout = "wide",
+      frame = "standard",
       className,
       ...props
     },
@@ -42,6 +46,7 @@ export const Testimonial: DiscernComponent<HTMLElement, TestimonialProps> =
         ref={ref}
         className={classNames(
           "discern-testimonial",
+          frame === "wide" && "discern-testimonial--frame-wide",
           `discern-testimonial--${layout}`,
           className,
         )}

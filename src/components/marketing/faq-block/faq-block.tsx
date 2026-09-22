@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import type { MarketingFrame } from "../frame.ts";
 
 /** One faq item entry rendered by the FAQ block component. */
 export interface FaqItem {
@@ -18,6 +19,8 @@ export interface FaqBlockProps
   readonly items: readonly FaqItem[];
   readonly aside?: ReactNode;
   readonly openFirst?: boolean;
+  /** Lay content out at the editorial page measure or the wider campaign frame. */
+  readonly frame?: MarketingFrame;
 }
 
 /** Editorial frequently-asked-questions section using native disclosure controls and a sticky introduction. */
@@ -30,6 +33,7 @@ export const FaqBlock: DiscernComponent<HTMLElement, FaqBlockProps> =
       items,
       aside,
       openFirst = false,
+      frame = "standard",
       className,
       ...props
     },
@@ -38,7 +42,11 @@ export const FaqBlock: DiscernComponent<HTMLElement, FaqBlockProps> =
     return (
       <section
         ref={ref}
-        className={classNames("discern-faq-block", className)}
+        className={classNames(
+          "discern-faq-block",
+          frame === "wide" && "discern-faq-block--frame-wide",
+          className,
+        )}
         {...props}
       >
         <div className="discern-faq-block__inner">

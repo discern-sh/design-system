@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import type { MarketingFrame } from "../frame.ts";
 
 /** One point entry rendered by the Split feature component. */
 export interface SplitFeaturePoint {
@@ -20,6 +21,8 @@ export interface SplitFeatureProps
   readonly media: ReactNode;
   readonly reverse?: boolean;
   readonly surface?: "canvas" | "surface" | "sunken";
+  /** Lay content out at the editorial page measure or the wider campaign frame. */
+  readonly frame?: MarketingFrame;
 }
 
 /** Alternating editorial feature section with narrative copy, proof points, actions, and an unconstrained media slot. */
@@ -34,6 +37,7 @@ export const SplitFeature: DiscernComponent<HTMLElement, SplitFeatureProps> =
       media,
       reverse = false,
       surface = "canvas",
+      frame = "standard",
       className,
       ...props
     },
@@ -44,6 +48,7 @@ export const SplitFeature: DiscernComponent<HTMLElement, SplitFeatureProps> =
         ref={ref}
         className={classNames(
           "discern-split-feature",
+          frame === "wide" && "discern-split-feature--frame-wide",
           reverse && "discern-split-feature--reverse",
           `discern-split-feature--${surface}`,
           className,

@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import type { MarketingFrame } from "../frame.ts";
 import { useInitialFragmentTarget } from "../../use-initial-fragment-target.ts";
 
 /** How one navigation destination relates to the page being read. */
@@ -41,6 +42,8 @@ export interface SiteHeaderProps extends HTMLAttributes<HTMLElement> {
   readonly collapseNavOnNarrow?: boolean;
   /** Standard page chrome or the wider campaign masthead. */
   readonly variant?: SiteHeaderVariant;
+  /** Lay content out at the editorial page measure or the wider campaign frame; the campaign variant defaults to wide. */
+  readonly frame?: MarketingFrame;
 }
 
 /** Responsive landing-page masthead with optional notice, navigation, actions, and sticky positioning. */
@@ -60,6 +63,7 @@ export const SiteHeader: DiscernComponent<HTMLElement, SiteHeaderProps> =
       sticky = false,
       collapseNavOnNarrow = false,
       variant = "standard",
+      frame = variant === "campaign" ? "wide" : "standard",
       className,
       ...props
     },
@@ -77,6 +81,7 @@ export const SiteHeader: DiscernComponent<HTMLElement, SiteHeaderProps> =
           Boolean(notice) && "discern-site-header--with-notice",
           collapseNavOnNarrow && "discern-site-header--collapse-nav",
           variant === "campaign" && "discern-site-header--campaign",
+          frame === "wide" && "discern-site-header--frame-wide",
           className,
         )}
         {...props}

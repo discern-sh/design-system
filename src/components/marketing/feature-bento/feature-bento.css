@@ -1,11 +1,16 @@
 @layer discern.components {
   .discern-feature-bento {
+    --discern-feature-bento-max: var(--discern-page-max);
     container: discern-feature-bento / inline-size;
     padding-block: var(--discern-section-space);
     background: var(--discern-color-surface-sunken);
   }
+  .discern-feature-bento--frame-wide {
+    --discern-feature-bento-max: var(--discern-page-max-wide);
+  }
   .discern-feature-bento__inner {
-    width: min(100% - 2 * var(--discern-space-6), var(--discern-page-max));
+    width: min(100% - 2 * var(--discern-space-6),
+      var(--discern-feature-bento-max));
     margin-inline: auto;
   }
   .discern-feature-bento__header {

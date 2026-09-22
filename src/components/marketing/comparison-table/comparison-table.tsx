@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import type { MarketingFrame } from "../frame.ts";
 
 /** One comparison row entry rendered by the Comparison table component. */
 export interface ComparisonRow {
@@ -21,6 +22,8 @@ export interface ComparisonTableProps
   readonly secondLabel: string;
   readonly rows: readonly ComparisonRow[];
   readonly secondBadge?: ReactNode;
+  /** Lay content out at the editorial page measure or the wider campaign frame. */
+  readonly frame?: MarketingFrame;
 }
 
 /** Three-column capability comparison with an emphasized recommendation and card-like mobile rows. */
@@ -37,6 +40,7 @@ export const ComparisonTable: DiscernComponent<
     secondLabel,
     rows,
     secondBadge,
+    frame = "standard",
     className,
     ...props
   },
@@ -45,7 +49,11 @@ export const ComparisonTable: DiscernComponent<
   return (
     <section
       ref={ref}
-      className={classNames("discern-comparison-table", className)}
+      className={classNames(
+        "discern-comparison-table",
+        frame === "wide" && "discern-comparison-table--frame-wide",
+        className,
+      )}
       {...props}
     >
       <div className="discern-comparison-table__inner">

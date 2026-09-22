@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import type { MarketingFrame } from "../frame.ts";
 
 /** One process step entry rendered by the Process steps component. */
 export interface ProcessStep {
@@ -19,6 +20,8 @@ export interface ProcessStepsProps
   readonly description?: ReactNode;
   readonly steps: readonly ProcessStep[];
   readonly orientation?: "horizontal" | "vertical";
+  /** Lay content out at the editorial page measure or the wider campaign frame. */
+  readonly frame?: MarketingFrame;
 }
 
 /** Numbered horizontal or vertical journey for onboarding, workflow, implementation, or methodology stories. */
@@ -30,6 +33,7 @@ export const ProcessSteps: DiscernComponent<HTMLElement, ProcessStepsProps> =
       description,
       steps,
       orientation = "horizontal",
+      frame = "standard",
       className,
       ...props
     },
@@ -40,6 +44,7 @@ export const ProcessSteps: DiscernComponent<HTMLElement, ProcessStepsProps> =
         ref={ref}
         className={classNames(
           "discern-process-steps",
+          frame === "wide" && "discern-process-steps--frame-wide",
           `discern-process-steps--${orientation}`,
           className,
         )}
