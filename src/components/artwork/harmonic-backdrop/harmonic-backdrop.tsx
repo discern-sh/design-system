@@ -6,6 +6,7 @@ import { classNames } from "../../class-names.ts";
 import type { DiscernComponent } from "../../component-type.ts";
 import { Backdrop } from "../backdrop/backdrop.tsx";
 import type { BackdropProps } from "../backdrop/backdrop.tsx";
+import { phraseIterations } from "../phrase.ts";
 
 interface Point {
   readonly x: number;
@@ -39,6 +40,8 @@ interface HarmonicTremble {
   readonly dx: number;
   readonly dy: number;
   readonly delay: string;
+  /** Carries the staggered group through exactly one beat. */
+  readonly iterations: number;
 }
 
 /** The single proportion authority for the whole plate. */
@@ -371,14 +374,14 @@ const HARMONIC_TREMBLES: readonly HarmonicTremble[] = Object.freeze(
     (_, index): HarmonicTremble => {
       const angle = (index / HARMONIC_GEOMETRY.tremble.phases) * Math.PI * 2 +
         0.4;
+      const advance =
+        Math.round((index / HARMONIC_GEOMETRY.tremble.phases) * 1000) / 1000;
       return Object.freeze({
         dx: round(Math.cos(angle) * HARMONIC_GEOMETRY.tremble.amplitude),
         dy: round(Math.sin(angle) * HARMONIC_GEOMETRY.tremble.amplitude),
-        delay: `calc(var(--discern-backdrop-beat) * ${
-          -Math.round(
-            (index / HARMONIC_GEOMETRY.tremble.phases) * 1000,
-          ) / 1000
-        })`,
+        delay: `calc(var(--discern-backdrop-beat) * ${-advance})`,
+        // The advance is in beats and the tremble lasts one beat.
+        iterations: phraseIterations(advance, 1),
       });
     },
   ),
@@ -409,6 +412,7 @@ function grainStyle(grain: HarmonicGrain): GrainStyle {
 function trembleStyle(tremble: HarmonicTremble): TrembleStyle {
   return {
     animationDelay: tremble.delay,
+    animationIterationCount: tremble.iterations,
     "--discern-harmonic-backdrop-tx": `${tremble.dx}px`,
     "--discern-harmonic-backdrop-ty": `${tremble.dy}px`,
   };

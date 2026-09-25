@@ -4,6 +4,12 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
+## Unreleased
+
+### Artwork
+
+- Seven Artwork phrases play in full again. Approach, Aperture, Envelope, Fold, Tiling, Compression, and Harmonic stagger their elements by starting each one partway into a shared loop, but play a single iteration, so every staggered element stopped short of a full cycle: seven of Approach's nine rings never lit, and most of the other phrases were skipped before the first frame. A staggered element now runs for exactly one period, in step with its neighbours and ending on the frame it began with; Tiling begins and ends on its still. Fold's bands, whose light does not return to where it began, wait for their turn instead of starting partway through. A browser test holds every Artwork piece, including future ones, to both rules.
+
 ## 0.36.0
 
 A campaign page can now set every Marketing block, its header, and its footer on one wide frame, lay out a four-group footer and an end-aligned bento tile, and hand its static search dialog to the emitted runtime, all through Component options rather than consumer selectors reaching into package anatomy. Faint ink holds AA on every neutral surface at both poles under any tint, and every class in the manifest has exactly one owner.

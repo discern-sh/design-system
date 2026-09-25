@@ -4,6 +4,7 @@ import { classNames } from "../../class-names.ts";
 import type { DiscernComponent } from "../../component-type.ts";
 import { Backdrop } from "../backdrop/backdrop.tsx";
 import type { BackdropProps } from "../backdrop/backdrop.tsx";
+import { phraseWait } from "../phrase.ts";
 
 /** Grd. III — the fold. One triangular tessellation, every facet authored at its own tint, gathered into fourteen diagonal bands that take light in turn. */
 
@@ -19,6 +20,13 @@ interface FoldBand {
   readonly offset: number;
   readonly facets: readonly FoldFacet[];
 }
+
+/**
+ * The stylesheet's phrase: 45 beats of 2.4s. A band's light rises from dim
+ * and settles lit, so its keyframes do not close a loop: each band waits for
+ * its turn rather than starting partway through.
+ */
+const FOLD_PHRASE_SECONDS = 108;
 
 /** The fourteen bands, ordered across the plate from the light's approach. */
 const FOLD_BANDS: readonly FoldBand[] = Object.freeze([{
@@ -526,7 +534,9 @@ export const FoldBackdrop: DiscernComponent<HTMLDivElement, FoldBackdropProps> =
               key={bandIndex}
               className="discern-fold-backdrop__band"
               style={{
-                "--discern-fold-backdrop-offset": `${band.offset}s`,
+                "--discern-fold-backdrop-offset": `${
+                  phraseWait(-band.offset, FOLD_PHRASE_SECONDS)
+                }s`,
               } as CSSProperties}
             >
               {band.facets.map((facet, facetIndex) => (

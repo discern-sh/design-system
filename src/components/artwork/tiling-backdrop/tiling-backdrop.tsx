@@ -1,10 +1,12 @@
 /** Reusable tiling artwork: a Truchet field whose traced route re-routes. */
 
 import { forwardRef } from "react";
+import type { CSSProperties } from "react";
 import { classNames } from "../../class-names.ts";
 import type { DiscernComponent } from "../../component-type.ts";
 import { Backdrop } from "../backdrop/backdrop.tsx";
 import type { BackdropProps } from "../backdrop/backdrop.tsx";
+import { phraseIterations } from "../phrase.ts";
 
 interface Point {
   readonly x: number;
@@ -28,8 +30,10 @@ interface TilingTurner {
   readonly column: number;
   readonly row: number;
   readonly arcs: readonly string[];
-  readonly turnDelay: string;
-  readonly washDelay: string;
+  /** Seconds this tile's turn runs ahead on the loop clock. */
+  readonly turnAdvance: number;
+  /** Seconds this tile's wash runs ahead on the loop clock. */
+  readonly washAdvance: number;
   /**
    * The rotation the tile stands at during the rest stage, declared statically
    * so the stilled figure matches the frame its rest-stage arcs were authored
@@ -45,14 +49,16 @@ interface TilingTurner {
  * authored frame: the group's rotation carries it to where it belongs. */
 interface TilingTracedArc {
   readonly arc: string;
-  readonly delay: string;
+  /** Seconds this arc's stage runs ahead on the loop clock. */
+  readonly advance: number;
   readonly rest: boolean;
 }
 
 /** The traced route for one stage of the phrase. */
 interface TilingStage {
   readonly route: string;
-  readonly delay: string;
+  /** Seconds this stage runs ahead on the loop clock. */
+  readonly advance: number;
   /** Whether this stage's tiling is the authored one, shown when still. */
   readonly rest: boolean;
 }
@@ -312,18 +318,38 @@ const TILING_REST_STAGE = (() => {
 /** How far each turning tile stands turned in the stage shown when still. */
 const REST_QUARTERS: readonly number[] = quartersDuring(TILING_REST_STAGE);
 
-/** Where a stage sits in the phrase. A negative delay advances the local
- * clock, so stage k must be pulled back by the whole phrase less its own
- * start — otherwise the stages hand over in reverse and the route runs on
+/** Where a stage sits in the phrase. An advance runs the local clock ahead,
+ * so stage k must be pulled back by the whole phrase less its own start —
+ * otherwise the stages hand over in reverse and the route runs on
  * connections the tiles have already turned away from. */
-function stageDelay(stage: number): string {
+function stageAdvance(stage: number): number {
   const back = (TILING_STAGE_COUNT - stage) % TILING_STAGE_COUNT;
-  return `${-round(back * STAGE_SECONDS)}s`;
+  return back * STAGE_SECONDS;
 }
 
 /** Where a column sits in the wash that crosses the field once per phrase. */
-function washDelay(column: number): string {
-  return `${-round((column / columns) * TILING_GEOMETRY.phraseSeconds)}s`;
+function washAdvance(column: number): number {
+  return (column / columns) * TILING_GEOMETRY.phraseSeconds;
+}
+
+/**
+ * Where the single played phrase starts and ends on the loop clock: the
+ * middle of the rest stage. The first and last frames are then the stilled
+ * figure — no tile turned away from it, only the rest route lit — so the
+ * hand-back to the static styles when the phrase ends is seamless.
+ */
+const TILING_PHRASE_START = (TILING_REST_STAGE + 0.5) * STAGE_SECONDS;
+
+/** Timing that plays one element's part of the phrase once, from rest. */
+function tilingTiming(advance: number): CSSProperties {
+  const phrase = TILING_GEOMETRY.phraseSeconds;
+  const shifted =
+    Math.round(((advance + TILING_PHRASE_START) % phrase) * 1000) /
+    1000;
+  return {
+    animationDelay: `${-shifted}s`,
+    animationIterationCount: phraseIterations(shifted, phrase),
+  };
 }
 
 const TURNING_KEYS = new Set(
@@ -431,8 +457,8 @@ const TILING_TURNERS: readonly TilingTurner[] = Object.freeze(
       arcs: Object.freeze(
         pairs(at, typeAt(BASE_TYPES, at)).map(([a, b]) => arcPath(at, a, b)),
       ),
-      turnDelay: `${-round(index * STAGE_SECONDS)}s`,
-      washDelay: washDelay(at.column),
+      turnAdvance: index * STAGE_SECONDS,
+      washAdvance: washAdvance(at.column),
       restTransform: `rotate(${(REST_QUARTERS[index] ?? 0) * 90}deg)`,
       traced: Object.freeze(
         STAGE_BUILDS.flatMap((build, stage) =>
@@ -441,7 +467,7 @@ const TILING_TURNERS: readonly TilingTurner[] = Object.freeze(
             .map((entry): TilingTracedArc =>
               Object.freeze({
                 arc: entry.arc,
-                delay: stageDelay(stage),
+                advance: stageAdvance(stage),
                 rest: stage === TILING_REST_STAGE,
               })
             )
@@ -456,7 +482,7 @@ const TILING_STAGES: readonly TilingStage[] = Object.freeze(
   STAGE_BUILDS.map((build, stage): TilingStage =>
     Object.freeze({
       route: build.route,
-      delay: stageDelay(stage),
+      advance: stageAdvance(stage),
       rest: stage === TILING_REST_STAGE,
     })
   ),
@@ -501,7 +527,7 @@ export const TilingBackdrop: DiscernComponent<
                 className="discern-tiling-backdrop__column"
                 d={path}
                 vectorEffect="non-scaling-stroke"
-                style={{ animationDelay: washDelay(column) }}
+                style={tilingTiming(washAdvance(column))}
               />
             ))}
           </g>
@@ -512,12 +538,12 @@ export const TilingBackdrop: DiscernComponent<
               className="discern-tiling-backdrop__tile"
               style={{
                 transform: turner.restTransform,
-                animationDelay: turner.turnDelay,
+                ...tilingTiming(turner.turnAdvance),
               }}
             >
               <g
                 className="discern-tiling-backdrop__tile-arcs"
-                style={{ animationDelay: turner.washDelay }}
+                style={tilingTiming(turner.washAdvance)}
               >
                 {turner.arcs.map((path) => (
                   <path
@@ -535,7 +561,7 @@ export const TilingBackdrop: DiscernComponent<
                     : "discern-tiling-backdrop__route"}
                   d={entry.arc}
                   vectorEffect="non-scaling-stroke"
-                  style={{ animationDelay: entry.delay }}
+                  style={tilingTiming(entry.advance)}
                 />
               ))}
             </g>
@@ -550,7 +576,7 @@ export const TilingBackdrop: DiscernComponent<
                   : "discern-tiling-backdrop__route"}
                 d={stage.route}
                 vectorEffect="non-scaling-stroke"
-                style={{ animationDelay: stage.delay }}
+                style={tilingTiming(stage.advance)}
               />
             ))}
           </g>

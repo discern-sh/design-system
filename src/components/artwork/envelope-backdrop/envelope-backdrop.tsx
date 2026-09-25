@@ -4,6 +4,7 @@ import { classNames } from "../../class-names.ts";
 import type { DiscernComponent } from "../../component-type.ts";
 import { Backdrop } from "../backdrop/backdrop.tsx";
 import type { BackdropProps } from "../backdrop/backdrop.tsx";
+import { phraseIterations } from "../phrase.ts";
 
 /** Grd. VI — the envelope: straight chords between two legs, and the curve none of them draws. */
 
@@ -27,6 +28,9 @@ interface EnvelopeFamily {
   }[];
   readonly chords: readonly EnvelopeChord[];
 }
+
+/** The stylesheet's phrase: 40 beats of 2.4s. */
+const ENVELOPE_PHRASE_SECONDS = 96;
 
 /**
  * Two families, authored in opposite corners. Chord i joins the point i/n
@@ -148,6 +152,10 @@ export const EnvelopeBackdrop: DiscernComponent<
                   key={chordIndex}
                   style={{
                     "--discern-envelope-backdrop-offset": `${chord.offset}s`,
+                    animationIterationCount: phraseIterations(
+                      -chord.offset,
+                      ENVELOPE_PHRASE_SECONDS,
+                    ),
                   } as CSSProperties}
                   x1={chord.x1}
                   y1={chord.y1}

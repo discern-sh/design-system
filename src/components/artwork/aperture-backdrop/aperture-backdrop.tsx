@@ -4,6 +4,7 @@ import { classNames } from "../../class-names.ts";
 import type { DiscernComponent } from "../../component-type.ts";
 import { Backdrop } from "../backdrop/backdrop.tsx";
 import type { BackdropProps } from "../backdrop/backdrop.tsx";
+import { phraseIterations } from "../phrase.ts";
 
 /** Grd. IV — the aperture. One triangular opening set off-centre, raking three unequal beams across the head of the page. */
 
@@ -30,6 +31,9 @@ interface ApertureBeam {
 
 /** The opening's two edges, drawn as one path through the off-plate apex. */
 const APERTURE_FRAME_PATH = "M 622.62 790 L 1210 -150 L 0 466.53";
+
+/** The stylesheet's phrase: 35 beats of 2.4s. */
+const APERTURE_PHRASE_SECONDS = 84;
 
 /** The three beams: unequal in width, reach, and spacing. */
 const APERTURE_BEAMS: readonly ApertureBeam[] = Object.freeze([{
@@ -118,6 +122,10 @@ export const ApertureBackdrop: DiscernComponent<
             style={{
               "--discern-aperture-backdrop-offset": `${beam.offset}s`,
               "--discern-aperture-backdrop-lean": `${beam.lean}deg`,
+              animationIterationCount: phraseIterations(
+                -beam.offset,
+                APERTURE_PHRASE_SECONDS,
+              ),
             } as CSSProperties}
           >
             <polygon

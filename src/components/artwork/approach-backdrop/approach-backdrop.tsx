@@ -4,6 +4,7 @@ import { classNames } from "../../class-names.ts";
 import type { DiscernComponent } from "../../component-type.ts";
 import { Backdrop } from "../backdrop/backdrop.tsx";
 import type { BackdropProps } from "../backdrop/backdrop.tsx";
+import { phraseIterations } from "../phrase.ts";
 
 /** Grd. II — the approach. Nine triangles nested about one station in the right third, held still, with one accent moving between depths. */
 
@@ -32,6 +33,9 @@ const APPROACH_RINGS: readonly ApproachRing[] = Object.freeze([
   { "points": "1020,-46.96 657.17,581.48 1382.83,581.48", "offset": -36 },
   { "points": "1020,-181.02 541.07,648.51 1498.93,648.51", "offset": -84 },
 ]);
+
+/** The stylesheet's phrase: 45 beats of 2.4s. */
+const APPROACH_PHRASE_SECONDS = 108;
 
 /** The three sightlines from the station through the outermost vertices. */
 const APPROACH_SIGHTLINES: readonly { x2: number; y2: number }[] = Object
@@ -90,6 +94,10 @@ export const ApproachBackdrop: DiscernComponent<
             className="discern-approach-backdrop__attend"
             style={{
               "--discern-approach-backdrop-offset": `${ring.offset}s`,
+              animationIterationCount: phraseIterations(
+                -ring.offset,
+                APPROACH_PHRASE_SECONDS,
+              ),
             } as CSSProperties}
             points={ring.points}
             vectorEffect="non-scaling-stroke"

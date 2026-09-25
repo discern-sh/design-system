@@ -6,6 +6,7 @@ import { classNames } from "../../class-names.ts";
 import type { DiscernComponent } from "../../component-type.ts";
 import { Backdrop } from "../backdrop/backdrop.tsx";
 import type { BackdropProps } from "../backdrop/backdrop.tsx";
+import { phraseIterations } from "../phrase.ts";
 
 /** One cross-tick on a flat run, resolved to its place in the drift. */
 interface CompressionTick {
@@ -63,6 +64,8 @@ const COMPRESSION_GEOMETRY = Object.freeze({
   turnRatio: 0.72,
   /** Seconds of the phrase the drift along the cross-ticks is spread over. */
   drift: 20,
+  /** The stylesheet's phrase: 15 beats of 2.4s. */
+  phraseSeconds: 36,
 });
 
 const { axis, creases, creaseHalfPitch, creaseRise, tickPitch, reserve } =
@@ -176,10 +179,16 @@ function flatTicks(direction: 1 | -1): readonly CompressionTick[] {
 const COMPRESSION_HEAD_TICKS: readonly CompressionTick[] = flatTicks(-1);
 const COMPRESSION_TAIL_TICKS: readonly CompressionTick[] = flatTicks(1);
 
-/** Convert a tick's place along the ribbon into its drift delay. */
-function driftDelay(order: number): string {
-  const offset = -(1 - order) * COMPRESSION_GEOMETRY.drift;
-  return `${Math.round(offset * 1000) / 1000}s`;
+/** Convert a tick's place along the ribbon into its turn in the drift. */
+function driftTiming(order: number): CSSProperties {
+  const advance = (1 - order) * COMPRESSION_GEOMETRY.drift;
+  return {
+    animationDelay: `${-Math.round(advance * 1000) / 1000}s`,
+    animationIterationCount: phraseIterations(
+      advance,
+      COMPRESSION_GEOMETRY.phraseSeconds,
+    ),
+  };
 }
 
 /** One flat run: the ribbon's line, and the ticks that show it holds. */
@@ -214,7 +223,7 @@ function flatRun(
             x2={tick.x}
             y2={round(axis.y + reach)}
             vectorEffect="non-scaling-stroke"
-            style={{ animationDelay: driftDelay(tick.order) }}
+            style={driftTiming(tick.order)}
           />
         );
       })}
