@@ -533,3 +533,24 @@ export function buildTokens(provenance: TokenProvenance): unknown {
 export function colourRoleCount(): number {
   return colourTokens().length;
 }
+
+/**
+ * Theme tokens no artifact token group emits, so the README's "Not synced"
+ * note names exactly what a consumer of the artifact goes without.
+ */
+export function uncarriedThemeTokens(): readonly ThemeToken[] {
+  const carried = new Set<string>();
+  const collect = (node: unknown): void => {
+    if (Array.isArray(node)) {
+      node.forEach(collect);
+    } else if (node !== null && typeof node === "object") {
+      const record = node as Readonly<Record<string, unknown>>;
+      if (typeof record.name === "string") carried.add(record.name);
+      Object.values(record).forEach(collect);
+    }
+  };
+  collect(buildTokens({ ref: "", synced: "", components: {} }));
+  return allTokens.filter(isThemeToken).filter((token) =>
+    !carried.has(strip(token.name))
+  );
+}

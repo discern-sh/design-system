@@ -28,6 +28,7 @@ import {
   colourRoleCount,
   fontFamilies,
   fontFiles,
+  uncarriedThemeTokens,
 } from "./tokens.ts";
 
 const ROOT = new URL("../../", import.meta.url);
@@ -120,11 +121,27 @@ async function exampleHelpers(): Promise<string> {
   return rules.join("\n");
 }
 
+/** The per-theme tokens the artifact omits, named with both pole values. */
+function uncarriedThemeTokenList(): string {
+  const tokens = uncarriedThemeTokens().map((token) =>
+    `\`${token.name}\` (${token.light} light, ${token.dark} dark)`
+  );
+  const counted = ["no", "one", "two", "three", "four", "five", "six"][
+    tokens.length
+  ] ?? String(tokens.length);
+  const listed = tokens.length < 2
+    ? tokens.join("")
+    : `${tokens.slice(0, -1).join(", ")} and ${tokens.at(-1)}`;
+  return `the ${counted} per-theme presentation token${
+    tokens.length === 1 ? "" : "s"
+  } ${listed}`;
+}
+
 function notSynced(ref: string, cards: number): string {
   const total = componentMetadata.length;
   return `## Not synced
 
-Built from \`discern-sh/design-system\` at \`${ref}\` (v${packageVersion}). Not carried: the two per-theme presentation tokens \`--discern-brand-artwork-opacity\` (1 light, 0 dark) and \`--discern-backdrop-theme-gain\` (1 light, 0.78 dark); the feature-bound \`Discern Inter UI\` and \`Discern Inter Marketing\` faces and the metric-adjusted Georgia, Helvetica, and Arial fallback aliases from \`assets/fonts.css\` (the same \`inter.woff2\` ships here as plain Inter); the appearance scopes stylesheet and the \`discern.js\` behaviour script (tooltips, hover cards, copy buttons, the theme toggle, and the docs drawer show their static fallbacks). Components took the built route: \`components/bundle.js\` is the whole React adapter (\`src/react.ts\`, all ${total} components) bundled as one script on React 18, while the previews are the package's canonical examples rendered to static HTML through that same adapter. ${cards} components have cards; the remaining ${
+Built from \`discern-sh/design-system\` at \`${ref}\` (v${packageVersion}). Not carried: ${uncarriedThemeTokenList()}; the feature-bound \`Discern Inter UI\` and \`Discern Inter Marketing\` faces and the metric-adjusted Georgia, Helvetica, and Arial fallback aliases from \`assets/fonts.css\` (the same \`inter.woff2\` ships here as plain Inter); the appearance scopes stylesheet and the \`discern.js\` behaviour script (tooltips, hover cards, copy buttons, the theme toggle, and the docs drawer show their static fallbacks). Components took the built route: \`components/bundle.js\` is the whole React adapter (\`src/react.ts\`, all ${total} components) bundled as one script on React 18, while the previews are the package's canonical examples rendered to static HTML through that same adapter. ${cards} components have cards; the remaining ${
     total - cards
   } are in the bundle and typed in \`components/index.d.ts\` but have no card here.
 `;
