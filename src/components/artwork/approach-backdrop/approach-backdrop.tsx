@@ -1,4 +1,4 @@
-import { forwardRef } from "react";
+import { forwardRef, useId } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { classNames } from "../../class-names.ts";
 import type { DiscernComponent } from "../../component-type.ts";
@@ -159,6 +159,9 @@ export const ApproachBackdrop: DiscernComponent<
   );
   const ringStyle = (index: number) =>
     ({ "--discern-approach-backdrop-ring": index }) as CSSProperties;
+  /** The emitted front's reach: the base plate shows only what it has
+   * passed, in the plate's own coordinates. */
+  const reachId = `discern-approach-${useId().replaceAll(":", "")}-reach`;
 
   return (
     <Backdrop
@@ -185,34 +188,48 @@ export const ApproachBackdrop: DiscernComponent<
           preserveAspectRatio="xMaxYMid slice"
           focusable="false"
         >
-          <g className="discern-approach-backdrop__sightlines">
-            {APPROACH_SIGHTLINES.map((path) => (
-              <path key={path} d={path} vectorEffect="non-scaling-stroke" />
-            ))}
+          {construct
+            ? (
+              <defs>
+                <clipPath id={reachId}>
+                  <path
+                    className="discern-approach-backdrop__reach"
+                    d={APPROACH_FRONT}
+                  />
+                </clipPath>
+              </defs>
+            )
+            : null}
+          <g clipPath={construct ? `url(#${reachId})` : undefined}>
+            <g className="discern-approach-backdrop__sightlines">
+              {APPROACH_SIGHTLINES.map((path) => (
+                <path key={path} d={path} vectorEffect="non-scaling-stroke" />
+              ))}
+            </g>
+            {camera(
+              [...rings].reverse().map((ring) => (
+                <g
+                  key={ring.index}
+                  className="discern-approach-backdrop__ring-set"
+                  style={ringStyle(ring.index)}
+                >
+                  {terraces
+                    ? (
+                      <path
+                        className="discern-approach-backdrop__terrace"
+                        d={ring.path}
+                      />
+                    )
+                    : null}
+                  <path
+                    className="discern-approach-backdrop__ring"
+                    d={ring.path}
+                    vectorEffect="non-scaling-stroke"
+                  />
+                </g>
+              )),
+            )}
           </g>
-          {camera(
-            [...rings].reverse().map((ring) => (
-              <g
-                key={ring.index}
-                className="discern-approach-backdrop__ring-set"
-                style={ringStyle(ring.index)}
-              >
-                {terraces
-                  ? (
-                    <path
-                      className="discern-approach-backdrop__terrace"
-                      d={ring.path}
-                    />
-                  )
-                  : null}
-                <path
-                  className="discern-approach-backdrop__ring"
-                  d={ring.path}
-                  vectorEffect="non-scaling-stroke"
-                />
-              </g>
-            )),
-          )}
         </svg>
         {construct || signal
           ? (
