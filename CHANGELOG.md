@@ -4,7 +4,9 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
-## Unreleased
+## 0.37.0
+
+Approach becomes a hero piece — emitted from its station, answered by one wave of light, and still within five seconds, with an opt-in arrival, endless drift, and scroll dolly — and every staggered Artwork phrase plays in full again instead of stopping short before the first frame.
 
 ### Artwork
 
