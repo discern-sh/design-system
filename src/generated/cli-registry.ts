@@ -32,7 +32,7 @@ export const cliComponentRegistry = {
   "backdrop": { stance: "exempt", reason: "Backdrop owns viewport-scaled browser positioning and decorative layer presence; terminal output has no background plane or semantic content to render in its place." },
   "light-backdrop": { stance: "exempt", reason: "Light backdrop is decorative spatial illumination without a terminal information or interaction equivalent." },
   "survey-backdrop": { stance: "exempt", reason: "Survey backdrop's tileable equilateral ruling and travelling light wash depend on a continuous decorative browser plane unavailable to terminal output." },
-  "approach-backdrop": { stance: "exempt", reason: "Approach backdrop's nested right-anchored triangles and accent moving between visual depths require scalable browser geometry with no honest terminal-cell equivalent." },
+  "approach-backdrop": { stance: "exempt", reason: "Approach backdrop's nested right-anchored triangles, emitted wavefront, and depth-weighted rings require scalable browser geometry with no honest terminal-cell equivalent." },
   "fold-backdrop": { stance: "exempt", reason: "Fold backdrop's triangular tessellation conveys material depth through continuously lit facets, decorative browser geometry that terminal glyphs cannot preserve." },
   "aperture-backdrop": { stance: "exempt", reason: "Aperture backdrop's off-centre triangular opening and raking light beams require a scalable layered plane that terminal cells cannot represent without inventing semantic content." },
   "impression-backdrop": { stance: "exempt", reason: "Impression backdrop's pointer-responsive accent aperture moves across a scalable glyph lattice, while terminal rendering has no equivalent decorative pointer plane." },

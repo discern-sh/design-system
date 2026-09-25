@@ -112,6 +112,54 @@ function truncatedPhrases(timings: readonly PhraseTiming[]): string[] {
     });
 }
 
+Deno.test("Approach's entrance and its wave settle within five seconds", async () => {
+  // Auto-playing motion that ends within five seconds needs no pause
+  // control (WCAG 2.2.2); only an opted-in drift continues past that.
+  const output = await Deno.makeTempDir();
+  const browser = await launchBrowser();
+  try {
+    await emitDesignSystemRuntime({
+      outputRoot: toFileUrl(`${output}/`),
+      components: ["approach-backdrop"],
+    });
+    const css = await Deno.readTextFile(join(output, "discern.css"));
+    const entrances = [
+      {},
+      { arrive: true },
+      { construct: false, arrive: true },
+      { construct: false },
+      { depth: "lantern", light: true },
+    ] as const;
+    const page = await browser.newPage();
+    await page.setContent(
+      `<html data-discern-root><style>${css}</style><body>${
+        entrances.map((props, index) =>
+          `<section data-slug="${index}" style="position:relative;width:960px;height:540px">${
+            renderToStaticMarkup(createElement(react.ApproachBackdrop, props))
+          }</section>`
+        ).join("")
+      }</body></html>`,
+    );
+    const timings = await phraseTimings(page);
+    for (const [index] of entrances.entries()) {
+      const finite = timings.filter(({ slug, iterations }) =>
+        slug === String(index) && Number.isFinite(iterations)
+      );
+      assert(finite.length > 0, `entrance ${index} must animate`);
+      const settled = Math.max(...finite.map(({ endTime }) => endTime));
+      assert(
+        settled <= 5000,
+        `entrance ${
+          JSON.stringify(entrances[index])
+        } still moves at ${settled}ms`,
+      );
+    }
+  } finally {
+    await browser.close();
+    await Deno.remove(output, { recursive: true });
+  }
+});
+
 Deno.test("phrase timing keeps the authored stagger inside one period", () => {
   assertEquals(phraseIterations(0, 108), 1);
   assertEquals(phraseIterations(48, 108), 1.444444);

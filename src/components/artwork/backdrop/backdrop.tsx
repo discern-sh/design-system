@@ -15,6 +15,12 @@ export interface BackdropProps
   readonly presence?: number;
   /** Allow authored ambient motion or deliberately hold the resolved still. */
   readonly motion?: BackdropMotion;
+  /**
+   * Speckle the plane with a fine grain in the ink colour. The grain is an
+   * inline SVG noise image, so a Content-Security-Policy must admit
+   * `img-src data:`. Defaults to false.
+   */
+  readonly grain?: boolean;
 }
 
 type BackdropStyle = CSSProperties & {
@@ -31,6 +37,7 @@ export const Backdrop: DiscernComponent<HTMLDivElement, BackdropProps> =
       children,
       presence,
       motion = "ambient",
+      grain = false,
       className,
       style,
       ...props
@@ -47,6 +54,7 @@ export const Backdrop: DiscernComponent<HTMLDivElement, BackdropProps> =
         className={classNames(
           "discern-backdrop",
           motion === "still" && "discern-backdrop--still",
+          grain && "discern-backdrop--grain",
           className,
         )}
         style={backdropStyle}

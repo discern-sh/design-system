@@ -438,6 +438,13 @@ const presentationThemeTokens: readonly ThemeToken[] = [
     "Optical opacity correction for decorative backdrops across light and dark canvases.",
     "Motion",
   ),
+  themeToken(
+    "--discern-backdrop-fill-gain",
+    "0.55",
+    "1",
+    "Optical opacity correction for filled backdrop areas, which weigh more as dark ink on a light canvas than as light ink on a dark one.",
+    "Motion",
+  ),
 ];
 
 /** Semantic light/dark role Tokens projected from the two poles. */

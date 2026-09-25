@@ -1,64 +1,541 @@
 @layer discern.components {
   .discern-approach-backdrop {
+    --discern-backdrop-grain-mask: linear-gradient(
+      90deg,
+      transparent 0 30%,
+      var(--discern-color-ink) 70%
+    );
     color: var(--discern-backdrop-ink);
   }
 
+  /* A size container, so the station can be placed in CSS: one plate unit in
+   * px under xMaxYMid slice, and the station within that plate. */
+  .discern-approach-backdrop__stage {
+    --discern-approach-backdrop-unit: max(
+      calc(100cqw / 1200),
+      calc(100cqh / 760)
+    );
+    --discern-approach-backdrop-station-x: calc(
+      100cqw - 180 * var(--discern-approach-backdrop-unit)
+    );
+    --discern-approach-backdrop-station-y: calc(
+      50cqh - 8 * var(--discern-approach-backdrop-unit)
+    );
+    position: absolute;
+    inset: 0;
+    container-type: size;
+    view-timeline-name: --discern-approach-backdrop-dolly;
+  }
+
+  /* Two plates: the base is rasterised once, and only the strokes that
+   * light up repaint above it. */
   .discern-approach-backdrop__plate {
+    position: absolute;
+    inset: 0;
     mask-image: linear-gradient(
       90deg,
       transparent 0 14%,
       color-mix(in srgb, var(--discern-color-ink) 55%, transparent) 42%,
       var(--discern-color-ink) 68% 100%
     );
+    will-change: transform;
   }
 
-  .discern-approach-backdrop__sightline {
+  .discern-approach-backdrop__scroll,
+  .discern-approach-backdrop__arrive,
+  .discern-approach-backdrop__drift,
+  .discern-approach-backdrop__front {
+    transform-box: view-box;
+    transform-origin: 1020px 372px;
+  }
+
+  .discern-approach-backdrop__sightlines {
     fill: none;
     stroke: var(--discern-backdrop-guide);
     stroke-width: var(--discern-backdrop-hairline);
     opacity: var(--discern-backdrop-veil-2);
   }
 
+  /* A ring exists from one step inside the station to one step beyond the
+   * ninth; only drift ever carries one across either edge. Each set carries
+   * its own depth inline; every weight below is derived from it. */
+  .discern-approach-backdrop__ring-set {
+    --discern-approach-backdrop-ring: 0;
+    opacity: calc(
+      clamp(0, var(--discern-approach-backdrop-ring) + 1, 1) *
+      clamp(0, 9 - var(--discern-approach-backdrop-ring), 1)
+    );
+  }
+
+  /* Haze: the nearer, outer rings read stronger and heavier. */
   .discern-approach-backdrop__ring {
     fill: none;
     stroke: currentColor;
-    stroke-width: var(--discern-backdrop-hairline);
-    opacity: var(--discern-backdrop-veil-3);
+    stroke-linejoin: round;
+    stroke-width: calc(
+      var(--discern-backdrop-hairline) *
+      (1 + 0.7 * clamp(0, var(--discern-approach-backdrop-ring) / 8, 1))
+    );
+    opacity: calc(
+      var(--discern-backdrop-veil-3) * 0.9 *
+      (0.4 + 0.6 * clamp(0, var(--discern-approach-backdrop-ring) / 8, 1))
+    );
   }
 
-  /* The travelling accent. Only opacity animates, so the ring beneath it
-   * stays exactly where it was drawn. */
-  .discern-approach-backdrop__attend {
+  /* Lantern: the rings brighten toward the station instead. */
+  .discern-approach-backdrop--lantern .discern-approach-backdrop__ring {
+    stroke-width: var(--discern-backdrop-hairline);
+    opacity: calc(
+      var(--discern-backdrop-veil-3) * 0.9 *
+      (1 - 0.55 * clamp(0, var(--discern-approach-backdrop-ring) / 8, 1))
+    );
+  }
+
+  /* Equal fills stack, so the corridor deepens stepwise toward the station. */
+  .discern-approach-backdrop__terrace {
+    fill: currentColor;
+    stroke: none;
+    opacity: calc(
+      var(--discern-backdrop-veil-1) * 0.42 * var(--discern-backdrop-fill-gain)
+    );
+  }
+
+  .discern-approach-backdrop__light {
+    position: absolute;
+    inset: 0;
+    mask-image: linear-gradient(
+      90deg,
+      transparent 0 14%,
+      color-mix(in srgb, var(--discern-color-ink) 55%, transparent) 42%,
+      var(--discern-color-ink) 68% 100%
+    );
+    background: radial-gradient(
+      circle calc(340 * var(--discern-approach-backdrop-unit)) at
+      var(--discern-approach-backdrop-station-x)
+      var(--discern-approach-backdrop-station-y),
+      var(--discern-color-ambient) 0%,
+      color-mix(in oklab, var(--discern-color-ambient) 55%, transparent) 22%,
+      color-mix(in oklab, var(--discern-color-ambient) 16%, transparent) 55%,
+      transparent 100%
+    );
+    opacity: calc(var(--discern-backdrop-veil-2) * 1.15);
+    will-change: opacity;
+  }
+
+  .discern-approach-backdrop__pulse,
+  .discern-approach-backdrop__bloom,
+  .discern-approach-backdrop__front {
     fill: none;
     stroke: var(--discern-backdrop-accent);
-    stroke-width: var(--discern-backdrop-line);
     opacity: 0;
-    animation: discern-approach-backdrop-attend
-      calc(var(--discern-backdrop-beat) *
-      45)
-      var(--discern-backdrop-ease-drift) 1 both;
-    animation-delay: var(--discern-approach-backdrop-offset, 0s);
   }
 
-  .discern-approach-backdrop__station line {
-    stroke: var(--discern-backdrop-accent);
+  .discern-approach-backdrop__pulse,
+  .discern-approach-backdrop__front {
     stroke-width: var(--discern-backdrop-line);
-    opacity: var(--discern-backdrop-veil-4);
   }
 
-  /* One ring's turn: in over two beats, held for four, out over two, then
-   * dark for the rest of the phrase while the other eight take theirs. */
-  @keyframes discern-approach-backdrop-attend {
+  .discern-approach-backdrop__bloom {
+    stroke-width: 7;
+    stroke-linejoin: round;
+  }
+
+  /* Construct. A hairline front leaves the station and a matching clip
+   * reveals the nest behind it; both grow as the rings' own ratio, so the
+   * front passes one ring at an even cadence. The clip exists only while the
+   * phrase runs, leaving the plain still behind it. */
+  .discern-approach-backdrop--construct .discern-approach-backdrop__plate--base {
+    animation: discern-approach-backdrop-emit-clip
+      calc(var(--discern-backdrop-beat) * 0.95) linear
+      calc(var(--discern-backdrop-beat) * 0.12) backwards;
+    animation-timing-function: linear(
+      0,
+      0.0145 10%,
+      0.0348 20%,
+      0.0632 30%,
+      0.1028 40%,
+      0.1581 50%,
+      0.2355 60%,
+      0.3436 70%,
+      0.4947 80%,
+      0.7056 90%,
+      1
+    );
+  }
+
+  .discern-approach-backdrop--construct .discern-approach-backdrop__front {
+    animation: discern-approach-backdrop-emit-front
+      calc(var(--discern-backdrop-beat) * 0.95) linear
+      calc(var(--discern-backdrop-beat) * 0.12) backwards;
+    animation-timing-function: linear(
+      0,
+      0.0145 10%,
+      0.0348 20%,
+      0.0632 30%,
+      0.1028 40%,
+      0.1581 50%,
+      0.2355 60%,
+      0.3436 70%,
+      0.4947 80%,
+      0.7056 90%,
+      1
+    );
+  }
+
+  .discern-approach-backdrop--construct .discern-approach-backdrop__light {
+    animation: discern-approach-backdrop-appear
+      calc(var(--discern-backdrop-beat) * 1.2)
+      var(--discern-backdrop-ease-drift)
+      calc(var(--discern-backdrop-beat) * 0.2) both;
+  }
+
+  /* Arrival. The nest approaches from two ring-steps away and settles. */
+  .discern-approach-backdrop--arrive .discern-approach-backdrop__arrive {
+    animation:
+      discern-approach-backdrop-arrive calc(var(--discern-backdrop-beat) * 1.9)
+      var(--discern-backdrop-ease-settle) both,
+      discern-approach-backdrop-appear calc(var(--discern-backdrop-beat) * 0.3)
+      var(--discern-backdrop-ease-drift) both;
+  }
+
+  .discern-approach-backdrop--arrive :is(.discern-approach-backdrop__sightlines, .discern-approach-backdrop__light) {
+    animation: discern-approach-backdrop-appear
+      calc(var(--discern-backdrop-beat) * 1.6)
+      var(--discern-backdrop-ease-drift)
+      calc(var(--discern-backdrop-beat) * 0.3) both;
+  }
+
+  /* Signal. One wave of light runs in from the outer ring, faint at the edge
+   * and gathering toward the station, starting as the entrance settles. */
+  .discern-approach-backdrop--signal {
+    --discern-approach-backdrop-signal: 0.5;
+  }
+
+  .discern-approach-backdrop--signal.discern-approach-backdrop--arrive {
+    --discern-approach-backdrop-signal: 1.1;
+  }
+
+  .discern-approach-backdrop--signal.discern-approach-backdrop--construct {
+    --discern-approach-backdrop-signal: 1.12;
+  }
+
+  .discern-approach-backdrop--signal .discern-approach-backdrop__pulse {
+    animation: discern-approach-backdrop-pulse
+      calc(var(--discern-backdrop-beat) * 0.48) linear
+      calc(
+      var(--discern-backdrop-beat) *
+      (
+        var(--discern-approach-backdrop-signal) +
+        (8 - var(--discern-approach-backdrop-ring)) * 0.06
+      )
+    )
+      both;
+  }
+
+  .discern-approach-backdrop--signal .discern-approach-backdrop__bloom {
+    animation: discern-approach-backdrop-bloom
+      calc(var(--discern-backdrop-beat) * 0.48) linear
+      calc(
+      var(--discern-backdrop-beat) *
+      (
+        var(--discern-approach-backdrop-signal) +
+        (8 - var(--discern-approach-backdrop-ring)) * 0.06
+      )
+    )
+      both;
+  }
+
+  /* The station light answers the wave; its entrance, listed first, still
+   * governs it until then because the answer fills only while it runs. */
+  .discern-approach-backdrop--signal .discern-approach-backdrop__light {
+    animation: discern-approach-backdrop-answer
+      calc(var(--discern-backdrop-beat) * 0.44) linear
+      calc(
+      var(--discern-backdrop-beat) *
+      (var(--discern-approach-backdrop-signal) + 0.48)
+    );
+  }
+
+  .discern-approach-backdrop--signal:is(.discern-approach-backdrop--construct, .discern-approach-backdrop--arrive) .discern-approach-backdrop__light {
+    animation:
+      discern-approach-backdrop-appear calc(var(--discern-backdrop-beat) * 1.2)
+      var(--discern-backdrop-ease-drift)
+      calc(var(--discern-backdrop-beat) * 0.2) both,
+      discern-approach-backdrop-answer calc(var(--discern-backdrop-beat) * 0.44)
+      linear
+      calc(
+      var(--discern-backdrop-beat) *
+      (var(--discern-approach-backdrop-signal) + 0.48)
+    );
+  }
+
+  /* Drift. Scaling the nest by one ratio lands every ring on its neighbour,
+   * so the loop is seamless: each ring's presence, weight and width move to
+   * its neighbour's values over the same step. The scale follows 1.32^t so
+   * the pace holds constant through the step. */
+  :is(.discern-approach-backdrop--drift-in, .discern-approach-backdrop--drift-out) .discern-approach-backdrop__drift {
+    animation: discern-approach-backdrop-drift
+      calc(
+      var(--discern-backdrop-beat) *
+      var(--discern-approach-backdrop-drift-beats, 15)
+    )
+      linear infinite;
+    animation-timing-function: linear(
+      0,
+      0.088 10%,
+      0.1784 20%,
+      0.2714 30%,
+      0.367 40%,
+      0.4653 50%,
+      0.5664 60%,
+      0.6704 70%,
+      0.7772 80%,
+      0.8871 90%,
+      1
+    );
+  }
+
+  :is(.discern-approach-backdrop--drift-in, .discern-approach-backdrop--drift-out) .discern-approach-backdrop__ring-set {
+    animation: discern-approach-backdrop-drift-presence
+      calc(
+      var(--discern-backdrop-beat) *
+      var(--discern-approach-backdrop-drift-beats, 15)
+    )
+      linear infinite;
+  }
+
+  :is(.discern-approach-backdrop--drift-in, .discern-approach-backdrop--drift-out) .discern-approach-backdrop__ring {
+    animation: discern-approach-backdrop-drift-haze
+      calc(
+      var(--discern-backdrop-beat) *
+      var(--discern-approach-backdrop-drift-beats, 15)
+    )
+      linear infinite;
+  }
+
+  .discern-approach-backdrop--lantern:is(.discern-approach-backdrop--drift-in, .discern-approach-backdrop--drift-out) .discern-approach-backdrop__ring {
+    animation-name: discern-approach-backdrop-drift-lantern;
+  }
+
+  .discern-approach-backdrop--drift-in :is(.discern-approach-backdrop__drift, .discern-approach-backdrop__ring-set, .discern-approach-backdrop__ring) {
+    animation-direction: reverse;
+  }
+
+  /* Dolly. As the backdrop leaves the view it moves two ring-steps into the
+   * station and fades; it moves only while the reader scrolls. */
+  @supports (view-timeline-name: --discern-approach-backdrop-dolly) {
+    .discern-approach-backdrop--dolly .discern-approach-backdrop__scroll {
+      animation: discern-approach-backdrop-dolly linear both;
+      animation-timeline: --discern-approach-backdrop-dolly;
+      animation-range: exit 0% exit 100%;
+    }
+
+    .discern-approach-backdrop--dolly .discern-approach-backdrop__stage {
+      animation: discern-approach-backdrop-dolly-fade linear both;
+      animation-timeline: --discern-approach-backdrop-dolly;
+      animation-range: exit 0% exit 100%;
+    }
+  }
+
+  @keyframes discern-approach-backdrop-appear {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes discern-approach-backdrop-emit-clip {
+    from {
+      clip-path: polygon(
+        var(--discern-approach-backdrop-station-x)
+        calc(
+          var(--discern-approach-backdrop-station-y) - 34 *
+          var(--discern-approach-backdrop-unit)
+        ),
+        calc(
+          var(--discern-approach-backdrop-station-x) + 29.44 *
+          var(--discern-approach-backdrop-unit)
+        )
+        calc(
+          var(--discern-approach-backdrop-station-y) + 17 *
+          var(--discern-approach-backdrop-unit)
+        ),
+        calc(
+          var(--discern-approach-backdrop-station-x) - 29.44 *
+          var(--discern-approach-backdrop-unit)
+        )
+        calc(
+          var(--discern-approach-backdrop-station-y) + 17 *
+          var(--discern-approach-backdrop-unit)
+        )
+      );
+    }
+
+    to {
+      clip-path: polygon(
+        var(--discern-approach-backdrop-station-x)
+        calc(
+          var(--discern-approach-backdrop-station-y) - 964 *
+          var(--discern-approach-backdrop-unit)
+        ),
+        calc(
+          var(--discern-approach-backdrop-station-x) + 834.84 *
+          var(--discern-approach-backdrop-unit)
+        )
+        calc(
+          var(--discern-approach-backdrop-station-y) + 482 *
+          var(--discern-approach-backdrop-unit)
+        ),
+        calc(
+          var(--discern-approach-backdrop-station-x) - 834.84 *
+          var(--discern-approach-backdrop-unit)
+        )
+        calc(
+          var(--discern-approach-backdrop-station-y) + 482 *
+          var(--discern-approach-backdrop-unit)
+        )
+      );
+    }
+  }
+
+  @keyframes discern-approach-backdrop-emit-front {
+    from {
+      opacity: calc(var(--discern-backdrop-veil-4) * 2.4);
+      transform: scale(0.34);
+    }
+
+    to {
+      opacity: 0;
+      transform: scale(9.64);
+    }
+  }
+
+  @keyframes discern-approach-backdrop-arrive {
+    from {
+      transform: scale(0.5432);
+    }
+  }
+
+  @keyframes discern-approach-backdrop-pulse {
     0%,
-    14%,
-    99%,
     100% {
       opacity: 0;
     }
 
-    4%,
-    9% {
-      opacity: var(--discern-backdrop-veil-4);
+    20% {
+      opacity: calc(
+        var(--discern-backdrop-veil-4) * 2.1 *
+        (0.3 + 0.7 * (1 - var(--discern-approach-backdrop-ring) / 8))
+      );
+      animation-timing-function: cubic-bezier(0.25, 0.6, 0.35, 1);
+    }
+  }
+
+  @keyframes discern-approach-backdrop-bloom {
+    0%,
+    83.3%,
+    100% {
+      opacity: 0;
+    }
+
+    21.7% {
+      opacity: calc(
+        var(--discern-backdrop-veil-1) * 1.6 *
+        (0.3 + 0.7 * (1 - var(--discern-approach-backdrop-ring) / 8))
+      );
+      animation-timing-function: cubic-bezier(0.25, 0.6, 0.35, 1);
+    }
+  }
+
+  @keyframes discern-approach-backdrop-answer {
+    0%,
+    100% {
+      opacity: calc(var(--discern-backdrop-veil-2) * 1.15);
+    }
+
+    27% {
+      opacity: calc(var(--discern-backdrop-veil-2) * 2.1);
+      animation-timing-function: cubic-bezier(0.25, 0.6, 0.35, 1);
+    }
+  }
+
+  @keyframes discern-approach-backdrop-drift {
+    from {
+      transform: scale(1);
+    }
+
+    to {
+      transform: scale(1.32);
+    }
+  }
+
+  @keyframes discern-approach-backdrop-drift-presence {
+    from {
+      opacity: calc(
+        clamp(0, var(--discern-approach-backdrop-ring) + 1, 1) *
+        clamp(0, 9 - var(--discern-approach-backdrop-ring), 1)
+      );
+    }
+
+    to {
+      opacity: calc(
+        clamp(0, var(--discern-approach-backdrop-ring) + 2, 1) *
+        clamp(0, 8 - var(--discern-approach-backdrop-ring), 1)
+      );
+    }
+  }
+
+  @keyframes discern-approach-backdrop-drift-haze {
+    from {
+      stroke-width: calc(
+        var(--discern-backdrop-hairline) *
+        (1 + 0.7 * clamp(0, var(--discern-approach-backdrop-ring) / 8, 1))
+      );
+      opacity: calc(
+        var(--discern-backdrop-veil-3) * 0.9 *
+        (0.4 + 0.6 * clamp(0, var(--discern-approach-backdrop-ring) / 8, 1))
+      );
+    }
+
+    to {
+      stroke-width: calc(
+        var(--discern-backdrop-hairline) *
+        (1 + 0.7 *
+        clamp(0, (var(--discern-approach-backdrop-ring) + 1) / 8, 1))
+      );
+      opacity: calc(
+        var(--discern-backdrop-veil-3) * 0.9 *
+        (0.4 + 0.6 *
+        clamp(0, (var(--discern-approach-backdrop-ring) + 1) / 8, 1))
+      );
+    }
+  }
+
+  @keyframes discern-approach-backdrop-drift-lantern {
+    from {
+      opacity: calc(
+        var(--discern-backdrop-veil-3) * 0.9 *
+        (1 - 0.55 * clamp(0, var(--discern-approach-backdrop-ring) / 8, 1))
+      );
+    }
+
+    to {
+      opacity: calc(
+        var(--discern-backdrop-veil-3) * 0.9 *
+        (1 - 0.55 *
+        clamp(0, (var(--discern-approach-backdrop-ring) + 1) / 8, 1))
+      );
+    }
+  }
+
+  @keyframes discern-approach-backdrop-dolly {
+    to {
+      transform: scale(1.7424);
+    }
+  }
+
+  @keyframes discern-approach-backdrop-dolly-fade {
+    to {
+      opacity: 0.3;
     }
   }
 }

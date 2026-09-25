@@ -769,7 +769,25 @@ export const componentExampleRegistry = {
         "web",
       ],
       "reason":
-        "Approach backdrop's nested right-anchored triangles and accent moving between visual depths require scalable browser geometry with no honest terminal-cell equivalent.",
+        "Approach backdrop's nested right-anchored triangles, emitted wavefront, and depth-weighted rings require scalable browser geometry with no honest terminal-cell equivalent.",
+    },
+    {
+      "id": "arrival",
+      "label": "Arrival with drift",
+      "surfaces": [
+        "web",
+      ],
+      "reason":
+        "Approach backdrop's nested right-anchored triangles, emitted wavefront, and depth-weighted rings require scalable browser geometry with no honest terminal-cell equivalent.",
+    },
+    {
+      "id": "lantern",
+      "label": "Lantern light",
+      "surfaces": [
+        "web",
+      ],
+      "reason":
+        "Approach backdrop's nested right-anchored triangles, emitted wavefront, and depth-weighted rings require scalable browser geometry with no honest terminal-cell equivalent.",
     },
   ],
   "fold-backdrop": [
