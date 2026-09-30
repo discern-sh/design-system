@@ -14,6 +14,7 @@ import {
   DISCERN_TERMINAL_MOTIF,
   fillStyledLine,
   type KeyHints,
+  measureText,
   padText,
   renderBox,
   renderKeyHintsCli,
@@ -40,6 +41,7 @@ import {
   type TerminalTextTone,
   terminalTextToneColor,
   type TerminalThemeOptions,
+  truncateText,
 } from "../src/cli/mod.ts";
 
 /** Optional browser or stdout presentation bound across one complete sheet. */
@@ -410,8 +412,8 @@ function surfaceSpecimens(
   capabilities: TerminalCapabilities,
   presentation?: TerminalFoundationPresentation,
 ): readonly TerminalFoundationSpecimen[] {
-  const width = Math.min(72, capabilities.columns);
-  if (width < 36) {
+  const width = Math.min(48, capabilities.columns);
+  if (width < 32) {
     throw new TypeError(
       `terminal width ${capabilities.columns} cannot hold the surface catalogue`,
     );
@@ -434,14 +436,15 @@ function surfaceSpecimens(
       background: theme.surfaces[surface],
     }, capabilities);
 
-  const ladder = TERMINAL_SURFACE_ROLES.map((surface) =>
+  const ladder = TERMINAL_SURFACE_ROLES.flatMap((surface) => [
+    fill(`  ${text(SURFACE_LABELS[surface], "ink", surface, true)}`, surface),
     fill(
-      `  ${text(padText(SURFACE_LABELS[surface], 20), "ink", surface, true)}${
+      `  ${
         TERMINAL_TEXT_TONES.map((tone) => text(tone, tone, surface)).join(" ")
       }`,
       surface,
-    )
-  ).join("\n");
+    ),
+  ]).join("\n");
 
   const row = (
     sample: SampleRow,
@@ -453,7 +456,7 @@ function surfaceSpecimens(
       selection === "selection" ? "accent" : "faint",
       surface,
     );
-    const title = padText(sample.title, width - 22);
+    const title = padText(truncateText(sample.title, width - 22), width - 22);
     const content = `${marker} ${
       text(terminalGlyph(sample.glyph, capabilities), sample.tone, surface)
     } ${text(title, "ink", surface, selection === "selection")}${
@@ -542,15 +545,29 @@ function surfaceSpecimens(
 
   const hints = [
     renderKeyHintsCli(SAMPLE_HINTS, width, capabilities, options),
-    renderKeyHintsCli(SAMPLE_HINTS, 36, capabilities, options),
+    renderKeyHintsCli(SAMPLE_HINTS, Math.min(36, width), capabilities, options),
   ].join("\n");
 
-  const glyphTable = GLYPH_COLUMNS.map((column) =>
-    `${padText(column, 8)}${
-      Object.values(TERMINAL_GLYPHS).filter((glyph) => glyph.column === column)
-        .map((glyph) => `${glyph.unicode} ${glyph.ascii}`).join("  ")
-    }`
-  ).join("\n");
+  const glyphTable = GLYPH_COLUMNS.flatMap((column) => {
+    const lines: string[] = [];
+    let line = padText(column, 8);
+    for (
+      const glyph of Object.values(TERMINAL_GLYPHS).filter((entry) =>
+        entry.column === column
+      )
+    ) {
+      const entry = `${glyph.unicode} ${glyph.ascii}`;
+      const separated = line.trim() === column ? entry : `  ${entry}`;
+      if (
+        measureText(line) + measureText(separated) > width &&
+        line.trim() !== column
+      ) {
+        lines.push(line);
+        line = `${" ".repeat(8)}${entry}`;
+      } else line += separated;
+    }
+    return [...lines, line];
+  }).join("\n");
 
   return [
     {

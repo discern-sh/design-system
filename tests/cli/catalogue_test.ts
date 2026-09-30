@@ -5,6 +5,7 @@ import {
   assertThrows,
 } from "@std/assert";
 import { stripAnsi } from "../../src/cli/ansi.ts";
+import { measureText } from "../../src/cli/text.ts";
 import { detectTerminalCapabilities } from "../../src/cli/capabilities.ts";
 import type { CliComponentRegistryEntry } from "../../src/cli/contracts.ts";
 import { cliComponentRegistry } from "../../src/generated/cli-registry.ts";
@@ -350,4 +351,17 @@ Deno.test("surface catalogue fills where fills paint and draws structure elsewhe
   assertStringIncludes(plain, "[ Park ]");
   assertStringIncludes(plain, "( Drop )");
   assertEquals(plain.includes("\u001b[48"), false);
+  for (const columns of [32, 40, 52]) {
+    const narrow = await renderCliCatalogue(
+      "surfaces",
+      testTerminalCapabilities({ columns, colorDepth: "truecolor" }),
+    );
+    const specimenLines = narrow.split("\n").filter((line) =>
+      !line.startsWith("#")
+    );
+    assert(
+      specimenLines.every((line) => measureText(line) <= columns),
+      `the surface sheet overflows ${columns} columns`,
+    );
+  }
 });
