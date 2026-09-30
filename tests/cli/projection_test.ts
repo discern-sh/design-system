@@ -27,6 +27,7 @@ import {
   terminalSpanCss,
 } from "../../src/cli/projection.ts";
 import {
+  deriveTerminalTheme,
   terminalThemeColor,
   terminalThemes,
   terminalToneColor,
@@ -429,4 +430,19 @@ Deno.test("projected HTML links safe targets and rejects unsafe envelopes", () =
     TerminalProjectionError,
     "unsupported or unterminated sequence",
   );
+});
+
+Deno.test("projected backgrounds fill the whole line box like a terminal cell", () => {
+  const theme = deriveTerminalTheme("dark", { accent: 255 });
+  const capabilities = testTerminalCapabilities({ colorDepth: "truecolor" });
+  const html = projectTerminalInlineHtml(
+    `${
+      styleText("bar", { background: theme.surfaces.selection }, capabilities)
+    }${styleText("ink", { bold: true }, capabilities)}`,
+  );
+  assertStringIncludes(
+    html,
+    '<span style="background-color:rgb(38 60 87);display:inline-block">bar</span>',
+  );
+  assertStringIncludes(html, '<span style="font-weight:700">ink</span>');
 });

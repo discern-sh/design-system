@@ -393,9 +393,12 @@ function inlineCss(css: TerminalSpanCss): string {
 
 function spanHtml(span: TerminalSpan): string {
   const text = terminalTextHtml(span.text);
-  const css = span.style === undefined
-    ? undefined
-    : inlineCss(terminalSpanCss(span.style));
+  // A terminal paints a background across the whole cell; an inline box
+  // would leave the line gap unpainted and rule every filled surface.
+  const css = span.style === undefined ? undefined : [
+    inlineCss(terminalSpanCss(span.style)),
+    ...(span.style.background === undefined ? [] : ["display:inline-block"]),
+  ].join(";");
   const styleAttribute = css === undefined || css === ""
     ? ""
     : ` style="${escapeHtml(css)}"`;
