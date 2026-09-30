@@ -93,6 +93,7 @@
     "proseWrap": "never",
     "exclude": [
       ".idea/",
+      ".scratch/",
       "discern.toml",
       "map/**",
       "dist/",

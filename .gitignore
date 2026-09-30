@@ -6,6 +6,7 @@ node_modules/
 dist/*
 !dist/.gitkeep
 /.claude/launch.json
+/.scratch/
 catalogue/generated/*
 !catalogue/generated/.gitkeep
 !catalogue/generated/example-images/
