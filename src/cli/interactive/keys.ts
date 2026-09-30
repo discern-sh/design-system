@@ -7,6 +7,50 @@
 import type { TerminalIO } from "./io.ts";
 import { adoptTerminalRead } from "./read-broker.ts";
 
+/**
+ * Control chords decoded as names: every Ctrl+letter whose byte is not
+ * already Tab (Ctrl+I), a line ending (Ctrl+J, Ctrl+M), or Escape.
+ */
+export type TerminalControlKeyName =
+  | "ctrl-a"
+  | "ctrl-b"
+  | "ctrl-c"
+  | "ctrl-d"
+  | "ctrl-e"
+  | "ctrl-f"
+  | "ctrl-g"
+  | "ctrl-h"
+  | "ctrl-k"
+  | "ctrl-l"
+  | "ctrl-n"
+  | "ctrl-o"
+  | "ctrl-p"
+  | "ctrl-q"
+  | "ctrl-r"
+  | "ctrl-s"
+  | "ctrl-t"
+  | "ctrl-u"
+  | "ctrl-v"
+  | "ctrl-w"
+  | "ctrl-x"
+  | "ctrl-y"
+  | "ctrl-z";
+
+/** Function keys F1 through F12. */
+export type TerminalFunctionKeyName =
+  | "f1"
+  | "f2"
+  | "f3"
+  | "f4"
+  | "f5"
+  | "f6"
+  | "f7"
+  | "f8"
+  | "f9"
+  | "f10"
+  | "f11"
+  | "f12";
+
 /** Named non-text keys understood by the terminal interaction state machines. */
 export type TerminalKeyName =
   | "up"
@@ -15,6 +59,8 @@ export type TerminalKeyName =
   | "left"
   | "shift-up"
   | "shift-down"
+  | "shift-right"
+  | "shift-left"
   | "shift-tab"
   | "page-up"
   | "page-down"
@@ -22,16 +68,8 @@ export type TerminalKeyName =
   | "backspace"
   | "enter"
   | "tab"
-  | "ctrl-a"
-  | "ctrl-b"
-  | "ctrl-c"
-  | "ctrl-d"
-  | "ctrl-e"
-  | "ctrl-f"
-  | "ctrl-h"
-  | "ctrl-n"
-  | "ctrl-p"
-  | "ctrl-u"
+  | TerminalControlKeyName
+  | TerminalFunctionKeyName
   | "option-backspace"
   | "home"
   | "end"
@@ -120,6 +158,8 @@ export interface TerminalKeyTokenization {
 const NAMED_SEQUENCES = new Map<string, TerminalKeyName>([
   ["\x1b[1;2A", "shift-up"],
   ["\x1b[1;2B", "shift-down"],
+  ["\x1b[1;2C", "shift-right"],
+  ["\x1b[1;2D", "shift-left"],
   ["\x1b[A", "up"],
   ["\x1bOA", "up"],
   ["\x1b[B", "down"],
@@ -140,6 +180,22 @@ const NAMED_SEQUENCES = new Map<string, TerminalKeyName>([
   ["\x1bOF", "end"],
   ["\x1b[4~", "end"],
   ["\x1b[8~", "end"],
+  ["\x1bOP", "f1"],
+  ["\x1bOQ", "f2"],
+  ["\x1bOR", "f3"],
+  ["\x1bOS", "f4"],
+  ["\x1b[11~", "f1"],
+  ["\x1b[12~", "f2"],
+  ["\x1b[13~", "f3"],
+  ["\x1b[14~", "f4"],
+  ["\x1b[15~", "f5"],
+  ["\x1b[17~", "f6"],
+  ["\x1b[18~", "f7"],
+  ["\x1b[19~", "f8"],
+  ["\x1b[20~", "f9"],
+  ["\x1b[21~", "f10"],
+  ["\x1b[23~", "f11"],
+  ["\x1b[24~", "f12"],
   ["\x1b\x7f", "option-backspace"],
   ["\x7f", "backspace"],
   ["\r", "enter"],
@@ -151,10 +207,23 @@ const NAMED_SEQUENCES = new Map<string, TerminalKeyName>([
   ["\x04", "ctrl-d"],
   ["\x05", "ctrl-e"],
   ["\x06", "ctrl-f"],
+  ["\x07", "ctrl-g"],
   ["\x08", "ctrl-h"],
+  ["\x0b", "ctrl-k"],
+  ["\x0c", "ctrl-l"],
   ["\x0e", "ctrl-n"],
+  ["\x0f", "ctrl-o"],
   ["\x10", "ctrl-p"],
+  ["\x11", "ctrl-q"],
+  ["\x12", "ctrl-r"],
+  ["\x13", "ctrl-s"],
+  ["\x14", "ctrl-t"],
   ["\x15", "ctrl-u"],
+  ["\x16", "ctrl-v"],
+  ["\x17", "ctrl-w"],
+  ["\x18", "ctrl-x"],
+  ["\x19", "ctrl-y"],
+  ["\x1a", "ctrl-z"],
   ["\x1b", "escape"],
 ]);
 
@@ -171,6 +240,11 @@ const COMPLETE_CSI = new RegExp(
 const COMPLETE_SS3 = new RegExp(`^${ESCAPE}O.`, "u");
 const POSSIBLE_ESCAPE = new RegExp(
   `^${ESCAPE}(?:\\[[0-?]*[ -/]*|O?)$`,
+  "u",
+);
+/** A C0 control byte without a name: never printable text. */
+const C0_CONTROL = new RegExp(
+  `^[${String.fromCharCode(0)}-${String.fromCharCode(31)}]`,
   "u",
 );
 const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
@@ -243,6 +317,11 @@ export function tokenizeTerminalKeys(
     if (control !== undefined) {
       keys.push(namedKey(NAMED_SEQUENCES.get(control) ?? "escape"));
       rest = rest.slice(control.length);
+      continue;
+    }
+    if (C0_CONTROL.test(rest)) {
+      keys.push({ kind: "unknown", sequence: rest.slice(0, 1) });
+      rest = rest.slice(1);
       continue;
     }
 

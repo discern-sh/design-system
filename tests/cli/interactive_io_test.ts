@@ -8,6 +8,7 @@ import {
   SHOW_TERMINAL_CURSOR,
   TERMINAL_MOUSE_MAX_COORDINATE,
   TerminalInputReader,
+  type TerminalKeyName,
   TerminalKeyReader,
   tokenizeTerminalKeys,
   withRawTerminal,
@@ -62,6 +63,43 @@ Deno.test("Alt and meta chords stay non-printable unknown sequences", () => {
     { kind: "named", name: "escape" },
     { kind: "named", name: "up" },
   ]);
+});
+
+Deno.test("no C0 control byte ever decodes as printable text", () => {
+  for (let code = 0x00; code < 0x20; code += 1) {
+    const byte = String.fromCharCode(code);
+    for (const key of tokenizeTerminalKeys(byte, true).keys) {
+      assertEquals(
+        key.kind === "text",
+        false,
+        `control byte 0x${code.toString(16)} leaked as text`,
+      );
+    }
+  }
+  assertEquals(tokenizeTerminalKeys("\x0b\x0f\x14\x18", true).keys, [
+    { kind: "named", name: "ctrl-k" },
+    { kind: "named", name: "ctrl-o" },
+    { kind: "named", name: "ctrl-t" },
+    { kind: "named", name: "ctrl-x" },
+  ]);
+});
+
+Deno.test("function keys and shifted arrows decode in every common encoding", () => {
+  const cases: readonly (readonly [string, TerminalKeyName])[] = [
+    ["\x1bOP", "f1"],
+    ["\x1b[11~", "f1"],
+    ["\x1bOS", "f4"],
+    ["\x1b[14~", "f4"],
+    ["\x1b[15~", "f5"],
+    ["\x1b[24~", "f12"],
+    ["\x1b[1;2C", "shift-right"],
+    ["\x1b[1;2D", "shift-left"],
+  ];
+  for (const [sequence, name] of cases) {
+    assertEquals(tokenizeTerminalKeys(sequence, true).keys, [
+      { kind: "named", name },
+    ], JSON.stringify(sequence));
+  }
 });
 
 Deno.test("SGR mouse input decodes presses, releases, wheels, coordinates, and modifiers", async () => {
