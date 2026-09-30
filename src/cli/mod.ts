@@ -11,6 +11,7 @@ export * from "./block-composition.ts";
 export * from "./capabilities.ts";
 export * from "./contracts.ts";
 export * from "./interactive-states.ts";
+export * from "./key-hints.ts";
 export * from "./semantic-inline.ts";
 export * from "./layout.ts";
 export {
