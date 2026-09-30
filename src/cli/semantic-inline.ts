@@ -25,6 +25,7 @@ import {
   terminalToneColor,
 } from "./theme.ts";
 import type { TerminalCapabilities } from "./capabilities.ts";
+import { styleCodes } from "./styled-sequences.ts";
 import { inspectSafeAsciiUrlReference } from "../url-reference.ts";
 
 /** Maximum semantic-node nesting accepted at the public rendering boundary. */
@@ -563,6 +564,20 @@ function markerSpan(text: string, style: TerminalTextStyle): StyledSpan {
   return { text, style };
 }
 
+/**
+ * Whether an inline emphasis must be spelled with Markdown markers: only
+ * without colour, and only when the capabilities cannot draw the emphasis
+ * as an attribute — an application keeps bold without colour, so strong
+ * text stays bold rather than gaining asterisks.
+ */
+function textualEmphasis(
+  added: TerminalTextStyle,
+  capabilities: TerminalCapabilities,
+): boolean {
+  return capabilities.colorDepth === "none" &&
+    styleCodes(added, capabilities).length === 0;
+}
+
 function styledCodeText(
   text: string,
   capabilities: TerminalCapabilities,
@@ -609,7 +624,7 @@ function labelSpans(
           : item.kind === "strong"
           ? theme.typography.strong
           : { strikethrough: true } as const;
-        if (capabilities.colorDepth === "none") {
+        if (textualEmphasis(added, capabilities)) {
           return [
             markerSpan(fallback, inherited),
             ...labelSpans(item.content, inherited, capabilities, theme),
@@ -680,7 +695,7 @@ function renderContent(
           : item.kind === "strong"
           ? theme.typography.strong
           : { strikethrough: true } as const;
-        if (capabilities.colorDepth === "none") {
+        if (textualEmphasis(added, capabilities)) {
           return marker +
             renderContent(item.content, inherited, capabilities, theme) +
             marker;

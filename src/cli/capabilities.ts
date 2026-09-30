@@ -21,6 +21,14 @@ export interface TerminalCapabilities {
   readonly colorDepth: TerminalColorDepth;
   readonly columns: number;
   /**
+   * Whether bold and underline survive when `colorDepth` is `"none"`.
+   * Omission strips every attribute along with colour, so plain output and
+   * pipes read as bare text. An application that owns the screen sets it:
+   * a reader who asked for no colour still sees headings, selection, and
+   * focus through weight and underline.
+   */
+  readonly emphasisWithoutColor?: boolean;
+  /**
    * Whether OSC 8 hyperlink envelopes are worth emitting. Omission derives
    * the fact from colour depth, so a stream styled with SGR colour also
    * receives hyperlinks while an unstyled stream receives a textual
@@ -35,6 +43,19 @@ export interface TerminalCapabilities {
    */
   readonly mouseTracking?: boolean;
   readonly unicode: boolean;
+}
+
+/**
+ * The capabilities an application that owns the screen renders with: the
+ * terminal's own facts, keeping bold and underline when colour is off
+ * unless the caller has explicitly refused them.
+ */
+export function applicationTerminalCapabilities(
+  capabilities: TerminalCapabilities,
+): TerminalCapabilities {
+  return capabilities.emphasisWithoutColor === undefined
+    ? { ...capabilities, emphasisWithoutColor: true }
+    : capabilities;
 }
 
 /** Process facts consumed by {@linkcode detectTerminalCapabilities}. */

@@ -27,12 +27,20 @@ function ansi16Background(index: number): number {
  * Canonical SGR codes for one style at the supplied capabilities, in the
  * package's fixed attribute order. A background without a 16-colour index —
  * a surface fill — is omitted at that depth rather than approximated.
+ * Without colour nothing is emitted, except bold and underline where the
+ * capabilities keep emphasis without colour.
  */
 export function styleCodes(
   style: TerminalTextStyle,
   capabilities: TerminalCapabilities,
 ): readonly number[] {
-  if (capabilities.colorDepth === "none") return [];
+  if (capabilities.colorDepth === "none") {
+    if (capabilities.emphasisWithoutColor !== true) return [];
+    return [
+      ...(style.bold === true ? [1] : []),
+      ...(style.underline === true ? [4] : []),
+    ];
+  }
   const codes: number[] = [];
   if (style.bold === true) codes.push(1);
   if (style.dim === true) codes.push(2);

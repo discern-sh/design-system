@@ -1,5 +1,8 @@
 /** Shared internal coordination for owned terminal viewports. */
-import type { TerminalCapabilities } from "../capabilities.ts";
+import {
+  applicationTerminalCapabilities,
+  type TerminalCapabilities,
+} from "../capabilities.ts";
 import type { TerminalIO, TerminalSize } from "./io.ts";
 
 export interface TerminalFacts {
@@ -7,6 +10,11 @@ export interface TerminalFacts {
   readonly size: TerminalSize;
 }
 
+/**
+ * Sample one stable viewport and its capabilities for a screen the package
+ * owns. Owned screens are applications, so they keep bold and underline
+ * when colour is off.
+ */
 export function terminalFacts(io: TerminalIO): TerminalFacts {
   let last: TerminalFacts | undefined;
   for (let attempt = 0; attempt < 8; attempt += 1) {
@@ -23,7 +31,10 @@ export function terminalFacts(io: TerminalIO): TerminalFacts {
     if (capabilities.ansiControl === false) {
       throw new TypeError("terminal ANSI cursor control is unavailable");
     }
-    return { size: confirmed, capabilities };
+    return {
+      size: confirmed,
+      capabilities: applicationTerminalCapabilities(capabilities),
+    };
   }
   throw new TypeError(
     `Terminal geometry did not stabilise while sampling its viewport and capabilities${
