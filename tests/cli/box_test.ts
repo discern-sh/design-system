@@ -134,6 +134,15 @@ Deno.test("borderless boxes keep the frame's area as blank cells", () => {
     "  Info      \n  Hi        \n            ",
     capabilities,
   );
+  const padded = renderBox(
+    { body: "Hi", title: "Info", width: 14, padding: 3, style: "none" },
+    testTerminalCapabilities({ columns: 14 }),
+  );
+  assertEquals(
+    padded.split("\n").slice(0, 2),
+    ["    Info      ", "    Hi        "],
+    "a borderless title aligns with the body",
+  );
   assertEquals(
     blank.split("\n").map((line) => measureText(line)),
     drawn.split("\n").map((line) => measureText(line)),

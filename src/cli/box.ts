@@ -138,15 +138,21 @@ function boxStyle(style: TerminalBoxStyle | undefined): TerminalBoxStyle {
   return resolved;
 }
 
+/**
+ * Split the upper border around its title. A drawn border seats a
+ * start-aligned title against its corner; without a border the title
+ * aligns with the body's first column instead, because no rule carries it.
+ */
 function titleRow(
   title: string,
   width: number,
   align: TerminalAlignment,
   horizontal: string,
+  inset: number,
 ): { readonly before: string; readonly after: string } {
   const room = Math.max(0, width - 2 - measureText(title));
   const before = align === "start"
-    ? 0
+    ? Math.min(inset, room)
     : align === "end"
     ? room
     : Math.floor(room / 2);
@@ -188,10 +194,8 @@ export function renderBox(
       `terminal width ${capabilities.columns} is too narrow for a box`,
     );
   }
-  const glyphs = terminalFrameGlyphs(
-    boxStyle(options.style),
-    capabilities.unicode,
-  );
+  const style = boxStyle(options.style);
+  const glyphs = terminalFrameGlyphs(style, capabilities.unicode);
   const ellipsis = capabilities.unicode ? "…" : ".";
   const title = options.title === undefined || options.title === ""
     ? ""
@@ -204,6 +208,7 @@ export function renderBox(
     width,
     options.titleAlign ?? "start",
     glyphs.horizontal,
+    style === "none" ? Math.max(0, padding - 1) : 0,
   );
   const top = `${border(glyphs.topLeft)}${border(titleFill.before)}${
     border(title)
