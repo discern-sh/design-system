@@ -1342,6 +1342,91 @@ export const appearanceShadowRoleLaws: readonly AppearanceShadowRoleLaw[] =
 export type AppearanceShadowRoleName =
   typeof appearanceShadowRoleLaws[number]["name"];
 
+/**
+ * Opaque fill a medium without borders, shadows, or translucency uses to
+ * separate regions: a reading surface, a raised overlay, a selection and
+ * its receded form, a resting control, a focused control, and a focused
+ * destructive control.
+ */
+export type AppearanceFillRoleName =
+  | "surface"
+  | "raised"
+  | "selection"
+  | "selectionMuted"
+  | "control"
+  | "focusFill"
+  | "dangerFill";
+
+/** One fill role and its sole appearance law. */
+export interface AppearanceFillLaw {
+  readonly name: AppearanceFillRoleName;
+  readonly description: string;
+  /** Active-ink alpha over the canvas whenever no Accent projection applies. */
+  readonly expression: AppearanceExpression;
+  /** Chromatic projection under Accent, or `mono` when the fill stays neutral. */
+  readonly accent: AccentColorProjection | "mono";
+}
+
+const surfaceFillExpression = polarCurve(0.03, 0.06, 0.06, 0.075);
+const emphasisFillExpression = polarCurve(0.22, 0.26, 0.26, 0.28);
+
+/**
+ * Fill laws for media whose only separation is the fill itself. Each step
+ * is stronger than its browser cousin because no border or shadow helps
+ * it: the surface and raised ladder stays neutral, while selection, focus,
+ * and danger reuse the browser washes' Accent projections so the hue a
+ * reader learns in one medium means the same in the other.
+ */
+export const appearanceFillLaws: readonly AppearanceFillLaw[] = Object.freeze(
+  [
+    {
+      name: "surface",
+      description:
+        "Reading surface beside the canvas: an inspector, strip, or field.",
+      expression: surfaceFillExpression,
+      accent: "mono",
+    },
+    {
+      name: "raised",
+      description: "Overlay surface above the canvas and the reading surface.",
+      expression: polarCurve(0.07, 0.1, 0.1, 0.11),
+      accent: "mono",
+    },
+    {
+      name: "selection",
+      description: "Selected row on the canvas or a raised surface.",
+      expression: polarCurve(0.11, 0.15, 0.15, 0.17),
+      accent: accent100Projection,
+    },
+    {
+      name: "selectionMuted",
+      description:
+        "Selection that keeps its place while another layer holds focus.",
+      expression: surfaceFillExpression,
+      accent: "mono",
+    },
+    {
+      name: "control",
+      description: "Resting control on a raised surface.",
+      expression: polarCurve(0.19, 0.2, 0.2, 0.2),
+      accent: "mono",
+    },
+    {
+      name: "focusFill",
+      description: "Focused control; focus also carries a non-colour marker.",
+      expression: emphasisFillExpression,
+      accent: accent200Projection,
+    },
+    {
+      name: "dangerFill",
+      description:
+        "Focused destructive control; danger also carries a non-colour marker.",
+      expression: emphasisFillExpression,
+      accent: dangerSoftProjection,
+    },
+  ] as const satisfies readonly AppearanceFillLaw[],
+);
+
 /** Darkness samples signed off by the exploratory proof of concept. */
 export const APPEARANCE_CONTRAST_SAMPLE_DARKNESSES = [
   0,
@@ -1549,6 +1634,24 @@ function evaluateStructuredMono(
   })) as Record<AppearanceColorRoleName, EvaluatedRoleColor>);
 }
 
+function evaluateAccentProjection(
+  projection: AccentColorProjection,
+  resolved: Appearance,
+): EvaluatedRoleColor {
+  const lightness = evaluateResolvedExpression(projection.lightness, resolved);
+  const chroma = evaluateResolvedExpression(projection.chroma, resolved);
+  const radians = evaluateResolvedExpression(projection.hue, resolved) *
+    Math.PI / 180;
+  return {
+    color: {
+      lightness,
+      a: chroma * Math.cos(radians),
+      b: chroma * Math.sin(radians),
+    },
+    alpha: evaluateResolvedExpression(projection.alpha, resolved),
+  };
+}
+
 function evaluateStructuredAppearance(
   appearance: Partial<Appearance>,
 ): Readonly<Record<AppearanceColorRoleName, EvaluatedRoleColor>> {
@@ -1556,26 +1659,12 @@ function evaluateStructuredAppearance(
   const mono = evaluateStructuredMono(resolved);
   if (resolved.accent === undefined) return mono;
 
-  return Object.freeze(Object.fromEntries(appearanceColorRoleLaws.map((law) => {
-    if (law.accent === "mono") {
-      return [law.name, mono[law.name]];
-    }
-    const lightness = evaluateResolvedExpression(
-      law.accent.lightness,
-      resolved,
-    );
-    const chroma = evaluateResolvedExpression(law.accent.chroma, resolved);
-    const projectedHue = evaluateResolvedExpression(law.accent.hue, resolved);
-    const radians = projectedHue * Math.PI / 180;
-    return [law.name, {
-      color: {
-        lightness,
-        a: chroma * Math.cos(radians),
-        b: chroma * Math.sin(radians),
-      },
-      alpha: evaluateResolvedExpression(law.accent.alpha, resolved),
-    }];
-  })) as Record<AppearanceColorRoleName, EvaluatedRoleColor>);
+  return Object.freeze(Object.fromEntries(appearanceColorRoleLaws.map((law) => [
+    law.name,
+    law.accent === "mono"
+      ? mono[law.name]
+      : evaluateAccentProjection(law.accent, resolved),
+  ])) as Record<AppearanceColorRoleName, EvaluatedRoleColor>);
 }
 
 function roundDecimal(value: number, places: number): number {
@@ -1646,6 +1735,33 @@ export function evaluateOpaqueAppearance(
       }),
     ];
   })) as Record<AppearanceColorRoleName, string>);
+}
+
+/**
+ * Evaluate every fill role at one appearance as an opaque colour over its
+ * canvas. Fills share the role graph's pigments, tints, and Accent
+ * projections, but they are never emitted as CSS custom properties.
+ */
+export function evaluateOpaqueAppearanceFills(
+  appearance: Partial<Appearance> = {},
+): Readonly<Record<AppearanceFillRoleName, string>> {
+  const resolved = resolveAppearance(appearance);
+  const { canvas, active } = resolvePigments(resolved);
+  return Object.freeze(Object.fromEntries(appearanceFillLaws.map((law) => {
+    const value = law.accent !== "mono" && resolved.accent !== undefined
+      ? evaluateAccentProjection(law.accent, resolved)
+      : {
+        color: active,
+        alpha: evaluateResolvedExpression(law.expression, resolved),
+      };
+    return [
+      law.name,
+      formatOklch({
+        color: compositeOklab(value.color, value.alpha, canvas),
+        alpha: 1,
+      }),
+    ];
+  })) as Record<AppearanceFillRoleName, string>);
 }
 
 /** Density-scaled spacing unit for projections that opt into the density axis. */

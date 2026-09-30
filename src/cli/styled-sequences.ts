@@ -8,10 +8,56 @@
  * @module
  */
 
+import type { TerminalTextStyle } from "./ansi.ts";
+import type { TerminalCapabilities } from "./capabilities.ts";
 import { inspectSafeAsciiUrlReference } from "../url-reference.ts";
 
 const ESCAPE = String.fromCharCode(27);
 const BELL = String.fromCharCode(7);
+
+function ansi16Foreground(index: number): number {
+  return index < 8 ? 30 + index : 90 + index - 8;
+}
+
+function ansi16Background(index: number): number {
+  return index < 8 ? 40 + index : 100 + index - 8;
+}
+
+/**
+ * Canonical SGR codes for one style at the supplied capabilities, in the
+ * package's fixed attribute order. A background without a 16-colour index —
+ * a surface fill — is omitted at that depth rather than approximated.
+ */
+export function styleCodes(
+  style: TerminalTextStyle,
+  capabilities: TerminalCapabilities,
+): readonly number[] {
+  if (capabilities.colorDepth === "none") return [];
+  const codes: number[] = [];
+  if (style.bold === true) codes.push(1);
+  if (style.dim === true) codes.push(2);
+  if (style.italic === true) codes.push(3);
+  if (style.underline === true) codes.push(4);
+  if (style.strikethrough === true) codes.push(9);
+  if (style.color !== undefined) {
+    if (capabilities.colorDepth === "truecolor") {
+      codes.push(38, 2, style.color.red, style.color.green, style.color.blue);
+    } else if (capabilities.colorDepth === "ansi256") {
+      codes.push(38, 5, style.color.ansi256);
+    } else codes.push(ansi16Foreground(style.color.ansi16));
+  }
+  const background = style.background;
+  if (background !== undefined) {
+    if (capabilities.colorDepth === "truecolor") {
+      codes.push(48, 2, background.red, background.green, background.blue);
+    } else if (capabilities.colorDepth === "ansi256") {
+      codes.push(48, 5, background.ansi256);
+    } else if (background.ansi16 !== undefined) {
+      codes.push(ansi16Background(background.ansi16));
+    }
+  }
+  return codes;
+}
 
 /** Regex source matching one complete ANSI CSI sequence. */
 export const CSI_PATTERN = `${ESCAPE}\\[[0-?]*[ -/]*[@-~]`;

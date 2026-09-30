@@ -38,6 +38,7 @@ export * from "./narration.ts";
 export * from "./presenter.ts";
 export * from "./result-summary-group.ts";
 export * from "./rhythm.ts";
+export * from "./surface-admission.ts";
 export * from "./text.ts";
 export * from "./theme.ts";
 export * from "./triangles.ts";

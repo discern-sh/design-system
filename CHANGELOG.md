@@ -4,6 +4,16 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
+## Unreleased
+
+### Terminal foundations
+
+- Terminal themes gain surfaces. `TerminalTheme.surfaces` (`TerminalThemeRoles`) holds an opaque `TerminalFill` for each `TerminalSurfaceRole` — `surface`, `raised`, `selection`, `selectionMuted`, `control`, `focusFill`, and `dangerFill` — evaluated from the new `appearanceFillLaws` in the appearance authority (`AppearanceFillLaw`, `AppearanceFillRoleName`, `evaluateOpaqueAppearanceFills`). The laws share the colour roles' pigments, tints, and Accent projections but are never emitted as CSS custom properties. Under an Accent, the selection, focus, and danger fills equal `accent-100`, `accent-200`, and `danger-soft`.
+- Fills paint at truecolor and ANSI 256 only (`terminalPaintsSurfaces`). At 256 colours a wash keeps its hue through a fixed-palette entry of the same family near its lightness, or yields to a grey at its lightness; the fills are quantised jointly so the regions in `TERMINAL_SURFACE_SEPARATIONS` never share an entry. A `TerminalFill` has no 16-colour index, so a fill background is omitted at 16 colours and without colour, where renderers draw structure instead.
+- `terminalTextToneColor(theme, tone, surface?)` resolves the seven `TerminalTextTone`s (`ink`, `muted`, `faint`, `accent`, `success`, `warning`, `danger`) on a surface. `TERMINAL_SURFACE_TEXT_TONES` names the tones each surface carries; faint rises to muted on a selection or a control. On a fill, a tone's 256-colour index moves to the nearest legible entry of its family when the quantised pair would fall below `TERMINAL_TEXT_CONTRAST_FLOOR`.
+- `proveTerminalSurfaceAdmission()` proves every tone on every surface at 4.5:1, every separated pair apart, and a resting control at 1.25:1 against the raised surface, at truecolor and 256 colours on both grounds, for monochrome and the complete Accent hue sweep; at 16 colours and without colour it proves that no fill is painted.
+- `TerminalTextStyle.background` accepts a `TerminalFill` as well as a `TerminalColor`.
+
 ## 0.37.0
 
 Approach becomes a hero piece — emitted from its station, answered by one wave of light, and still within five seconds, with an opt-in arrival, endless drift, and scroll dolly — and every staggered Artwork phrase plays in full again instead of stopping short before the first frame.

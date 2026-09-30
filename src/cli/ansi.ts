@@ -10,14 +10,24 @@ import {
   hyperlinkSequence,
   OSC_PATTERN,
   sgrSequence,
+  styleCodes,
   validHyperlinkTarget,
 } from "./styled-sequences.ts";
-import type { TerminalColor, TerminalTypeStyle } from "./theme.ts";
+import type {
+  TerminalColor,
+  TerminalFill,
+  TerminalTypeStyle,
+} from "./theme.ts";
 
 /** Visual attributes carried by one terminal text span. */
 export interface TerminalTextStyle extends TerminalTypeStyle {
   readonly color?: TerminalColor;
-  readonly background?: TerminalColor;
+  /**
+   * A semantic colour or a surface fill. A surface fill carries no
+   * 16-colour index, so at that depth the background is omitted and the
+   * renderer's structural fallback stands in for it.
+   */
+  readonly background?: TerminalColor | TerminalFill;
   readonly underline?: true;
   readonly strikethrough?: true;
 }
@@ -33,46 +43,16 @@ const ANSI_SEQUENCE = new RegExp(
   "gu",
 );
 
-function ansi16Foreground(index: number): number {
-  return index < 8 ? 30 + index : 90 + index - 8;
-}
-
-function ansi16Background(index: number): number {
-  return index < 8 ? 40 + index : 100 + index - 8;
-}
-
-function styleCodes(
-  style: TerminalTextStyle,
+/**
+ * Whether surface fills reach the terminal at these capabilities. Truecolor
+ * and ANSI 256 paint them; the 16-colour palette and colourless output
+ * cannot, so renderers draw a pointer, brackets, or a box instead.
+ */
+export function terminalPaintsSurfaces(
   capabilities: TerminalCapabilities,
-): readonly number[] {
-  if (capabilities.colorDepth === "none") return [];
-  const codes: number[] = [];
-  if (style.bold === true) codes.push(1);
-  if (style.dim === true) codes.push(2);
-  if (style.italic === true) codes.push(3);
-  if (style.underline === true) codes.push(4);
-  if (style.strikethrough === true) codes.push(9);
-  if (style.color !== undefined) {
-    if (capabilities.colorDepth === "truecolor") {
-      codes.push(38, 2, style.color.red, style.color.green, style.color.blue);
-    } else if (capabilities.colorDepth === "ansi256") {
-      codes.push(38, 5, style.color.ansi256);
-    } else codes.push(ansi16Foreground(style.color.ansi16));
-  }
-  if (style.background !== undefined) {
-    if (capabilities.colorDepth === "truecolor") {
-      codes.push(
-        48,
-        2,
-        style.background.red,
-        style.background.green,
-        style.background.blue,
-      );
-    } else if (capabilities.colorDepth === "ansi256") {
-      codes.push(48, 5, style.background.ansi256);
-    } else codes.push(ansi16Background(style.background.ansi16));
-  }
-  return codes;
+): boolean {
+  return capabilities.colorDepth === "truecolor" ||
+    capabilities.colorDepth === "ansi256";
 }
 
 /**
