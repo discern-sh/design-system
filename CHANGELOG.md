@@ -13,6 +13,7 @@ Each release is cut from a green run of the full release gate — formatting, li
 - `terminalTextToneColor(theme, tone, surface?)` resolves the seven `TerminalTextTone`s (`ink`, `muted`, `faint`, `accent`, `success`, `warning`, `danger`) on a surface. `TERMINAL_SURFACE_TEXT_TONES` names the tones each surface carries; faint rises to muted on a selection or a control. On a fill, a tone's 256-colour index moves to the nearest legible entry of its family when the quantised pair would fall below `TERMINAL_TEXT_CONTRAST_FLOOR`.
 - `proveTerminalSurfaceAdmission()` proves every tone on every surface at 4.5:1, every separated pair apart, and a resting control at 1.25:1 against the raised surface, at truecolor and 256 colours on both grounds, for monochrome and the complete Accent hue sweep; at 16 colours and without colour it proves that no fill is painted.
 - `TerminalTextStyle.background` accepts a `TerminalFill` as well as a `TerminalColor`.
+- `fillStyledLine(content, columns, style, capabilities)` fits one styled line to an exact width with the style painted inside it: its background underlays every run that sets none of its own and the padding, so full-width bars and tinted panel rows render. `padText` still pads outside styles.
 
 ## 0.37.0
 

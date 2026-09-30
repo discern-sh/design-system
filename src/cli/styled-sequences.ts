@@ -188,6 +188,33 @@ function canonicalCodes(state: SgrState): readonly number[] {
   ];
 }
 
+/**
+ * Layer canonical base codes beneath every run, as inherited style: the
+ * base attributes join each run's own, and the base colours apply wherever
+ * a run sets none of its own.
+ */
+export function underlayStyledSegments(
+  segments: readonly StyledSegment[],
+  base: readonly number[],
+): readonly StyledSegment[] {
+  if (base.length === 0) return segments;
+  const reject = (): never => {
+    throw new TypeError("underlay codes must be canonical SGR codes");
+  };
+  return segments.map((segment) => {
+    const state: SgrState = {
+      attributes: new Set(),
+      foreground: undefined,
+      background: undefined,
+    };
+    applySgr(base.join(";"), state, reject);
+    if (segment.codes.length > 0) {
+      applySgr(segment.codes.join(";"), state, reject);
+    }
+    return { ...segment, codes: canonicalCodes(state) };
+  });
+}
+
 function sameRun(
   segment: StyledSegment,
   codes: readonly number[],

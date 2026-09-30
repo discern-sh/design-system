@@ -4,13 +4,16 @@
  * @module
  */
 
-import { stripAnsi } from "./ansi.ts";
+import { stripAnsi, type TerminalTextStyle } from "./ansi.ts";
+import type { TerminalCapabilities } from "./capabilities.ts";
 import { eastAsianWidthKind } from "../unicode/east-asian-width.ts";
 import {
   emitStyledLine,
   parseStyledSource,
   sliceStyledSegments,
   type StyledSegment,
+  styleCodes,
+  underlayStyledSegments,
 } from "./styled-sequences.ts";
 
 /** Horizontal alignment used by terminal padding and column layout. */
@@ -353,4 +356,41 @@ export function padText(
     return `${" ".repeat(before)}${value}${" ".repeat(missing - before)}`;
   }
   return `${value}${" ".repeat(missing)}`;
+}
+
+/**
+ * Fit one styled line to exactly `columns` cells with a style painted
+ * inside it, so a full-width bar or a tinted panel row keeps its fill under
+ * every cell. {@linkcode padText} pads outside styled runs; here the style
+ * underlays the whole line instead: its background shows wherever a run
+ * sets none of its own, its foreground colours unstyled text, its
+ * attributes join every run, and the padding carries it too. Over-wide
+ * content truncates with an ellipsis before the fill is applied. Where the
+ * capabilities cannot paint the style — a surface fill at 16 colours, or
+ * any colour without colour — the line is simply padded.
+ *
+ * The content must be one line of package-styled text; a newline throws a
+ * `TypeError`, as does any sequence {@linkcode wrapStyledText} rejects.
+ */
+export function fillStyledLine(
+  content: string,
+  columns: number,
+  style: TerminalTextStyle,
+  capabilities: TerminalCapabilities,
+): string {
+  assertColumns("fill", columns, 0);
+  if (content.includes("\n")) {
+    throw new TypeError("fillStyledLine fits exactly one line");
+  }
+  const fitted = truncateStyledText(
+    content,
+    columns,
+    capabilities.unicode ? "…" : "...",
+  );
+  const missing = columns - measureText(fitted);
+  const base = styleCodes(style, capabilities);
+  return emitStyledLine([
+    ...underlayStyledSegments(parseStyledSource(fitted), base),
+    { text: " ".repeat(missing), codes: base, link: undefined },
+  ]);
 }

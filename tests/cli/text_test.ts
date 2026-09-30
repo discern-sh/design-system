@@ -1,8 +1,10 @@
-import { assert, assertEquals } from "@std/assert";
-import { stripAnsi, styleText } from "../../src/cli/ansi.ts";
+import { assert, assertEquals, assertThrows } from "@std/assert";
+import { stripAnsi, styleHyperlink, styleText } from "../../src/cli/ansi.ts";
+import { deriveTerminalTheme } from "../../src/cli/theme.ts";
 import { eastAsianWidthKind } from "../../src/unicode/east-asian-width.ts";
 import { testTerminalCapabilities } from "../../src/cli/interactive/testing.ts";
 import {
+  fillStyledLine,
   graphemeWidth,
   measureText,
   padText,
@@ -108,4 +110,82 @@ Deno.test("padding aligns by visible cells", () => {
   assertEquals(padText("界", 4), "界  ");
   assertEquals(padText("x", 5, "center"), "  x  ");
   assertEquals(padText("x", 3, "end"), "  x");
+});
+
+Deno.test("filled lines paint their style inside every run and the padding", () => {
+  const theme = deriveTerminalTheme("dark", { accent: 255 });
+  const fill = theme.surfaces.selection;
+  const truecolor = testTerminalCapabilities({ colorDepth: "truecolor" });
+  const bg = "48;2;38;60;87";
+  assertEquals(
+    fillStyledLine("ab", 5, { background: fill }, truecolor),
+    `\x1b[${bg}mab   \x1b[0m`,
+  );
+  const bold = styleText("a", { bold: true }, truecolor);
+  assertEquals(
+    fillStyledLine(`${bold}b`, 4, { background: fill }, truecolor),
+    `\x1b[1;${bg}ma\x1b[0m\x1b[${bg}mb  \x1b[0m`,
+  );
+  const own = styleText(
+    "c",
+    { background: theme.surfaces.dangerFill },
+    truecolor,
+  );
+  assertEquals(
+    fillStyledLine(own, 2, { background: fill }, truecolor),
+    `\x1b[48;2;67;32;28mc\x1b[0m\x1b[${bg}m \x1b[0m`,
+    "a run's own background wins over the fill",
+  );
+  const filled = fillStyledLine("abcdefgh", 5, { background: fill }, truecolor);
+  assertEquals(stripAnsi(filled), "abcd…");
+  assertEquals(measureText(filled), 5);
+  assertEquals(
+    stripAnsi(fillStyledLine("abcdefgh", 5, {}, {
+      ...truecolor,
+      unicode: false,
+    })),
+    "ab...",
+  );
+});
+
+Deno.test("filled lines yield to plain padding where the style cannot paint", () => {
+  const theme = deriveTerminalTheme("light", { accent: 255 });
+  const style = { background: theme.surfaces.raised } as const;
+  for (const colorDepth of ["ansi16", "none"] as const) {
+    assertEquals(
+      fillStyledLine("row", 6, style, testTerminalCapabilities({ colorDepth })),
+      "row   ",
+    );
+  }
+  assertEquals(
+    fillStyledLine(
+      "",
+      3,
+      style,
+      testTerminalCapabilities({
+        colorDepth: "ansi256",
+      }),
+    ),
+    `\x1b[48;5;${theme.surfaces.raised.ansi256}m   \x1b[0m`,
+  );
+  assertEquals(fillStyledLine("row", 0, style, testTerminalCapabilities()), "");
+  assertThrows(
+    () => fillStyledLine("a\nb", 3, style, testTerminalCapabilities()),
+    TypeError,
+  );
+});
+
+Deno.test("filled lines keep hyperlinks closed before the padding", () => {
+  const truecolor = testTerminalCapabilities({ colorDepth: "truecolor" });
+  const theme = deriveTerminalTheme("dark");
+  const link = styleHyperlink("docs", "https://example.com", truecolor);
+  const line = fillStyledLine(
+    link,
+    8,
+    { background: theme.surfaces.surface },
+    truecolor,
+  );
+  assertEquals(stripAnsi(line), "docs    ");
+  const close = "\x1b]8;;\x1b\\";
+  assert(line.indexOf(close) < line.lastIndexOf("    "));
 });
