@@ -198,8 +198,9 @@ export function foundationsSearchRecords(
       href: foundationsPaths.terminal,
       title: "Terminal foundations",
       context: "Foundations",
-      description: "Motifs and narration primitives for terminal surfaces.",
-      keywords: ["terminal", "motif", "narration"],
+      description:
+        "Motifs, narration, surfaces, key hints, and glyphs for terminal output.",
+      keywords: ["terminal", "motif", "narration", "surface", "glyph"],
     },
     ...sources.terminalFoundations.map((sheet, order) => ({
       id: `terminal-foundation:${sheet.id}`,

@@ -12,6 +12,11 @@ import {
   createCliPresenter,
   deriveTerminalMotif,
   DISCERN_TERMINAL_MOTIF,
+  fillStyledLine,
+  type KeyHints,
+  padText,
+  renderBox,
+  renderKeyHintsCli,
   renderMotifActivityBeacon,
   renderMotifDivider,
   renderMotifPattern,
@@ -19,9 +24,21 @@ import {
   renderMotifSectionRule,
   renderMotifSpinnerFrame,
   renderMotifWorkflowStepper,
+  resolveTerminalTheme,
   type SequentialStepStatus,
+  styleText,
+  TERMINAL_GLYPHS,
+  TERMINAL_SURFACE_ROLES,
+  TERMINAL_TEXT_TONES,
   type TerminalCapabilities,
+  terminalGlyph,
+  type TerminalGlyphColumn,
+  type TerminalGlyphName,
   terminalMotifRepertoire,
+  terminalPaintsSurfaces,
+  type TerminalSurfaceRole,
+  type TerminalTextTone,
+  terminalTextToneColor,
   type TerminalThemeOptions,
 } from "../src/cli/mod.ts";
 
@@ -312,6 +329,275 @@ function narrationSpecimens(
   ];
 }
 
+const SURFACE_LABELS: Readonly<Record<TerminalSurfaceRole, string>> = {
+  surface: "Surface",
+  raised: "Raised",
+  selection: "Selection",
+  selectionMuted: "Receded selection",
+  control: "Control",
+  focusFill: "Focused control",
+  dangerFill: "Focused danger",
+};
+
+const GLYPH_COLUMNS: readonly TerminalGlyphColumn[] = [
+  "state",
+  "fold",
+  "mark",
+  "flag",
+  "menu",
+  "button",
+  "chrome",
+  "key",
+];
+
+interface SampleRow {
+  readonly glyph: TerminalGlyphName;
+  readonly tone: TerminalTextTone;
+  readonly title: string;
+  readonly label: string;
+  readonly age: string;
+}
+
+const SAMPLE_ROWS: readonly SampleRow[] = [
+  {
+    glyph: "done",
+    tone: "success",
+    title: "Refresh the index",
+    label: "Ready",
+    age: "20m",
+  },
+  {
+    glyph: "failed",
+    tone: "danger",
+    title: "Rebuild the cache",
+    label: "Failed",
+    age: "2h",
+  },
+  {
+    glyph: "attention",
+    tone: "warning",
+    title: "Rename the export",
+    label: "Stale",
+    age: "11d",
+  },
+  {
+    glyph: "idle",
+    tone: "faint",
+    title: "Tidy the notes",
+    label: "Idle",
+    age: "2d",
+  },
+];
+
+const SAMPLE_HINTS: KeyHints = {
+  left: [
+    { key: "enter", label: "Open…" },
+    { key: "v", label: "View details" },
+    { key: "g", label: "Approve…" },
+  ],
+  right: [
+    { key: ".", label: "Actions" },
+    { key: "ctrl-k", label: "Commands" },
+  ],
+  extra: [
+    { key: "?", label: "Keys" },
+    { key: "/", label: "Filter" },
+    { key: "q", label: "Quit" },
+  ],
+};
+
+function surfaceSpecimens(
+  capabilities: TerminalCapabilities,
+  presentation?: TerminalFoundationPresentation,
+): readonly TerminalFoundationSpecimen[] {
+  const width = Math.min(72, capabilities.columns);
+  if (width < 36) {
+    throw new TypeError(
+      `terminal width ${capabilities.columns} cannot hold the surface catalogue`,
+    );
+  }
+  const options = presentationOptions(presentation);
+  const theme = resolveTerminalTheme(options);
+  const painted = terminalPaintsSurfaces(capabilities);
+  const text = (
+    value: string,
+    tone: TerminalTextTone,
+    surface?: TerminalSurfaceRole,
+    bold = false,
+  ): string =>
+    styleText(value, {
+      color: terminalTextToneColor(theme, tone, surface),
+      ...(bold ? { bold: true } : {}),
+    }, capabilities);
+  const fill = (content: string, surface: TerminalSurfaceRole): string =>
+    fillStyledLine(content, width, {
+      background: theme.surfaces[surface],
+    }, capabilities);
+
+  const ladder = TERMINAL_SURFACE_ROLES.map((surface) =>
+    fill(
+      `  ${text(padText(SURFACE_LABELS[surface], 20), "ink", surface, true)}${
+        TERMINAL_TEXT_TONES.map((tone) => text(tone, tone, surface)).join(" ")
+      }`,
+      surface,
+    )
+  ).join("\n");
+
+  const row = (
+    sample: SampleRow,
+    selection: "selection" | "selectionMuted" | undefined,
+  ): string => {
+    const surface = selection;
+    const marker = selection === undefined ? " " : text(
+      terminalGlyph("selection", capabilities),
+      selection === "selection" ? "accent" : "faint",
+      surface,
+    );
+    const title = padText(sample.title, width - 22);
+    const content = `${marker} ${
+      text(terminalGlyph(sample.glyph, capabilities), sample.tone, surface)
+    } ${text(title, "ink", surface, selection === "selection")}${
+      text(padText(sample.label, 9, "end"), sample.tone, surface)
+    }  ${text(padText(sample.age, 4, "end"), "faint", surface)}`;
+    return surface === undefined ? padText(content, width) : fill(
+      content,
+      surface,
+    );
+  };
+  const list = (selection: "selection" | "selectionMuted"): string =>
+    SAMPLE_ROWS.map((sample, index) =>
+      row(sample, index === 0 ? selection : undefined)
+    ).join("\n");
+
+  const button = (
+    label: string,
+    state: "focused" | "resting" | "disabled",
+    danger: boolean,
+  ): string => {
+    if (!painted) {
+      const [open, close] = state === "focused"
+        ? [
+          terminalGlyph("focusStart", capabilities),
+          terminalGlyph("focusEnd", capabilities),
+        ]
+        : state === "resting"
+        ? ["[", "]"]
+        : ["(", ")"];
+      return styleText(
+        `${open} ${label} ${close}`,
+        state === "focused" ? { bold: true } : {},
+        capabilities,
+      );
+    }
+    const surface: TerminalSurfaceRole = state === "focused"
+      ? danger ? "dangerFill" : "focusFill"
+      : state === "resting"
+      ? "control"
+      : "surface";
+    const tone: TerminalTextTone = state === "disabled"
+      ? "faint"
+      : danger
+      ? "danger"
+      : "ink";
+    const [open, close] = state === "focused"
+      ? [
+        terminalGlyph("focusStart", capabilities),
+        terminalGlyph("focusEnd", capabilities),
+      ]
+      : [" ", " "];
+    return styleText(`${open} ${label} ${close}`, {
+      background: theme.surfaces[surface],
+      color: terminalTextToneColor(theme, tone, surface),
+      ...(state === "focused" ? { bold: true } : {}),
+    }, capabilities);
+  };
+  const buttons = [
+    `${button("Keep", "focused", false)}  ${button("Park", "resting", false)}`,
+    `${button("Drop", "focused", true)}  ${button("Drop", "resting", true)}  ${
+      button("Drop", "disabled", true)
+    }`,
+  ].join("\n");
+
+  const consequence = (glyph: TerminalGlyphName, line: string) =>
+    `${text(terminalGlyph(glyph, capabilities), "muted", "raised")}  ${
+      text(line, "ink", "raised")
+    }`;
+  const panel = renderBox({
+    title: "Apply the change?",
+    width,
+    padding: 2,
+    style: painted ? "none" : "rounded",
+    fill: { background: theme.surfaces.raised },
+    borderStyle: { bold: true, color: terminalTextToneColor(theme, "ink") },
+    body: [
+      "",
+      consequence("changes", "Updates 4 files in place"),
+      consequence("removes", "Removes the scratch copy"),
+      consequence("keeps", "Keeps the recorded history"),
+      consequence("restorable", "Can be restored for a while"),
+      "",
+      text("Nothing changes until you confirm.", "faint", "raised"),
+    ].join("\n"),
+  }, capabilities);
+
+  const hints = [
+    renderKeyHintsCli(SAMPLE_HINTS, width, capabilities, options),
+    renderKeyHintsCli(SAMPLE_HINTS, 36, capabilities, options),
+  ].join("\n");
+
+  const glyphTable = GLYPH_COLUMNS.map((column) =>
+    `${padText(column, 8)}${
+      Object.values(TERMINAL_GLYPHS).filter((glyph) => glyph.column === column)
+        .map((glyph) => `${glyph.unicode} ${glyph.ascii}`).join("  ")
+    }`
+  ).join("\n");
+
+  return [
+    {
+      id: "surface-ladder",
+      title: "Surface roles and text tones",
+      group: "Surfaces",
+      output: ladder,
+    },
+    {
+      id: "selection",
+      title: "Selection",
+      group: "Selection and focus",
+      output: list("selection"),
+    },
+    {
+      id: "receded-selection",
+      title: "Receded selection",
+      group: "Selection and focus",
+      output: list("selectionMuted"),
+    },
+    {
+      id: "buttons",
+      title: "Buttons",
+      group: "Selection and focus",
+      output: buttons,
+    },
+    {
+      id: "raised-panel",
+      title: "Raised panel",
+      group: "Surfaces",
+      output: panel,
+    },
+    {
+      id: "key-hints",
+      title: "Key hints",
+      group: "Key hints and glyphs",
+      output: hints,
+    },
+    {
+      id: "glyph-table",
+      title: "Glyph table",
+      group: "Key hints and glyphs",
+      output: glyphTable,
+    },
+  ];
+}
+
 /** Canonical set of terminal foundations visible in every Catalogue. */
 export const terminalFoundationSheets = [
   {
@@ -331,6 +617,15 @@ export const terminalFoundationSheets = [
     keywords:
       "success note warning failure lead narration rhythm status marker",
     specimens: narrationSpecimens,
+  },
+  {
+    id: "surfaces",
+    title: "Terminal surfaces",
+    description:
+      "Surface fills, selection, buttons, a raised panel, key hints, and the glyph table across every colour depth.",
+    keywords:
+      "surface raised selection focus control button panel fill key hints glyph table NO_COLOR 256 16 colour",
+    specimens: surfaceSpecimens,
   },
 ] as const satisfies readonly TerminalFoundationSheet[];
 

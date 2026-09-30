@@ -16,7 +16,7 @@ import {
 Deno.test("terminal foundation inventory enrols every sheet and specimen", () => {
   assertEquals(
     terminalFoundationSheets.map(({ id }) => id),
-    ["motifs", "narration"],
+    ["motifs", "narration", "surfaces"],
   );
 
   const sheetIds = new Set<string>();

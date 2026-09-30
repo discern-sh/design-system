@@ -320,3 +320,34 @@ Deno.test("consumer-hardening examples enrol through Component CLI registries", 
     "agent/terminal-contract-audit-with-complete-identities",
   );
 });
+
+Deno.test("surface catalogue fills where fills paint and draws structure elsewhere", async () => {
+  const painted = await renderCliCatalogue(
+    "surfaces",
+    testTerminalCapabilities({ columns: 80, colorDepth: "truecolor" }),
+  );
+  const plain = await renderCliCatalogue(
+    "surfaces",
+    testTerminalCapabilities({ columns: 80, colorDepth: "none" }),
+  );
+  for (
+    const heading of [
+      "Surface roles and text tones",
+      "Selection",
+      "Receded selection",
+      "Buttons",
+      "Raised panel",
+      "Key hints",
+      "Glyph table",
+    ]
+  ) {
+    assertStringIncludes(painted, `### ${heading}`);
+    assertStringIncludes(plain, `### ${heading}`);
+  }
+  assertStringIncludes(painted, "\u001b[48;2;");
+  assertEquals(painted.includes("╭"), false, "a painted panel needs no box");
+  assertStringIncludes(plain, "╭ Apply the change?");
+  assertStringIncludes(plain, "[ Park ]");
+  assertStringIncludes(plain, "( Drop )");
+  assertEquals(plain.includes("\u001b[48"), false);
+});

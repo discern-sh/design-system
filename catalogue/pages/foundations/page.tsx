@@ -490,7 +490,7 @@ function FoundationsIndex(
         <CatalogueIndexCard
           href={foundationsPaths.terminal}
           title="Terminal foundations"
-          description="Motifs and narration primitives."
+          description="Motifs, narration, and surface primitives."
           action="Browse terminal foundations"
           metadata={<span>{sheets.length} sheets</span>}
           media={
@@ -534,7 +534,7 @@ function TerminalFoundationsIndex(
         index="04"
         eyebrow="Foundations"
         title="Terminal foundations"
-        description="Motifs and narration primitives; Terminal layouts are composed full frames."
+        description="Motifs, narration, and surface primitives; Terminal layouts are composed full frames."
       />
       <div className="discern-catalogue-terminal-foundation-gallery">
         {sheets.map((sheet) => {

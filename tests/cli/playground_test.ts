@@ -690,7 +690,7 @@ Deno.test("degraded journeys run through the synthetic environment", async () =>
 
 Deno.test("browse journey reaches the motif sheet and returns to the hub", async () => {
   const io = new FakeTerminalIO(
-    [`${END}${UP}${UP}${UP}${ENTER}`, ENTER, `${END}${ENTER}`],
+    [`${END}${UP}${UP}${UP}${UP}${ENTER}`, ENTER, `${END}${ENTER}`],
     { columns: 80 },
   );
   assertEquals(
@@ -702,7 +702,7 @@ Deno.test("browse journey reaches the motif sheet and returns to the hub", async
 
 Deno.test("browse journey reaches the narration sheet and returns to the hub", async () => {
   const io = new FakeTerminalIO(
-    [`${END}${UP}${UP}${ENTER}`, ENTER, `${END}${ENTER}`],
+    [`${END}${UP}${UP}${UP}${ENTER}`, ENTER, `${END}${ENTER}`],
     { columns: 80 },
   );
   assertEquals(
@@ -711,6 +711,19 @@ Deno.test("browse journey reaches the narration sheet and returns to the hub", a
   );
   assertStringIncludes(io.output(), "## Narration lines");
   assertStringIncludes(io.output(), "✓ Checks passed");
+});
+
+Deno.test("browse journey reaches the surface sheet and returns to the hub", async () => {
+  const io = new FakeTerminalIO(
+    [`${END}${UP}${UP}${ENTER}`, ENTER, `${END}${ENTER}`],
+    { columns: 80 },
+  );
+  assertEquals(
+    await runJourney(journey("browse"), testRuntime(io)),
+    "completed",
+  );
+  assertStringIncludes(io.output(), "## Terminal surfaces");
+  assertStringIncludes(io.output(), "Receded selection");
 });
 
 Deno.test("browse journey walks Group, component, and example navigation", async () => {
