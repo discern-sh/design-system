@@ -1,5 +1,6 @@
 /**
- * Capability-aware Unicode and ASCII terminal box drawing.
+ * Capability-aware Unicode and ASCII terminal box drawing, and the one
+ * authority for frame glyphs.
  *
  * @module
  */
@@ -7,11 +8,99 @@
 import type { TerminalCapabilities } from "./capabilities.ts";
 import { styleText, type TerminalTextStyle } from "./ansi.ts";
 import {
+  fillStyledLine,
   measureText,
   padText,
+  type TerminalAlignment,
   truncateText,
   wrapStyledTextPreservingIndent,
 } from "./text.ts";
+
+/**
+ * Border treatment of a terminal frame. `light` draws square corners,
+ * `rounded` draws rounded corners, and `none` keeps the frame's geometry —
+ * its border rows and columns — as blank cells, so a filled panel and a
+ * bordered one occupy exactly the same area.
+ */
+export type TerminalBoxStyle = "light" | "rounded" | "none";
+
+/** Glyphs one drawn border style uses, including joins for ruled grids. */
+export interface TerminalFrameGlyphs {
+  readonly topLeft: string;
+  readonly topJoin: string;
+  readonly topRight: string;
+  readonly middleLeft: string;
+  readonly middleJoin: string;
+  readonly middleRight: string;
+  readonly bottomLeft: string;
+  readonly bottomJoin: string;
+  readonly bottomRight: string;
+  readonly horizontal: string;
+  readonly vertical: string;
+}
+
+const LIGHT_FRAME: TerminalFrameGlyphs = Object.freeze({
+  topLeft: "┌",
+  topJoin: "┬",
+  topRight: "┐",
+  middleLeft: "├",
+  middleJoin: "┼",
+  middleRight: "┤",
+  bottomLeft: "└",
+  bottomJoin: "┴",
+  bottomRight: "┘",
+  horizontal: "─",
+  vertical: "│",
+});
+
+const ROUNDED_FRAME: TerminalFrameGlyphs = Object.freeze({
+  ...LIGHT_FRAME,
+  topLeft: "╭",
+  topRight: "╮",
+  bottomLeft: "╰",
+  bottomRight: "╯",
+});
+
+const ASCII_FRAME: TerminalFrameGlyphs = Object.freeze({
+  topLeft: "+",
+  topJoin: "+",
+  topRight: "+",
+  middleLeft: "+",
+  middleJoin: "+",
+  middleRight: "+",
+  bottomLeft: "+",
+  bottomJoin: "+",
+  bottomRight: "+",
+  horizontal: "-",
+  vertical: "|",
+});
+
+const BLANK_FRAME: TerminalFrameGlyphs = Object.freeze({
+  topLeft: " ",
+  topJoin: " ",
+  topRight: " ",
+  middleLeft: " ",
+  middleJoin: " ",
+  middleRight: " ",
+  bottomLeft: " ",
+  bottomJoin: " ",
+  bottomRight: " ",
+  horizontal: " ",
+  vertical: " ",
+});
+
+/**
+ * Resolve the frame glyphs for one border style. Without Unicode every
+ * drawn style uses `+`, `-`, and `|`; `none` is blank in both repertoires.
+ */
+export function terminalFrameGlyphs(
+  style: TerminalBoxStyle,
+  unicode: boolean,
+): TerminalFrameGlyphs {
+  if (style === "none") return BLANK_FRAME;
+  if (!unicode) return ASCII_FRAME;
+  return style === "rounded" ? ROUNDED_FRAME : LIGHT_FRAME;
+}
 
 function wrapBoxLine(line: string, width: number): readonly string[] {
   if (measureText(line) <= width) return [line];
@@ -24,6 +113,16 @@ export interface TerminalBoxOptions {
   readonly title?: string;
   readonly width?: number;
   readonly padding?: number;
+  /** Border treatment; defaults to `"light"`. */
+  readonly style?: TerminalBoxStyle;
+  /** Where the title sits in the upper border; defaults to `"start"`. */
+  readonly titleAlign?: TerminalAlignment;
+  /**
+   * Style painted under the whole frame, borders and padding included —
+   * usually a surface fill. Where the capabilities cannot paint it, the
+   * frame renders unfilled.
+   */
+  readonly fill?: TerminalTextStyle;
   readonly borderStyle?: TerminalTextStyle;
   /** Optional status embedded in the lower border. */
   readonly bottomLabel?: string;
@@ -31,7 +130,37 @@ export interface TerminalBoxOptions {
   readonly bottomLabelStyle?: TerminalTextStyle;
 }
 
-/** Render a width-bounded box using Unicode or intentional ASCII borders. */
+function boxStyle(style: TerminalBoxStyle | undefined): TerminalBoxStyle {
+  const resolved = style ?? "light";
+  if (resolved !== "light" && resolved !== "rounded" && resolved !== "none") {
+    throw new TypeError(`unknown box style: ${String(style)}`);
+  }
+  return resolved;
+}
+
+function titleRow(
+  title: string,
+  width: number,
+  align: TerminalAlignment,
+  horizontal: string,
+): { readonly before: string; readonly after: string } {
+  const room = Math.max(0, width - 2 - measureText(title));
+  const before = align === "start"
+    ? 0
+    : align === "end"
+    ? room
+    : Math.floor(room / 2);
+  return {
+    before: horizontal.repeat(before),
+    after: horizontal.repeat(room - before),
+  };
+}
+
+/**
+ * Render a width-bounded box using Unicode or intentional ASCII borders.
+ * Over-wide body lines wrap with their styling and indentation intact, so
+ * no content is lost to the frame.
+ */
 export function renderBox(
   options: TerminalBoxOptions,
   capabilities: TerminalCapabilities,
@@ -59,51 +188,31 @@ export function renderBox(
       `terminal width ${capabilities.columns} is too narrow for a box`,
     );
   }
-
-  const glyphs = capabilities.unicode
-    ? {
-      topLeft: "┌",
-      topRight: "┐",
-      bottomLeft: "└",
-      bottomRight: "┘",
-      horizontal: "─",
-      vertical: "│",
-    }
-    : {
-      topLeft: "+",
-      topRight: "+",
-      bottomLeft: "+",
-      bottomRight: "+",
-      horizontal: "-",
-      vertical: "|",
-    };
+  const glyphs = terminalFrameGlyphs(
+    boxStyle(options.style),
+    capabilities.unicode,
+  );
+  const ellipsis = capabilities.unicode ? "…" : ".";
   const title = options.title === undefined || options.title === ""
     ? ""
-    : ` ${
-      truncateText(
-        options.title,
-        Math.max(0, width - 6),
-        capabilities.unicode ? "…" : ".",
-      )
-    } `;
-  const topFill = glyphs.horizontal.repeat(
-    Math.max(0, width - 2 - measureText(title)),
-  );
+    : ` ${truncateText(options.title, Math.max(0, width - 6), ellipsis)} `;
   const borderStyle = options.borderStyle ?? {};
   const border = (value: string): string =>
     styleText(value, borderStyle, capabilities);
-  const top = `${border(glyphs.topLeft)}${border(title)}${border(topFill)}${
-    border(glyphs.topRight)
-  }`;
+  const titleFill = titleRow(
+    title,
+    width,
+    options.titleAlign ?? "start",
+    glyphs.horizontal,
+  );
+  const top = `${border(glyphs.topLeft)}${border(titleFill.before)}${
+    border(title)
+  }${border(titleFill.after)}${border(glyphs.topRight)}`;
   const bottomLabel = options.bottomLabel === undefined ||
       options.bottomLabel === ""
     ? ""
     : ` ${
-      truncateText(
-        options.bottomLabel,
-        Math.max(0, width - 5),
-        capabilities.unicode ? "…" : ".",
-      )
+      truncateText(options.bottomLabel, Math.max(0, width - 5), ellipsis)
     } `;
   const bottomFillWidth = Math.max(
     0,
@@ -136,5 +245,10 @@ export function renderBox(
       padText(line, innerWidth)
     }${" ".repeat(padding)}${border(glyphs.vertical)}`
   );
-  return [top, ...content, bottom].join("\n");
+  const rows = [top, ...content, bottom];
+  const fill = options.fill;
+  return (fill === undefined
+    ? rows
+    : rows.map((row) => fillStyledLine(row, width, fill, capabilities)))
+    .join("\n");
 }

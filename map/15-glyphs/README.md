@@ -28,7 +28,7 @@ The Catalogue describes Unicode facts as source-cited, authored, bounded records
 
 ## Independent neighbours
 
-The Atlas does not own glyph grammar merely because it contains the same character. [`motif.ts`](../../src/cli/motif.ts) owns semantic and brand motif roles, [`triangles.ts`](../../src/cli/triangles.ts) owns fixed plain-triangle geometry, [`glyph-ramps.ts`](../../src/cli/glyph-ramps.ts) owns chart ramps and series cues, and component renderers such as [`icon.cli.ts`](../../src/components/core/icon/icon.cli.ts) retain their existing contracts. Box drawing, punctuation, prose separators, and other local grammars remain with the surface that gives them meaning.
+The Atlas does not own glyph grammar merely because it contains the same character. [`motif.ts`](../../src/cli/motif.ts) owns semantic and brand motif roles, [`triangles.ts`](../../src/cli/triangles.ts) owns fixed plain-triangle geometry, [`glyph-ramps.ts`](../../src/cli/glyph-ramps.ts) owns chart ramps and series cues, and component renderers such as [`icon.cli.ts`](../../src/components/core/icon/icon.cli.ts) retain their existing contracts. Frame glyphs belong to [`box.ts`](../../src/cli/box.ts)'s `terminalFrameGlyphs()`. Punctuation, prose separators, and other local grammars remain with the surface that gives them meaning.
 
 ## Unicode update review
 

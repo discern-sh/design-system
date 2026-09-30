@@ -5,6 +5,7 @@
  */
 
 import { styleText, type TerminalTextStyle } from "../../../cli/ansi.ts";
+import { terminalFrameGlyphs } from "../../../cli/box.ts";
 import type { TerminalCapabilities } from "../../../cli/capabilities.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
 import {
@@ -197,36 +198,6 @@ function allocateWidths(
   return widths;
 }
 
-function frameGlyphs(unicode: boolean) {
-  return unicode
-    ? {
-      topLeft: "┌",
-      topJoin: "┬",
-      topRight: "┐",
-      middleLeft: "├",
-      middleJoin: "┼",
-      middleRight: "┤",
-      bottomLeft: "└",
-      bottomJoin: "┴",
-      bottomRight: "┘",
-      horizontal: "─",
-      vertical: "│",
-    }
-    : {
-      topLeft: "+",
-      topJoin: "+",
-      topRight: "+",
-      middleLeft: "+",
-      middleJoin: "+",
-      middleRight: "+",
-      bottomLeft: "+",
-      bottomJoin: "+",
-      bottomRight: "+",
-      horizontal: "-",
-      vertical: "|",
-    };
-}
-
 function columnAlignment(
   props: Readonly<TableCliProps>,
   index: number,
@@ -295,7 +266,7 @@ function renderCompactTable(
     )
   );
   const columnWidths = allocateWidths(natural, available);
-  const glyphs = frameGlyphs(capabilities.unicode);
+  const glyphs = terminalFrameGlyphs("light", capabilities.unicode);
   const theme = resolveTerminalTheme(props);
   const borderStyle = {
     ...theme.typography.muted,
@@ -546,7 +517,7 @@ function renderResponsiveGrid(
     available,
     GRID_MINIMUM_CELL_WIDTH,
   );
-  const glyphs = frameGlyphs(capabilities.unicode);
+  const glyphs = terminalFrameGlyphs("light", capabilities.unicode);
   const theme = resolveTerminalTheme(props);
   const borderStyle = {
     ...theme.typography.muted,

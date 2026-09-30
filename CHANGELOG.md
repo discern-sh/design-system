@@ -14,6 +14,7 @@ Each release is cut from a green run of the full release gate — formatting, li
 - `proveTerminalSurfaceAdmission()` proves every tone on every surface at 4.5:1, every separated pair apart, and a resting control at 1.25:1 against the raised surface, at truecolor and 256 colours on both grounds, for monochrome and the complete Accent hue sweep; at 16 colours and without colour it proves that no fill is painted.
 - `TerminalTextStyle.background` accepts a `TerminalFill` as well as a `TerminalColor`.
 - `fillStyledLine(content, columns, style, capabilities)` fits one styled line to an exact width with the style painted inside it: its background underlays every run that sets none of its own and the padding, so full-width bars and tinted panel rows render. `padText` still pads outside styles.
+- `renderBox` gains `style` (`TerminalBoxStyle`: `"light"`, the default and existing bytes, `"rounded"`, or `"none"`, which keeps the frame's area as blank cells), `titleAlign` (`"start"`, `"center"`, `"end"`), and `fill`, a style painted under every cell of the frame. `terminalFrameGlyphs(style, unicode)` (`TerminalFrameGlyphs`) is the single frame-glyph table, joins included; Table, Code block, and Code listing now draw through it with unchanged output.
 
 ## 0.37.0
 

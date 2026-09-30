@@ -5,6 +5,7 @@
  */
 
 import { styleText } from "../../../cli/ansi.ts";
+import { terminalFrameGlyphs } from "../../../cli/box.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type {
   CliExample,
@@ -166,23 +167,7 @@ const renderCodeBlockCli: CliRenderer<CodeBlockCliProps> = (
     ...theme.typography.annotation,
     color: terminalThemeColor(theme, "--discern-color-ink-muted"),
   };
-  const glyphs = capabilities.unicode
-    ? {
-      topLeft: "╭",
-      topRight: "╮",
-      bottomLeft: "╰",
-      bottomRight: "╯",
-      horizontal: "─",
-      vertical: "│",
-    }
-    : {
-      topLeft: "+",
-      topRight: "+",
-      bottomLeft: "+",
-      bottomRight: "+",
-      horizontal: "-",
-      vertical: "|",
-    };
+  const glyphs = terminalFrameGlyphs("rounded", capabilities.unicode);
   const safeLines = makeSourceControlsVisible(props.code, {
     preserveLineFeeds: true,
     preserveTabs: true,

@@ -5,6 +5,7 @@
  */
 
 import { styleText } from "../../../cli/ansi.ts";
+import { terminalFrameGlyphs } from "../../../cli/box.ts";
 import type { TerminalCapabilities } from "../../../cli/capabilities.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type {
@@ -83,23 +84,7 @@ function renderListingFrame(
   borderColor: TerminalColor,
   capabilities: TerminalCapabilities,
 ): string {
-  const glyphs = capabilities.unicode
-    ? {
-      topLeft: "┌",
-      topRight: "┐",
-      bottomLeft: "└",
-      bottomRight: "┘",
-      horizontal: "─",
-      vertical: "│",
-    }
-    : {
-      topLeft: "+",
-      topRight: "+",
-      bottomLeft: "+",
-      bottomRight: "+",
-      horizontal: "-",
-      vertical: "|",
-    };
+  const glyphs = terminalFrameGlyphs("light", capabilities.unicode);
   const framedTitle = title === "" ? "" : ` ${
     truncateText(
       title,
