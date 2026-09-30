@@ -426,7 +426,7 @@ export const glyphDefinitions = [
     "browserGuidance": "Keep the visible or accessible status wording authoritative.",
     "terminalGuidance": "Safe in one-cell geometry when a status word remains visible.",
     "ascii": {
-      "text": "+",
+      "text": "v",
       "columns": 1,
       "fidelity": "semantic"
     }

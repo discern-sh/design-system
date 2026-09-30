@@ -5,6 +5,7 @@ import { denseWorklogEntries } from "../operational-examples.ts";
  * @module
  */
 
+import { terminalGlyph } from "../../../cli/terminal-glyphs.ts";
 import {
   type CliExample,
   type CliPresentationOptions,
@@ -96,9 +97,9 @@ function staticMarker(
   status: Exclude<WorklogStatus, "active">,
   unicode: boolean,
 ): string {
-  if (status === "done") return unicode ? "✓" : "+";
+  if (status === "done") return terminalGlyph("done", { unicode });
   if (status === "queued") return unicode ? "·" : ".";
-  if (status === "failed") return unicode ? "✕" : "x";
+  if (status === "failed") return terminalGlyph("failed", { unicode });
   return unicode ? "–" : "-";
 }
 

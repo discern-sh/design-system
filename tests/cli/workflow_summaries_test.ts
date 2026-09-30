@@ -69,7 +69,7 @@ Deno.test("Result summary renders exact widths, capability levels, and every sta
   assertCapabilityLevels(
     (capabilities) => renderResultSummaryCli(props, capabilities),
     standard,
-    '+ Passed: The full gate passed\nNext: Accept the branch\nTests: 310   Files: 98   Duration: 2m 18s\nData: {"ok":true}',
+    'v Passed: The full gate passed\nNext: Accept the branch\nTests: 310   Files: 98   Duration: 2m 18s\nData: {"ok":true}',
   );
 
   const unicodeStates = {
@@ -81,7 +81,7 @@ Deno.test("Result summary renders exact widths, capability levels, and every sta
     unchanged: "= Unchanged: One fact",
   } as const satisfies Readonly<Record<ResultSummaryState, string>>;
   const asciiStates = {
-    passed: "+ Passed: One fact",
+    passed: "v Passed: One fact",
     failed: "x Failed: One fact",
     blocked: "! Blocked: One fact",
     changed: "* Changed: One fact",

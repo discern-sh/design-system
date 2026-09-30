@@ -4,6 +4,7 @@
  * @module
  */
 
+import { terminalGlyph } from "../../../cli/terminal-glyphs.ts";
 import { styleText } from "../../../cli/ansi.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
 import {
@@ -123,9 +124,9 @@ const renderProcessStepsCli: CliRenderer<ProcessStepsCliProps> = (
   ).join("\n");
   const theme = resolveTerminalTheme(props);
   const lifecycle = props.lifecycle.status === "validation-error"
-    ? `! ${props.lifecycle.message}`
+    ? `${terminalGlyph("attention", capabilities)} ${props.lifecycle.message}`
     : props.lifecycle.status === "submitted"
-    ? capabilities.unicode ? "✓ Complete" : "OK Complete"
+    ? `${terminalGlyph("done", capabilities)} Complete`
     : props.lifecycle.status === "cancelled"
     ? `${capabilities.unicode ? "×" : "x"} ${props.lifecycle.reason}`
     : props.hint ?? "";

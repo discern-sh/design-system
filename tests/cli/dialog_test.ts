@@ -55,7 +55,7 @@ Deno.test("Dialog preserves hierarchy across capability levels", () => {
       status: "submitted",
       width: 28,
     }, capabilities),
-    "+ Published ---------------+\n| The release is live.     |\n|                          |\n| OK Submitted             |\n+--------------------------+",
+    "+ Published ---------------+\n| The release is live.     |\n|                          |\n| v Submitted              |\n+--------------------------+",
     capabilities,
   );
 });

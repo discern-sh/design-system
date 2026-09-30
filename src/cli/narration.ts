@@ -11,6 +11,7 @@
  * @module
  */
 
+import { TERMINAL_GLYPHS } from "./terminal-glyphs.ts";
 import {
   renderStyledSpans,
   type StyledSpan,
@@ -69,8 +70,8 @@ const NARRATION_LINE_SPECS: Readonly<
   Record<NarrationLineKind, NarrationLineSpec>
 > = {
   success: {
-    unicodeMarker: "✓",
-    asciiMarker: "+",
+    unicodeMarker: TERMINAL_GLYPHS.done.unicode,
+    asciiMarker: TERMINAL_GLYPHS.done.ascii,
     tone: "success",
     heading: false,
   },
@@ -81,14 +82,14 @@ const NARRATION_LINE_SPECS: Readonly<
     heading: false,
   },
   warning: {
-    unicodeMarker: "!",
-    asciiMarker: "!",
+    unicodeMarker: TERMINAL_GLYPHS.attention.unicode,
+    asciiMarker: TERMINAL_GLYPHS.attention.ascii,
     tone: "warning",
     heading: false,
   },
   failure: {
-    unicodeMarker: "✕",
-    asciiMarker: "x",
+    unicodeMarker: TERMINAL_GLYPHS.failed.unicode,
+    asciiMarker: TERMINAL_GLYPHS.failed.ascii,
     tone: "danger",
     heading: false,
   },

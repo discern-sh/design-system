@@ -52,7 +52,7 @@ Deno.test("narration verbs render exact plain frames with Unicode markers", () =
 Deno.test("narration verbs keep their meaning through ASCII markers", () => {
   const capabilities = testTerminalCapabilities({ unicode: false });
   const cases = [
-    [renderSuccessLine, "Saved the draft", "+ Saved the draft"],
+    [renderSuccessLine, "Saved the draft", "v Saved the draft"],
     [renderNoteLine, "Cache already warm", "> Cache already warm"],
     [renderWarningLine, "Two checks need review", "! Two checks need review"],
     [renderFailureLine, "The check refused", "x The check refused"],
@@ -130,7 +130,7 @@ Deno.test("narration selects exact Accent semantic codes across poles and depths
 Deno.test("Accent narration keeps exact witnesses and emits no styling without colour", () => {
   const appearance = { accent: 335 };
   const cases = [
-    [renderSuccessLine, "Saved", "✓ Saved", "+ Saved"],
+    [renderSuccessLine, "Saved", "✓ Saved", "v Saved"],
     [renderNoteLine, "Noted", "▸ Noted", "> Noted"],
     [renderWarningLine, "Review", "! Review", "! Review"],
     [renderFailureLine, "Refused", "✕ Refused", "x Refused"],

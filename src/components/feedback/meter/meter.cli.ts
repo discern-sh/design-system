@@ -4,6 +4,7 @@
  * @module
  */
 
+import { terminalGlyph } from "../../../cli/terminal-glyphs.ts";
 import { styleText } from "../../../cli/ansi.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
 import {
@@ -116,11 +117,15 @@ const renderMeterCli: CliRenderer<MeterCliProps> = (props, capabilities) => {
     ),
   }, capabilities);
   const lifecycle = state.lifecycle.status === "validation-error"
-    ? styleText(`! ${state.lifecycle.message}`, {
-      color: terminalToneColor(theme, "danger"),
-    }, capabilities)
+    ? styleText(
+      `${terminalGlyph("attention", capabilities)} ${state.lifecycle.message}`,
+      {
+        color: terminalToneColor(theme, "danger"),
+      },
+      capabilities,
+    )
     : state.lifecycle.status === "submitted"
-    ? styleText(capabilities.unicode ? "✓ Complete" : "OK Complete", {
+    ? styleText(`${terminalGlyph("done", capabilities)} Complete`, {
       color: terminalToneColor(theme, "success"),
       bold: true,
     }, capabilities)

@@ -297,7 +297,7 @@ Deno.test("Verification report renders exact narrow, standard, wide, and capabil
     52,
     (capabilities) => renderVerificationReportCli(props, capabilities),
     standard,
-    "+ [+] Gate proof ----------------------------------+\n| All required checks passed                       |\n|                                                  |\n| Branch: agent/cli-2b                             |\n| Commit: abc1234                                  |\n|                                                  |\n| Typecheck ............................... + pass |\n| Tests ............................... 310 + pass |\n| Publish ................................. - skip |\n+--------------------------------------------------+",
+    "+ [v] Gate proof ----------------------------------+\n| All required checks passed                       |\n|                                                  |\n| Branch: agent/cli-2b                             |\n| Commit: abc1234                                  |\n|                                                  |\n| Typecheck ............................... v pass |\n| Tests ............................... 310 v pass |\n| Publish ................................. - skip |\n+--------------------------------------------------+",
   );
 });
 
@@ -401,7 +401,7 @@ Deno.test("Worklog renders exact widths, capability levels, and every status", (
     52,
     (capabilities) => renderWorklogCli(props, capabilities),
     standard,
-    "+ Generate registry [done]\nMeta: 120ms\n--^----- Run exact-frame tests [active]\n  Testing every capability level\n. Accept branch [queued]\nx Publish [failed]\n- Notify [skipped]",
+    "v Generate registry [done]\nMeta: 120ms\n--^----- Run exact-frame tests [active]\n  Testing every capability level\n. Accept branch [queued]\nx Publish [failed]\n- Notify [skipped]",
   );
 });
 

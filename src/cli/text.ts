@@ -6,13 +6,14 @@
 
 import { stripAnsi, type TerminalTextStyle } from "./ansi.ts";
 import type { TerminalCapabilities } from "./capabilities.ts";
+import { terminalGlyph } from "./terminal-glyphs.ts";
 import { eastAsianWidthKind } from "../unicode/east-asian-width.ts";
 import {
   emitStyledLine,
   parseStyledSource,
   sliceStyledSegments,
-  type StyledSegment,
   styleCodes,
+  type StyledSegment,
   underlayStyledSegments,
 } from "./styled-sequences.ts";
 
@@ -385,7 +386,7 @@ export function fillStyledLine(
   const fitted = truncateStyledText(
     content,
     columns,
-    capabilities.unicode ? "…" : "...",
+    terminalGlyph("ellipsis", capabilities),
   );
   const missing = columns - measureText(fitted);
   const base = styleCodes(style, capabilities);

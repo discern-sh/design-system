@@ -4,6 +4,7 @@
  * @module
  */
 
+import { TERMINAL_GLYPHS } from "../../../cli/terminal-glyphs.ts";
 import type {
   CliExample,
   CliPresentationOptions,
@@ -33,9 +34,9 @@ interface ResultSummaryMarker {
 }
 
 const stateMarkers = {
-  passed: { unicode: "✓", ascii: "+" },
-  failed: { unicode: "✕", ascii: "x" },
-  blocked: { unicode: "!", ascii: "!" },
+  passed: TERMINAL_GLYPHS.done,
+  failed: TERMINAL_GLYPHS.failed,
+  blocked: TERMINAL_GLYPHS.attention,
   changed: { unicode: "◇", ascii: "*" },
   declared: { unicode: "·", ascii: "." },
   unchanged: { unicode: "=", ascii: "=" },

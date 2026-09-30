@@ -285,7 +285,7 @@ Deno.test("narration catalogue presents every verb and the composed rhythm", asy
     "narration",
     testTerminalCapabilities({ columns: 80, unicode: false }),
   );
-  assertStringIncludes(ascii, "+ Checks passed");
+  assertStringIncludes(ascii, "v Checks passed");
   assertStringIncludes(ascii, "^ RELEASE CHECKS");
 });
 

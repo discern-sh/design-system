@@ -82,7 +82,7 @@ Deno.test("progress label changes paint exact ASCII frames", async () => {
     "fmt\n[  0%] >------------",
     "lint\n[ 25%] ===>---------",
     "tests\n[ 75%] =========>---",
-    "tests\n[100%] ============^\nOK Complete",
+    "tests\n[100%] ============^\nv Complete",
   ]);
 });
 

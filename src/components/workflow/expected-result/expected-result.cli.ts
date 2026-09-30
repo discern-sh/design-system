@@ -4,6 +4,7 @@
  * @module
  */
 
+import { terminalGlyph } from "../../../cli/terminal-glyphs.ts";
 import type {
   CliExample,
   CliPresentationOptions,
@@ -61,7 +62,7 @@ const renderExpectedResultCli: CliRenderer<ExpectedResultCliProps> = (
   const width = workflowCliWidth(props.maxWidth, capabilities);
   const marker = props.variant === "state"
     ? (capabilities.unicode ? "→" : ">")
-    : (capabilities.unicode ? "✓" : "+");
+    : terminalGlyph("done", capabilities);
   const heading = workflowPrefixedLines(`${marker} `, label, width).join("\n");
   return [
     styleWorkflowHeading(

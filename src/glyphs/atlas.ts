@@ -2570,10 +2570,10 @@ export const discernGlyphAliases: readonly DiscernGlyphAlias[] = Object.freeze([
         "Keep the visible or accessible status wording authoritative.",
       ),
       terminal: terminal(
-        "+",
+        "v",
         "semantic",
         "Safe in one-cell geometry when a status word remains visible.",
-        "A plus preserves affirmative status only when the adjacent wording carries completion.",
+        "A lowercase v reads as a tick and stays apart from the plus that marks a folded row or an addition; the adjacent wording still carries completion.",
       ),
     },
   }),

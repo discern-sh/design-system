@@ -4,6 +4,7 @@
  * @module
  */
 
+import { terminalGlyph } from "../../../cli/terminal-glyphs.ts";
 import type {
   CliExample,
   CliPresentationOptions,
@@ -67,7 +68,10 @@ const renderRetryNoticeCli: CliRenderer<RetryNoticeCliProps> = (
   if (props.label !== undefined) {
     assertWorkflowCliText(props.label, "retry label");
   }
-  const marker = props.safeToRetry ? (capabilities.unicode ? "✓" : "+") : "!";
+  const marker = terminalGlyph(
+    props.safeToRetry ? "done" : "attention",
+    capabilities,
+  );
   return [
     styleWorkflowHeading(
       workflowPrefixedLines(`${marker} `, `${state}${label}`, width).join("\n"),

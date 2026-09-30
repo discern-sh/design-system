@@ -4,6 +4,7 @@
  * @module
  */
 
+import { terminalGlyph } from "../../../cli/terminal-glyphs.ts";
 import type {
   CliExample,
   CliPresentationOptions,
@@ -79,13 +80,13 @@ const renderAgentAvatarCli: CliRenderer<AgentAvatarCliProps> = (
     );
   }
   const marker = props.status === "working"
-    ? (capabilities.unicode ? "●" : "*")
+    ? terminalGlyph("active", capabilities)
     : props.status === "waiting"
     ? (capabilities.unicode ? "◌" : "o")
     : props.status === "blocked"
-    ? "!"
+    ? terminalGlyph("attention", capabilities)
     : props.status === "done"
-    ? (capabilities.unicode ? "✓" : "+")
+    ? terminalGlyph("done", capabilities)
     : (capabilities.unicode ? "·" : ".");
   const frame = truncateText(
     `${chip} ${marker} ${props.statusLabel ?? props.status}`,

@@ -4,6 +4,7 @@
  * @module
  */
 
+import { terminalGlyph } from "../../cli/terminal-glyphs.ts";
 import { stripAnsi, styleText } from "../../cli/ansi.ts";
 import { renderBox } from "../../cli/box.ts";
 import type { TerminalCapabilities } from "../../cli/capabilities.ts";
@@ -98,10 +99,12 @@ function footer(
   capabilities: TerminalCapabilities,
 ): string {
   if (options.lifecycle.status === "validation-error") {
-    return `! ${options.lifecycle.message}`;
+    return `${
+      terminalGlyph("attention", capabilities)
+    } ${options.lifecycle.message}`;
   }
   if (options.lifecycle.status === "submitted") {
-    return capabilities.unicode ? "✓ Submitted" : "OK Submitted";
+    return `${terminalGlyph("done", capabilities)} Submitted`;
   }
   if (options.lifecycle.status === "cancelled") {
     return `${capabilities.unicode ? "×" : "x"} ${options.lifecycle.reason}`;

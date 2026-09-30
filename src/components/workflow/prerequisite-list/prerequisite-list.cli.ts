@@ -4,6 +4,7 @@
  * @module
  */
 
+import { terminalGlyph } from "../../../cli/terminal-glyphs.ts";
 import type {
   CliExample,
   CliPresentationOptions,
@@ -106,10 +107,10 @@ const renderPrerequisiteListCli: CliRenderer<PrerequisiteListCliProps> = (
       );
     }
     const marker = item.state === "satisfied"
-      ? (capabilities.unicode ? "✓" : "+")
+      ? terminalGlyph("done", capabilities)
       : item.state === "required"
       ? (capabilities.unicode ? "•" : "*")
-      : "!";
+      : terminalGlyph("attention", capabilities);
     const itemLines = workflowPrefixedLines(
       `${marker} `,
       `${item.requirement} [${stateLabels[item.state]}]`,

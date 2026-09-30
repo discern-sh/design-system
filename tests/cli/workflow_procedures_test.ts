@@ -109,7 +109,7 @@ Deno.test("Prerequisite list renders exact narrow, standard, wide, and capabilit
   assertCapabilityLevels(
     (capabilities) => renderPrerequisiteListCli(props, capabilities),
     standard,
-    "Before you start\n+ Deno 2 [Satisfied]\n* Clean worktree [Required]\n! Landing grant [Unresolved]\n  Wait for owner authority",
+    "Before you start\nv Deno 2 [Satisfied]\n* Clean worktree [Required]\n! Landing grant [Unresolved]\n  Wait for owner authority",
   );
 });
 
@@ -158,7 +158,7 @@ Deno.test("Procedure renders exact narrow, standard, wide, and every semantic st
   assertCapabilityLevels(
     (capabilities) => renderProcedureCli(props, capabilities),
     standard,
-    `Ship the wave\n  Complete every owned CLI renderer\n\nBefore you start\n+ Wave 1 [Satisfied]\n\n${
+    `Ship the wave\n  Complete every owned CLI renderer\n\nBefore you start\nv Wave 1 [Satisfied]\n\n${
       procedureRule(52, false)
     }\n ^  Implemented\n |\n[v] Run gate\n |\n v  Land\n |\n !  Rejected\n |\n x  Stopped\n\nDone when: The branch is on main`,
   );
@@ -196,7 +196,7 @@ Deno.test("Procedure step renders exact widths, capability levels, statuses, and
   assertCapabilityLevels(
     (capabilities) => renderProcedureStepCli(props, capabilities),
     standard,
-    "[v] Run the gate\n  Verify the committed tree\n  Run: discern done\n  + You should see\n    The full gate passes\nComplete when: A proof is recorded",
+    "[v] Run the gate\n  Verify the committed tree\n  Run: discern done\n  v You should see\n    The full gate passes\nComplete when: A proof is recorded",
   );
 
   const capabilities = testTerminalCapabilities({ columns: 52 });

@@ -69,7 +69,7 @@ Deno.test("Command renders exact narrow, standard, wide, and capability frames",
   assertCapabilityLevels(
     (capabilities) => renderCommandCli(props, capabilities),
     expected,
-    expected.replace("✓", "+"),
+    expected.replace("✓", "v"),
   );
 });
 
@@ -141,7 +141,7 @@ Deno.test("Command group renders exact narrow, standard, wide, and capability fr
   assertCapabilityLevels(
     (capabilities) => renderCommandGroupCli(props, capabilities),
     standard,
-    standard.replace("✓", "+"),
+    standard.replace("✓", "v"),
   );
 });
 

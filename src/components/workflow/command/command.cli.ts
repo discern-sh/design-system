@@ -4,6 +4,7 @@
  * @module
  */
 
+import { terminalGlyph } from "../../../cli/terminal-glyphs.ts";
 import type {
   CliExample,
   CliPresentationOptions,
@@ -114,7 +115,7 @@ const renderCommandCli: CliRenderer<CommandCliProps> = (
     assertWorkflowCliText(label, "command expected-result label");
     const marker = props.expectedResultVariant === "state"
       ? (capabilities.unicode ? "→" : ">")
-      : (capabilities.unicode ? "✓" : "+");
+      : terminalGlyph("done", capabilities);
     lines.push(
       ...workflowFactLines(`${marker} ${label}`, props.expectedResult, width),
     );

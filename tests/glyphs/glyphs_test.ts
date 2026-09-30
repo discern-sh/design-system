@@ -67,7 +67,7 @@ Deno.test("glyph resolution keeps contextual meaning, width, and unavailability 
   });
   assertEquals(resolveGlyph("status-complete", "ascii"), {
     available: true,
-    text: "+",
+    text: "v",
     columns: 1,
     fidelity: "semantic",
     repertoire: "ascii",

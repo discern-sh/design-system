@@ -382,8 +382,8 @@ Deno.test("ASCII terminals keep the same journey in the fallback repertoire", as
   );
   assertEquals(io.writes.slice(1), [
     "^ Working: Weave styles\n`-|\n  |\n",
-    `${replacePrefix(4)}< Working: Weave styles\n+ Held\n\`-| alpha\n  |\n`,
-    `${replacePrefix(5)}^ Complete: Weave styles\n+ Held\n`,
+    `${replacePrefix(4)}< Working: Weave styles\nv Held\n\`-| alpha\n  |\n`,
+    `${replacePrefix(5)}^ Complete: Weave styles\nv Held\n`,
     "\n",
     SHOW_TERMINAL_CURSOR,
   ]);

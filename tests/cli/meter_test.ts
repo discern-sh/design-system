@@ -63,7 +63,7 @@ Deno.test("Meter uses exact ASCII progress and every colour capability", () => {
   });
   assertExactFrame(
     renderMeterCli({ ...meter(100, "submitted"), width: 20 }, completeAscii),
-    "Upload\n[100%] ============^\nOK Complete",
+    "Upload\n[100%] ============^\nv Complete",
     completeAscii,
   );
   const wide = testTerminalCapabilities({ columns: 40 });

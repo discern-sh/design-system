@@ -4,6 +4,7 @@
  * @module
  */
 
+import { terminalGlyph } from "../../../cli/terminal-glyphs.ts";
 import { styleText } from "../../../cli/ansi.ts";
 import { renderBox } from "../../../cli/box.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
@@ -66,7 +67,7 @@ const renderDialogCli: CliRenderer<DialogCliProps> = (props, capabilities) => {
   }
   const theme = resolveTerminalTheme(props);
   const marker = props.status === "submitted"
-    ? capabilities.unicode ? "✓ Submitted" : "OK Submitted"
+    ? `${terminalGlyph("done", capabilities)} Submitted`
     : props.status === "cancelled"
     ? capabilities.unicode ? "× Cancelled" : "x Cancelled"
     : undefined;

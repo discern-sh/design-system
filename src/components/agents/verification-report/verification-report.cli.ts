@@ -5,6 +5,7 @@ import { denseVerificationReport } from "../operational-examples.ts";
  * @module
  */
 
+import { terminalGlyph } from "../../../cli/terminal-glyphs.ts";
 import { renderBox } from "../../../cli/box.ts";
 import type {
   CliExample,
@@ -102,8 +103,8 @@ function checkGlyph(
   state: VerificationReportCheckState,
   unicode: boolean,
 ): string {
-  if (state === "pass") return unicode ? "✓" : "+";
-  if (state === "fail") return unicode ? "✕" : "x";
+  if (state === "pass") return terminalGlyph("done", { unicode });
+  if (state === "fail") return terminalGlyph("failed", { unicode });
   return unicode ? "–" : "-";
 }
 
