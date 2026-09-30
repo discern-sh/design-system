@@ -44,6 +44,15 @@ Deno.test("terminal foundation inventory enrols every sheet and specimen", () =>
       theme: "dark",
     });
     assertEquals(specimens.length > 0, true, `${sheet.id} has no specimens`);
+    const groups = specimens.map(({ group }) => group ?? "");
+    const contiguous = groups.filter((group, index) =>
+      index === 0 || group !== groups[index - 1]
+    );
+    assertEquals(
+      new Set(contiguous).size,
+      contiguous.length,
+      `${sheet.id} splits a browser group; the gallery renders groups in registry order`,
+    );
     for (const specimen of specimens) {
       assertMatch(specimen.id, /^[a-z0-9]+(?:-[a-z0-9]+)*$/);
       const identity = `${sheet.id}:${specimen.id}`;

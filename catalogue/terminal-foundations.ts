@@ -577,6 +577,12 @@ function surfaceSpecimens(
       output: ladder,
     },
     {
+      id: "raised-panel",
+      title: "Raised panel",
+      group: "Surfaces",
+      output: panel,
+    },
+    {
       id: "selection",
       title: "Selection",
       group: "Selection and focus",
@@ -593,12 +599,6 @@ function surfaceSpecimens(
       title: "Buttons",
       group: "Selection and focus",
       output: buttons,
-    },
-    {
-      id: "raised-panel",
-      title: "Raised panel",
-      group: "Surfaces",
-      output: panel,
     },
     {
       id: "key-hints",
