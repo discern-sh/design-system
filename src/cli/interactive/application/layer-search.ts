@@ -178,12 +178,30 @@ export interface PaletteRows<A> {
   readonly items: readonly PaletteItem<A>[];
 }
 
+/** Rankings by palette value, then query; one keystroke reads them several times. */
+const rankings = new WeakMap<object, Map<string, PaletteRows<unknown>>>();
+
 /**
  * A blank query shows every section in order. A typed query ranks matching
  * items across sections by label, then context, then keywords, best first,
  * keeping declaration order between equal scores.
  */
 export function paletteRows<A>(
+  palette: ApplicationPalette<A>,
+  query: string,
+): PaletteRows<A> {
+  const known = rankings.get(palette);
+  const found = known?.get(query);
+  if (found !== undefined) return found as PaletteRows<A>;
+  const result = rankPalette(palette, query);
+  const queries = known ?? new Map<string, PaletteRows<unknown>>();
+  if (queries.size >= 16) queries.clear();
+  queries.set(query, result as PaletteRows<unknown>);
+  rankings.set(palette, queries);
+  return result;
+}
+
+function rankPalette<A>(
   palette: ApplicationPalette<A>,
   query: string,
 ): PaletteRows<A> {

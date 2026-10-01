@@ -336,6 +336,108 @@ for (const rowDiff of [true, false]) {
   }
   painterTiming.push({ rowDiff, paints: frames.length, ...summary(times) });
 }
+/** A confirming sheet over the list: consequences, two disclosures, two buttons. */
+const sheet = {
+  kind: "sheet" as const,
+  id: "review",
+  scope: "item" as const,
+  title: "Apply the change to every item?",
+  state: "ready" as const,
+  body: [{
+    kind: "marks" as const,
+    items: Array.from({ length: 6 }, (_, i) => ({
+      mark: { unicode: "→", ascii: ">", tone: "muted" as const },
+      runs: [{ text: `Consequence ${i + 1} of the change, stated plainly` }],
+    })),
+  }],
+  disclosures: ["plan", "command"].map((id, i) => ({
+    id,
+    label: id === "plan" ? "Plan · 12 steps" : "Command",
+    key: i === 0 ? "d" : "c",
+    content: Array.from({ length: 12 }, (_, step) => ({
+      kind: "text" as const,
+      runs: [{ text: `Step ${step + 1} of the plan` }],
+    })),
+  })),
+  footnote: [{ text: "Nothing changes until you choose Apply." }],
+  buttons: [
+    { id: "keep", label: "Keep", role: "safe" as const },
+    { id: "apply", label: "Apply", role: "confirm" as const, action: 1 },
+  ],
+};
+/** A palette of `count` items across ten sections. */
+const palette = (count: number) => ({
+  kind: "palette" as const,
+  id: "palette",
+  scope: "global" as const,
+  placeholder: "Search",
+  sections: Array.from({ length: 10 }, (_, section) => ({
+    title: `Section ${section}`,
+    items: Array.from({ length: count / 10 }, (_, i) => ({
+      id: `${section}-${i}`,
+      label: `Command ${section * (count / 10) + i}`,
+      context: `Item ${i}`,
+      action: i,
+    })),
+  })),
+});
+const keyOf = (name: string) =>
+  name.length === 1
+    ? { kind: "key" as const, key: { kind: "text" as const, text: name } }
+    : {
+      kind: "key" as const,
+      key: { kind: "named" as const, name: name as "right" },
+    };
+const layers = [];
+for (const count of [20, 10_000]) {
+  for (
+    const [name, layer, keys] of [
+      ["sheet", sheet, ["right", "left", "d", "d", "tab", "shift-tab"]],
+      ["palette", palette(1000), [..."command 4", "backspace"]],
+    ] as const
+  ) {
+    const io = new FakeTerminalIO([], { colorDepth: "truecolor" });
+    const painter = new TerminalScreenPainter(io, () => 0);
+    let model: TerminalApplicationModel<number> =
+      createTerminalApplicationModel(
+        { ...collection(count), layers: [layer] },
+      ).model;
+    const render = () => {
+      const frame = renderTerminalApplication(
+        model,
+        io.size(),
+        io.capabilities(),
+      );
+      model = frame.model;
+      return painter.paint({
+        frame: frame.frame,
+        size: io.size(),
+        layer: frame.composition,
+      });
+    };
+    const opened = render();
+    const times: number[] = [];
+    const written: number[] = [];
+    for (let i = 0; i < 60; i++) {
+      const start = performance.now();
+      model = transitionTerminalApplication(
+        model,
+        keyOf(keys[i % keys.length] ?? "right"),
+        i,
+      ).model;
+      const painted = render();
+      times.push(performance.now() - start);
+      written.push(painted.status === "painted" ? painted.bytes : 0);
+    }
+    layers.push({
+      items: count,
+      layer: name,
+      openBytes: opened.status === "painted" ? opened.bytes : 0,
+      keyBytes: bytes(written),
+      ...summary(times),
+    });
+  }
+}
 console.log(
   JSON.stringify(
     {
@@ -349,6 +451,7 @@ console.log(
       navigation,
       painting,
       painterTiming,
+      layers,
     },
     null,
     2,

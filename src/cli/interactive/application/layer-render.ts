@@ -106,7 +106,11 @@ interface RowHit {
 
 /** One content row: styled text no wider than the panel's content width. */
 interface PanelRow {
-  readonly text: string;
+  /**
+   * The row's styled text, or a function that styles it, so a long body
+   * such as a palette's results styles only the rows that reach the screen.
+   */
+  readonly text: string | (() => string);
   readonly hits?: readonly RowHit[];
   /** Draw the selection bar in the cell before the content. */
   readonly bar?: boolean;
@@ -575,7 +579,9 @@ interface Fitted {
 }
 
 function visibleRows(rows: readonly PanelRow[]): number {
-  return rows.filter((row) => row.text.trim() !== "").length;
+  return rows.filter((row) =>
+    typeof row.text === "function" || row.text.trim() !== ""
+  ).length;
 }
 
 /**
@@ -710,7 +716,11 @@ function composePanel(
     const middle = fitLine(
       context,
       `${bar}${" ".repeat(pad - 1)}${
-        truncateStyledText(row.text, width, ellipsis(context))
+        truncateStyledText(
+          typeof row.text === "function" ? row.text() : row.text,
+          width,
+          ellipsis(context),
+        )
       }`,
       inner,
       RAISED,
@@ -1520,7 +1530,7 @@ function menuPanel<A>(
           ? describe("", [{ text: unavailable.sentence }])
           : describe(unavailable.label, undefined)
         : [];
-      const padded = [...lines.map((text) => ({ text }))];
+      const padded: PanelRow[] = lines.map((text) => ({ text }));
       while (padded.length < reserved) padded.push(BLANK);
       return padded;
     },
@@ -1574,50 +1584,53 @@ function palettePanel<A>(
     const control = itemControl(item.id);
     const highlighted = model.highlight === item.id;
     const surface: TerminalSurfaceRole = highlighted ? "selection" : RAISED;
-    const trailing = [
-      ...(metaWidth > 0
-        ? [
-          padText(
-            truncateStyledText(
-              styleRuns(context, item.meta, surface, "faint"),
+    const styled = (): string => {
+      const trailing = [
+        ...(metaWidth > 0
+          ? [
+            padText(
+              truncateStyledText(
+                styleRuns(context, item.meta, surface, "faint"),
+                metaWidth,
+                ellipsis(context),
+              ),
               metaWidth,
-              ellipsis(context),
+              "end",
             ),
-            metaWidth,
-            "end",
-          ),
-        ]
-        : []),
-      ...(keyWidth > 0
-        ? [
-          padText(
-            item.key === undefined
-              ? ""
-              : ink(context, keyText(context, item.key), {
-                tone: "ink",
-                bold: true,
-              }, surface),
-            keyWidth,
-            "end",
-          ),
-        ]
-        : []),
-    ].join("  ");
-    const room = Math.max(4, width - measureText(trailing) - 2);
-    const label = truncateStyledText(
-      `${
-        ink(context, item.label, { tone: "ink", bold: highlighted }, surface)
-      }${
-        item.context === undefined
-          ? ""
-          : `  ${ink(context, item.context, { tone: "muted" }, surface)}`
-      }`,
-      room,
-      ellipsis(context),
-    );
-    const text = spread(label, trailing, width);
+          ]
+          : []),
+        ...(keyWidth > 0
+          ? [
+            padText(
+              item.key === undefined
+                ? ""
+                : ink(context, keyText(context, item.key), {
+                  tone: "ink",
+                  bold: true,
+                }, surface),
+              keyWidth,
+              "end",
+            ),
+          ]
+          : []),
+      ].join("  ");
+      const room = Math.max(4, width - measureText(trailing) - 2);
+      const label = truncateStyledText(
+        `${
+          ink(context, item.label, { tone: "ink", bold: highlighted }, surface)
+        }${
+          item.context === undefined
+            ? ""
+            : `  ${ink(context, item.context, { tone: "muted" }, surface)}`
+        }`,
+        room,
+        ellipsis(context),
+      );
+      const text = spread(label, trailing, width);
+      return highlighted ? fitLine(context, text, width, "selection") : text;
+    };
     body.push({
-      text: highlighted ? fitLine(context, text, width, "selection") : text,
+      text: styled,
       hits: [{ start: 0, end: width, target: controlHit(palette.id, control) }],
       bar: highlighted,
       control,
