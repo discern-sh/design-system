@@ -53,6 +53,26 @@ export function controlFree(value: string): boolean {
   return !/[\p{Cc}\p{Cf}]/u.test(value);
 }
 
+/** Cells a tab becomes in a multi-line field. */
+const FIELD_TAB = "    ";
+
+/**
+ * Text a caller writes into a field, made safe to edit and paint: line
+ * breaks become newlines in a multi-line field and spaces in a one-line
+ * field, tabs become spaces, and every other control or format character
+ * is dropped, keeping only the joiners that emoji and joined scripts need.
+ */
+export function fieldText(value: string, multiline: boolean): string {
+  const lines = value.replace(/\r\n?/gu, "\n");
+  const broken = multiline ? lines : lines.replaceAll("\n", " ");
+  return broken
+    .replaceAll("\t", multiline ? FIELD_TAB : " ")
+    .replace(/[\p{Cc}\p{Cf}]/gu, (character) =>
+      character === "\n" || character === "\u200c" || character === "\u200d"
+        ? character
+        : "");
+}
+
 /** A control-free string, non-blank unless `empty` allows it. */
 export function text(
   issues: Issues,

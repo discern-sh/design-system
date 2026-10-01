@@ -18,6 +18,7 @@ import {
 import {
   adoptLayerModel,
   createLayerModel,
+  formField,
   layerFieldValues,
   layerKey,
   type LayerStepContext,
@@ -48,6 +49,7 @@ import {
   assertTerminalApplicationView,
   type TerminalApplicationViewContext,
 } from "./validate.ts";
+import { fieldText } from "./validate-rules.ts";
 import {
   DEFAULT_LIST_SETTLE_MS,
   type GroupedList,
@@ -1429,19 +1431,47 @@ function layerStep<A>(
   return applyLayerEffects(replaceLayer(model, next), context.effects, step);
 }
 
-/** The caller writes a field's value; the cursor moves to its end. */
+const graphemes = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+
+function graphemeCount(text: string): number {
+  return [...graphemes.segment(text)].length;
+}
+
+/**
+ * The caller writes a field's value; the cursor moves to its end. Text is
+ * normalised as {@linkcode fieldText} describes; a choice field accepts
+ * only an option that can be chosen, and anything else is a caller error.
+ * A layer or field the view no longer shows is ignored, since it may have
+ * closed while the caller worked.
+ */
 function writeField<A>(
   model: TerminalApplicationModel<A>,
   layerId: string,
   fieldId: string,
   value: string,
 ): TerminalApplicationModel<A> {
-  const layer = model.layers[layerId];
-  if (layer === undefined || !(fieldId in layer.values)) return model;
+  const stored = model.layers[layerId];
+  const layer = visibleLayers(model).find((open) => open.id === layerId);
+  if (
+    stored === undefined || layer === undefined || !(fieldId in stored.values)
+  ) return model;
+  const path = `fields.${layerId}.${fieldId}`;
+  if (typeof value !== "string") throw new TypeError(`${path} must be text`);
+  const field = layer.kind === "form" ? formField(layer, fieldId) : undefined;
+  let written: string;
+  if (field?.kind === "choice") {
+    const option = field.options.find((candidate) => candidate.id === value);
+    if (option === undefined || option.disabledReason !== undefined) {
+      throw new TypeError(`${path} must name an option that can be chosen`);
+    }
+    written = value;
+  } else {
+    written = fieldText(value, field?.kind === "text" && field.multiline === true);
+  }
   return replaceLayer(model, {
-    ...layer,
-    values: { ...layer.values, [fieldId]: value },
-    cursors: { ...layer.cursors, [fieldId]: [...value].length },
+    ...stored,
+    values: { ...stored.values, [fieldId]: written },
+    cursors: { ...stored.cursors, [fieldId]: graphemeCount(written) },
   });
 }
 

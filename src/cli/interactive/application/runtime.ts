@@ -95,7 +95,11 @@ export interface TerminalApplicationContext<A> {
   ): void;
   /**
    * Write a field's value in an open layer, such as text an external editor
-   * returned. Applies like `update`; the cursor moves to the end.
+   * returned. Applies like `update`; the cursor moves to the end. Line
+   * breaks become newlines in a multi-line field and spaces elsewhere, tabs
+   * become spaces, and other control and format characters are dropped; a
+   * choice field takes only an option that can be chosen, and any other
+   * value fails the session like an invalid view.
    */
   setField(layerId: string, fieldId: string, value: string): void;
   /** End the session with this error after restoring the terminal. */
