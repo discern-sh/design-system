@@ -937,7 +937,15 @@ function masterDetail<A>(
     contentWidth,
     !short,
   );
-  const inset = " ".repeat(left);
+  // Without fills nothing tints the detail, so a faint rule parts it from
+  // the list instead.
+  const inset = context.painted || left < 1 ? " ".repeat(left) : `${
+    ink(
+      context,
+      terminalFrameGlyphs("light", context.capabilities.unicode).vertical,
+      { tone: "faint" },
+    )
+  }${" ".repeat(left - 1)}`;
   return {
     lines: painted.lines.map((line, index) =>
       `${line}${

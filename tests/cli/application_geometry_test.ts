@@ -524,3 +524,22 @@ Deno.test("a truncated word never leaves a space before its ellipsis", () => {
     }
   }
 });
+
+Deno.test("without fills a rule parts the list from its detail", () => {
+  for (const columns of [80, 120]) {
+    for (const unicode of [true, false]) {
+      const driver = new ApplicationDriver(applicationDemoView(), {
+        columns,
+        rows: 24,
+        colorDepth: "none",
+        unicode,
+      });
+      const width = modelState(driver.model).lists.jobs?.density?.width ?? 0;
+      const rule = unicode ? "│" : "|";
+      const body = driver.text.split("\n").slice(2, -1);
+      for (const row of body) {
+        assertEquals([...row][width], rule, `${columns} ${unicode}: ${row}`);
+      }
+    }
+  }
+});
