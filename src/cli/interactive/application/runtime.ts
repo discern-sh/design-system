@@ -29,18 +29,16 @@ import {
 } from "../painter.ts";
 import { signalPassthrough } from "../signals.ts";
 import type { InteractionRuntime } from "../types.ts";
-import {
-  renderTerminalApplication,
-  type TerminalApplicationFrame,
-} from "./frame.ts";
+import { type RenderedFrame, renderModelState } from "./frame.ts";
 import { keyChordOf } from "./keymap.ts";
 import {
   assertDismissalsHonoured,
   bindingInForce,
-  createTerminalApplicationModel,
+  createModelState,
   interruptEffect,
+  modelStateDeadline,
+  snapshotModelState,
   type TerminalApplicationActionSource,
-  terminalApplicationDeadline,
   type TerminalApplicationDismissal,
   type TerminalApplicationDismissTarget,
   type TerminalApplicationEffect,
@@ -48,10 +46,9 @@ import {
   type TerminalApplicationLayout,
   type TerminalApplicationSelectionMove,
   type TerminalApplicationState,
-  terminalApplicationState,
-  transitionTerminalApplication,
-  updateTerminalApplication,
-  updateTerminalApplicationProvisionally,
+  transitionModelState,
+  updateModelState,
+  updateModelStateProvisionally,
 } from "./model.ts";
 import type {
   InlineRun,
@@ -253,7 +250,7 @@ export async function runTerminalApplication<A>(
   terminalFacts(io);
   const paintOptions = terminalPaintOptions(runtime.paint);
   const clock = runtime.clock ?? systemTerminalClock;
-  const created = createTerminalApplicationModel(options.view, {
+  const created = createModelState(options.view, {
     ...(options.keymap === undefined ? {} : { keymap: options.keymap }),
     ...(options.viKeys === undefined ? {} : { viKeys: options.viKeys }),
   }, clock.now());
@@ -291,14 +288,14 @@ export async function runTerminalApplication<A>(
   };
   const context: TerminalApplicationContext<A> = {
     get state() {
-      return terminalApplicationState(model);
+      return snapshotModelState(model);
     },
     update(view) {
       if (ended) return;
       if (dispatching) {
         // Later callbacks of this input may report further dismissals, so
         // the view is judged against them once the queue drains.
-        const step = updateTerminalApplicationProvisionally(
+        const step = updateModelStateProvisionally(
           model,
           view,
           clock.now(),
@@ -320,7 +317,7 @@ export async function runTerminalApplication<A>(
         ...(selection.reveal === true ? { reveal: true } : {}),
       };
       if (dispatching) {
-        const step = transitionTerminalApplication(model, input, clock.now());
+        const step = transitionModelState(model, input, clock.now());
         model = step.model;
         queue.push(...step.effects);
         return;
@@ -337,7 +334,7 @@ export async function runTerminalApplication<A>(
         value,
       };
       if (dispatching) {
-        const step = transitionTerminalApplication(model, input, clock.now());
+        const step = transitionModelState(model, input, clock.now());
         model = step.model;
         queue.push(...step.effects);
         return;
@@ -410,7 +407,7 @@ export async function runTerminalApplication<A>(
   const apply = (
     input: TerminalApplicationInput,
   ): TerminalApplicationCommand | void => {
-    const step = transitionTerminalApplication(model, input, clock.now());
+    const step = transitionModelState(model, input, clock.now());
     model = step.model;
     queue.push(...step.effects);
     return dispatch();
@@ -443,12 +440,12 @@ export async function runTerminalApplication<A>(
     if (pendingView !== undefined) {
       const view = pendingView;
       pendingView = undefined;
-      const step = updateTerminalApplication(model, view, clock.now());
+      const step = updateModelState(model, view, clock.now());
       model = step.model;
       queue.push(...step.effects);
     }
     for (const input of pendingInputs.splice(0)) {
-      const step = transitionTerminalApplication(model, input, clock.now());
+      const step = transitionModelState(model, input, clock.now());
       model = step.model;
       queue.push(...step.effects);
     }
@@ -457,7 +454,7 @@ export async function runTerminalApplication<A>(
   };
   const schedule = (): void => {
     const now = clock.now();
-    const deadline = terminalApplicationDeadline(model, now);
+    const deadline = modelStateDeadline(model, now);
     if (deadline === timer?.at) return;
     stopTimer();
     if (deadline === undefined || ended) return;
@@ -489,14 +486,14 @@ export async function runTerminalApplication<A>(
           );
           painter = screen;
           let paintedSize: TerminalSize | undefined;
-          let rendered: TerminalApplicationFrame<A> | undefined;
+          let rendered: RenderedFrame<A> | undefined;
           const paint = (): void => {
             if (signalRestored) throw new InteractionCancelled("Cancelled.");
             if (fault !== undefined) throw fault.error;
             for (let attempt = 0; attempt < 8; attempt += 1) {
               const facts = terminalFacts(io);
               const startedAt = performance.now();
-              const frame = renderTerminalApplication(
+              const frame = renderModelState(
                 model,
                 facts.size,
                 facts.capabilities,
@@ -692,5 +689,5 @@ export async function runTerminalApplication<A>(
     }
   }
   if (failure !== undefined) throw failure.error;
-  return terminalApplicationState(model);
+  return snapshotModelState(model);
 }

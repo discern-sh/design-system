@@ -14,6 +14,7 @@ import {
   renderListViewport,
 } from "../../src/cli/interactive/application/list-render.ts";
 import { flattenList } from "../../src/cli/interactive/application/list-model.ts";
+import { modelState } from "../../src/cli/interactive/application/model.ts";
 import { renderDetailBlocks } from "../../src/cli/interactive/application/detail-render.ts";
 import { paintContext } from "../../src/cli/interactive/application/paint.ts";
 import type { DetailBlock } from "../../src/cli/interactive/mod.ts";
@@ -87,7 +88,8 @@ Deno.test("application frames fill every pinned geometry and posture exactly", (
       const text = stripAnsi(frame.frame);
       assertStringIncludes(text, "Quarterly", where);
       const flag = posture.unicode ? "⇄" : "&";
-      const width = frame.model.lists.jobs?.density?.width ?? geometry.columns;
+      const width = modelState(frame.model).lists.jobs?.density?.width ??
+        geometry.columns;
       const list = listRows(text, width);
       assertEquals(
         list.some((line) => line.includes(flag)),
@@ -115,7 +117,8 @@ Deno.test("every visible row's label and age end on one column per frame", () =>
       io.size(),
       io.capabilities(),
     );
-    const width = frame.model.lists.jobs?.density?.width ?? geometry.columns;
+    const width = modelState(frame.model).lists.jobs?.density?.width ??
+      geometry.columns;
     const ends = new Set(
       listRows(stripAnsi(frame.frame), width).map((row) =>
         row.trimEnd().length
@@ -138,7 +141,7 @@ Deno.test("a master-detail list is sized to its content and never squeezes the d
       io.capabilities(),
     );
     assertEquals(
-      frame.model.lists.jobs?.density?.width,
+      modelState(frame.model).lists.jobs?.density?.width,
       expected,
       `${columns}`,
     );

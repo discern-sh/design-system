@@ -67,12 +67,15 @@ import {
 } from "./list-render.ts";
 import {
   bodyList,
+  type ListModel,
   listModelRows,
+  type ModelState,
+  modelState,
   replaceLayer,
+  sealModelState,
+  snapshotModelState,
   type TerminalApplicationLayout,
-  type TerminalApplicationListModel,
   type TerminalApplicationModel,
-  terminalApplicationState,
   visibleLayers,
   visibleMessage,
 } from "./model.ts";
@@ -108,6 +111,7 @@ const SPACIOUS_ROWS = 20;
 /** One exact frame and the model fitted to it. */
 export interface TerminalApplicationFrame<A> {
   readonly frame: string;
+  /** The model with its density, width, and scroll fitted to this frame. */
   readonly model: TerminalApplicationModel<A>;
   /** How the body is laid out, beneath any layers. */
   readonly layout: TerminalApplicationLayout;
@@ -127,6 +131,11 @@ export interface TerminalApplicationFrame<A> {
   /** The navigation identities a state report announces. */
   readonly report: TerminalApplicationStateReport;
 }
+
+/** A frame whose model is still unsealed state. Package-internal. */
+export type RenderedFrame<A> =
+  & Omit<TerminalApplicationFrame<A>, "model">
+  & { readonly model: ModelState<A> };
 
 interface Region {
   readonly top: number;
@@ -157,7 +166,7 @@ const readingCache = new WeakMap<
 /** The header line, with a hit for every chip that carries an action. */
 function header<A>(
   context: FrameContext,
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   bar: HeaderBar<A>,
   columns: number,
 ): { readonly line: string; readonly hits: readonly ApplicationHit[] } {
@@ -272,7 +281,7 @@ function header<A>(
 }
 
 function footerHints<A>(
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
 ): KeyHints<A> {
   const view = model.view;
   const listView = bodyList(view);
@@ -354,7 +363,7 @@ function footer<A>(
 
 function messageLine<A>(
   context: FrameContext,
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   columns: number,
 ): string | undefined {
   const message = visibleMessage(model);
@@ -412,11 +421,11 @@ function contentListWidth<A>(
  * stands until either changes, so pressing keys never refolds the list.
  */
 function fitDensity<A>(
-  list: TerminalApplicationListModel<A>,
+  list: ListModel<A>,
   available: number,
   geometry: string,
   width: (display: GroupedList<A>) => number | undefined,
-): TerminalApplicationListModel<A> {
+): ListModel<A> {
   const key = `${geometry}|${listLayoutKey(list.display)}`;
   if (list.density?.key === key) return list;
   const base = {
@@ -446,7 +455,7 @@ interface ListPaint<A> {
   readonly lines: readonly string[];
   /** The selectable row each line shows. */
   readonly keys: readonly (ListRowKey | undefined)[];
-  readonly list: TerminalApplicationListModel<A>;
+  readonly list: ListModel<A>;
 }
 
 /** Hits for a list's lines: the viewport for the wheel, each row for clicks. */
@@ -489,9 +498,9 @@ function areaHits(
 
 function paintList<A>(
   context: FrameContext,
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   view: GroupedList<A>,
-  list: TerminalApplicationListModel<A>,
+  list: ListModel<A>,
   width: number,
   height: number,
   roomy: boolean,
@@ -651,7 +660,7 @@ function groupStripTitle<A>(
 
 interface BodyResult<A> {
   readonly lines: readonly string[];
-  readonly model: TerminalApplicationModel<A>;
+  readonly model: ModelState<A>;
   readonly layout: TerminalApplicationLayout;
   readonly listRows: number;
   readonly detailRows: number;
@@ -661,18 +670,18 @@ interface BodyResult<A> {
 }
 
 function withList<A>(
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   id: string,
-  list: TerminalApplicationListModel<A>,
-): TerminalApplicationModel<A> {
+  list: ListModel<A>,
+): ModelState<A> {
   return { ...model, lists: { ...model.lists, [id]: list } };
 }
 
 function scrolled<A>(
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   itemId: string | undefined,
   scroll: number,
-): TerminalApplicationModel<A> {
+): ModelState<A> {
   if (itemId === undefined || (model.detailScroll[itemId] ?? 0) === scroll) {
     return model;
   }
@@ -684,7 +693,7 @@ function scrolled<A>(
 
 function masterDetail<A>(
   context: FrameContext,
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   body: MasterDetailBody<A>,
   size: TerminalSize,
   region: Region,
@@ -878,7 +887,7 @@ function masterDetail<A>(
 
 function listOnly<A>(
   context: FrameContext,
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   view: GroupedList<A>,
   size: TerminalSize,
   region: Region,
@@ -913,9 +922,9 @@ function listOnly<A>(
 
 function reading<A>(
   context: FrameContext,
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   body: Extract<
-    TerminalApplicationModel<A>["view"]["body"],
+    ModelState<A>["view"]["body"],
     { kind: "reading" }
   >,
   size: TerminalSize,
@@ -972,8 +981,8 @@ function reading<A>(
 
 function empty<A>(
   context: FrameContext,
-  model: TerminalApplicationModel<A>,
-  body: Extract<TerminalApplicationModel<A>["view"]["body"], { kind: "empty" }>,
+  model: ModelState<A>,
+  body: Extract<ModelState<A>["view"]["body"], { kind: "empty" }>,
   size: TerminalSize,
   region: Region,
 ): BodyResult<A> {
@@ -1087,9 +1096,9 @@ function empty<A>(
 
 function tooSmall<A>(
   context: FrameContext,
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   size: TerminalSize,
-): TerminalApplicationFrame<A> {
+): RenderedFrame<A> {
   const times = terminalGlyph("times", context.capabilities);
   const inset = size.columns >= 24 ? "  " : "";
   const needs =
@@ -1125,9 +1134,9 @@ function tooSmall<A>(
  * the body's list and selected item, and whether its detail is zoomed.
  */
 export function terminalApplicationStateReport<A>(
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
 ): TerminalApplicationStateReport {
-  const state = terminalApplicationState(model);
+  const state = snapshotModelState(model);
   const list = bodyList(model.view);
   const listState = list === undefined ? undefined : state.lists[list.id];
   return {
@@ -1154,6 +1163,24 @@ export function renderTerminalApplication<A>(
   presentation: CliPresentationOptions = {},
   motion: TerminalApplicationMotion = { phase: 0 },
 ): TerminalApplicationFrame<A> {
+  const frame = renderModelState(
+    modelState(model),
+    size,
+    capabilities,
+    presentation,
+    motion,
+  );
+  return { ...frame, model: sealModelState(frame.model) };
+}
+
+/** Render one frame from model state. Package-internal. */
+export function renderModelState<A>(
+  model: ModelState<A>,
+  size: TerminalSize,
+  capabilities: TerminalCapabilities,
+  presentation: CliPresentationOptions = {},
+  motion: TerminalApplicationMotion = { phase: 0 },
+): RenderedFrame<A> {
   for (const dimension of [size.columns, size.rows]) {
     if (!Number.isSafeInteger(dimension) || dimension < 1) {
       throw new TypeError(
@@ -1188,7 +1215,7 @@ export function renderTerminalApplication<A>(
     borrowed: messageRow ? 1 : 0,
   };
   const layers = visibleLayers(model);
-  let fitted: TerminalApplicationModel<A>;
+  let fitted: ModelState<A>;
   let bodyLines: readonly string[];
   let layout: TerminalApplicationLayout;
   let hits: readonly ApplicationHit[];
@@ -1250,7 +1277,7 @@ export function renderTerminalApplication<A>(
 /** Render the body for a region; `covered` hides the strip beneath a bottom layer. */
 function renderBody<A>(
   context: FrameContext,
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   size: TerminalSize,
   region: Region,
   short: boolean,
@@ -1282,7 +1309,7 @@ const NARROW_LAYER_COLUMNS = 56;
  * sits beside the list; layers anchored to the detail occupy it.
  */
 function detailColumn<A>(
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   size: TerminalSize,
   region: Region,
 ): number | undefined {
@@ -1359,7 +1386,7 @@ function placeLayer<A>(
 /** A reader's focusable rows, each rendered at the layer's content width. */
 function readerRows<A>(
   context: FrameContext,
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   list: GroupedList<A>,
   width: number,
 ): ReaderRows | undefined {
@@ -1391,7 +1418,7 @@ function readerRows<A>(
 
 interface LayeredBody<A> {
   readonly lines: readonly string[];
-  readonly model: TerminalApplicationModel<A>;
+  readonly model: ModelState<A>;
   readonly layout: TerminalApplicationLayout;
   /** Hits in screen rows: the top layer's controls only. */
   readonly hits: readonly ApplicationHit[];
@@ -1406,7 +1433,7 @@ interface LayeredBody<A> {
  */
 function renderLayers<A>(
   context: FrameContext,
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   layers: readonly ApplicationLayer<A>[],
   size: TerminalSize,
   region: Region,

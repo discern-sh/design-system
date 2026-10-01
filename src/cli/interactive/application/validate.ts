@@ -5,8 +5,16 @@
  * @module
  */
 
-import { decodableChord } from "./keymap.ts";
-import { type LayerBindings, layerRules } from "./layer-validate.ts";
+import {
+  type CompiledKeymap,
+  compileKeymap,
+  decodableChord,
+  keymapIssues,
+  keymapViewIssues,
+  throwIssues,
+} from "./keymap.ts";
+import { layerRules } from "./layer-validate.ts";
+import type { TerminalApplicationState } from "./model.ts";
 import {
   blocks,
   count,
@@ -18,21 +26,37 @@ import {
   text,
   tone,
 } from "./validate-rules.ts";
-import type { SplitRules, TerminalApplicationView } from "./view.ts";
+import type {
+  KeymapEntry,
+  SplitRules,
+  TerminalApplicationView,
+} from "./view.ts";
 
 export type { TerminalApplicationViewIssue } from "./validate-rules.ts";
 
-/** Facts from the running application that a new view must respect. */
-export interface TerminalApplicationViewContext {
-  /** Message ids the application reported dismissed; the view must omit them. */
-  readonly dismissedMessages?: readonly string[];
-  /** Layer ids the application reported dismissed; the view must omit them. */
-  readonly dismissedLayers?: readonly string[];
+/** What a view is checked against besides itself. */
+export interface TerminalApplicationViewContext<A> {
   /**
-   * The caller's layer-scoped bindings by layer id, then normalised chord;
-   * a binding may not take a key its layer already uses.
+   * The caller's bindings. Their own rules are reported, and against the
+   * view: a base binding may not take a key the body reserves, and a layer
+   * binding may not take a key its layer uses or reach a confirm or
+   * destructive button's action.
    */
-  readonly layerBindings?: LayerBindings;
+  readonly keymap?: readonly KeymapEntry<A>[];
+  /** Whether j and k move, so the body reserves them. */
+  readonly viKeys?: boolean;
+  /**
+   * The running application's state: the view must omit every message and
+   * layer it lists as dismissed.
+   */
+  readonly state?: TerminalApplicationState;
+}
+
+/** The package's own checking context, with the keymap already compiled. */
+export interface ViewRuleContext<A> {
+  readonly keymap?: CompiledKeymap<A>;
+  readonly dismissedMessages?: readonly string[];
+  readonly dismissedLayers?: readonly string[];
 }
 
 function split(issues: Issues, path: string, value: SplitRules): void {
@@ -67,12 +91,35 @@ function split(issues: Issues, path: string, value: SplitRules): void {
 }
 
 /**
- * Check a view against the application rules and return every broken rule.
- * An empty result means the view may be shown.
+ * Check a view, and the keymap it will run with, against the application
+ * rules and return every broken rule. An empty result means the view may
+ * be shown.
  */
 export function validateTerminalApplicationView<A>(
   view: TerminalApplicationView<A>,
-  context: TerminalApplicationViewContext = {},
+  context: TerminalApplicationViewContext<A> = {},
+): readonly TerminalApplicationViewIssue[] {
+  const entries = context.keymap ?? [];
+  const keymapProblems = keymapIssues(entries);
+  const keymap = keymapProblems.length === 0
+    ? compileKeymap(entries, context.viKeys === true)
+    : undefined;
+  return [
+    ...keymapProblems,
+    ...viewIssues(view, {
+      ...(keymap === undefined ? {} : { keymap }),
+      ...(context.state === undefined ? {} : {
+        dismissedMessages: context.state.dismissed.messages,
+        dismissedLayers: context.state.dismissed.layers,
+      }),
+    }),
+  ];
+}
+
+/** Every broken view rule, with the keymap already compiled. */
+export function viewIssues<A>(
+  view: TerminalApplicationView<A>,
+  context: ViewRuleContext<A>,
 ): readonly TerminalApplicationViewIssue[] {
   const issues: Issues = [];
   runs(issues, "header.leading", view.header.leading);
@@ -190,26 +237,20 @@ export function validateTerminalApplicationView<A>(
     ...(context.dismissedLayers === undefined
       ? {}
       : { dismissedLayers: context.dismissedLayers }),
-    ...(context.layerBindings === undefined
+    ...(context.keymap === undefined
       ? {}
-      : { layerBindings: context.layerBindings }),
+      : { layerBindings: context.keymap.layers }),
   });
+  if (context.keymap !== undefined) {
+    issues.push(...keymapViewIssues(context.keymap, body));
+  }
   return issues;
 }
 
 /** Throw a `TypeError` naming every broken rule. */
 export function assertTerminalApplicationView<A>(
   view: TerminalApplicationView<A>,
-  context: TerminalApplicationViewContext = {},
+  context: ViewRuleContext<A> = {},
 ): void {
-  const issues = validateTerminalApplicationView(view, context);
-  if (issues.length === 0) return;
-  throw new TypeError(
-    `application view breaks ${issues.length} rule${
-      issues.length === 1 ? "" : "s"
-    }: ${
-      issues.slice(0, 5).map((issue) => `${issue.path} ${issue.message}`)
-        .join("; ")
-    }`,
-  );
+  throwIssues("application view", viewIssues(view, context));
 }

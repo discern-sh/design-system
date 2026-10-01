@@ -30,9 +30,9 @@ import {
   enterRow,
   type KeyStep,
   listModelRows,
+  type ModelState,
   replaceLayer,
   selectRow,
-  type TerminalApplicationModel,
   topLayer,
 } from "./model.ts";
 
@@ -51,11 +51,11 @@ function keyFor(chord: string): TerminalKey | undefined {
 
 /** Select a list row, or run it when it is already selected. */
 function clickRow<A>(
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   listId: string,
   key: string,
   step: KeyStep<A>,
-): TerminalApplicationModel<A> {
+): ModelState<A> {
   const list = model.lists[listId];
   if (list === undefined) return model;
   if (list.selection === key) return enterRow(model, listId, step, "click");
@@ -76,12 +76,12 @@ function scrollLayer(
 
 /** A click on one control of the top layer. */
 function clickControl<A>(
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   layer: ApplicationLayer<A>,
   current: TerminalApplicationLayerModel,
   control: string,
   step: KeyStep<A>,
-): TerminalApplicationModel<A> {
+): ModelState<A> {
   const target = parseControl(control);
   const context: LayerStepContext<A> = { effects: [] };
   let next = current;
@@ -169,12 +169,12 @@ function clickControl<A>(
 
 /** A wheel turn over a layer: sheets and forms scroll, the rest move like arrows. */
 function wheelLayer<A>(
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   layer: ApplicationLayer<A>,
   current: TerminalApplicationLayerModel,
   direction: "up" | "down",
   step: KeyStep<A>,
-): TerminalApplicationModel<A> {
+): ModelState<A> {
   if (layer.kind === "sheet" || layer.kind === "form") {
     return replaceLayer(
       model,
@@ -207,10 +207,10 @@ function layerTarget(
  * nothing; the package acts on presses and wheel turns.
  */
 export function mouseTransition<A>(
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   event: TerminalMouseEvent,
   step: KeyStep<A>,
-): TerminalApplicationModel<A> {
+): ModelState<A> {
   if (event.action === "release") return model;
   if (event.action === "press" && event.button !== "left") return model;
   const target = hitAt(model.hits, event.row - 1, event.column - 1);

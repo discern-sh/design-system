@@ -9,7 +9,8 @@
 import { type KeyChord, normalizeKeyChord } from "../../key-hints.ts";
 import { isTerminalKeyName, type TerminalKey } from "../keys.ts";
 import type { ApplicationLayerKind } from "./layer-view.ts";
-import type { KeymapEntry } from "./view.ts";
+import type { TerminalApplicationViewIssue } from "./validate-rules.ts";
+import type { ApplicationBody, GroupedList, KeymapEntry } from "./view.ts";
 
 /**
  * Chords a text field keeps for editing, following readline conventions. An
@@ -28,30 +29,66 @@ export const EDITOR_RESERVED_CHORDS: readonly KeyChord[] = Object.freeze([
   "ctrl-w",
 ]);
 
+/** Keys a list moves through, whatever its body. */
+const LIST_KEYS: readonly KeyChord[] = [
+  "up",
+  "down",
+  "home",
+  "end",
+  "page-up",
+  "page-down",
+  "tab",
+  "shift-tab",
+  "enter",
+];
+
+/** Options for {@linkcode terminalApplicationReservedKeys}. */
+export interface TerminalApplicationReservedKeyOptions {
+  /** Whether j and k move as well. */
+  readonly viKeys?: boolean;
+}
+
 /**
- * Keys the package always handles while a list owns input: moving the
- * selection, Home and End, group jumps, scrolling the detail, Enter, Space
- * for zoom, Left to leave zoom, and `/` to filter. Escape is handled first
- * by the package — clearing a filter, leaving zoom, dismissing a message —
- * and reaches a binding only when there is nothing to close.
+ * The keys the package handles in the base scope for one body, which a
+ * caller binding may not take. A list moves with the arrows, Home, End,
+ * the page keys, Tab, and Shift+Tab, and runs or folds with Enter; `/`
+ * filters when the list declares a filter. A master-detail body adds
+ * Shift+Up and Shift+Down to scroll its detail, Space to zoom, and Left to
+ * leave zoom. A reading body scrolls with the arrows, page keys, Home, and
+ * End. An empty body runs its primary with Enter, and with a list below
+ * keeps the list's keys, Up and Down moving between the primary and the
+ * list. With `viKeys`, j and k move wherever a list or document does.
+ * Escape is handled first by the package and reaches a binding only when
+ * nothing is left to close; Ctrl+C cancels unless a base binding claims it.
  */
-export const TERMINAL_APPLICATION_RESERVED_KEYS: readonly KeyChord[] = Object
-  .freeze([
-    "up",
-    "down",
-    "home",
-    "end",
-    "page-up",
-    "page-down",
-    "shift-up",
-    "shift-down",
-    "tab",
-    "shift-tab",
-    "enter",
-    "space",
-    "left",
-    "/",
-  ]);
+export function terminalApplicationReservedKeys<A>(
+  body: ApplicationBody<A>,
+  options: TerminalApplicationReservedKeyOptions = {},
+): readonly KeyChord[] {
+  const vi: readonly KeyChord[] = options.viKeys === true ? ["j", "k"] : [];
+  const filter = (list: GroupedList<A> | undefined): readonly KeyChord[] =>
+    list?.filter === undefined ? [] : ["/"];
+  switch (body.kind) {
+    case "master-detail":
+      return [
+        ...LIST_KEYS,
+        "shift-up",
+        "shift-down",
+        "space",
+        "left",
+        ...filter(body.list),
+        ...vi,
+      ];
+    case "list":
+      return [...LIST_KEYS, ...filter(body.list), ...vi];
+    case "reading":
+      return ["up", "down", "home", "end", "page-up", "page-down", ...vi];
+    case "empty":
+      return body.list === undefined
+        ? ["enter"]
+        : [...LIST_KEYS, ...filter(body.list), ...vi];
+  }
+}
 
 /**
  * Keys the package handles in each kind of layer while focus is not in a
@@ -194,6 +231,8 @@ export interface CompiledBinding<A> {
 
 /** Validated bindings, ready to match decoded keys. */
 export interface CompiledKeymap<A> {
+  /** The entries as the caller wrote them, for checking each adopted view. */
+  readonly entries: readonly KeymapEntry<A>[];
   readonly base: ReadonlyMap<KeyChord, CompiledBinding<A>>;
   readonly layers: ReadonlyMap<
     string,
@@ -202,65 +241,141 @@ export interface CompiledKeymap<A> {
   readonly viKeys: boolean;
 }
 
-/** The keys reserved in the base scope for this configuration. */
-export function reservedBaseChords(viKeys: boolean): ReadonlySet<KeyChord> {
-  return new Set([
-    ...TERMINAL_APPLICATION_RESERVED_KEYS,
-    ...(viKeys ? ["j", "k"] : []),
-  ]);
+/** The scope a keymap entry binds in: `base` or a layer id. */
+export function entryScope<A>(entry: KeymapEntry<A>): string | undefined {
+  const scope = entry.scope ?? "base";
+  if (scope === "base") return "base";
+  return typeof scope.layer === "string" && scope.layer !== ""
+    ? scope.layer
+    : undefined;
 }
 
 /**
- * Validate and index caller bindings. Collisions with reserved keys or
- * another binding in the same scope, and `inFields` bindings on printing or
- * editing keys, throw a `TypeError`.
+ * The keymap rules that hold whatever the view: every key decodes, a scope
+ * names its layer, a key means one thing per scope, an `inFields` binding
+ * neither types nor edits text, and Ctrl+C is bound only in the base scope.
+ * Each broken rule is an issue located by `keymap[index]`.
+ */
+export function keymapIssues<A>(
+  entries: readonly KeymapEntry<A>[],
+): readonly TerminalApplicationViewIssue[] {
+  const issues: TerminalApplicationViewIssue[] = [];
+  const seen = new Map<string, Set<KeyChord>>();
+  for (const [index, entry] of entries.entries()) {
+    const path = `keymap[${index}]`;
+    const chord = typeof entry.key === "string"
+      ? decodableChord(entry.key)
+      : undefined;
+    if (chord === undefined) {
+      issues.push({
+        path: `${path}.key`,
+        message: `no terminal key decodes to ${JSON.stringify(entry.key)}`,
+      });
+      continue;
+    }
+    if (entry.inFields === true && fieldOwnsChord(chord)) {
+      issues.push({
+        path: `${path}.inFields`,
+        message: `${JSON.stringify(entry.key)} types or edits text`,
+      });
+    }
+    const scope = entryScope(entry);
+    if (scope === undefined) {
+      issues.push({ path: `${path}.scope`, message: "names no layer" });
+      continue;
+    }
+    // Ctrl+C means one thing everywhere: a base binding applies beneath
+    // every layer and at every size.
+    if (scope !== "base" && chord === "ctrl-c") {
+      issues.push({
+        path: `${path}.scope`,
+        message: '"ctrl-c" is bound in the base scope only',
+      });
+    }
+    const chords = seen.get(scope) ?? new Set<KeyChord>();
+    seen.set(scope, chords);
+    if (chords.has(chord)) {
+      issues.push({
+        path: `${path}.key`,
+        message: `${JSON.stringify(entry.key)} is bound twice in one scope`,
+      });
+    }
+    chords.add(chord);
+  }
+  return issues;
+}
+
+/**
+ * The rules a keymap keeps against one view: a base binding takes no key
+ * the view's body reserves, and a layer binding takes no key its layer
+ * already gives meaning to (checked with the layer rules).
+ */
+export function keymapViewIssues<A>(
+  keymap: CompiledKeymap<A>,
+  body: ApplicationBody<A>,
+): readonly TerminalApplicationViewIssue[] {
+  const reserved = new Set(
+    terminalApplicationReservedKeys(body, { viKeys: keymap.viKeys }),
+  );
+  const issues: TerminalApplicationViewIssue[] = [];
+  for (const [index, entry] of keymap.entries.entries()) {
+    if (entryScope(entry) !== "base") continue;
+    const chord = decodableChord(entry.key);
+    if (chord !== undefined && reserved.has(chord)) {
+      issues.push({
+        path: `keymap[${index}].key`,
+        message: `${
+          JSON.stringify(entry.key)
+        } is reserved for navigation in a ${body.kind} body`,
+      });
+    }
+  }
+  return issues;
+}
+
+/** Throw a `TypeError` naming every issue, when there are any. */
+export function throwIssues(
+  what: string,
+  issues: readonly TerminalApplicationViewIssue[],
+): void {
+  if (issues.length === 0) return;
+  throw new TypeError(
+    `${what} breaks ${issues.length} rule${issues.length === 1 ? "" : "s"}: ${
+      issues.slice(0, 5).map((issue) => `${issue.path} ${issue.message}`)
+        .join("; ")
+    }`,
+  );
+}
+
+/**
+ * Validate and index caller bindings. A broken keymap rule throws a
+ * `TypeError` naming every issue; collisions with what a view reserves are
+ * checked as each view is adopted.
  */
 export function compileKeymap<A>(
   entries: readonly KeymapEntry<A>[] = [],
   viKeys = false,
 ): CompiledKeymap<A> {
-  const reserved = reservedBaseChords(viKeys);
+  throwIssues("application keymap", keymapIssues(entries));
   const base = new Map<KeyChord, CompiledBinding<A>>();
   const layers = new Map<string, Map<KeyChord, CompiledBinding<A>>>();
   for (const entry of entries) {
     const chord = bindableChord(entry.key);
-    const inFields = entry.inFields === true;
-    if (inFields && fieldOwnsChord(chord)) {
-      throw new TypeError(
-        `${
-          JSON.stringify(entry.key)
-        } cannot be bound in fields: it types or edits text`,
-      );
-    }
-    const scope = entry.scope ?? "base";
-    let table: Map<KeyChord, CompiledBinding<A>>;
-    if (scope === "base") {
-      if (reserved.has(chord)) {
-        throw new TypeError(
-          `${JSON.stringify(entry.key)} is reserved for application navigation`,
-        );
-      }
-      table = base;
-    } else {
-      if (typeof scope.layer !== "string" || scope.layer === "") {
-        throw new TypeError("a layer binding names its layer");
-      }
-      // Ctrl+C means one thing everywhere: a base binding applies beneath
-      // every layer and at every size.
-      if (chord === "ctrl-c") {
-        throw new TypeError(
-          '"ctrl-c" is bound in the base scope only; it applies under every layer',
-        );
-      }
-      table = layers.get(scope.layer) ?? new Map();
-      layers.set(scope.layer, table);
-    }
-    if (table.has(chord)) {
-      throw new TypeError(
-        `${JSON.stringify(entry.key)} is bound twice in one scope`,
-      );
-    }
-    table.set(chord, Object.freeze({ action: entry.action, inFields }));
+    const scope = entryScope(entry) ?? "base";
+    const table = scope === "base" ? base : layers.get(scope) ?? new Map();
+    if (scope !== "base") layers.set(scope, table);
+    table.set(
+      chord,
+      Object.freeze({
+        action: entry.action,
+        inFields: entry.inFields === true,
+      }),
+    );
   }
-  return Object.freeze({ base, layers, viKeys });
+  return Object.freeze({
+    entries: Object.freeze([...entries]),
+    base,
+    layers,
+    viKeys,
+  });
 }

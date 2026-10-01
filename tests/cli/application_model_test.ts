@@ -1,13 +1,17 @@
 import { assert, assertEquals, assertThrows } from "@std/assert";
-import { createCliBlock, stripAnsi } from "../../src/cli/mod.ts";
+import {
+  createCliBlock,
+  renderMarkdownCli,
+  stripAnsi,
+} from "../../src/cli/mod.ts";
 import {
   createTerminalApplicationModel,
   renderTerminalApplication,
-  TERMINAL_APPLICATION_RESERVED_KEYS,
   terminalApplicationDeadline,
   type TerminalApplicationEffect,
   type TerminalApplicationInput,
   type TerminalApplicationModel,
+  terminalApplicationReservedKeys,
   terminalApplicationState,
   type TerminalApplicationView,
   transitionTerminalApplication,
@@ -20,6 +24,7 @@ import {
   TERMINAL_KEY_SEQUENCES,
 } from "../../src/cli/interactive/testing.ts";
 import { type TestItem, testView } from "../fixtures/application-views.ts";
+import { ApplicationDriver } from "../fixtures/application-driver.ts";
 
 const GROUPS = [
   { id: "first", title: "First" },
@@ -702,75 +707,160 @@ Deno.test("the view rules report every broken rule as data", () => {
   assertThrows(() => createTerminalApplicationModel(view), TypeError);
 });
 
-Deno.test("every key the package acts on in a list is reserved from caller bindings", () => {
+Deno.test("every body reserves exactly the keys the package acts on in it", async (t) => {
   // Iterate the decoder's whole key vocabulary plus printable navigation
-  // keys, so a newly handled key that is not reserved fails here.
+  // keys through every kind of body, with and without a filter, so a key a
+  // body handles without reserving it, or reserves while ignoring it, fails.
   const keys: readonly string[] = [
     ...Object.keys(TERMINAL_KEY_SEQUENCES),
     "/",
-    " ",
+    "space",
     "j",
     "k",
   ];
-  const view = grouped([
+  const items: readonly TestItem[] = [
     { id: "a", group: "first" },
     { id: "b", group: "first" },
     { id: "c", group: "second" },
     { id: "d", group: "second" },
     { id: "e", group: "third" },
-  ], { filter: true });
-  const body = view.body;
-  if (body.kind !== "master-detail") throw new Error("expected master-detail");
-  const long = {
-    ...view,
-    body: {
-      ...body,
-      detail: {
-        ...body.detail,
-        content: Object.fromEntries(
-          ["a", "b", "c", "d", "e"].map((id) => [
-            id,
-            Array.from({ length: 60 }, (_, index) => ({
-              kind: "text" as const,
-              runs: [{ text: `${id} line ${index}` }],
-            })),
-          ]),
-        ),
+  ];
+  const longDetail = (filter: boolean): TerminalApplicationView<string> => {
+    const view = grouped(items, { filter });
+    if (view.body.kind !== "master-detail") throw new Error("expected detail");
+    return {
+      ...view,
+      body: {
+        ...view.body,
+        detail: {
+          ...view.body.detail,
+          content: Object.fromEntries(
+            items.map(({ id }) => [
+              id,
+              Array.from({ length: 60 }, (_, index) => ({
+                kind: "text" as const,
+                runs: [{ text: `${id} line ${index}` }],
+              })),
+            ]),
+          ),
+        },
       },
+    };
+  };
+  const listed = (filter: boolean) => grouped(items, { filter, body: "list" });
+  const reading: TerminalApplicationView<string> = {
+    ...testView(["a"]),
+    body: {
+      kind: "reading",
+      id: "guide",
+      content: createCliBlock(renderMarkdownCli, {
+        source: Array.from({ length: 80 }, (_, index) => `- line ${index}`)
+          .join("\n"),
+      }),
     },
   };
-  const prepared = [
-    (driver: Driver) => driver.key("down", "down"),
-    (driver: Driver) => driver.key("down", "down", "page-down"),
-    (driver: Driver) => driver.key("down", "down", "space"),
+  const empty = (list: boolean, filter: boolean) => {
+    const base = listed(filter);
+    return {
+      ...base,
+      body: {
+        kind: "empty" as const,
+        title: "Nothing yet",
+        body: [{ text: "Start here." }],
+        primary: { key: "enter", label: "New", action: "new" },
+        ...(list && base.body.kind === "list" ? { list: base.body.list } : {}),
+      },
+    };
+  };
+  const bodies: readonly {
+    readonly name: string;
+    readonly view: TerminalApplicationView<string>;
+    readonly prepared: readonly (readonly string[])[];
+  }[] = [
+    ...[true, false].map((filter) => ({
+      name: `master-detail, filter ${filter}`,
+      view: longDetail(filter),
+      prepared: [["down", "down"], ["down", "down", "page-down"], [
+        "down",
+        "down",
+        "space",
+      ]],
+    })),
+    ...[true, false].map((filter) => ({
+      name: `list, filter ${filter}`,
+      view: listed(filter),
+      prepared: [["down", "down"], ["end"]],
+    })),
+    { name: "reading", view: reading, prepared: [[], ["page-down"]] },
+    ...[true, false].map((filter) => ({
+      name: `empty with a list, filter ${filter}`,
+      view: empty(true, filter),
+      prepared: [[], ["down"], ["down", "down"], ["down", "end"]],
+    })),
+    { name: "empty", view: empty(false, false), prepared: [[]] },
   ];
-  const handled = new Set<string>();
-  for (const key of keys) {
-    for (const prepare of prepared) {
-      const driver = prepare(new Driver(long));
-      const before = JSON.stringify(terminalApplicationState(driver.model));
-      driver.take();
-      driver.key(key === " " ? "space" : key);
-      const effects = driver.take().filter((effect) =>
-        effect.kind !== "selection-change"
-      );
-      if (
-        JSON.stringify(terminalApplicationState(driver.model)) !== before ||
-        effects.length > 0
-      ) handled.add(key === " " ? "space" : key);
+  for (const body of bodies) {
+    for (const viKeys of [false, true]) {
+      await t.step(`${body.name}, vi ${viKeys}`, () => {
+        const handled = new Set<string>();
+        for (const key of keys) {
+          for (const prepare of body.prepared) {
+            const driver = new ApplicationDriver(body.view, {
+              columns: 80,
+              rows: 24,
+              viKeys,
+            });
+            driver.key(...prepare);
+            const before = JSON.stringify(driver.state);
+            driver.take();
+            driver.key(key);
+            const effects = driver.take().filter((effect) =>
+              effect.kind !== "selection-change"
+            );
+            if (JSON.stringify(driver.state) !== before || effects.length > 0) {
+              handled.add(key);
+            }
+          }
+        }
+        // Escape closes what is open before a binding may see it, and
+        // Ctrl+C cancels unless a binding claims it; both stay bindable.
+        handled.delete("escape");
+        handled.delete("ctrl-c");
+        const reserved = new Set(
+          terminalApplicationReservedKeys(body.view.body, { viKeys }),
+        );
+        for (const key of handled) {
+          assert(
+            reserved.has(key),
+            `the package acts on ${key}, so a binding for it must be refused`,
+          );
+        }
+        for (const key of reserved) {
+          assert(
+            handled.has(key),
+            `${key} is reserved but the body ignores it`,
+          );
+        }
+      });
     }
   }
-  // Escape closes what is open before a binding may see it, and Ctrl+C
-  // cancels unless a binding claims it; both stay bindable on purpose.
-  const bindable = new Set(["escape", "ctrl-c"]);
-  for (const key of handled) {
-    if (bindable.has(key)) continue;
-    assert(
-      TERMINAL_APPLICATION_RESERVED_KEYS.includes(key),
-      `the package acts on ${key}, so a binding for it must be refused`,
-    );
-  }
-  for (const key of TERMINAL_APPLICATION_RESERVED_KEYS) {
-    assert(handled.has(key), `${key} is reserved but the list ignores it`);
-  }
+});
+
+Deno.test("a base binding may take any key the body leaves free", () => {
+  const list = testView(["a", "b"], { body: "list" });
+  const bound = new ApplicationDriver(list, {
+    keymap: [
+      { key: "space", action: "toggle" },
+      { key: "left", action: "collapse" },
+      { key: "/", action: "search" },
+    ],
+  });
+  bound.take();
+  bound.key("space", "left", "/");
+  assertEquals(bound.actions(), ["toggle", "collapse", "search"]);
+  assertThrows(
+    () => bound.update(testView(["a", "b"])),
+    TypeError,
+    "reserved for navigation in a master-detail body",
+  );
 });

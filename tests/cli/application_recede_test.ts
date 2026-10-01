@@ -139,9 +139,7 @@ const SHEET: ApplicationSheet<string> = {
 /** The rows between the header and the layer, which are the receded base. */
 function baseRows(driver: ApplicationDriver): readonly string[] {
   const layerRows = new Set(
-    (driver.model.hits ?? []).flatMap((hit) =>
-      hit.target.kind === "layer" ? [hit.row] : []
-    ),
+    driver.hits.flatMap((hit) => hit.target.kind === "layer" ? [hit.row] : []),
   );
   const rows = driver.last.frame.split("\n");
   return rows.filter((_, index) =>

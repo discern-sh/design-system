@@ -287,10 +287,12 @@ Deno.test("a view that keeps a dismissed layer is refused", () => {
   assertEquals(dismissals(driver.take()), ["run:escape"]);
   assertEquals(driver.state.topLayerId, undefined);
   assertThrows(() => driver.update(view), TypeError, "dismissed");
+  assertEquals(driver.state.dismissed.layers, ["run"], "pending until omitted");
   assert(
-    validateTerminalApplicationView(view, { dismissedLayers: ["run"] }).some((
+    validateTerminalApplicationView(view, { state: driver.state }).some((
       issue,
     ) => issue.path === "layers[0].id"),
+    "a caller can check its next view against the package's state",
   );
   driver.update(withLayers());
   driver.update(view);
@@ -701,20 +703,72 @@ Deno.test("the layer rules report every broken rule as data", () => {
   for (const build of [...PANELS, () => demoActionsMenu(IMAGE)]) {
     assertEquals(validateTerminalApplicationView(withLayers(build())), []);
   }
-  const bindings = new Map([
-    ["run", new Map([["up", { inFields: false }]])],
-    ["palette", new Map([["x", { inFields: false }]])],
-  ]);
-  const issues = validateTerminalApplicationView(
-    withLayers(sheet),
-    { layerBindings: bindings },
-  );
+  const keymap = [
+    { key: "up", action: "up", scope: { layer: "run" } },
+    { key: "x", action: "x", scope: { layer: "palette" } },
+  ];
+  const issues = validateTerminalApplicationView(withLayers(sheet), { keymap });
   assert(issues.some((issue) => issue.path === "keymap.run.up"));
   assert(
     validateTerminalApplicationView(
       withLayers(demoPalette(DEMO_JOBS, false)),
-      { layerBindings: bindings },
+      { keymap },
     ).some((issue) => issue.path === "keymap.palette.x"),
+  );
+});
+
+Deno.test("no single key reaches a confirm or destructive action around its gates", () => {
+  const run = demoRunSheet(IMAGE, "loading");
+  const confirm = run.buttons.find((button) => button.role === "confirm");
+  assert(confirm?.action !== undefined);
+  const bound = validateTerminalApplicationView(withLayers(run), {
+    keymap: [{ key: "y", action: confirm.action, scope: { layer: "run" } }],
+  });
+  assert(
+    bound.some((issue) => issue.path === "keymap.run.y"),
+    JSON.stringify(bound),
+  );
+  const deleting = demoDeleteSheet(ARCHIVE);
+  const destructive = deleting.buttons.find((button) =>
+    button.role === "destructive"
+  );
+  assert(destructive?.action !== undefined);
+  const destroy = destructive.action;
+  const alternative = validateTerminalApplicationView(withLayers({
+    ...deleting,
+    buttons: deleting.buttons.map((button) =>
+      button.role === "alternative" ? { ...button, action: destroy } : button
+    ),
+  }));
+  assert(
+    alternative.some((issue) =>
+      issue.path.endsWith(".action") &&
+      issue.message.includes("without its gates")
+    ),
+    JSON.stringify(alternative),
+  );
+  const form = demoNewJobForm();
+  const create = form.buttons.find((button) => button.role === "confirm");
+  assert(create?.action !== undefined);
+  const created = create.action;
+  const editor = validateTerminalApplicationView(withLayers({
+    ...form,
+    fields: form.fields.map((field) =>
+      field.kind === "disclosure"
+        ? {
+          ...field,
+          fields: field.fields.map((inner) =>
+            inner.kind === "text" && inner.editor !== undefined
+              ? { ...inner, editor: { ...inner.editor, action: created } }
+              : inner
+          ),
+        }
+        : field
+    ),
+  }));
+  assert(
+    editor.some((issue) => issue.path.endsWith(".editor")),
+    JSON.stringify(editor),
   );
 });
 
@@ -904,7 +958,7 @@ Deno.test("a two-click confirmation starts over after any other click or a new r
       sheet.buttons.find((candidate) => candidate.label === entry.button)?.id
     }`;
     const { driver: survey } = open();
-    const others = (survey.model.hits ?? []).filter((hit) =>
+    const others = survey.hits.filter((hit) =>
       hit.target.kind === "control" && hit.target.control !== own
     );
     assert(others.length > 0);
@@ -916,7 +970,7 @@ Deno.test("a two-click confirmation starts over after any other click or a new r
         driver.click(hit.start + 1, hit.row + 1);
         if (driver.state.topLayerId !== "run") return;
         // The button may have moved, as when a disclosure opened.
-        const again = (driver.model.hits ?? []).find((candidate) =>
+        const again = driver.hits.find((candidate) =>
           candidate.target.kind === "control" &&
           candidate.target.control === own
         );
@@ -993,14 +1047,14 @@ function controlShown(driver: ApplicationDriver, layer: string): boolean {
     );
     const selected = list?.[1].selectedId;
     return selected === undefined ||
-      (driver.model.hits ?? []).some((hit) =>
+      driver.hits.some((hit) =>
         hit.target.kind === "row" && hit.target.key === `i:${selected}`
       );
   }
   const control = state.highlightedId === undefined
     ? focus
     : `item:${state.highlightedId}`;
-  return (driver.model.hits ?? []).some((hit) =>
+  return driver.hits.some((hit) =>
     hit.target.kind === "control" && hit.target.layerId === layer &&
     hit.target.control === control
   );
@@ -1075,7 +1129,7 @@ Deno.test("a panel never holds blank rows while it hides body rows", async (t) =
             colorDepth,
           });
           const panel = new Set(
-            (driver.model.hits ?? []).flatMap((hit) =>
+            driver.hits.flatMap((hit) =>
               hit.target.kind === "layer" ? [hit.row] : []
             ),
           );
@@ -1085,7 +1139,7 @@ Deno.test("a panel never holds blank rows while it hides body rows", async (t) =
           );
           const left = Math.min(
             ...[...panel].map((row) =>
-              (driver.model.hits ?? []).find((hit) =>
+              driver.hits.find((hit) =>
                 hit.row === row && hit.target.kind === "layer"
               )?.start ?? 0
             ),

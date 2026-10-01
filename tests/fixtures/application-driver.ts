@@ -23,6 +23,8 @@ import {
   FakeTerminalIO,
   type FakeTerminalIOOptions,
 } from "../../src/cli/interactive/testing.ts";
+import type { ApplicationHit } from "../../src/cli/interactive/application/hits.ts";
+import { modelState } from "../../src/cli/interactive/application/model.ts";
 
 /** The decoded key for a decoder name or one character. */
 export function keyOf(name: TerminalKeyName | string): TerminalKey {
@@ -35,6 +37,7 @@ export function keyOf(name: TerminalKeyName | string): TerminalKey {
 /** Options for {@linkcode ApplicationDriver}. */
 export interface ApplicationDriverOptions extends FakeTerminalIOOptions {
   readonly keymap?: readonly KeymapEntry<string>[];
+  readonly viKeys?: boolean;
 }
 
 /** Drive a model through inputs, rendering after each like the runtime. */
@@ -52,6 +55,7 @@ export class ApplicationDriver {
     this.io = new FakeTerminalIO([], { columns: 80, rows: 24, ...options });
     const created = createTerminalApplicationModel(view, {
       ...(options.keymap === undefined ? {} : { keymap: options.keymap }),
+      ...(options.viKeys === undefined ? {} : { viKeys: options.viKeys }),
     });
     this.model = created.model;
     this.effects.push(...created.effects);
@@ -122,6 +126,11 @@ export class ApplicationDriver {
 
   get state(): TerminalApplicationState {
     return terminalApplicationState(this.model);
+  }
+
+  /** Where the last frame put each clickable thing; package-internal. */
+  get hits(): readonly ApplicationHit[] {
+    return modelState(this.model).hits ?? [];
   }
 
   take(): TerminalApplicationEffect<string>[] {

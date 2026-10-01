@@ -1120,6 +1120,10 @@ export const interactiveExportCoverage: Readonly<
     excluded:
       "The application journey exercises the minimum viewport and its notice.",
   },
+  TerminalApplicationModel: {
+    excluded:
+      "The opaque state the pure functions pass along; nothing to show on its own.",
+  },
   createTerminalApplicationModel: {
     excluded: "Pure view adoption exercised by the application journey.",
   },
@@ -1160,9 +1164,9 @@ export const interactiveExportCoverage: Readonly<
   EDITOR_RESERVED_CHORDS: {
     excluded: "A validation list for field bindings; there is nothing to show.",
   },
-  TERMINAL_APPLICATION_RESERVED_KEYS: {
+  terminalApplicationReservedKeys: {
     excluded:
-      "The navigation keys the application journey uses; a validation list.",
+      "The navigation keys each body the application journey shows reserves; a validation list.",
   },
   TERMINAL_APPLICATION_LAYER_KEYS: {
     excluded:

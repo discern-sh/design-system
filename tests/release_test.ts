@@ -1047,6 +1047,108 @@ Deno.test("every entrypoint and public symbol is documented", async () => {
   assertEquals(problems, [], problems.join("\n"));
 });
 
+/** Every symbol any entry point exports, by name. */
+async function exportedSymbols(): Promise<{
+  readonly names: ReadonlySet<string>;
+  readonly nodes: Readonly<
+    Record<string, {
+      readonly symbols?: readonly {
+        readonly name?: string;
+        readonly declarations?: readonly {
+          readonly kind?: string;
+          readonly def?: {
+            readonly properties?: readonly {
+              readonly accessibility?: string;
+            }[];
+            readonly methods?: readonly { readonly accessibility?: string }[];
+            readonly indexSignatures?: readonly unknown[];
+          };
+        }[];
+      }[];
+    }>
+  >;
+}> {
+  const result = await new Deno.Command(Deno.execPath(), {
+    args: ["doc", "--json", ...Object.values(config.exports)],
+    cwd: PACKAGE_ROOT,
+    stdout: "piped",
+    stderr: "piped",
+  }).output();
+  assertEquals(result.code, 0, new TextDecoder().decode(result.stderr));
+  const parsed = JSON.parse(new TextDecoder().decode(result.stdout)) as {
+    readonly nodes: Awaited<ReturnType<typeof exportedSymbols>>["nodes"];
+  };
+  const names = new Set<string>();
+  for (const node of Object.values(parsed.nodes)) {
+    for (const symbol of node.symbols ?? []) {
+      if (symbol.name !== undefined) names.add(symbol.name);
+    }
+  }
+  return { names, nodes: parsed.nodes };
+}
+
+Deno.test("public signatures name only types some entry point exports", async () => {
+  // A public signature that names an unexported type leaves consumers unable
+  // to name it. The baseline holds references that predate this guard; it
+  // may only shrink, so a new signature can never add one.
+  const { names } = await exportedSymbols();
+  const { output } = await run(PACKAGE_ROOT, [
+    "doc",
+    "--lint",
+    ...Object.values(config.exports),
+  ]);
+  const found = new Set(
+    [
+      ...output.matchAll(
+        /public type '([^']+)' references private type '([^']+)'/gu,
+      ),
+    ].flatMap((match) =>
+      match[2] !== undefined && !names.has(match[2])
+        ? [`${match[1]} -> ${match[2]}`]
+        : []
+    ),
+  );
+  const baseline = new Set(
+    JSON.parse(
+      await Deno.readTextFile(
+        join(PACKAGE_ROOT, "tests/fixtures/private-type-references.json"),
+      ),
+    ) as string[],
+  );
+  const added = [...found].filter((reference) => !baseline.has(reference));
+  const resolved = [...baseline].filter((reference) => !found.has(reference));
+  assertEquals(
+    added,
+    [],
+    "export these types, or keep them out of public signatures",
+  );
+  assertEquals(
+    resolved,
+    [],
+    "these references are gone; remove them from tests/fixtures/private-type-references.json",
+  );
+});
+
+Deno.test("an application model exposes no members", async () => {
+  // The model is opaque so its bookkeeping stays free to change; callers
+  // read terminalApplicationState and the frame instead.
+  const { nodes } = await exportedSymbols();
+  const model = Object.values(nodes).flatMap((node) => node.symbols ?? [])
+    .find((symbol) => symbol.name === "TerminalApplicationModel");
+  assert(model !== undefined, "TerminalApplicationModel is not exported");
+  for (const declaration of model.declarations ?? []) {
+    const visible = [
+      ...(declaration.def?.properties ?? []),
+      ...(declaration.def?.methods ?? []),
+    ].filter((member) =>
+      member.accessibility !== "private" &&
+      member.accessibility !== "protected"
+    );
+    assertEquals(visible, [], "the model shows members to callers");
+    assertEquals(declaration.def?.indexSignatures ?? [], []);
+  }
+});
+
 Deno.test("release verification builds generated prerequisites first", () => {
   const verify = config.tasks.verify;
   assert(verify, "deno.json has no verify task");

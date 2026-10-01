@@ -8,6 +8,7 @@
 
 import type { KeyChord } from "../../key-hints.ts";
 import {
+  type CompiledBinding,
   decodableChord,
   EDITOR_RESERVED_CHORDS,
   fieldOwnsChord,
@@ -37,20 +38,66 @@ import {
   tone,
 } from "./validate-rules.ts";
 
-/** Caller bindings scoped to one layer, by normalised chord. */
-export type LayerBindings = ReadonlyMap<
+/** Caller bindings scoped to one layer, by layer id, then normalised chord. */
+export type LayerBindings<A> = ReadonlyMap<
   string,
-  ReadonlyMap<KeyChord, { readonly inFields: boolean }>
+  ReadonlyMap<KeyChord, CompiledBinding<A>>
 >;
 
 /** Facts from the running application that a view's layers must respect. */
-export interface LayerRuleContext {
+export interface LayerRuleContext<A> {
   /** Layer ids the application reported dismissed. */
   readonly dismissedLayers?: readonly string[];
   /** The caller's layer-scoped bindings. */
-  readonly layerBindings?: LayerBindings;
+  readonly layerBindings?: LayerBindings<A>;
   /** Ids of lists the body already shows; a reader's rows need their own. */
   readonly listIds?: readonly string[];
+}
+
+/**
+ * Report every one-key route to a confirm or destructive button's action on
+ * the same layer: an alternative button, an external-editor chord, or a
+ * layer binding that carries the identical action would run it without the
+ * button's gates — loading, reading, the challenge — so letters could
+ * confirm. Actions compare by identity.
+ */
+function bypasses<A>(
+  issues: Issues,
+  path: string,
+  layer: ApplicationSheet<A> | ApplicationForm<A>,
+  bindings: ReadonlyMap<KeyChord, CompiledBinding<A>> | undefined,
+): void {
+  const guarded = new Set<A>(
+    layer.buttons.flatMap((button): A[] =>
+      (button.role === "confirm" || button.role === "destructive") &&
+        button.action !== undefined
+        ? [button.action]
+        : []
+    ),
+  );
+  if (guarded.size === 0) return;
+  const message =
+    "runs a confirm or destructive button's action without its gates";
+  for (const [index, button] of layer.buttons.entries()) {
+    if (
+      button.role === "alternative" && button.action !== undefined &&
+      guarded.has(button.action)
+    ) {
+      issues.push({ path: `${path}.buttons[${index}].action`, message });
+    }
+  }
+  if (layer.kind === "form") {
+    for (const field of formTextFields(layer)) {
+      if (field.editor !== undefined && guarded.has(field.editor.action)) {
+        issues.push({ path: `${path}.fields.${field.id}.editor`, message });
+      }
+    }
+  }
+  for (const [chord, binding] of bindings ?? []) {
+    if (guarded.has(binding.action)) {
+      issues.push({ path: `keymap.${layer.id}.${chord}`, message });
+    }
+  }
 }
 
 const ROLES: ReadonlySet<string> = new Set([
@@ -581,7 +628,7 @@ function reader<A>(
 export function layerRules<A>(
   issues: Issues,
   layers: readonly ApplicationLayer<A>[] | undefined,
-  context: LayerRuleContext,
+  context: LayerRuleContext<A>,
 ): void {
   if (layers === undefined) return;
   if (!Array.isArray(layers)) {
@@ -640,9 +687,11 @@ export function layerRules<A>(
         issues.push({ path: `${path}.kind`, message: "is not a layer kind" });
         continue;
     }
-    for (
-      const [chord, binding] of context.layerBindings?.get(layer.id) ?? []
-    ) {
+    const bindings = context.layerBindings?.get(layer.id);
+    if (layer.kind === "sheet" || layer.kind === "form") {
+      bypasses(issues, path, layer, bindings);
+    }
+    for (const [chord, binding] of bindings ?? []) {
       const at = `keymap.${layer.id}.${chord}`;
       if (keys.has(chord)) {
         issues.push({

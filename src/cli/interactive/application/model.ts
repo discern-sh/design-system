@@ -14,7 +14,7 @@ import {
   type CompiledKeymap,
   compileKeymap,
   keyChordOf,
-  reservedBaseChords,
+  terminalApplicationReservedKeys,
 } from "./keymap.ts";
 import {
   adoptLayerModel,
@@ -49,7 +49,7 @@ import {
 } from "./list-model.ts";
 import {
   assertTerminalApplicationView,
-  type TerminalApplicationViewContext,
+  type ViewRuleContext,
 } from "./validate.ts";
 import { fieldText } from "./validate-rules.ts";
 import {
@@ -71,7 +71,7 @@ export type TerminalApplicationLayout =
   | "too-small";
 
 /** The viewport sizes the last frame gave each region, for paging. */
-export interface TerminalApplicationGeometry {
+export interface ModelGeometry {
   readonly layout: TerminalApplicationLayout;
   readonly listRows: number;
   /** Rows of a detail column or zoom; 0 while the detail is a strip or absent. */
@@ -80,7 +80,7 @@ export interface TerminalApplicationGeometry {
 }
 
 /** A list's filter while it applies. */
-export interface TerminalApplicationFilter {
+export interface FilterState {
   readonly query: string;
   readonly cursor: number;
   /** Whether the filter field owns input. */
@@ -88,7 +88,7 @@ export interface TerminalApplicationFilter {
 }
 
 /** Fitting decisions made on resize and membership change only. */
-export interface TerminalApplicationDensity {
+export interface DensityDecision {
   /** The geometry and membership the decision was made for. */
   readonly key: string;
   readonly separators: boolean;
@@ -98,7 +98,7 @@ export interface TerminalApplicationDensity {
 }
 
 /** Everything the package remembers about one list, by its id. */
-export interface TerminalApplicationListModel<A> {
+export interface ListModel<A> {
   /** The newest list the caller supplied. */
   readonly latest: GroupedList<A>;
   /** The list whose membership and order are on screen. */
@@ -108,7 +108,7 @@ export interface TerminalApplicationListModel<A> {
   /** Whether a membership change waits for the settle window. */
   readonly pending: boolean;
   readonly selection?: ListRowKey;
-  readonly filter?: TerminalApplicationFilter;
+  readonly filter?: FilterState;
   /** Foldable groups the person folded. */
   readonly folds: readonly string[];
   /** Groups whose initial fold has been applied. */
@@ -122,19 +122,18 @@ export interface TerminalApplicationListModel<A> {
   readonly anchor?: number;
   /** Groups just unfolded, which the next frame scrolls into view. */
   readonly reveal?: readonly string[];
-  readonly density?: TerminalApplicationDensity;
+  readonly density?: DensityDecision;
 }
 
 /**
  * The package's complete application state: the adopted view, the caller's
- * bindings, and everything navigation owns. Treat it as opaque and
- * immutable; read the public projection with
- * {@linkcode terminalApplicationState}.
+ * bindings, and everything navigation owns. Package-internal: callers hold
+ * it sealed inside a {@linkcode TerminalApplicationModel}.
  */
-export interface TerminalApplicationModel<A> {
+export interface ModelState<A> {
   readonly view: TerminalApplicationView<A>;
   readonly keymap: CompiledKeymap<A>;
-  readonly lists: Readonly<Record<string, TerminalApplicationListModel<A>>>;
+  readonly lists: Readonly<Record<string, ListModel<A>>>;
   /** Whether an empty body's primary hint holds the selection. */
   readonly primaryFocused: boolean;
   /** Detail scroll by item id. */
@@ -154,7 +153,7 @@ export interface TerminalApplicationModel<A> {
   readonly dismissedLayers: readonly string[];
   /** When mouse input turned on, while its selection hint shows. */
   readonly mouseHintSince?: number;
-  readonly geometry?: TerminalApplicationGeometry;
+  readonly geometry?: ModelGeometry;
   /** Where the last frame put each clickable thing. */
   readonly hits?: readonly ApplicationHit[];
 }
@@ -213,6 +212,17 @@ export interface TerminalApplicationState {
   readonly fields: Readonly<Record<string, Readonly<Record<string, string>>>>;
   /** Whether each sheet's body has been read to its end in this review. */
   readonly fullyRead: Readonly<Record<string, boolean>>;
+  /**
+   * Messages and layers reported dismissed that the view in force still
+   * declares; they stay hidden, and the caller's next view must omit them.
+   */
+  readonly dismissed: TerminalApplicationDismissed;
+}
+
+/** Message and layer ids reported dismissed and still declared. */
+export interface TerminalApplicationDismissed {
+  readonly messages: readonly string[];
+  readonly layers: readonly string[];
 }
 
 /** How a selected item moved when a view changed. */
@@ -276,10 +286,112 @@ export type TerminalApplicationEffect<A> =
   }
   | { readonly kind: "cancel" };
 
+/** One step's new model state and the callbacks it owes, in order. */
+export interface ModelStep<A> {
+  readonly model: ModelState<A>;
+  readonly effects: readonly TerminalApplicationEffect<A>[];
+}
+
+let openModel: <A>(model: TerminalApplicationModel<A>) => ModelState<A>;
+let sealModel: <A>(state: ModelState<A>) => TerminalApplicationModel<A>;
+
+/**
+ * An application's complete state: the adopted view, the caller's bindings,
+ * and everything navigation owns. It is opaque and immutable; only the
+ * package's functions read or advance it, and callers read the public
+ * projection with {@linkcode terminalApplicationState}.
+ */
+export class TerminalApplicationModel<A> {
+  readonly #state: ModelState<A>;
+  private constructor(state: ModelState<A>) {
+    this.#state = state;
+  }
+  static {
+    openModel = <B>(model: TerminalApplicationModel<B>) => model.#state;
+    sealModel = <B>(state: ModelState<B>) =>
+      new TerminalApplicationModel(state);
+  }
+}
+
+/** The state a sealed model holds. Package-internal. */
+export function modelState<A>(
+  model: TerminalApplicationModel<A>,
+): ModelState<A> {
+  return openModel(model);
+}
+
+/** Seal model state for callers. Package-internal. */
+export function sealModelState<A>(
+  state: ModelState<A>,
+): TerminalApplicationModel<A> {
+  return sealModel(state);
+}
+
 /** One step's new model and the callbacks it owes, in order. */
 export interface TerminalApplicationTransition<A> {
   readonly model: TerminalApplicationModel<A>;
   readonly effects: readonly TerminalApplicationEffect<A>[];
+}
+
+function sealStep<A>(step: ModelStep<A>): TerminalApplicationTransition<A> {
+  return { model: sealModel(step.model), effects: step.effects };
+}
+
+/**
+ * Start an application model from its first view. The transition's effects
+ * hold the initial selection change. A view or keymap that breaks a rule
+ * throws a `TypeError` before anything is shown.
+ */
+export function createTerminalApplicationModel<A>(
+  view: TerminalApplicationView<A>,
+  config: TerminalApplicationConfig<A> = {},
+  now = 0,
+): TerminalApplicationTransition<A> {
+  return sealStep(createModelState(view, config, now));
+}
+
+/**
+ * Adopt a replacement view. Selection follows item identity; membership and
+ * order changes wait for the settle window while keys are being pressed. A
+ * view that breaks a rule throws a `TypeError`.
+ */
+export function updateTerminalApplication<A>(
+  model: TerminalApplicationModel<A>,
+  view: TerminalApplicationView<A>,
+  now: number,
+): TerminalApplicationTransition<A> {
+  return sealStep(updateModelState(openModel(model), view, now));
+}
+
+/**
+ * Apply one input. Keys move selection, folds, zoom, filter, and scroll;
+ * bound keys and Enter become actions; time settles membership changes and
+ * times out messages; a caller selection follows identity and may reveal.
+ */
+export function transitionTerminalApplication<A>(
+  model: TerminalApplicationModel<A>,
+  input: TerminalApplicationInput,
+  now: number,
+): TerminalApplicationTransition<A> {
+  return sealStep(transitionModelState(openModel(model), input, now));
+}
+
+/** The read-only snapshot callers read: selection, focus, fields, and more. */
+export function terminalApplicationState<A>(
+  model: TerminalApplicationModel<A>,
+): TerminalApplicationState {
+  return snapshotModelState(openModel(model));
+}
+
+/**
+ * The next time something is due without input: a settle window closing, a
+ * message timing out, or a busy liveness becoming visible.
+ */
+export function terminalApplicationDeadline<A>(
+  model: TerminalApplicationModel<A>,
+  now: number,
+): number | undefined {
+  return modelStateDeadline(openModel(model), now);
 }
 
 /** Input the model applies one at a time. */
@@ -335,7 +447,7 @@ function ordered<A>(
 
 /** The layers on screen, bottom to top: the view's, less any dismissed. */
 export function visibleLayers<A>(
-  model: Pick<TerminalApplicationModel<A>, "view" | "dismissedLayers">,
+  model: Pick<ModelState<A>, "view" | "dismissedLayers">,
 ): readonly ApplicationLayer<A>[] {
   const layers = model.view.layers ?? [];
   return model.dismissedLayers.length === 0
@@ -345,7 +457,7 @@ export function visibleLayers<A>(
 
 /** The layer that owns focus, if one is open. */
 export function topLayer<A>(
-  model: Pick<TerminalApplicationModel<A>, "view" | "dismissedLayers">,
+  model: Pick<ModelState<A>, "view" | "dismissedLayers">,
 ): ApplicationLayer<A> | undefined {
   return visibleLayers(model).at(-1);
 }
@@ -366,7 +478,7 @@ const rowsCache = new WeakMap<
 
 /** The rows a list model shows now. */
 export function listModelRows<A>(
-  list: TerminalApplicationListModel<A>,
+  list: ListModel<A>,
 ): ListRows<A> {
   const shape = {
     folds: new Set(list.folds),
@@ -408,11 +520,11 @@ function initialSelection<A>(rows: ListRows<A>): ListRowKey | undefined {
  */
 function reconcileSelection<A>(
   listId: string,
-  before: TerminalApplicationListModel<A> | undefined,
-  after: TerminalApplicationListModel<A>,
+  before: ListModel<A> | undefined,
+  after: ListModel<A>,
   effects: TerminalApplicationEffect<A>[],
   report: boolean,
-): TerminalApplicationListModel<A> {
+): ListModel<A> {
   const rows = listModelRows(after);
   const key = after.selection;
   if (key === undefined || before === undefined) {
@@ -464,9 +576,9 @@ function reconcileSelection<A>(
 }
 
 function withSelection<A>(
-  list: TerminalApplicationListModel<A>,
+  list: ListModel<A>,
   selection: ListRowKey | undefined,
-): TerminalApplicationListModel<A> {
+): ListModel<A> {
   if (selection === list.selection) return list;
   const { selection: _previous, ...rest } = list;
   return selection === undefined ? rest : { ...rest, selection };
@@ -474,10 +586,10 @@ function withSelection<A>(
 
 /** Adopt one list version, deferring membership changes inside the settle window. */
 function adoptList<A>(
-  previous: TerminalApplicationListModel<A> | undefined,
+  previous: ListModel<A> | undefined,
   list: GroupedList<A>,
   settleDeferred: boolean,
-): TerminalApplicationListModel<A> {
+): ListModel<A> {
   const initialFolds = (groups: GroupedList<A>["groups"]) =>
     groups.filter((group) =>
       group.foldable === true && group.initiallyFolded === true
@@ -511,7 +623,7 @@ function adoptList<A>(
 }
 
 function settleWindowOpen<A>(
-  model: TerminalApplicationModel<A> | undefined,
+  model: ModelState<A> | undefined,
   list: GroupedList<A>,
   now: number,
 ): boolean {
@@ -530,7 +642,7 @@ function readerLists<A>(
 
 /** The selected item id of the body's list and of each reader's rows. */
 function selectedItems<A>(
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
 ): ReadonlyMap<string, string | undefined> {
   const selected = new Map<string, string | undefined>();
   const list = bodyList(model.view);
@@ -549,8 +661,8 @@ function selectedItems<A>(
 }
 
 function selectionEffects<A>(
-  before: TerminalApplicationModel<A> | undefined,
-  after: TerminalApplicationModel<A>,
+  before: ModelState<A> | undefined,
+  after: ModelState<A>,
   effects: TerminalApplicationEffect<A>[],
 ): void {
   const was = before === undefined ? undefined : selectedItems(before);
@@ -565,7 +677,7 @@ function selectionEffects<A>(
 }
 
 function messageTiming<A>(
-  previous: TerminalApplicationModel<A> | undefined,
+  previous: ModelState<A> | undefined,
   message: MessageLine | undefined,
   now: number,
 ): number | undefined {
@@ -582,7 +694,7 @@ function messageTiming<A>(
  * may not have heard of every dismissal yet.
  */
 function stillDeclared<A>(
-  previous: TerminalApplicationModel<A> | undefined,
+  previous: ModelState<A> | undefined,
   view: TerminalApplicationView<A>,
 ): {
   readonly messages: readonly string[];
@@ -605,21 +717,21 @@ function stillDeclared<A>(
 export type ViewAdoption = "final" | "provisional";
 
 function adopt<A>(
-  previous: TerminalApplicationModel<A> | undefined,
+  previous: ModelState<A> | undefined,
   view: TerminalApplicationView<A>,
   keymap: CompiledKeymap<A>,
   now: number,
   adoption: ViewAdoption = "final",
-): TerminalApplicationTransition<A> {
+): ModelStep<A> {
   const declared = stillDeclared(previous, view);
-  const context: TerminalApplicationViewContext = {
+  const context: ViewRuleContext<A> = {
     ...(adoption === "final"
       ? {
         dismissedMessages: declared.messages,
         dismissedLayers: declared.layers,
       }
       : {}),
-    layerBindings: keymap.layers,
+    keymap,
   };
   assertTerminalApplicationView(view, context);
   const effects: TerminalApplicationEffect<A>[] = [];
@@ -666,7 +778,7 @@ function adopt<A>(
       : now
     : undefined;
   const messageSince = messageTiming(previous, view.message, now);
-  const model: TerminalApplicationModel<A> = {
+  const model: ModelState<A> = {
     view,
     keymap,
     lists,
@@ -697,11 +809,11 @@ function adopt<A>(
  * Start an application model from its first view. The transition's effects
  * hold the initial selection change.
  */
-export function createTerminalApplicationModel<A>(
+export function createModelState<A>(
   view: TerminalApplicationView<A>,
   config: TerminalApplicationConfig<A> = {},
   now = 0,
-): TerminalApplicationTransition<A> {
+): ModelStep<A> {
   return adopt(
     undefined,
     view,
@@ -714,11 +826,11 @@ export function createTerminalApplicationModel<A>(
  * Adopt a replacement view. Selection follows item identity; membership and
  * order changes wait for the settle window while keys are being pressed.
  */
-export function updateTerminalApplication<A>(
-  model: TerminalApplicationModel<A>,
+export function updateModelState<A>(
+  model: ModelState<A>,
   view: TerminalApplicationView<A>,
   now: number,
-): TerminalApplicationTransition<A> {
+): ModelStep<A> {
   return adopt(model, view, model.keymap, now);
 }
 
@@ -729,11 +841,11 @@ export function updateTerminalApplication<A>(
  * the callbacks finish, {@linkcode assertDismissalsHonoured} checks the view
  * that stands.
  */
-export function updateTerminalApplicationProvisionally<A>(
-  model: TerminalApplicationModel<A>,
+export function updateModelStateProvisionally<A>(
+  model: ModelState<A>,
   view: TerminalApplicationView<A>,
   now: number,
-): TerminalApplicationTransition<A> {
+): ModelStep<A> {
   return adopt(model, view, model.keymap, now, "provisional");
 }
 
@@ -742,7 +854,7 @@ export function updateTerminalApplicationProvisionally<A>(
  * dismissed: the rule a view supplied in answer to a dismissal must keep.
  */
 export function assertDismissalsHonoured<A>(
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
 ): void {
   if (model.dismissed.length === 0 && model.dismissedLayers.length === 0) {
     return;
@@ -750,29 +862,29 @@ export function assertDismissalsHonoured<A>(
   assertTerminalApplicationView(model.view, {
     dismissedMessages: model.dismissed,
     dismissedLayers: model.dismissedLayers,
-    layerBindings: model.keymap.layers,
+    keymap: model.keymap,
   });
 }
 
 /** Replace one list's model. */
 export function replaceList<A>(
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   id: string,
-  list: TerminalApplicationListModel<A>,
-): TerminalApplicationModel<A> {
+  list: ListModel<A>,
+): ModelState<A> {
   return { ...model, lists: { ...model.lists, [id]: list } };
 }
 
 /** Apply settle windows and timed dismissals that are due. */
 function applyTime<A>(
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   now: number,
   effects: TerminalApplicationEffect<A>[],
-): TerminalApplicationModel<A> {
+): ModelState<A> {
   let next = model;
   for (const [id, list] of Object.entries(model.lists)) {
     if (!list.pending || settleWindowOpen(model, list.latest, now)) continue;
-    const settled: TerminalApplicationListModel<A> = {
+    const settled: ListModel<A> = {
       ...list,
       settled: list.latest,
       display: list.latest,
@@ -809,7 +921,7 @@ function applyTime<A>(
 
 /** The message the screen shows: the view's, unless it was dismissed. */
 export function visibleMessage<A>(
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
 ): MessageLine | undefined {
   const message = model.view.message;
   return message === undefined || model.dismissed.includes(message.id)
@@ -821,8 +933,8 @@ export function visibleMessage<A>(
  * The next time something is due without input: a settle window closing, a
  * message timing out, or a busy liveness becoming visible.
  */
-export function terminalApplicationDeadline<A>(
-  model: TerminalApplicationModel<A>,
+export function modelStateDeadline<A>(
+  model: ModelState<A>,
   now: number,
 ): number | undefined {
   const deadlines: number[] = [];
@@ -852,11 +964,11 @@ export function terminalApplicationDeadline<A>(
 
 /** Select a row by index in a list, keeping the model's other state. */
 export function selectRow<A>(
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   listId: string,
   rows: ListRows<A>,
   index: number,
-): TerminalApplicationModel<A> {
+): ModelState<A> {
   const list = model.lists[listId];
   const key = rowKey(rows.rows[index]);
   if (list === undefined || key === undefined) return model;
@@ -865,11 +977,11 @@ export function selectRow<A>(
 }
 
 function revealItem<A>(
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   listId: string,
   itemId: string,
   reveal: boolean,
-): TerminalApplicationModel<A> {
+): ModelState<A> {
   let list = model.lists[listId];
   if (list === undefined) return model;
   if (groupOfItem(list.display, itemId) === undefined && list.pending) {
@@ -908,13 +1020,13 @@ function revealItem<A>(
 
 /** Unfold every group a fold row holds, keeping the selection on its first row. */
 function unfold<A>(
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   listId: string,
   groups: readonly string[],
-): TerminalApplicationModel<A> {
+): ModelState<A> {
   const list = model.lists[listId];
   if (list === undefined) return model;
-  const opened: TerminalApplicationListModel<A> = {
+  const opened: ListModel<A> = {
     ...list,
     reveal: groups,
     folds: list.folds.filter((id) => !groups.includes(id)),
@@ -943,14 +1055,14 @@ function unfold<A>(
 }
 
 function filterAfterEdit<A>(
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   listId: string,
-  filter: TerminalApplicationFilter | undefined,
-): TerminalApplicationModel<A> {
+  filter: FilterState | undefined,
+): ModelState<A> {
   const list = model.lists[listId];
   if (list === undefined) return model;
   const { filter: _old, anchor: _anchor, ...rest } = list;
-  const next: TerminalApplicationListModel<A> = filter === undefined
+  const next: ListModel<A> = filter === undefined
     ? { ...rest, scroll: 0 }
     : { ...rest, filter, scroll: 0 };
   const rows = listModelRows(next);
@@ -968,18 +1080,18 @@ function filterAfterEdit<A>(
 
 /** The effects one input owes, collected as it applies. */
 export interface KeyStep<A> {
-  readonly model: TerminalApplicationModel<A>;
+  readonly model: ModelState<A>;
   readonly effects: TerminalApplicationEffect<A>[];
 }
 
 /** Keys while a filter field owns input. */
 function filterKey<A>(
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   listId: string,
-  filter: TerminalApplicationFilter,
+  filter: FilterState,
   key: TerminalKey,
   step: KeyStep<A>,
-): TerminalApplicationModel<A> {
+): ModelState<A> {
   const chord = keyChordOf(key);
   if (chord === "escape") return filterAfterEdit(model, listId, undefined);
   if (chord === "enter") {
@@ -1018,10 +1130,10 @@ function filterKey<A>(
 }
 
 function scrollDetail<A>(
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   itemId: string | undefined,
   delta: number,
-): TerminalApplicationModel<A> {
+): ModelState<A> {
   if (itemId === undefined) return model;
   const current = model.detailScroll[itemId] ?? 0;
   return {
@@ -1035,10 +1147,10 @@ function scrollDetail<A>(
 
 /** Navigation keys a list understands, whether or not a filter owns input. */
 function navigate<A>(
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   listId: string,
   chord: string,
-): TerminalApplicationModel<A> {
+): ModelState<A> {
   const list = model.lists[listId];
   if (list === undefined) return model;
   const rows = listModelRows(list);
@@ -1123,9 +1235,9 @@ function navigate<A>(
 
 /** Enter on the selected row: run an item, fold or unfold a group. */
 function enter<A>(
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   step: KeyStep<A>,
-): TerminalApplicationModel<A> {
+): ModelState<A> {
   const body = model.view.body;
   if (body.kind === "empty" && model.primaryFocused) {
     if (body.primary.action !== undefined) {
@@ -1145,11 +1257,11 @@ function enter<A>(
 
 /** Run a list's selected item, or fold or unfold its selected group row. */
 export function enterRow<A>(
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   listId: string,
   step: KeyStep<A>,
   source: "enter" | "click",
-): TerminalApplicationModel<A> {
+): ModelState<A> {
   const list = model.lists[listId];
   if (list === undefined) return model;
   const rows = listModelRows(list);
@@ -1177,9 +1289,9 @@ export function enterRow<A>(
 
 /** Escape closes the nearest thing: a filter, zoom, then a message. */
 function escape<A>(
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   step: KeyStep<A>,
-): TerminalApplicationModel<A> {
+): ModelState<A> {
   const listView = bodyList(model.view);
   const list = listView === undefined ? undefined : model.lists[listView.id];
   if (listView !== undefined && list?.filter !== undefined) {
@@ -1209,10 +1321,10 @@ function escape<A>(
 }
 
 function readingKey<A>(
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   id: string,
   chord: string,
-): TerminalApplicationModel<A> {
+): ModelState<A> {
   const rows = Math.max(1, (model.geometry?.readingRows ?? 2) - 1);
   const current = model.readingScroll[id] ?? 0;
   const next = chord === "up"
@@ -1236,15 +1348,17 @@ function readingKey<A>(
 
 /** Keys while the list (not a field) owns input. */
 function baseKey<A>(
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   key: TerminalKey,
   step: KeyStep<A>,
-): TerminalApplicationModel<A> {
+): ModelState<A> {
   const chord = keyChordOf(key);
   if (chord === undefined) return model;
   const listView = bodyList(model.view);
   const viKeys = model.keymap.viKeys;
-  const reserved = reservedBaseChords(viKeys);
+  const reserved = new Set(
+    terminalApplicationReservedKeys(model.view.body, { viKeys }),
+  );
   const navigation = chord === "j" && viKeys
     ? "down"
     : chord === "k" && viKeys
@@ -1298,7 +1412,7 @@ function baseKey<A>(
  * cannot bind it, so it means one thing everywhere.
  */
 export function interruptEffect<A>(
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
 ): TerminalApplicationEffect<A> {
   const binding = model.keymap.base.get("ctrl-c");
   return binding === undefined
@@ -1313,7 +1427,7 @@ export function interruptEffect<A>(
  * input. Navigation waits below the minimum size, but these still run.
  */
 export function bindingInForce<A>(
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   chord: string,
 ): CompiledBinding<A> | undefined {
   const layer = topLayer(model);
@@ -1332,10 +1446,10 @@ export function bindingInForce<A>(
 }
 
 function keyTransition<A>(
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   key: TerminalKey,
   step: KeyStep<A>,
-): TerminalApplicationModel<A> {
+): ModelState<A> {
   const chord = keyChordOf(key);
   if (chord === "ctrl-c") {
     step.effects.push(interruptEffect(model));
@@ -1367,27 +1481,27 @@ function keyTransition<A>(
 
 /** Apply one key as if pressed, as a click on its key hint does. */
 export function applyKey<A>(
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   key: TerminalKey,
   step: KeyStep<A>,
-): TerminalApplicationModel<A> {
+): ModelState<A> {
   return keyTransition(model, key, step);
 }
 
 /** Replace one layer's model. */
 export function replaceLayer<A>(
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   layer: TerminalApplicationLayerModel,
-): TerminalApplicationModel<A> {
+): ModelState<A> {
   return { ...model, layers: { ...model.layers, [layer.id]: layer } };
 }
 
 /** Report a layer step's effects, hiding a dismissed layer at once. */
 export function applyLayerEffects<A>(
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   effects: LayerStepContext<A>["effects"],
   step: KeyStep<A>,
-): TerminalApplicationModel<A> {
+): ModelState<A> {
   let next = model;
   for (const effect of effects) {
     step.effects.push(effect);
@@ -1403,11 +1517,11 @@ export function applyLayerEffects<A>(
 
 /** Move between a reader's rows; undefined when the key is not row movement. */
 function readerRowsKey<A>(
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   layer: ApplicationReader<A>,
   key: TerminalKey,
   step: KeyStep<A>,
-): TerminalApplicationModel<A> | undefined {
+): ModelState<A> | undefined {
   const chord = keyChordOf(key);
   const listId = layer.rows?.id;
   const list = listId === undefined ? undefined : model.lists[listId];
@@ -1445,11 +1559,11 @@ function readerRowsKey<A>(
 
 /** Apply one key to the top layer. */
 function layerStep<A>(
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   layer: ApplicationLayer<A>,
   key: TerminalKey,
   step: KeyStep<A>,
-): TerminalApplicationModel<A> {
+): ModelState<A> {
   const stored = model.layers[layer.id];
   if (stored === undefined) return model;
   // A key ends any two-click confirmation a click began.
@@ -1481,11 +1595,11 @@ function graphemeCount(text: string): number {
  * closed while the caller worked.
  */
 function writeField<A>(
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
   layerId: string,
   fieldId: string,
   value: string,
-): TerminalApplicationModel<A> {
+): ModelState<A> {
   const stored = model.layers[layerId];
   const layer = visibleLayers(model).find((open) => open.id === layerId);
   if (
@@ -1519,13 +1633,13 @@ function writeField<A>(
  * bound keys and Enter become actions; time settles membership changes and
  * times out messages; a caller selection follows identity and may reveal.
  */
-export function transitionTerminalApplication<A>(
-  model: TerminalApplicationModel<A>,
+export function transitionModelState<A>(
+  model: ModelState<A>,
   input: TerminalApplicationInput,
   now: number,
-): TerminalApplicationTransition<A> {
+): ModelStep<A> {
   const effects: TerminalApplicationEffect<A>[] = [];
-  let next: TerminalApplicationModel<A>;
+  let next: ModelState<A>;
   switch (input.kind) {
     case "key":
       next = keyTransition(
@@ -1561,8 +1675,8 @@ export function transitionTerminalApplication<A>(
 
 /** Hide the mouse selection hint: any input means the person has seen it. */
 function withoutHint<A>(
-  model: TerminalApplicationModel<A>,
-): TerminalApplicationModel<A> {
+  model: ModelState<A>,
+): ModelState<A> {
   if (model.mouseHintSince === undefined) return model;
   const { mouseHintSince: _shown, ...rest } = model;
   return rest;
@@ -1575,7 +1689,7 @@ function layerFocus(layer: TerminalApplicationLayerModel): string {
 
 /** The control that receives the next key. */
 function focusedControl<A>(
-  model: TerminalApplicationModel<A>,
+  model: ModelState<A>,
 ): string | undefined {
   const top = topLayer(model);
   const layer = top === undefined ? undefined : model.layers[top.id];
@@ -1593,8 +1707,8 @@ function focusedControl<A>(
 }
 
 /** Project the model to the snapshot callers read. */
-export function terminalApplicationState<A>(
-  model: TerminalApplicationModel<A>,
+export function snapshotModelState<A>(
+  model: ModelState<A>,
 ): TerminalApplicationState {
   const lists: Record<string, TerminalApplicationListState> = {};
   for (const [id, list] of Object.entries(model.lists)) {
@@ -1644,5 +1758,9 @@ export function terminalApplicationState<A>(
     layers: Object.freeze(layers),
     fields: Object.freeze(fields),
     fullyRead: Object.freeze(fullyRead),
+    dismissed: Object.freeze({
+      messages: Object.freeze([...model.dismissed]),
+      layers: Object.freeze([...model.dismissedLayers]),
+    }),
   });
 }
