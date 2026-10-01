@@ -43,6 +43,7 @@ import {
   type InteractionMachineContext,
   runInteraction,
 } from "./driver.ts";
+import { systemTerminalClock } from "./clock.ts";
 import { GraphemeTextEditor } from "./editor.ts";
 import { isNamedKey, type TerminalKey } from "./keys.ts";
 import type { InteractionFrameViewport } from "./viewport-budget.ts";
@@ -93,13 +94,6 @@ export interface DiscoveryRequestPacing {
   /** Injectable scheduler driving deterministic debounce tests. */
   readonly scheduler?: InteractionDelayScheduler;
 }
-
-const systemDelayScheduler: InteractionDelayScheduler = {
-  delay(callback, delayMs) {
-    const timer = setTimeout(callback, delayMs);
-    return () => clearTimeout(timer);
-  },
-};
 
 function discoveryDebounceMs(value: number | undefined): number {
   const debounce = value ?? 0;
@@ -275,7 +269,7 @@ class SearchInteractionMachine<T>
       call: searchProvider(options.search),
       apply: (entries) => this.#apply(entries),
       debounceMs: discoveryDebounceMs(options.debounceMs),
-      scheduler: options.scheduler ?? systemDelayScheduler,
+      scheduler: options.scheduler ?? systemTerminalClock,
     });
   }
 
@@ -494,7 +488,7 @@ class SearchSelectionsInteractionMachine<T>
       call: searchProvider(options.search),
       apply: (entries) => this.#apply(entries),
       debounceMs: discoveryDebounceMs(options.debounceMs),
-      scheduler: options.scheduler ?? systemDelayScheduler,
+      scheduler: options.scheduler ?? systemTerminalClock,
     });
   }
 
@@ -762,7 +756,7 @@ class AutocompleteInteractionMachine
         call: (query, signal) => provider(query, signal),
         apply: (suggestions) => this.#apply(suggestions),
         debounceMs: discoveryDebounceMs(options.debounceMs),
-        scheduler: options.scheduler ?? systemDelayScheduler,
+        scheduler: options.scheduler ?? systemTerminalClock,
       });
     } else {
       this.#static = options.suggestions;

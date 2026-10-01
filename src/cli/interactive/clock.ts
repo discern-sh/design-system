@@ -26,6 +26,31 @@ export const systemTerminalClock: TerminalClock = Object.freeze({
   },
 });
 
+/**
+ * Settle with `pending`, or with `elapsed` once `delayMs` passes on
+ * `scheduler`, whichever comes first; the delay is cancelled either way.
+ * Every bounded wait for terminal input races through here, so the clock
+ * that times it is always one argument away from a test's manual clock.
+ */
+export async function raceTerminalDelay<T, E>(
+  pending: Promise<T>,
+  delayMs: number,
+  elapsed: E,
+  scheduler: InteractionDelayScheduler = systemTerminalClock,
+): Promise<T | E> {
+  const timer = { cancel: (): void => {} };
+  try {
+    return await Promise.race([
+      pending,
+      new Promise<E>((resolve) => {
+        timer.cancel = scheduler.delay(() => resolve(elapsed), delayMs);
+      }),
+    ]);
+  } finally {
+    timer.cancel();
+  }
+}
+
 /** Interval between animation frames: four frames a second. */
 export const TERMINAL_ANIMATION_INTERVAL_MS = 250;
 

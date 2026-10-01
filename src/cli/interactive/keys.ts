@@ -4,6 +4,7 @@
  * @module
  */
 
+import { raceTerminalDelay } from "./clock.ts";
 import type { TerminalIO } from "./io.ts";
 import { adoptTerminalRead } from "./read-broker.ts";
 
@@ -388,23 +389,6 @@ const LONE_ESCAPE_DELAY_MS = 100;
 
 const LONE_ESCAPE_ELAPSED = Symbol("lone-escape-elapsed");
 
-async function raceLoneEscapeDelay(
-  read: Promise<Uint8Array | null>,
-  delayMs: number,
-): Promise<Uint8Array | null | typeof LONE_ESCAPE_ELAPSED> {
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  try {
-    return await Promise.race([
-      read,
-      new Promise<typeof LONE_ESCAPE_ELAPSED>((resolve) => {
-        timer = setTimeout(() => resolve(LONE_ESCAPE_ELAPSED), delayMs);
-      }),
-    ]);
-  } finally {
-    if (timer !== undefined) clearTimeout(timer);
-  }
-}
-
 /** Tuning accepted by {@linkcode TerminalKeyReader}. */
 export interface TerminalKeyReaderOptions {
   /**
@@ -446,7 +430,11 @@ class TerminalKeyBatchReader {
       let chunk: Uint8Array | null | typeof LONE_ESCAPE_ELAPSED;
       try {
         chunk = this.#decoder.bufferedText === "\x1b"
-          ? await raceLoneEscapeDelay(read.result, this.#escapeDelayMs)
+          ? await raceTerminalDelay(
+            read.result,
+            this.#escapeDelayMs,
+            LONE_ESCAPE_ELAPSED,
+          )
           : await read.result;
       } catch (error) {
         read.release();

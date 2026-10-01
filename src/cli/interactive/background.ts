@@ -10,6 +10,7 @@
  */
 
 import type { TerminalRgbColor } from "../ansi-palette.ts";
+import { raceTerminalDelay, systemTerminalClock } from "./clock.ts";
 import type { TerminalIO } from "./io.ts";
 import { withRawTerminal } from "./lifecycle.ts";
 import {
@@ -88,23 +89,6 @@ interface ReportedColor {
   readonly red: number;
   readonly green: number;
   readonly blue: number;
-}
-
-async function raceQueryDeadline(
-  read: Promise<Uint8Array | null>,
-  remainingMs: number,
-): Promise<Uint8Array | null | typeof QUERY_ELAPSED> {
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  try {
-    return await Promise.race([
-      read,
-      new Promise<typeof QUERY_ELAPSED>((resolve) => {
-        timer = setTimeout(() => resolve(QUERY_ELAPSED), remainingMs);
-      }),
-    ]);
-  } finally {
-    if (timer !== undefined) clearTimeout(timer);
-  }
 }
 
 function concatChunks(left: Uint8Array, right: Uint8Array): Uint8Array {
@@ -220,11 +204,11 @@ async function readBackgroundReport(
   timeoutMs: number,
 ): Promise<string | undefined> {
   io.write(BACKGROUND_QUERY);
-  const deadline = Date.now() + timeoutMs;
+  const deadline = systemTerminalClock.now() + timeoutMs;
   let received: Uint8Array = new Uint8Array(0);
   let timedOut = false;
   while (received.length <= REPORT_LIMIT) {
-    const remaining = deadline - Date.now();
+    const remaining = deadline - systemTerminalClock.now();
     if (remaining <= 0) {
       timedOut = true;
       break;
@@ -232,7 +216,11 @@ async function readBackgroundReport(
     const read = adoptTerminalRead(io);
     let chunk: Uint8Array | null | typeof QUERY_ELAPSED;
     try {
-      chunk = await raceQueryDeadline(read.result, remaining);
+      chunk = await raceTerminalDelay(
+        read.result,
+        remaining,
+        QUERY_ELAPSED,
+      );
     } catch (error) {
       read.release();
       throw error;

@@ -1,5 +1,6 @@
 /** Input-side cleanup for reports queued before mouse tracking disabled. */
 
+import { raceTerminalDelay, systemTerminalClock } from "./clock.ts";
 import type { TerminalIO } from "./io.ts";
 import {
   adoptTerminalRead,
@@ -188,23 +189,6 @@ function lateMouseFenceFilter(): TerminalReadFilter {
   };
 }
 
-async function raceFenceDeadline(
-  read: Promise<Uint8Array | null>,
-  remainingMs: number,
-): Promise<Uint8Array | null | typeof INPUT_FENCE_ELAPSED> {
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  try {
-    return await Promise.race([
-      read,
-      new Promise<typeof INPUT_FENCE_ELAPSED>((resolve) => {
-        timer = setTimeout(() => resolve(INPUT_FENCE_ELAPSED), remainingMs);
-      }),
-    ]);
-  } finally {
-    if (timer !== undefined) clearTimeout(timer);
-  }
-}
-
 /**
  * Disable-side fence for a terminal that reported mouse input. The terminal's
  * cursor-position reply is ordered after reports already queued when the reset
@@ -213,15 +197,19 @@ async function raceFenceDeadline(
  */
 export async function drainTerminalMouseInput(io: TerminalIO): Promise<void> {
   io.write(QUERY_TERMINAL_CURSOR_POSITION);
-  const deadline = Date.now() + INPUT_FENCE_TIMEOUT_MS;
+  const deadline = systemTerminalClock.now() + INPUT_FENCE_TIMEOUT_MS;
   let received: Uint8Array = new Uint8Array(0);
   while (received.length <= INPUT_FENCE_LIMIT) {
-    const remaining = deadline - Date.now();
+    const remaining = deadline - systemTerminalClock.now();
     if (remaining <= 0) break;
     const read = adoptTerminalRead(io);
     let chunk: Uint8Array | null | typeof INPUT_FENCE_ELAPSED;
     try {
-      chunk = await raceFenceDeadline(read.result, remaining);
+      chunk = await raceTerminalDelay(
+        read.result,
+        remaining,
+        INPUT_FENCE_ELAPSED,
+      );
     } catch (error) {
       read.release();
       throw error;
