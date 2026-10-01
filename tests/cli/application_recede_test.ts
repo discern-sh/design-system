@@ -206,6 +206,43 @@ Deno.test("the base beneath a layer recedes in every body", async (t) => {
         { columns: 100, rows: 40, colorDepth: "truecolor" },
       );
       assertReceded(baseRows(driver), name);
+      for (const row of baseRows(driver)) {
+        assert(
+          !/PgUp|PgDn/u.test(row),
+          `${name}: a receded marker names a key the layer owns now`,
+        );
+      }
     });
   }
+});
+
+Deno.test("a receded overflow marker keeps its count and gives up its key", () => {
+  const driver = new ApplicationDriver(
+    {
+      ...testView(["a", "b"]),
+      layers: [SHEET],
+    },
+    { columns: 80, rows: 12, colorDepth: "none" },
+  );
+  const view = testView(["a", "b"]);
+  if (view.body.kind !== "master-detail") throw new Error("expected detail");
+  driver.update({
+    ...view,
+    body: {
+      ...view.body,
+      detail: {
+        ...view.body.detail,
+        content: {
+          a: Array.from({ length: 30 }, (_, index) => ({
+            kind: "text" as const,
+            runs: [{ text: `line ${index}` }],
+          })),
+        },
+      },
+    },
+    layers: [SHEET],
+  });
+  const rows = baseRows(driver);
+  assert(rows.some((row) => row.includes("more")), rows.join("\n"));
+  for (const row of rows) assert(!/PgUp|PgDn/u.test(row), row);
 });

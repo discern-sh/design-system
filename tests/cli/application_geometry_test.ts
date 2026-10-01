@@ -507,3 +507,20 @@ Deno.test("chrome rows keep their two-cell gutters at every width", async (t) =>
     }
   }
 });
+
+Deno.test("a truncated word never leaves a space before its ellipsis", () => {
+  for (const geometry of MATRIX) {
+    for (const unicode of [true, false]) {
+      const driver = new ApplicationDriver(applicationDemoView(), {
+        columns: geometry.columns,
+        rows: geometry.rows,
+        colorDepth: "none",
+        unicode,
+      });
+      assert(
+        !/ (…|\.\.\.)/u.test(driver.text),
+        `${geometry.columns}x${geometry.rows}:\n${driver.text}`,
+      );
+    }
+  }
+});

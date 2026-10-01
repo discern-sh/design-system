@@ -236,11 +236,16 @@ export function clip(
   width: number,
 ): string {
   if (width <= 0) return "";
-  return truncateText(
+  const ellipsis = terminalGlyph("ellipsis", context.capabilities);
+  const clipped = truncateText(
     context.capabilities.unicode ? text : asciiSpelling(text),
     width,
-    terminalGlyph("ellipsis", context.capabilities),
+    ellipsis,
   );
+  // A cut at a word boundary reads `archive…`, never `archive …`.
+  return clipped.endsWith(` ${ellipsis}`)
+    ? `${clipped.slice(0, -ellipsis.length - 1).trimEnd()}${ellipsis}`
+    : clipped;
 }
 
 /**
@@ -270,7 +275,8 @@ export function spread(
 
 /**
  * An overflow marker such as `↓ 6 more · PgDn`, or its ASCII words, with
- * the key that pages toward what is hidden when one does.
+ * the key that pages toward what is hidden when one does — unless the
+ * region has receded beneath a layer, whose keys those are now.
  */
 export function overflowMarker(
   context: PaintContext,
@@ -285,7 +291,8 @@ export function overflowMarker(
     : direction === "up"
     ? copy.moreAbove(count)
     : copy.moreBelow(count);
-  return key === undefined
+  // A receded region's keys belong to the layer above it now.
+  return key === undefined || context.recede === true
     ? base
     : `${base} ${terminalGlyph("separator", context.capabilities)} ${
       formatKeyChord(key, context.capabilities)
