@@ -7,6 +7,7 @@
  */
 
 import { styleText, terminalPaintsSurfaces } from "../../ansi.ts";
+import { asciiSpelling } from "../../ascii-text.ts";
 import type { TerminalCapabilities } from "../../capabilities.ts";
 import type { CliPresentationOptions } from "../../contracts.ts";
 import {
@@ -105,7 +106,8 @@ export function ink(
 ): string {
   const on = surface ?? context.ground;
   const receded = context.recede === true;
-  return styleText(text, {
+  const shown = context.capabilities.unicode ? text : asciiSpelling(text);
+  return styleText(shown, {
     color: terminalTextToneColor(
       context.theme,
       receded ? "faint" : style.tone,
@@ -115,9 +117,15 @@ export function ink(
   }, context.capabilities);
 }
 
-/** A run's text for the repertoire; an empty ASCII form drops it. */
+/**
+ * A run's text for the repertoire: without Unicode its `ascii` form, or its
+ * text with typographic marks spelled in ASCII; an empty ASCII form drops
+ * the run.
+ */
 export function runText(context: PaintContext, run: InlineRun): string {
-  return context.capabilities.unicode ? run.text : run.ascii ?? run.text;
+  return context.capabilities.unicode
+    ? run.text
+    : run.ascii ?? asciiSpelling(run.text);
 }
 
 /** The tone and weight a run's role and tone give it. */
@@ -221,7 +229,7 @@ export function fitLine(
   );
 }
 
-/** Truncate plain text with the repertoire's ellipsis. */
+/** Truncate plain text with the repertoire's ellipsis, spelled for the repertoire. */
 export function clip(
   context: PaintContext,
   text: string,
@@ -229,7 +237,7 @@ export function clip(
 ): string {
   if (width <= 0) return "";
   return truncateText(
-    text,
+    context.capabilities.unicode ? text : asciiSpelling(text),
     width,
     terminalGlyph("ellipsis", context.capabilities),
   );

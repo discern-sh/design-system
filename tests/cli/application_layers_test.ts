@@ -1257,3 +1257,46 @@ Deno.test("a menu can rename Enter and Escape and leave / to a binding", () => {
     true,
   );
 });
+
+Deno.test("without Unicode every frame is pure ASCII", async (t) => {
+  const scenes: readonly (readonly [
+    string,
+    () => TerminalApplicationView<string>,
+    readonly string[],
+  ])[] = [
+    ["list", () => withLayers(), ["down"]],
+    ["zoom", () => withLayers(), ["down", "space"]],
+    ["run", () => withLayers(demoRunSheet(IMAGE)), ["d"]],
+    [
+      "progress",
+      () =>
+        withLayers(
+          demoRunSheet(IMAGE, "working", { startedAt: 0, now: 11_000 }),
+        ),
+      [],
+    ],
+    ["delete", () => withLayers(demoDeleteSheet(ARCHIVE)), ["p"]],
+    ["form", () => withLayers(demoNewJobForm()), ["tab", "enter"]],
+    ["menu", () => withLayers(demoActionsMenu(IMAGE)), ["end", "enter"]],
+    ["palette", () => withLayers(demoPalette(DEMO_JOBS, false)), []],
+    ["keys", () => withLayers(demoKeysReader()), []],
+    ["log", () => withLayers(demoLogReader(IMAGE)), []],
+  ];
+  for (const [name, view, keys] of scenes) {
+    for (const [columns, rows] of GEOMETRIES) {
+      await t.step(`${name} at ${columns}x${rows}`, () => {
+        const driver = new ApplicationDriver(view(), {
+          columns,
+          rows,
+          colorDepth: "none",
+          unicode: false,
+        });
+        driver.key(...keys);
+        const strange = [...driver.text].filter((character) =>
+          !/[ -~\n]/u.test(character)
+        );
+        assertEquals(strange, [], driver.text);
+      });
+    }
+  }
+});

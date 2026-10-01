@@ -7,6 +7,7 @@
  */
 
 import { styleText, type TerminalTextStyle } from "./ansi.ts";
+import { asciiSpelling } from "./ascii-text.ts";
 import type { TerminalCapabilities } from "./capabilities.ts";
 import { terminalGlyph, type TerminalGlyphName } from "./terminal-glyphs.ts";
 import { measureText, truncateStyledText, truncateText } from "./text.ts";
@@ -244,7 +245,7 @@ export function layoutKeyHintsCli(
     key: formatKeyChord(hint.key, capabilities),
     label: capabilities.unicode
       ? hint.label ?? ""
-      : (hint.label ?? "").replaceAll("…", ellipsis),
+      : asciiSpelling(hint.label ?? ""),
     primary,
     withLabel: true,
   });
