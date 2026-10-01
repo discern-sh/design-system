@@ -229,7 +229,27 @@ export function fitListScroll<A>(
     return next;
   };
   const margined = fit(SCROLL_MARGIN, scroll);
-  return shows(margined) ? margined : fit(0, scroll);
+  const fitted = shows(margined) ? margined : fit(0, scroll);
+  // A group's header keeps with its first row: a window that would end on
+  // a header while rows stay hidden shows one more row, unless the selection
+  // would lose its line or its margin. An anchored selection keeps its line.
+  const later = fitted + 1;
+  return anchor === undefined && endsOnHeader(rows, height, fitted) &&
+      later <= maxScroll && shows(later) &&
+      selected - Math.min(SCROLL_MARGIN, selected) >= later
+    ? later
+    : fitted;
+}
+
+/** Whether a window ends on a group's header while rows stay hidden below it. */
+function endsOnHeader<A>(
+  rows: ListRows<A>,
+  height: number,
+  scroll: number,
+): boolean {
+  const window = listWindow(rows, height, scroll);
+  return window.below > 0 &&
+    rows.rows[scroll + window.count - 1]?.kind === "header";
 }
 
 interface RowPaint {
@@ -519,14 +539,22 @@ export function renderListViewport<A>(
   lines.push(render(first, marker("up", window.above)));
   keys.push(rowKey(rows.rows[first]));
   if (first === viewport.selected) line = 0;
+  // A header the window still ends on, because showing its first row would
+  // move the selection, holds its row blank rather than stand over nothing.
+  const widowed = endsOnHeader(rows, height, scroll) &&
+      scroll + window.count - 1 !== viewport.selected
+    ? scroll + window.count - 1
+    : undefined;
   for (
     let index = scroll + (window.sticky === undefined ? 1 : 0);
     index < scroll + window.count;
     index += 1
   ) {
     if (index === viewport.selected) line = lines.length;
-    lines.push(render(index, ""));
-    keys.push(rowKey(rows.rows[index]));
+    lines.push(
+      index === widowed ? fitLine(context, "", width) : render(index, ""),
+    );
+    keys.push(index === widowed ? undefined : rowKey(rows.rows[index]));
   }
   if (window.below > 0) {
     lines.push(

@@ -490,10 +490,30 @@ export function renderDetailBlocks(
   blocks: readonly ApplicationDetailBlock[],
   given: DetailLayout,
 ): readonly string[] {
+  return layoutDetailBlocks(context, blocks, given).lines;
+}
+
+/** Detail lines and where each block that stands on its own begins. */
+export interface DetailBlockLines {
+  readonly lines: readonly string[];
+  /**
+   * The line each block begins at, in order; text or a meter that belongs
+   * to the state above it begins no block of its own.
+   */
+  readonly starts: readonly number[];
+}
+
+/** Render detail blocks and record where each begins. */
+export function layoutDetailBlocks(
+  context: PaintContext,
+  blocks: readonly ApplicationDetailBlock[],
+  given: DetailLayout,
+): DetailBlockLines {
   const layout = given.keyWidth === undefined
     ? { ...given, keyWidth: hintsKeyWidth(context, blocks) }
     : given;
   const lines: string[] = [];
+  const starts: number[] = [];
   let previous: ApplicationDetailBlock["kind"] | undefined;
   for (const block of blocks) {
     const rendered = renderBlock(context, block, layout);
@@ -501,10 +521,11 @@ export function renderDetailBlocks(
     const hugs = (previous === "state" || previous === "meter") &&
       (block.kind === "text" || block.kind === "meter");
     if (previous !== undefined && !hugs) lines.push("");
+    if (!hugs) starts.push(lines.length);
     lines.push(...rendered);
     previous = block.kind;
   }
-  return lines;
+  return { lines, starts };
 }
 
 /** One scrolled slice of detail lines. */

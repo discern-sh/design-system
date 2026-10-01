@@ -124,6 +124,8 @@ interface PanelRow {
   readonly control?: LayerControl;
   /** Further controls sharing the row, such as closed disclosures in one flow. */
   readonly controls?: readonly LayerControl[];
+  /** A section's title, which never ends a viewport that hides rows below it. */
+  readonly heading?: boolean;
 }
 
 /** Whether a row shows a control. */
@@ -796,6 +798,24 @@ function settlePanel(
       const follow = panel.follow;
       keep(body.findIndex((row) => holds(row, follow)), false);
     }
+    // A section's title keeps with its first row: a viewport that would end
+    // on a title while rows stay hidden shows one more row, unless that
+    // would hide the row it keeps in view.
+    if (overflows && scroll < maxScroll) {
+      const now = viewport(scroll);
+      const end = now.first + now.rows;
+      const kept = [reveal, panel.follow].flatMap((control) =>
+        control === undefined
+          ? []
+          : [body.findIndex((row) => holds(row, control))]
+      ).filter((index) => index >= 0);
+      const next = viewport(scroll + 1);
+      if (
+        body[end - 1]?.heading === true && end < body.length &&
+        next.first < end && next.first + next.rows > end &&
+        kept.every((index) => index >= next.first)
+      ) scroll += 1;
+    }
     let at = overflows
       ? viewport(scroll)
       : { up: 0, first: 0, rows: body.length, down: 0 };
@@ -867,12 +887,25 @@ function drawPanel(
       width,
     ),
   });
+  const slice = body.slice(at.first, at.first + at.rows);
+  // A title that still ends the viewport, because showing its first row
+  // would hide the row kept in view, gives its row to the lower marker.
+  const widowed = at.down > 0 && slice.at(-1)?.heading === true;
   const bodyRows: PanelRow[] = [
     ...(at.up > 0
       ? [marker("up", count(body.slice(0, at.first)), "page-up")]
       : []),
-    ...body.slice(at.first, at.first + at.rows),
-    ...(at.down > 0 ? [marker("down", hidden, "page-down")] : []),
+    ...(widowed ? slice.slice(0, -1) : slice),
+    ...(at.down > 0
+      ? [
+        marker(
+          "down",
+          widowed ? count(body.slice(at.first + at.rows - 1)) : hidden,
+          "page-down",
+        ),
+      ]
+      : []),
+    ...(widowed ? [BLANK] : []),
   ];
   while (bodyRows.length < visible) bodyRows.push(BLANK);
   const foot = [...placed.foot];
@@ -1629,7 +1662,8 @@ function menuPanel<A>(
   const gap = 3;
   const columnWidth = columns === 2 ? Math.floor((width - gap) / 2) : width;
   const columnRows = rows.columns.map((sections) => {
-    const lines: { text: string; control?: LayerControl }[] = [];
+    const lines: { text: string; control?: LayerControl; heading?: true }[] =
+      [];
     for (const [index, entry] of sections.entries()) {
       if (index > 0) lines.push({ text: "" });
       lines.push({
@@ -1638,6 +1672,7 @@ function menuPanel<A>(
           clip(context, entry.section.title, columnWidth),
           entry.section.tone ?? "faint",
         ),
+        heading: true,
       });
       for (const item of entry.items) {
         const control = itemControl(item.id);
@@ -1714,11 +1749,16 @@ function menuPanel<A>(
       : right?.control !== undefined && model.focus === right.control
       ? right.control
       : left?.control ?? right?.control;
+    // A row is a title only where every column it spans shows one.
+    const heading = [left, right].every((cell) =>
+      cell === undefined || cell.heading === true || cell.text === ""
+    ) && (left?.heading === true || right?.heading === true);
     body.push({
       text,
       hits,
       bar: left?.control !== undefined && model.focus === left.control,
       ...(control === undefined ? {} : { control }),
+      ...(heading ? { heading } : {}),
     });
   }
   if (rows.unavailable !== undefined && menu.unavailable !== undefined) {
@@ -1905,7 +1945,7 @@ function palettePanel<A>(
   for (const row of result.rows) {
     if (row.kind === "section") {
       if (body.length > 0) body.push(BLANK);
-      body.push({ text: raised(context, row.title, "faint") });
+      body.push({ text: raised(context, row.title, "faint"), heading: true });
       continue;
     }
     const item = row.item;

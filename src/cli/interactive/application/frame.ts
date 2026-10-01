@@ -42,6 +42,8 @@ import type { TerminalSize } from "../io.ts";
 import { isTerminalKeyName } from "../keys.ts";
 import type { TerminalApplicationStateReport } from "../state-report.ts";
 import {
+  type DetailViewport,
+  layoutDetailBlocks,
   renderDetailBlocks,
   renderStrip,
   scrollDetail,
@@ -889,6 +891,30 @@ function scrolled<A>(
   };
 }
 
+/**
+ * A detail viewport beneath a layer that covers its first `cover` rows. The
+ * rows of a block that began under the layer stay blank, so what shows below
+ * the layer starts at a block's first line — a section's title, say — never
+ * part-way through one; with no block beginning below it, nothing shows.
+ */
+function beneathCover(
+  viewport: DetailViewport,
+  starts: readonly number[],
+  cover: number,
+): readonly string[] {
+  if (cover <= 0) return viewport.lines;
+  const begins = new Set(starts);
+  const shown = [...viewport.lines];
+  for (let row = cover; row < shown.length; row += 1) {
+    const line = row - viewport.offset;
+    if (
+      line >= 0 && line < viewport.shown && begins.has(viewport.first + line)
+    ) break;
+    shown[row] = "";
+  }
+  return shown;
+}
+
 function masterDetail<A>(
   context: FrameContext,
   model: ModelState<A>,
@@ -897,6 +923,7 @@ function masterDetail<A>(
   region: Region,
   short: boolean,
   covered: boolean,
+  cover: number,
 ): BodyResult<A> {
   const { columns } = size;
   const split = body.split ?? DEFAULT_APPLICATION_SPLIT_RULES;
@@ -1055,7 +1082,7 @@ function masterDetail<A>(
   const detailWidth = columns - listWidth;
   const [left, right] = split.detailPadding[tier];
   const contentWidth = Math.max(1, detailWidth - left - right);
-  const lines = renderDetailBlocks(context, blocks, {
+  const { lines, starts } = layoutDetailBlocks(context, blocks, {
     width: contentWidth,
     wide: tier === "wide",
     surface: "surface",
@@ -1068,6 +1095,7 @@ function masterDetail<A>(
     contentWidth,
     !short,
   );
+  const detailLines = beneathCover(viewport, starts, cover);
   // Without fills nothing tints the detail, so a faint rule parts it from
   // the list instead.
   const inset = context.painted || left < 1 ? " ".repeat(left) : `${
@@ -1082,7 +1110,7 @@ function masterDetail<A>(
       `${line}${
         fitLine(
           context,
-          `${inset}${viewport.lines[index] ?? ""}`,
+          `${inset}${detailLines[index] ?? ""}`,
           detailWidth,
           "surface",
         )
@@ -1686,10 +1714,11 @@ function renderBody<A>(
   region: Region,
   short: boolean,
   covered: boolean,
+  cover = 0,
 ): BodyResult<A> {
   const body = model.view.body;
   return body.kind === "master-detail"
-    ? masterDetail(context, model, body, size, region, short, covered)
+    ? masterDetail(context, model, body, size, region, short, covered, cover)
     : body.kind === "list"
     ? listOnly(context, model, body.list, size, region)
     : body.kind === "reading"
@@ -1884,6 +1913,13 @@ function renderLayers<A>(
       entry,
     ) => entry.paint.lines.length),
   );
+  // Rows a layer covers from the top of the detail column.
+  const cover = Math.max(
+    0,
+    ...painted.filter((entry) => entry.place.anchor === "detail").map((
+      entry,
+    ) => entry.paint.lines.length),
+  );
   const receded: FrameContext = {
     ...context,
     recede: true,
@@ -1903,6 +1939,7 @@ function renderLayers<A>(
       : region,
     short,
     covered > 0,
+    cover,
   );
   context.animated ||= receded.animated;
   context.renderCalls = receded.renderCalls;
