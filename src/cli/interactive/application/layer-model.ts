@@ -252,8 +252,15 @@ export function adoptLayerModel<A>(
   for (const [id, value] of Object.entries(fresh.open)) {
     open[id] = previous.open[id] ?? value;
   }
+  // A two-click confirmation never outlives a change of the sheet's state
+  // or the button it armed: the second click must answer the same review.
+  const { armed, ...kept } = previous;
+  const keepArm = armed !== undefined &&
+    (layer.kind !== "sheet" || previous.state === layer.state) &&
+    layerButtons(layer).some((button) => button.id === armed);
   let next: TerminalApplicationLayerModel = {
-    ...previous,
+    ...kept,
+    ...(keepArm ? { armed } : {}),
     values,
     cursors,
     open,
@@ -972,21 +979,26 @@ function readerKey<A>(
   return model;
 }
 
-/** Focus a control directly, as a click does, arming a consequential button. */
+/**
+ * Focus a control directly, as a click does. Focus moving anywhere ends a
+ * two-click confirmation; the caller re-arms when the click itself was the
+ * first of two on a consequential button.
+ */
 export function focusControl<A>(
   layer: ApplicationLayer<A>,
   model: TerminalApplicationLayerModel,
   control: LayerControl,
 ): TerminalApplicationLayerModel {
+  const { armed: _armed, ...unarmed } = model;
   if (layer.kind === "palette") {
     const { kind, id } = parseControl(control);
-    return kind === "item" ? { ...model, highlight: id } : model;
+    return kind === "item" ? { ...unarmed, highlight: id } : unarmed;
   }
   if (layer.kind === "menu") {
-    const { why: _why, ...rest } = model;
+    const { why: _why, ...rest } = unarmed;
     return { ...rest, focus: control };
   }
-  return { ...model, focus: control };
+  return { ...unarmed, focus: control };
 }
 
 /** The value of each declared field, for the read-only state. */

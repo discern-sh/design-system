@@ -94,7 +94,11 @@ function clickControl<A>(
       if (button === undefined) break;
       const consequential = button.role === "confirm" ||
         button.role === "destructive";
-      if (consequential && current.armed !== button.id) {
+      // The arm holds only while the click that set it left focus on the
+      // button; any focus change in between starts the confirmation over.
+      const armed = current.armed === button.id &&
+        current.focus === buttonControl(button.id);
+      if (consequential && !armed) {
         next = {
           ...focusControl(layer, current, buttonControl(button.id)),
           armed: button.id,

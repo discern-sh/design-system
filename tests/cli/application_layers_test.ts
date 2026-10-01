@@ -872,3 +872,75 @@ Deno.test("a click outside the top layer dismisses only that layer", () => {
   assertEquals(dismissals(driver.take()), ["run:click-outside"]);
   assertEquals(driver.state.topLayerId, "palette");
 });
+
+Deno.test("a two-click confirmation starts over after any other click or a new review", async (t) => {
+  /** The sheets whose consequential buttons take two clicks, each with its button's text. */
+  const cases = [
+    {
+      sheet: () => demoRunSheet(IMAGE),
+      button: "Run",
+      action: "confirm-run:image-resize",
+    },
+  ] as const;
+  for (const entry of cases) {
+    const open = () => {
+      const driver = new ApplicationDriver(
+        applicationDemoView(DEMO_JOBS, undefined, {
+          layers: [entry.sheet()],
+          mouse: true,
+        }),
+        { columns: 80, rows: 24, colorDepth: "none" },
+      );
+      const target = driver.find(`[ ${entry.button} ]`);
+      const button = { column: target.column + 2, row: target.row };
+      driver.click(button.column, button.row);
+      assertEquals(driver.actions(), [], "the first click only focuses");
+      return { driver, button };
+    };
+    // Every other clickable control the open sheet shows, enumerated from
+    // the frame's own hit regions so a new control enrols itself.
+    const sheet = entry.sheet();
+    const own = `button:${
+      sheet.buttons.find((candidate) => candidate.label === entry.button)?.id
+    }`;
+    const { driver: survey } = open();
+    const others = (survey.model.hits ?? []).filter((hit) =>
+      hit.target.kind === "control" && hit.target.control !== own
+    );
+    assert(others.length > 0);
+    for (const hit of others) {
+      if (hit.target.kind !== "control") continue;
+      const control = hit.target.control;
+      await t.step(`${entry.button} then ${control}`, () => {
+        const { driver } = open();
+        driver.click(hit.start + 1, hit.row + 1);
+        if (driver.state.topLayerId !== "run") return;
+        // The button may have moved, as when a disclosure opened.
+        const again = (driver.model.hits ?? []).find((candidate) =>
+          candidate.target.kind === "control" &&
+          candidate.target.control === own
+        );
+        if (again === undefined) return;
+        driver.take();
+        driver.click(again.start + 1, again.row + 1);
+        assert(
+          !driver.actions().includes(entry.action),
+          `one click on ${entry.button} ran it after ${control}`,
+        );
+      });
+    }
+    await t.step(`${entry.button} across a new review`, () => {
+      const { driver, button: at } = open();
+      driver.update(withLayers(demoRunSheet(IMAGE, "loading")));
+      driver.update(
+        applicationDemoView(DEMO_JOBS, undefined, {
+          layers: [entry.sheet()],
+          mouse: true,
+        }),
+      );
+      driver.take();
+      driver.click(at.column, at.row);
+      assert(!driver.actions().includes(entry.action));
+    });
+  }
+});
