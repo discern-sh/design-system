@@ -321,7 +321,16 @@ Deno.test("the header drops chips, then liveness, then counts as it narrows", ()
   );
   assertEquals(header(60).includes("Update ready"), false);
   assertStringIncludes(header(60), "! 2 stale  1 to review   Live");
-  assertStringIncludes(header(40), "1 to review   Live");
+  // Four cells always part the identity from the right side, which narrows
+  // first: at 40 columns liveness goes rather than that gap.
+  assert(/jobs {4,}1 to review/u.test(header(40)), header(40));
+  assertEquals(header(40).includes("Live"), false);
+  for (let columns = 36; columns <= 120; columns += 1) {
+    assert(
+      !/jobs {1,3}\S/u.test(header(columns)),
+      `${columns}: the identity runs into the right side`,
+    );
+  }
   assertEquals(header(32).includes("Live"), false);
   assertStringIncludes(header(32), "1 to review");
   assertStringIncludes(header(32), "Studio");

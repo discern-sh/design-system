@@ -110,6 +110,14 @@ export const TERMINAL_APPLICATION_MINIMUM: TerminalSize = Object.freeze({
 const ENTER_UNICODE = formatKeyChord("enter", { unicode: true });
 const ENTER_ASCII = formatKeyChord("enter", { unicode: false });
 
+/**
+ * Cells kept between the header's identity and its right side, so the two
+ * never read as one phrase; the right side narrows before this gap does.
+ */
+const HEADER_CLUSTER_GAP = 4;
+/** The gap the counts alone may close to at the smallest widths. */
+const HEADER_TIGHT_GAP = 2;
+
 /** From this many rows a blank line separates the header from the body. */
 const SPACIOUS_ROWS = 20;
 
@@ -251,17 +259,29 @@ function header<A>(
     () => compose(0, false, 2),
     () => ({ text: "", starts: [] }),
   ];
+  // Every step keeps the full gap from the identity; only the counts alone
+  // may close it to the tight gap, at the smallest widths, before they go.
+  const steps:
+    readonly (readonly [() => ReturnType<typeof compose>, number])[] = [
+      ...ladder.slice(0, -1).map((step) => [step, HEADER_CLUSTER_GAP] as const),
+      [() => compose(0, false, 2), HEADER_TIGHT_GAP],
+      [() => ({ text: "", starts: [] }), 0],
+    ];
   let right: ReturnType<typeof compose> = { text: "", starts: [] };
-  for (const step of ladder) {
+  let separation = 0;
+  for (const [step, gap] of steps) {
     right = step();
+    separation = gap;
     if (
-      right.text === "" || leadWidth + 2 + measureText(right.text) <= room
-    ) break;
+      right.text === "" || leadWidth + gap + measureText(right.text) <= room
+    ) {
+      break;
+    }
   }
   const rightWidth = measureText(right.text);
   const left = truncateStyledText(
     leading,
-    Math.max(0, room - (rightWidth === 0 ? 0 : rightWidth + 2)),
+    Math.max(0, room - (rightWidth === 0 ? 0 : rightWidth + separation)),
     terminalGlyph("ellipsis", context.capabilities),
   );
   const origin = 2 + room - rightWidth;
@@ -276,7 +296,11 @@ function header<A>(
     }];
   });
   return {
-    line: fitLine(context, `  ${spread(left, right.text, room)}`, columns),
+    line: fitLine(
+      context,
+      `  ${spread(left, right.text, room, Math.max(1, separation))}`,
+      columns,
+    ),
     hits,
   };
 }
@@ -325,16 +349,24 @@ function footerHints<A>(
   }
   if (list?.zoomed === true && view.body.kind === "master-detail") {
     if (view.body.zoomFooter !== undefined) return view.body.zoomFooter;
+    // Zoom gives Up, Down, Space, and Left their own meanings, so caller
+    // hints for those keys would promise what they no longer do.
+    const zoomKeys = new Set(["up", "down", "space", "left"]);
+    const free = (hint: KeyHint) =>
+      (typeof hint.key === "string" ? [hint.key] : hint.key).every((key) => {
+        const chord = decodableChord(key);
+        return chord === undefined || !zoomKeys.has(chord);
+      });
     const [primary, ...rest] = view.footer.left;
     return {
       left: [
         ...(primary === undefined ? [] : [primary]),
         { key: ["up", "down"], label: copy.next },
-        ...rest,
+        ...rest.filter(free),
       ],
       right: [
         { key: "left", label: copy.back },
-        ...(view.footer.right ?? []),
+        ...(view.footer.right ?? []).filter(free),
       ],
     };
   }
@@ -1039,7 +1071,7 @@ function empty<A>(
     : model.lists[body.list.id];
   const listRows = listModel === undefined ? 0 : Math.min(
     listModelRows(listModel).rows.length,
-    Math.max(1, region.height - 6),
+    Math.max(1, region.height - 7),
   );
   const wrapped = wrapStyledText(
     styleRuns(context, body.body, undefined, "muted"),
@@ -1085,23 +1117,32 @@ function empty<A>(
     keyWidth + Math.max(12, measureText(primaryText)) + 6,
     focus,
   );
+  // Secondary keys sit under the primary's key, past its bar and space.
   const secondary = (body.secondary ?? []).map((hint, index) =>
-    `${
+    `  ${
       ink(context, padText(keys[index + 1] ?? "", keyWidth), {
         tone: "ink",
         bold: true,
       })
     } ${ink(context, label(hint.label), { tone: "muted" })}`
   );
+  // The hints centre as one block, so their keys share a left edge.
+  const hintWidth = Math.max(
+    measureText(primary),
+    ...secondary.map(measureText),
+  );
   const block = [
     ink(context, body.title, { tone: "ink", bold: true }),
     "",
     ...wrapped,
     "",
-    primary,
-    ...(secondary.length === 0 ? [] : ["", ...secondary]),
+    padText(primary, hintWidth),
+    ...(secondary.length === 0
+      ? []
+      : ["", ...secondary.map((line) => padText(line, hintWidth))]),
   ];
-  const above = Math.max(0, region.height - listRows - (listRows > 0 ? 1 : 0));
+  // A list keeps a blank row above it and one between it and the footer.
+  const above = Math.max(0, region.height - listRows - (listRows > 0 ? 2 : 0));
   const offset = Math.max(0, Math.floor((above - block.length) / 2));
   const lines = Array.from(
     { length: above },
