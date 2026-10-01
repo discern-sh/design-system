@@ -944,3 +944,30 @@ Deno.test("a two-click confirmation starts over after any other click or a new r
     });
   }
 });
+
+Deno.test("a new review clears the challenge and returns focus to where a sheet starts", () => {
+  const deleting = (state: "ready" | "loading") =>
+    withLayers({ ...demoDeleteSheet(ARCHIVE), state });
+  const driver = new ApplicationDriver(deleting("ready"), {
+    colorDepth: "none",
+  });
+  const mustEqual = demoDeleteSheet(ARCHIVE).challenge?.mustEqual ?? "";
+  driver.type(mustEqual);
+  assertEquals(driver.state.fields.delete?.confirm, mustEqual);
+  driver.update(deleting("loading"));
+  driver.update(deleting("ready"));
+  assertEquals(driver.state.fields.delete?.confirm, "");
+  assertEquals(driver.state.layers.delete?.focusedControlId, "field:confirm");
+
+  const running = new ApplicationDriver(withLayers(demoRunSheet(IMAGE)), {
+    colorDepth: "none",
+  });
+  running.key("right");
+  assertEquals(running.state.layers.run?.focusedControlId, "button:run");
+  running.update(withLayers(demoRunSheet(IMAGE, "loading")));
+  running.update(withLayers(demoRunSheet(IMAGE)));
+  assertEquals(running.state.layers.run?.focusedControlId, "button:keep");
+  running.take();
+  running.key("enter");
+  assertEquals(actions(running.take()), [], "Enter lands on the safe button");
+});

@@ -230,7 +230,9 @@ function focusable<A>(
  * Adopt a new version of an open layer. Focus, values, disclosures, and
  * scroll stay; values for new fields start from their initial text; a
  * focused control that disappeared gives focus back to the layer's initial
- * control; a sheet that returns to `loading` starts its review again.
+ * control; a sheet that returns to `loading` starts its review again, with
+ * read progress, the challenge's text, and focus back where a new sheet
+ * starts.
  */
 export function adoptLayerModel<A>(
   previous: TerminalApplicationLayerModel,
@@ -270,7 +272,19 @@ export function adoptLayerModel<A>(
     layer.kind === "sheet" && layer.state === "loading" &&
     previous.state !== "loading"
   ) {
-    next = { ...next, seen: [], fullyRead: false };
+    // A new review starts clean: nothing typed or focused against the old
+    // plan carries over, so a stale keystroke cannot answer the new one.
+    const challenge = layer.challenge?.fieldId;
+    next = {
+      ...next,
+      seen: [],
+      fullyRead: false,
+      focus: fresh.focus,
+      ...(challenge === undefined ? {} : {
+        values: { ...next.values, [challenge]: "" },
+        cursors: { ...next.cursors, [challenge]: 0 },
+      }),
+    };
   }
   if (!focusable(layer, next).includes(next.focus)) {
     next = { ...next, focus: fresh.focus };
