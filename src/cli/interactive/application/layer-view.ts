@@ -81,7 +81,10 @@ export interface ApplicationDisclosure {
 
 /**
  * A sheet's lifecycle. `loading`, `changed`, and `gone` disable every button
- * but the safe one; `loading` and `working` show the busy line.
+ * but the safe one; `loading` and `working` show the busy line. A review is
+ * the time a sheet spends out of `loading`: nothing shown while loading
+ * counts as read, and entering or leaving `loading` starts the review over
+ * as a new sheet starts it.
  */
 export type ApplicationSheetState =
   | "loading"
@@ -222,7 +225,11 @@ export interface ApplicationSheet<A> extends ApplicationLayerBase {
   readonly busy?: string;
   readonly banner?: ApplicationBanner;
   readonly body: readonly ApplicationDetailBlock[];
-  /** Defaults to true when a confirm or destructive button exists. */
+  /**
+   * Keep confirm and destructive buttons disabled until every body line has
+   * been on screen in this review. Defaults to true when a confirm or
+   * destructive button exists.
+   */
   readonly requireFullRead?: boolean;
   /** Words after the unread count, such as `to read before applying`. */
   readonly readHint?: string;

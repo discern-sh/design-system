@@ -1071,6 +1071,111 @@ Deno.test("a new review clears the challenge and returns focus to where a sheet 
   assertEquals(actions(running.take()), [], "Enter lands on the safe button");
 });
 
+Deno.test("only the body that arrives after loading counts as read", () => {
+  const filling = new ApplicationDriver(
+    withLayers({ ...demoRunSheet(IMAGE, "loading"), body: [] }),
+    { columns: 80, rows: 13, colorDepth: "none" },
+  );
+  assertEquals(filling.state.fullyRead.run, false, "an empty loading body");
+  filling.update(withLayers(demoRunSheet(IMAGE)));
+  assertEquals(filling.state.fullyRead.run, false);
+  assert(filling.text.includes("PgDn to read before running"));
+  filling.key("right", "enter");
+  assertEquals(actions(filling.take()), [], "the arrived body is unread");
+  filling.key("page-down", "page-down");
+  assertEquals(filling.state.fullyRead.run, true);
+
+  const shown = new ApplicationDriver(
+    withLayers(demoRunSheet(IMAGE, "loading")),
+    { columns: 120, rows: 30 },
+  );
+  assertEquals(
+    shown.state.fullyRead.run,
+    false,
+    "lines on screen while loading are not under review",
+  );
+  shown.update(withLayers(demoRunSheet(IMAGE)));
+  assertEquals(shown.state.fullyRead.run, true, "the ready body fits");
+});
+
+Deno.test("a challenge that arrives with the plan takes focus", () => {
+  const { challenge, ...plan } = demoDeleteSheet(ARCHIVE);
+  const mustEqual = challenge?.mustEqual ?? "";
+  assert(
+    plan.buttons.some((button) =>
+      button.role === "alternative" && button.key === mustEqual[0]
+    ),
+    "the challenge's first letter is an alternative button's key",
+  );
+  // The loading sheet cannot know the challenge before its plan arrives.
+  const buttons = plan.buttons.map((button) => {
+    if (button.role !== "destructive") return button;
+    const { requiresChallenge: _requires, ...rest } = button;
+    return rest;
+  });
+  const driver = new ApplicationDriver(
+    withLayers({ ...plan, buttons, state: "loading" }),
+    { colorDepth: "none" },
+  );
+  assertEquals(driver.state.layers.delete?.focusedControlId, "button:keep");
+  driver.update(withLayers(demoDeleteSheet(ARCHIVE)));
+  assertEquals(driver.state.layers.delete?.focusedControlId, "field:confirm");
+  driver.type(mustEqual);
+  assertEquals(actions(driver.take()), [], "letters reach the field");
+  assertEquals(driver.state.fields.delete?.confirm, mustEqual);
+});
+
+/** One sheet's reported state: focus, scroll, disclosures, fields, and read progress. */
+function sheetState(driver: ApplicationDriver, id: string): string {
+  const state = driver.state;
+  return JSON.stringify({
+    layer: state.layers[id],
+    fields: state.fields[id],
+    fullyRead: state.fullyRead[id],
+  });
+}
+
+Deno.test("a sheet entering or leaving loading is the sheet a new one would be", () => {
+  const sheets: readonly ((
+    state: "ready" | "loading",
+  ) => ApplicationSheet<string>)[] = [
+    (state) => demoRunSheet(IMAGE, state),
+    (state) => ({ ...demoDeleteSheet(ARCHIVE), state }),
+  ];
+  const crossings = [["loading", "ready"], ["ready", "loading"]] as const;
+  const sizes = [[120, 30], [80, 24], [80, 13]] as const;
+  for (const build of sheets) {
+    for (const [from, to] of crossings) {
+      for (const [columns, rows] of sizes) {
+        const size = { columns, rows, colorDepth: "none" as const };
+        const target = build(to);
+        const label = `${target.id} ${from} → ${to} at ${columns} × ${rows}`;
+        const crossed = new ApplicationDriver(withLayers(build(from)), size);
+        const untouched = sheetState(crossed, target.id);
+        // Everything a person can do to a sheet short of answering it:
+        // type into the challenge, read on, and move focus.
+        if (target.challenge !== undefined) {
+          crossed.type(target.challenge.mustEqual);
+        }
+        crossed.key("page-down", "page-down", "tab", "tab");
+        assert(
+          sheetState(crossed, target.id) !== untouched,
+          `${label}: the interaction changed the sheet`,
+        );
+        crossed.update(withLayers(target));
+        assertEquals(
+          sheetState(crossed, target.id),
+          sheetState(
+            new ApplicationDriver(withLayers(target), size),
+            target.id,
+          ),
+          label,
+        );
+      }
+    }
+  }
+});
+
 const GEOMETRIES = [
   [120, 30],
   [80, 24],

@@ -39,6 +39,7 @@ import {
 import {
   buttonEnabled,
   requiresFullRead,
+  sheetUnderReview,
   type TerminalApplicationLayerModel,
 } from "./layer-model.ts";
 import { menuRows, paletteRows, unavailableMenuItem } from "./layer-search.ts";
@@ -992,16 +993,18 @@ function addRange(
 
 /**
  * Read progress after a frame showed the body rows in `shown`. Only lines
- * that were on screen count, so a jump past the middle of the body leaves
- * the gate closed; the body is read once every line in `[0, read)` has
- * been shown.
+ * that were on screen while the sheet was under review count, so a jump
+ * past the middle of the body leaves the gate closed and a loading body
+ * counts for nothing; the body is read once every line in `[0, read)` has
+ * been shown, at once when it has no lines.
  */
-function readProgress(
+function readProgress<A>(
+  sheet: ApplicationSheet<A>,
   model: TerminalApplicationLayerModel,
   read: number,
   shown: BodySpan,
 ): TerminalApplicationLayerModel {
-  if (model.fullyRead) return model;
+  if (model.fullyRead || !sheetUnderReview(sheet.state)) return model;
   const seen = addRange(model.seen, shown.start, Math.min(read, shown.end));
   const first = seen[0];
   const fullyRead = read === 0 ||
@@ -1278,7 +1281,7 @@ function sheetPanel<A>(
       foot: panelFoot(
         context,
         sheet,
-        (shown) => top ? readProgress(model, read, shown) : model,
+        (shown) => top ? readProgress(sheet, model, read, shown) : model,
         width,
       ),
     },
@@ -2062,7 +2065,7 @@ export function renderLayer<A>(
   const { reveal: _reveal, ...rest } = model;
   // Only the top layer is being read; a layer beneath it is covered or receded.
   const next = layer.kind === "sheet" && top
-    ? readProgress(rest, read, fitted.shown)
+    ? readProgress(layer, rest, read, fitted.shown)
     : rest;
   return {
     lines: fitted.lines,

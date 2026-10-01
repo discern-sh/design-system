@@ -233,7 +233,10 @@ export interface TerminalApplicationState {
   readonly layers: Readonly<Record<string, TerminalApplicationLayerState>>;
   /** Field values by layer, then field. */
   readonly fields: Readonly<Record<string, Readonly<Record<string, string>>>>;
-  /** Whether each sheet's body has been read to its end in this review. */
+  /**
+   * Whether each sheet's body has been read to its end in this review;
+   * false while the sheet is loading.
+   */
   readonly fullyRead: Readonly<Record<string, boolean>>;
   /**
    * Messages and layers reported dismissed that the view in force still

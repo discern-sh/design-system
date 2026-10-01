@@ -228,12 +228,21 @@ function focusable<A>(
 }
 
 /**
+ * Whether a sheet in this state is under review: its body is the plan the
+ * person answers. A `loading` sheet is not, so nothing it shows counts as
+ * read, and a sheet entering or leaving `loading` starts its review over.
+ */
+export function sheetUnderReview(state: ApplicationSheetState): boolean {
+  return state !== "loading";
+}
+
+/**
  * Adopt a new version of an open layer. Focus, values, disclosures, and
  * scroll stay; values for new fields start from their initial text; a
  * focused control that disappeared gives focus back to the layer's initial
- * control; a sheet that returns to `loading` starts its review again, with
- * read progress, the challenge's text, and focus back where a new sheet
- * starts.
+ * control. A sheet entering or leaving `loading` starts its review over as
+ * a new sheet starts it: nothing read, the challenge empty, focus on its
+ * initial control, and the body at its top; only open disclosures stay.
  */
 export function adoptLayerModel<A>(
   previous: TerminalApplicationLayerModel,
@@ -270,17 +279,19 @@ export function adoptLayerModel<A>(
     ...(layer.kind === "sheet" ? { state: layer.state } : {}),
   };
   if (
-    layer.kind === "sheet" && layer.state === "loading" &&
-    previous.state !== "loading"
+    layer.kind === "sheet" && previous.state !== undefined &&
+    sheetUnderReview(previous.state) !== sheetUnderReview(layer.state)
   ) {
-    // A new review starts clean: nothing typed or focused against the old
-    // plan carries over, so a stale keystroke cannot answer the new one.
+    // A review starts clean: nothing read, typed, or focused against what
+    // was on screen before carries over, so neither a stale keystroke nor
+    // a body seen before the plan arrived can answer the plan.
     const challenge = layer.challenge?.fieldId;
     next = {
       ...next,
       seen: [],
       fullyRead: false,
       focus: fresh.focus,
+      scroll: 0,
       ...(challenge === undefined ? {} : {
         values: { ...next.values, [challenge]: "" },
         cursors: { ...next.cursors, [challenge]: 0 },
