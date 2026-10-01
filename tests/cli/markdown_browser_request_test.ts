@@ -874,3 +874,16 @@ Deno.test("resolver, decoder, and cooperative cancellation faults restore mouse 
   assertEquals(beforeStart.writes, []);
   assertEquals(beforeStart.rawTransitions, []);
 });
+
+Deno.test("a resize that ends at the painted size repaints the whole browser", async () => {
+  const io = new FakeTerminalIO([], { holdOpen: true, columns: 80, rows: 24 });
+  const browsing = runMarkdownBrowserRequest(markdownBrowserOptions, { io });
+  await until(() => completeFrames(io).length === 1);
+  io.resize(40, 12);
+  io.resize(80, 24);
+  await until(() => completeFrames(io).length === 2);
+  io.enqueue("\x03");
+  await assertRejects(() => browsing, InteractionCancelled);
+  io.close();
+  assertEquals(completeFrames(io).length, 2);
+});

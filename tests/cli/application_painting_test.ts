@@ -145,3 +145,18 @@ Deno.test("the window title is saved, set with keyframes and changes, and restor
     "the title is restored before the screen is released",
   );
 });
+
+Deno.test("a resize that ends at the painted size repaints a keyframe", async () => {
+  const live = await applicationSession(testView(["item-0", "item-1"]));
+  const before = live.observations.length;
+  // Coalesced resizes can return to the painted size before the loop wakes.
+  live.io.resize(40, 12);
+  live.io.resize(80, 24);
+  await settle();
+  const after = live.observations.slice(before);
+  assert(
+    after.some((observation) => observation.paint === "keyframe"),
+    "the resize round trip left the screen as it was",
+  );
+  await live.finish();
+});

@@ -214,7 +214,12 @@ export async function runMarkdownBrowserRequest<Action>(
     return await withRawTerminalInputCleanup(io, async () => {
       let outcome: Settled<MarkdownBrowserResult<Action>> | undefined;
       try {
-        stopResizeListener = io.listenResize?.(resize.notify) ?? (() => {});
+        // A resize may have damaged the screen even when the size it ends
+        // at is the one painted, so the next paint is a keyframe.
+        stopResizeListener = io.listenResize?.(() => {
+          painter.invalidate();
+          resize.notify();
+        }) ?? (() => {});
         resizeListening = true;
         paintLatestFrame();
         let paintedState = state;
@@ -258,7 +263,10 @@ export async function runMarkdownBrowserRequest<Action>(
             facts = currentFacts;
           }
 
-          if (received.kind === "resize") continue;
+          if (received.kind === "resize") {
+            paintLatestFrame();
+            continue;
+          }
           const receivedEvents = received.events ?? [];
           if (
             options.mouse === true &&

@@ -545,7 +545,12 @@ export async function runTerminalApplication<A>(
               "application viewport did not stabilise while painting",
             );
           };
-          unlistenResize = io.listenResize?.(updates.notify) ?? (() => {});
+          // A resize may have damaged the screen even when the size it ends
+          // at is the one painted, so the next paint is a keyframe.
+          unlistenResize = io.listenResize?.(() => {
+            screen.invalidate();
+            updates.notify();
+          }) ?? (() => {});
           try {
             paint();
             if (!started) {
