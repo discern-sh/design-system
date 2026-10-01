@@ -200,7 +200,7 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
   },
   {
     id: "application",
-    title: "Live bounded application",
+    title: "Live application",
     section: "Interactive APIs",
     description:
       "A grouped list with a following detail and modal layers: live regrouping, filter, zoom, folds, sheets, menus, a palette, a form, readers, and foreground return. Run playground:application for the real child fixture.",
