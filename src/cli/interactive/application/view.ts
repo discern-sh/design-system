@@ -177,67 +177,109 @@ export interface ApplicationList<A> {
   readonly settleMs?: number;
 }
 
+/** A title, with an aside beside it on wide screens and in zoom. */
+export interface ApplicationHeadingBlock {
+  readonly kind: "heading";
+  readonly title: string;
+  /** Right-aligned on wide screens and in zoom, otherwise on its own line. */
+  readonly aside?: readonly ApplicationRun[];
+  readonly subtitle?: string;
+}
+
+/** A state: a glyph, a bold toned label, and a muted qualifier. */
+export interface ApplicationStateBlock {
+  readonly kind: "state";
+  readonly glyph: ApplicationGlyph;
+  readonly label: string;
+  readonly tone: TerminalTextTone;
+  readonly qualifier?: string;
+}
+
+/** Muted sentences. */
+export interface ApplicationTextBlock {
+  readonly kind: "text";
+  readonly runs: readonly ApplicationRun[];
+}
+
+/** Labelled values in a label column that grows to the longest label. */
+export interface ApplicationFactsBlock {
+  readonly kind: "facts";
+  readonly rows: readonly {
+    readonly label: string;
+    /** One entry per line. */
+    readonly value: readonly (readonly ApplicationRun[])[];
+  }[];
+}
+
+/** A meter and its caption. */
+export interface ApplicationMeterBlock {
+  readonly kind: "meter";
+  readonly value: number;
+  readonly max?: number;
+  readonly caption: string;
+}
+
+/** Consequence lines, each with a mark. */
+export interface ApplicationMarksBlock {
+  readonly kind: "marks";
+  readonly items: readonly ApplicationDetailMark[];
+}
+
+/** Keys and what they do, shown on wide screens and in zoom. */
+export interface ApplicationHintsBlock {
+  readonly kind: "hints";
+  readonly items: readonly {
+    readonly key: KeyChord | readonly KeyChord[];
+    readonly label: string;
+    readonly description?: string;
+    readonly primary?: boolean;
+  }[];
+}
+
+/** Aligned rows: a lead cell, text, and trailing columns. */
+export interface ApplicationRowsBlock {
+  readonly kind: "rows";
+  /** A fixed column before the text, such as a short id. */
+  readonly lead?: ApplicationListColumn;
+  /** Trailing aligned columns, dropping by priority like a list's. */
+  readonly columns?: readonly ApplicationListColumn[];
+  readonly items: readonly ApplicationDetailRow[];
+}
+
+/** Any Component block, such as a diffstat or rendered Markdown. */
+export interface ApplicationComponentBlock {
+  readonly kind: "block";
+  readonly content: CliBlock;
+}
+
+/** A placeholder while content loads. */
+export interface ApplicationPendingBlock {
+  readonly kind: "pending";
+  readonly label: string;
+}
+
+/** A titled group of blocks, one level deep. */
+export interface ApplicationSectionBlock {
+  readonly kind: "section";
+  readonly title: string;
+  readonly count?: number;
+  readonly caption?: string;
+  readonly blocks: readonly ApplicationDetailBlock[];
+}
+
 /** A detail or sheet block. Every block renders at the width it is given. */
 export type ApplicationDetailBlock =
-  | {
-    readonly kind: "heading";
-    readonly title: string;
-    /** Right-aligned on wide screens and in zoom, otherwise on its own line. */
-    readonly aside?: readonly ApplicationRun[];
-    readonly subtitle?: string;
-  }
-  | {
-    readonly kind: "state";
-    readonly glyph: ApplicationGlyph;
-    readonly label: string;
-    readonly tone: TerminalTextTone;
-    readonly qualifier?: string;
-  }
-  | { readonly kind: "text"; readonly runs: readonly ApplicationRun[] }
-  | {
-    readonly kind: "facts";
-    readonly rows: readonly {
-      readonly label: string;
-      /** One entry per line. */
-      readonly value: readonly (readonly ApplicationRun[])[];
-    }[];
-  }
-  | {
-    readonly kind: "meter";
-    readonly value: number;
-    readonly max?: number;
-    readonly caption: string;
-  }
-  | {
-    readonly kind: "marks";
-    readonly items: readonly ApplicationDetailMark[];
-  }
-  | {
-    readonly kind: "hints";
-    readonly items: readonly {
-      readonly key: KeyChord | readonly KeyChord[];
-      readonly label: string;
-      readonly description?: string;
-      readonly primary?: boolean;
-    }[];
-  }
-  | {
-    readonly kind: "rows";
-    /** A fixed column before the text, such as a short id. */
-    readonly lead?: ApplicationListColumn;
-    /** Trailing aligned columns, dropping by priority like a list's. */
-    readonly columns?: readonly ApplicationListColumn[];
-    readonly items: readonly ApplicationDetailRow[];
-  }
-  | { readonly kind: "block"; readonly content: CliBlock }
-  | { readonly kind: "pending"; readonly label: string }
-  | {
-    readonly kind: "section";
-    readonly title: string;
-    readonly count?: number;
-    readonly caption?: string;
-    readonly blocks: readonly ApplicationDetailBlock[];
-  };
+  | ApplicationHeadingBlock
+  | ApplicationStateBlock
+  | ApplicationTextBlock
+  | ApplicationFactsBlock
+  | ApplicationMeterBlock
+  | ApplicationMarksBlock
+  | ApplicationHintsBlock
+  | ApplicationRowsBlock
+  | ApplicationComponentBlock
+  | ApplicationPendingBlock
+  | ApplicationSectionBlock;
 
 /**
  * One consequence line: a one-cell mark, its text, and indented lines that

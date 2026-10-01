@@ -103,22 +103,60 @@ export type ApplicationButtonRole =
   | "destructive"
   | "alternative";
 
-/** One button in a sheet's or form's button row. */
-export interface ApplicationButton<A> {
+/** What every button declares. */
+export interface ApplicationButtonBase {
   readonly id: string;
   readonly label: string;
-  readonly role: ApplicationButtonRole;
-  /** What the button runs; required except on the safe button, which dismisses. */
-  readonly action?: A;
   /** Defaults to true. The package disables more buttons on its own rules. */
   readonly enabled?: boolean;
   /** Shown in place of the footnote while the disabled button has focus. */
   readonly disabledReason?: string;
-  /** Activates the button while focus is not in a text field; alternatives only. */
-  readonly key?: KeyChord;
-  /** Enabled only while the sheet's challenge field matches exactly; destructive only. */
+}
+
+/** The one safe button: Escape, a click outside, and the button dismiss the layer. */
+export interface ApplicationSafeButton extends ApplicationButtonBase {
+  readonly role: "safe";
+  readonly action?: never;
+  readonly key?: never;
+  readonly requiresChallenge?: never;
+}
+
+/** A button that confirms the layer's question; never a key, never one click. */
+export interface ApplicationConfirmButton<A> extends ApplicationButtonBase {
+  readonly role: "confirm";
+  readonly action: A;
+  readonly key?: never;
+  readonly requiresChallenge?: never;
+}
+
+/** A button that removes or discards; never a key, never one click. */
+export interface ApplicationDestructiveButton<A> extends ApplicationButtonBase {
+  readonly role: "destructive";
+  readonly action: A;
+  readonly key?: never;
+  /** Enabled only while the sheet's challenge field matches exactly. */
   readonly requiresChallenge?: boolean;
 }
+
+/** Another way out, such as `Pause instead`; it may take a key. */
+export interface ApplicationAlternativeButton<A> extends ApplicationButtonBase {
+  readonly role: "alternative";
+  readonly action: A;
+  /** Activates the button while focus is not in a text field. */
+  readonly key?: KeyChord;
+  readonly requiresChallenge?: never;
+}
+
+/**
+ * One button in a sheet's or form's button row. Its role decides what it
+ * may carry: only the safe button has no action, only an alternative takes
+ * a key, and only a destructive button may require the challenge.
+ */
+export type ApplicationButton<A> =
+  | ApplicationSafeButton
+  | ApplicationConfirmButton<A>
+  | ApplicationDestructiveButton<A>
+  | ApplicationAlternativeButton<A>;
 
 /**
  * A typed confirmation: destructive buttons that require it stay disabled

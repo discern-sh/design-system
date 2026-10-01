@@ -1,6 +1,7 @@
 import { assert, assertEquals, assertThrows } from "@std/assert";
 import { measureText } from "../../src/cli/mod.ts";
 import {
+  type ApplicationButton,
   type ApplicationLayer,
   type ApplicationSheet,
   type TerminalApplicationEffect,
@@ -170,7 +171,14 @@ Deno.test("letters never activate a confirm or destructive button", () => {
     ...demoRunSheet(IMAGE),
     buttons: [
       { id: "keep", label: "Keep", role: "safe" },
-      { id: "run", label: "Run", role: "confirm", action: "run", key: "r" },
+      // The type refuses this; the runtime rule protects untyped callers.
+      untyped<ApplicationButton<string>>({
+        id: "run",
+        label: "Run",
+        role: "confirm",
+        action: "run",
+        key: "r",
+      }),
     ],
   });
   assert(
@@ -179,6 +187,11 @@ Deno.test("letters never activate a confirm or destructive button", () => {
     ),
   );
 });
+
+/** A value an untyped caller could pass, to test the rules that guard it. */
+function untyped<T>(value: unknown): T {
+  return value as T;
+}
 
 Deno.test("every disclosure is one key from the initial focus", () => {
   for (const build of PANELS) {
@@ -639,7 +652,11 @@ Deno.test("the layer rules report every broken rule as data", () => {
           ...sheet,
           buttons: [
             { id: "keep", label: "Keep", role: "safe" },
-            { id: "run", label: "Run", role: "confirm" },
+            untyped<ApplicationButton<string>>({
+              id: "run",
+              label: "Run",
+              role: "confirm",
+            }),
           ],
         }),
       ],
