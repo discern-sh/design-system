@@ -236,7 +236,7 @@ export interface ApplicationMarksBlock {
   readonly items: readonly ApplicationDetailMark[];
 }
 
-/** Keys and what they do, shown on wide screens and in zoom. */
+/** Keys and what they do, shown at the wide tier, in the split and in zoom alike. */
 export interface ApplicationHintsBlock {
   readonly kind: "hints";
   readonly items: readonly {

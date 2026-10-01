@@ -765,7 +765,6 @@ function crumb<A>(
   rows: ListRows<A>,
   selected: number,
   width: number,
-  filtered: boolean,
 ): string {
   const row = rows.rows[selected];
   const itemId = row?.kind === "item" ? row.item.id : undefined;
@@ -780,20 +779,15 @@ function crumb<A>(
       ink(context, separator, { tone: "faint" }, "surface")
     }${ink(context, row.item.title, { tone: "muted" }, "surface")}`
     : "";
-  // The position counts the list's membership, so it reads the same at
-  // every size whatever folds; a filter counts what it matched.
-  const members = filtered
-    ? undefined
-    : body.list.groups.flatMap((group) => group.items.map((item) => item.id));
+  // The position counts the items Up and Down walk in zoom: those a filter
+  // matched, less those folded away, so every count is one step away.
   const position = row?.kind === "item"
     ? ink(
       context,
-      members === undefined
-        ? context.copy.count(
-          (rows.itemPrefix[selected] ?? 0) + 1,
-          rows.itemPrefix.at(-1) ?? 0,
-        )
-        : context.copy.count(members.indexOf(row.item.id) + 1, members.length),
+      context.copy.count(
+        (rows.itemPrefix[selected] ?? 0) + 1,
+        rows.itemPrefix.at(-1) ?? 0,
+      ),
       { tone: "faint" },
       "surface",
     )
@@ -909,9 +903,13 @@ function masterDetail<A>(
     const [left] = split.detailPadding.standard;
     const width = Math.max(1, columns - 2 * left);
     const pad = short ? 0 : 1;
+    // Zoom gives the detail the whole width, so it lays out as roomily as
+    // the wide tier, but shows hints only at that tier, as the split does:
+    // zooming in shows the same blocks larger, never more of them.
     const lines = renderDetailBlocks(context, blocks, {
       width,
       wide: true,
+      hints: tier === "wide",
       surface: "surface",
     });
     const viewport = scrollDetail(
@@ -924,14 +922,7 @@ function masterDetail<A>(
     );
     const inset = " ".repeat(left);
     const top = [
-      crumb(
-        context,
-        body,
-        rows,
-        selected,
-        width,
-        fitted.filter !== undefined,
-      ),
+      crumb(context, body, rows, selected, width),
     ];
     if (pad > 0) top.push("");
     const shown = [...top, ...viewport.lines].slice(0, region.height);

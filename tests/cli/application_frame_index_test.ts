@@ -205,7 +205,7 @@ const FRAMES: Readonly<Record<string, Frame>> = {
     keys: ["space", "down"],
     expect: (text, driver) => {
       assertEquals(driver.last.layout, "zoom");
-      shows(text, "›", "2 of 11");
+      shows(text, "›", "2 of 8");
     },
   },
   "stale-80x24": {

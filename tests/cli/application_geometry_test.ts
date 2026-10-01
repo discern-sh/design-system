@@ -796,3 +796,63 @@ Deno.test("a one-line strip shows a fact that fits and never cuts a word of its 
   assertStringIncludes(shown, "Image resize");
   assert(!shown.includes("Fail"), shown);
 });
+
+Deno.test("zoom counts exactly the items Up and Down walk, at every height", () => {
+  // Folding follows the height; the breadcrumb keeps its count at full width.
+  for (const rows of new Set(MATRIX.map((geometry) => geometry.rows))) {
+    const geometry = { columns: 120, rows };
+    const driver = new ApplicationDriver(applicationDemoView(), {
+      columns: geometry.columns,
+      rows: geometry.rows,
+      colorDepth: "none",
+    });
+    driver.key("space");
+    assertEquals(driver.last.layout, "zoom", `${geometry.columns}`);
+    const position = () => {
+      const match = /(\d+) of (\d+)/u.exec(driver.text.split("\n")[2] ?? "") ??
+        /(\d+) of (\d+)/u.exec(driver.text);
+      assert(match !== null, `no position\n${driver.text}`);
+      return [Number(match[1]), Number(match[2])] as const;
+    };
+    const [first, total] = position();
+    assertEquals(first, 1, `${geometry.columns}x${geometry.rows}`);
+    let steps = 1;
+    for (let guard = 0; guard < 50; guard += 1) {
+      const before = driver.state.lists.jobs?.selectedId;
+      driver.key("down");
+      if (driver.state.lists.jobs?.selectedId === before) break;
+      steps += 1;
+      assertEquals(
+        position(),
+        [steps, total],
+        `${geometry.columns}x${geometry.rows}`,
+      );
+    }
+    assertEquals(
+      steps,
+      total,
+      `${geometry.columns}x${geometry.rows}: Down walked ${steps} of ${total}`,
+    );
+  }
+});
+
+Deno.test("zoom shows the blocks the split shows at its width tier, larger", () => {
+  for (
+    const [columns, shown] of [[120, true], [100, true], [80, false], [
+      60,
+      false,
+    ]] as const
+  ) {
+    const driver = new ApplicationDriver(applicationDemoView(), {
+      columns,
+      rows: 30,
+      colorDepth: "none",
+    });
+    driver.key("space");
+    assertEquals(
+      driver.text.includes("Lend the terminal to a short child"),
+      shown,
+      `${columns}: hints ${shown ? "show" : "hide"} in zoom\n${driver.text}`,
+    );
+  }
+});

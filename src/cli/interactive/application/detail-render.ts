@@ -42,6 +42,11 @@ export interface DetailLayout {
   readonly width: number;
   /** Wide screens and zoom put a heading's aside on its title row. */
   readonly wide: boolean;
+  /**
+   * Whether hints blocks show; defaults to `wide`. Zoom lays out roomily
+   * at every width but shows hints only at the wide tier.
+   */
+  readonly hints?: boolean;
   readonly surface: TerminalSurfaceRole | undefined;
   /**
    * The key column every hints block shares, so sibling sections line their
@@ -459,7 +464,7 @@ function renderBlock(
       return rows(context, block, layout);
     case "hints":
       // The footer already names the keys; the fuller list needs room.
-      return layout.wide ? hints(context, block, layout) : [];
+      return (layout.hints ?? layout.wide) ? hints(context, block, layout) : [];
     case "block":
       return cliBlock(context, block, layout);
     case "pending":
