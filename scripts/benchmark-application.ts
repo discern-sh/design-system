@@ -220,8 +220,14 @@ for (const count of [20, 10_000]) {
     view,
     ...quit,
     start: (context) => {
+      // Replacements share the list value, as a provider's header-only
+      // update would; building 10,000 items per update would measure this
+      // script instead of adoption.
       for (let burst = 0; burst < 100; burst++) {
-        context.update(collection(count, 0, `Update ${burst}`));
+        context.update({
+          ...view,
+          header: { leading: [{ text: `Update ${burst}`, role: "title" }] },
+        });
       }
     },
   }, { io: updates, observe: (event) => updateObservations.push(event) });

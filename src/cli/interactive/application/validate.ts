@@ -42,6 +42,19 @@ const ROLES: ReadonlySet<string> = new Set([
   "code",
 ]);
 
+/** Glyph forms already measured; a list repeats a handful of them. */
+const cells = new Map<string, boolean>();
+
+function oneCell(value: unknown): boolean {
+  if (typeof value !== "string") return false;
+  const known = cells.get(value);
+  if (known !== undefined) return known;
+  const result = controlFree(value) && measureText(value) === 1;
+  if (cells.size >= 1024) cells.clear();
+  cells.set(value, result);
+  return result;
+}
+
 function controlFree(value: string): boolean {
   return !/[\p{Cc}\p{Cf}]/u.test(value);
 }
@@ -108,10 +121,7 @@ function glyph(
     return;
   }
   for (const form of ["unicode", "ascii"] as const) {
-    const cell = value[form];
-    if (
-      typeof cell !== "string" || !controlFree(cell) || measureText(cell) !== 1
-    ) {
+    if (!oneCell(value[form])) {
       issues.push({ path: `${path}.${form}`, message: "must be one cell" });
     }
   }
