@@ -32,16 +32,15 @@ Deno.test({
       env: { TERM: "xterm-256color", NO_COLOR: "1", LANG: "en_US.UTF-8" },
       input: [
         {
-          waitFor: ready("Working"),
-          capture: { name: "working", when: ready("Working") },
+          waitFor: ready("1 to review"),
+          capture: { name: "working", when: ready("1 to review") },
           steps: [{ bytes: "\x1b[B" }],
         },
         {
-          waitFor: ready("✓ Field notes"),
-          capture: { name: "ready", when: ready("✓ Field notes") },
+          waitFor: ready("2 to review"),
+          capture: { name: "ready", when: ready("2 to review") },
           steps: [{ bytes: "\r" }],
         },
-        { waitFor: ready("Run sample"), steps: [{ bytes: "\x1b[B\r" }] },
         { waitFor: "Press Enter to return", steps: [{ bytes: "\r" }] },
         {
           waitFor: ready("Run sample"),
@@ -60,7 +59,7 @@ Deno.test({
             `settled resized ${geometry.columns} x ${geometry.rows}`,
             (capture) =>
               capture.text.includes(
-                geometry.columns < 32 ? "Resize" : "Run sample",
+                geometry.columns < 32 ? "Too small" : "Image resize",
               ),
           );
           return {
@@ -74,9 +73,12 @@ Deno.test({
     });
     assertEquals(result.code, 0, result.transcript);
     assertStringIncludes(result.transcript, "LINE_MODE_RESTORED");
-    const captured = captureTerminalFrame(result.keyframes.returned!, size);
-    assertStringIncludes(captured.frame, "Small atlas");
+    const returned = result.keyframes.returned;
+    assert(returned !== undefined, "the returned frame was captured");
+    const captured = captureTerminalFrame(returned, size);
+    assertStringIncludes(captured.frame, "Image resize");
     assert(captured.html.includes("Run sample"));
+    assertStringIncludes(result.transcript, "Running ");
     assert(
       ptyOutputContains("Studio").test({
         stdout: result.stdout,

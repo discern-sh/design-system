@@ -55,19 +55,4 @@ export type { TerminalApplicationStateReport } from "./state-report.ts";
 export * from "./textarea-request.ts";
 export * from "./types.ts";
 
-export {
-  renderTerminalApplication,
-  TERMINAL_APPLICATION_MINIMUM,
-  transitionTerminalApplication,
-  updateTerminalApplication,
-} from "./application-model.ts";
-export type {
-  TerminalApplicationAction,
-  TerminalApplicationFrame,
-  TerminalApplicationMotion,
-  TerminalApplicationPosition,
-  TerminalApplicationRegion,
-  TerminalApplicationState,
-  TerminalApplicationView,
-} from "./application-model.ts";
-export * from "./application.ts";
+export * from "./application/mod.ts";

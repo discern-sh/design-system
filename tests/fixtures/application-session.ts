@@ -1,9 +1,12 @@
 /** A live application on a held-open fake terminal and a manual clock, for runtime tests. */
 import {
   runTerminalApplication,
+  type TerminalApplicationCommand,
   type TerminalApplicationContext,
   type TerminalApplicationObservation,
+  type TerminalApplicationOptions,
   type TerminalApplicationRuntime,
+  type TerminalApplicationState,
   type TerminalApplicationView,
 } from "../../src/cli/interactive/mod.ts";
 import {
@@ -29,14 +32,17 @@ export interface ApplicationSession {
   /** The settled frame replayed from everything written so far. */
   readonly frame: () => string;
   /** Exit with `q` and wait for restoration. */
-  readonly finish: () => Promise<void>;
+  readonly finish: () => Promise<TerminalApplicationState>;
 }
 
 /** Options for {@linkcode applicationSession}. */
 export interface ApplicationSessionOptions extends FakeTerminalIOOptions {
   readonly runtime?: Partial<TerminalApplicationRuntime>;
-  readonly onAction?: () => { kind: "foreground"; run: () => void };
+  /** Commands for actions other than the session's own `quit`. */
+  readonly onAction?: (action: string) => TerminalApplicationCommand | void;
   readonly clock?: ManualTerminalClock;
+  /** Further callbacks and bindings, merged over the session's own. */
+  readonly options?: Partial<TerminalApplicationOptions<string>>;
 }
 
 /** Start a session whose `q` key exits, and wait for its first paint. */
@@ -50,12 +56,17 @@ export async function applicationSession(
   let live: TerminalApplicationContext<string> | undefined;
   const running = runTerminalApplication({
     view,
+    ...options.options,
+    keymap: [{ key: "q", action: "quit" }, ...(options.options?.keymap ?? [])],
     start: (context) => {
       live = context;
+      return options.options?.start?.(context);
     },
-    onKey: (key) =>
-      key.kind === "text" && key.text === "q" ? { kind: "exit" } : undefined,
-    ...(options.onAction === undefined ? {} : { onAction: options.onAction }),
+    onAction: (action, context, source) =>
+      action === "quit"
+        ? { kind: "exit" }
+        : options.options?.onAction?.(action, context, source) ??
+          options.onAction?.(action),
   }, {
     io,
     clock,
@@ -74,8 +85,9 @@ export async function applicationSession(
     frame: () => settledTerminalFrame(io.output(), io.size()),
     finish: async () => {
       io.enqueue("q");
-      await running;
+      const state = await running;
       io.close();
+      return state;
     },
   };
 }

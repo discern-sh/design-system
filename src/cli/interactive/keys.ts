@@ -630,3 +630,10 @@ export function isNamedKey(
 ): boolean {
   return key.kind === "named" && key.name === name;
 }
+
+const KEY_NAMES: ReadonlySet<string> = new Set(NAMED_SEQUENCES.values());
+
+/** Whether a string is one of the names the key decoder produces. */
+export function isTerminalKeyName(value: string): value is TerminalKeyName {
+  return KEY_NAMES.has(value);
+}

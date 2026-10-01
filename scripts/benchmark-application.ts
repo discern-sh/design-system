@@ -4,15 +4,17 @@ import {
   type SelectFrameState,
 } from "@discern-sh/design-system/cli";
 import {
+  createTerminalApplicationModel,
   renderTerminalApplication,
   runTerminalApplication,
   TERMINAL_ANIMATION_INTERVAL_MS,
+  type TerminalApplicationModel,
   type TerminalApplicationObservation,
   type TerminalApplicationView,
   transitionTerminalApplication,
-  updateTerminalApplication,
 } from "@discern-sh/design-system/cli/interactive";
 import {
+  captureTerminalFrame,
   FakeTerminalIO,
   ManualTerminalClock,
 } from "@discern-sh/design-system/cli/interactive/testing";
@@ -21,6 +23,51 @@ import {
   fitInteractionFrame,
   type InteractionFrameViewport,
 } from "../src/cli/interactive/viewport-budget.ts";
+/** A one-group list of `count` items, the first `spinners` of them moving. */
+const collection = (
+  count: number,
+  spinners = 0,
+  title = "Collection",
+): TerminalApplicationView<number> => ({
+  header: { leading: [{ text: title, role: "title" }] },
+  body: {
+    kind: "list",
+    list: {
+      id: "items",
+      groups: [{
+        id: "all",
+        title: "Items",
+        items: Array.from({ length: count }, (_, i) => ({
+          id: String(i),
+          title: `Item ${i}`,
+          marker: i < spinners
+            ? {
+              unicode: "◐",
+              ascii: "@",
+              tone: "accent" as const,
+              animation: "spinner" as const,
+            }
+            : { unicode: "✓", ascii: "v", tone: "success" as const },
+          cells: {
+            status: [{
+              text: i < spinners ? "Working" : "Ready",
+              tone: "muted" as const,
+            }],
+          },
+          primary: i,
+        })),
+      }],
+      columns: [{ id: "status", width: 9, align: "end" }],
+    },
+  },
+  footer: { left: [{ key: "q", label: "Quit" }] },
+});
+const down = { kind: "key", key: { kind: "named", name: "down" } } as const;
+const quit = {
+  keymap: [{ key: "q", action: -1 }],
+  onAction: (action: number) =>
+    action === -1 ? { kind: "exit" as const } : undefined,
+};
 const summary = (times: number[]) => {
   const sorted = [...times].sort((a, b) => a - b);
   return {
@@ -117,49 +164,32 @@ for (
 }
 const navigation = [];
 for (const count of [20, 10_000]) {
-  const view: TerminalApplicationView<number> = {
-    title: "Collection",
-    regions: [{
-      kind: "choices",
-      id: "items",
-      title: "Items",
-      entries: Array.from(
-        { length: count },
-        (_, i) => ({
-          id: String(i),
-          label: `Item ${i}`,
-          value: i,
-          status: { content: "Ready", tone: "success" },
-        }),
-      ),
-    }],
-  };
-  let state = updateTerminalApplication(view);
+  const view = collection(count);
+  let model: TerminalApplicationModel<number> =
+    createTerminalApplicationModel(view).model;
   const io = new FakeTerminalIO();
   const times: number[] = [];
   const resizeTimes: number[] = [];
   let maximumRenderCalls = 0;
   for (let i = 0; i < 200; i++) {
     const start = performance.now();
-    state =
-      transitionTerminalApplication(state, { kind: "named", name: "down" })
-        .state;
+    model = transitionTerminalApplication(model, down, i).model;
     const rendered = renderTerminalApplication(
-      state,
+      model,
       io.size(),
       io.capabilities(),
     );
-    state = rendered.state;
+    model = rendered.model;
     maximumRenderCalls = Math.max(maximumRenderCalls, rendered.renderCalls);
     times.push(performance.now() - start);
   }
   for (let i = 0; i < 60; i++) {
     const sizes = [[80, 24], [120, 30], [40, 20], [80, 13], [60, 50]] as const;
-    const [columns, rows] = sizes[i % sizes.length]!;
+    const [columns, rows] = sizes[i % sizes.length] ?? [80, 24];
     io.resize(columns, rows);
     const start = performance.now();
-    state =
-      renderTerminalApplication(state, io.size(), io.capabilities()).state;
+    model =
+      renderTerminalApplication(model, io.size(), io.capabilities()).model;
     resizeTimes.push(performance.now() - start);
   }
   const observations: TerminalApplicationObservation[] = [];
@@ -168,8 +198,7 @@ for (const count of [20, 10_000]) {
   const start = performance.now();
   await runTerminalApplication({
     view,
-    onKey: (key) =>
-      key.kind === "text" && key.text === "q" ? { kind: "exit" } : undefined,
+    ...quit,
     start: (context) => {
       context.update(view);
     },
@@ -189,17 +218,18 @@ for (const count of [20, 10_000]) {
   const updateStart = performance.now();
   const updated = await runTerminalApplication({
     view,
+    ...quit,
     start: (context) => {
       for (let burst = 0; burst < 100; burst++) {
-        context.update({ ...view, title: `Update ${burst}` });
+        context.update(collection(count, 0, `Update ${burst}`));
       }
     },
-    onKey: (key) =>
-      key.kind === "text" && key.text === "q" ? { kind: "exit" } : undefined,
   }, { io: updates, observe: (event) => updateObservations.push(event) });
   if (
-    updated.positions.items?.selectedId !== String(Math.min(40, count - 1)) ||
-    updated.view.title !== "Update 99"
+    updated.lists.items?.selectedId !== String(Math.min(40, count - 1)) ||
+    !captureTerminalFrame(updates.output(), updates.size()).text.includes(
+      "Update 99",
+    )
   ) throw new Error("coalescing lost an update or navigation key");
   navigation.push({
     items: count,
@@ -229,23 +259,7 @@ const bytes = (values: number[]) => {
 const painting = [];
 for (const [columns, rows] of [[80, 24], [120, 30]] as const) {
   for (const colorDepth of ["none", "truecolor"] as const) {
-    const animated: TerminalApplicationView<number> = {
-      title: "Collection",
-      regions: [{
-        kind: "choices",
-        id: "items",
-        title: "Items",
-        entries: Array.from({ length: 40 }, (_, i) => ({
-          id: String(i),
-          label: `Item ${i}`,
-          value: i,
-          indicator: i < 3
-            ? { content: "◐", ascii: "@", animation: "spinner" as const }
-            : { content: "✓", ascii: "v", tone: "success" as const },
-          status: { content: i < 3 ? "Working" : "Ready" },
-        })),
-      }],
-    };
+    const animated = collection(40, 3);
     const io = new FakeTerminalIO([], {
       holdOpen: true,
       columns,
@@ -254,11 +268,7 @@ for (const [columns, rows] of [[80, 24], [120, 30]] as const) {
     });
     const clock = new ManualTerminalClock();
     const seen: TerminalApplicationObservation[] = [];
-    const running = runTerminalApplication({
-      view: animated,
-      onKey: (key) =>
-        key.kind === "text" && key.text === "q" ? { kind: "exit" } : undefined,
-    }, {
+    const running = runTerminalApplication({ view: animated, ...quit }, {
       io,
       clock,
       theme: "dark",
@@ -266,7 +276,8 @@ for (const [columns, rows] of [[80, 24], [120, 30]] as const) {
       observe: (event) => seen.push(event),
     });
     await settle();
-    const keyframe = seen[0]!;
+    const keyframe = seen[0];
+    if (keyframe === undefined) throw new Error("no first paint");
     for (let tick = 0; tick < 40; tick++) {
       clock.advance(TERMINAL_ANIMATION_INTERVAL_MS);
       await settle();
@@ -299,30 +310,16 @@ const painterTiming = [];
 for (const rowDiff of [true, false]) {
   const io = new FakeTerminalIO([], { columns: 80, rows: 24 });
   const painter = new TerminalScreenPainter(io, () => 0, { rowDiff });
-  let state = updateTerminalApplication({
-    title: "Collection",
-    regions: [{
-      kind: "choices",
-      id: "items",
-      title: "Items",
-      entries: Array.from({ length: 200 }, (_, i) => ({
-        id: String(i),
-        label: `Item ${i}`,
-        value: i,
-        status: { content: "Ready", tone: "success" as const },
-      })),
-    }],
-  });
+  let model: TerminalApplicationModel<number> =
+    createTerminalApplicationModel(collection(200)).model;
   const frames: string[] = [];
   for (let i = 0; i < 200; i++) {
-    state =
-      transitionTerminalApplication(state, { kind: "named", name: "down" })
-        .state;
-    const rendered = renderTerminalApplication(state, io.size(), {
+    model = transitionTerminalApplication(model, down, i).model;
+    const rendered = renderTerminalApplication(model, io.size(), {
       ...io.capabilities(),
       colorDepth: "truecolor",
     });
-    state = rendered.state;
+    model = rendered.model;
     frames.push(rendered.frame);
   }
   const times: number[] = [];

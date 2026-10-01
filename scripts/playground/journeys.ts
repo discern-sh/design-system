@@ -203,7 +203,7 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
     title: "Live bounded application",
     section: "Interactive APIs",
     description:
-      "A calm live collection, responsive regions, a reading pane and foreground return. Run playground:application for the real child fixture.",
+      "A grouped list with a following detail: live regrouping, filter, zoom, folds and foreground return. Run playground:application for the real child fixture.",
     run: async (runtime) => {
       await runTerminalApplication(
         applicationDemoOptions(async () => {
@@ -1118,7 +1118,10 @@ export const interactiveExportCoverage: Readonly<
   runTerminalApplication: { journey: "application" },
   TERMINAL_APPLICATION_MINIMUM: {
     excluded:
-      "The application journey exercises the minimum viewport and resize fallback.",
+      "The application journey exercises the minimum viewport and its notice.",
+  },
+  createTerminalApplicationModel: {
+    excluded: "Pure view adoption exercised by the application journey.",
   },
   updateTerminalApplication: {
     excluded: "Pure view adoption exercised by the application journey.",
@@ -1129,6 +1132,40 @@ export const interactiveExportCoverage: Readonly<
   renderTerminalApplication: {
     excluded:
       "Pure bounded frames exercised by the application journey and capture tool.",
+  },
+  terminalApplicationState: {
+    excluded:
+      "The read-only snapshot callers receive through the journey's context.",
+  },
+  terminalApplicationDeadline: {
+    excluded:
+      "Settle and message timers the application journey schedules without interaction of their own.",
+  },
+  validateTerminalApplicationView: {
+    excluded: "View rules as data; every journey view passes through them.",
+  },
+  DEFAULT_SPLIT_RULES: {
+    excluded:
+      "The master-detail split the application journey resizes through.",
+  },
+  DEFAULT_LIST_SPACING: {
+    excluded: "Row gaps the application journey shows at every width.",
+  },
+  DEFAULT_LIST_MIN_TITLE: {
+    excluded: "The column-dropping threshold the journey narrows past.",
+  },
+  DEFAULT_LIST_SETTLE_MS: {
+    excluded: "The settle window the journey's live update waits behind.",
+  },
+  EDITOR_RESERVED_CHORDS: {
+    excluded: "A validation list for field bindings; there is nothing to show.",
+  },
+  TERMINAL_APPLICATION_RESERVED_KEYS: {
+    excluded:
+      "The navigation keys the application journey uses; a validation list.",
+  },
+  isTerminalKeyName: {
+    excluded: "A decoder-name predicate with no interaction of its own.",
   },
   DEFAULT_TERMINAL_PAINT_OPTIONS: {
     excluded:

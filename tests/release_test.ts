@@ -477,11 +477,11 @@ Deno.test("the publish-shaped artifact serves the neutral consumer alone", async
 import { runTerminalApplication } from "${config.name}/cli/interactive";
 import { FakeTerminalIO, captureTerminalFrame, runPtyProcess } from "${config.name}/cli/interactive/testing";
 import { applicationDemoOptions } from "./application-demo.ts";
-const io = new FakeTerminalIO(["\\x1b[B\\r", "\\x1b[B\\r", "q"]);
+const io = new FakeTerminalIO(["\\x1b[B", "\\r", "q"]);
 let calls = 0;
 const state = await runTerminalApplication(applicationDemoOptions(() => { calls++; }), { io });
 const capture = captureTerminalFrame(io.output(), io.size());
-if (calls !== 1 || state.positions.projects?.selectedId !== "1" || !capture.html.includes("Run sample") || typeof runPtyProcess !== "function") throw new Error("Published application contract failed");
+if (calls !== 1 || state.lists.jobs?.selectedId !== "image-resize" || !capture.html.includes("Run sample") || typeof runPtyProcess !== "function") throw new Error("Published application contract failed");
 console.log("application-public-ok");
 `,
     );

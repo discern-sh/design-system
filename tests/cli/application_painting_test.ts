@@ -6,6 +6,9 @@ import {
 import {
   BEGIN_SYNCHRONIZED_UPDATE,
   END_SYNCHRONIZED_UPDATE,
+  POP_TERMINAL_TITLE,
+  PUSH_TERMINAL_TITLE,
+  terminalWindowTitle,
 } from "../../src/cli/interactive/painter.ts";
 import { TERMINAL_STATE_REPORT_PREFIX } from "../../src/cli/interactive/state-report.ts";
 import {
@@ -13,36 +16,20 @@ import {
   FakeTerminalIO,
 } from "../../src/cli/interactive/testing.ts";
 import { applicationSession, settle } from "../fixtures/application-session.ts";
+import { testView } from "../fixtures/application-views.ts";
 
 function listView(count = 3): TerminalApplicationView<string> {
-  return {
-    title: "Studio",
-    regions: [{
-      kind: "choices",
-      id: "items",
-      title: "Items",
-      entries: Array.from({ length: count }, (_, index) => ({
-        id: `item-${index}`,
-        label: `Item ${index}`,
-        value: `item-${index}`,
-      })),
-    }],
-  };
+  return testView(
+    Array.from({ length: count }, (_, index) => `item-${index}`),
+    { body: "list" },
+  );
 }
 
-Deno.test("navigation repaints changed rows; resize and a swapped region repaint keyframes", async () => {
-  const live = await applicationSession({
-    ...listView(),
-    regions: [listView().regions[0], {
-      kind: "choices",
-      id: "more",
-      title: "More",
-      entries: [{ id: "x", label: "Other", value: "x" }],
-    }],
-  });
+Deno.test("navigation repaints changed rows; resize and zoom repaint keyframes", async () => {
+  const live = await applicationSession(testView(["item-0", "item-1"]));
   live.io.enqueueKeys("down");
   await settle();
-  live.io.enqueueKeys("tab");
+  live.io.enqueue(" ");
   await settle();
   live.io.enqueueResize(100, 24);
   await settle();
@@ -50,9 +37,10 @@ Deno.test("navigation repaints changed rows; resize and a swapped region repaint
     live.observations.map((observation) => observation.paint),
     ["keyframe", "rows", "keyframe", "keyframe"],
   );
-  // The pointer leaves one row, enters another, and the position counter changes.
-  assertEquals(live.observations[1]?.rowsWritten, 3);
-  assert(live.observations[1]!.bytesWritten < live.observations[1]!.frameBytes);
+  // The selection leaves one row and enters another; the detail follows it.
+  const move = live.observations[1];
+  assert(move !== undefined && move.rowsWritten <= 6, `${move?.rowsWritten}`);
+  assert(move.bytesWritten < move.frameBytes);
   await live.finish();
 });
 
@@ -99,7 +87,12 @@ Deno.test("state reports follow navigation only when the environment opts in", a
   });
   assertEquals(
     captureTerminalFrame(reported.io.output(), reported.io.size()).state,
-    { focusedControlId: "items", listId: "items", selectedItemId: "item-0" },
+    {
+      focusedControlId: "items",
+      listId: "items",
+      selectedItemId: "item-0",
+      zoomed: false,
+    },
   );
   reported.io.enqueueKeys("down", "down");
   await settle();
@@ -108,7 +101,7 @@ Deno.test("state reports follow navigation only when the environment opts in", a
     reported.io.size(),
   );
   assertEquals(capture.state?.selectedItemId, "item-2");
-  assert(capture.text.includes("Item 2"));
+  assert(capture.text.includes("Item item-2"));
   await reported.finish();
 });
 
@@ -125,4 +118,30 @@ Deno.test("paint options are validated before the terminal changes", async () =>
   );
   assertEquals(io.writes, []);
   assertEquals(io.rawTransitions, []);
+});
+
+Deno.test("the window title is saved, set with keyframes and changes, and restored", async () => {
+  const titled = (title: string): TerminalApplicationView<string> => ({
+    ...listView(),
+    windowTitle: title,
+  });
+  const live = await applicationSession(titled("Studio · 3 items"));
+  live.context().update(titled("Studio · 2 items"));
+  await settle();
+  live.context().update(titled("Studio · 2 items"));
+  await settle();
+  const capture = captureTerminalFrame(live.io.output(), live.io.size());
+  assertEquals(capture.title, "Studio · 2 items");
+  await live.finish();
+  const output = live.io.output();
+  assertEquals(output.split(PUSH_TERMINAL_TITLE).length, 2, "pushed once");
+  assertEquals(
+    output.split(terminalWindowTitle("Studio · 2 items")).length,
+    2,
+    "an unchanged title is not repeated",
+  );
+  assert(
+    output.indexOf(POP_TERMINAL_TITLE) < output.lastIndexOf("\x1b[?1049l"),
+    "the title is restored before the screen is released",
+  );
 });

@@ -7,6 +7,7 @@ import {
 import { renderSemanticInlineContent } from "../../src/cli/semantic-inline.ts";
 import { deriveTerminalTheme } from "../../src/cli/theme.ts";
 import { runTerminalApplication } from "../../src/cli/interactive/mod.ts";
+import { testView } from "../fixtures/application-views.ts";
 import {
   FakeTerminalIO,
   testTerminalCapabilities,
@@ -83,18 +84,9 @@ Deno.test("inline emphasis spells markers only where attributes cannot draw it",
 Deno.test("the application runtime paints emphasis on a colourless terminal", async () => {
   const io = new FakeTerminalIO(["q"], { colorDepth: "none" });
   await runTerminalApplication({
-    view: {
-      title: "Projects",
-      regions: [{
-        kind: "choices",
-        id: "items",
-        title: "Items",
-        entries: [{ id: "a", label: "Item a", value: "a" }],
-      }],
-    },
-    onAction: () => undefined,
-    onKey: (key) =>
-      key.kind === "text" && key.text === "q" ? { kind: "exit" } : undefined,
+    view: testView(["a"], { body: "list" }),
+    keymap: [{ key: "q", action: "quit" }],
+    onAction: (action) => action === "quit" ? { kind: "exit" } : undefined,
   }, { io });
   const output = io.output();
   assert(output.includes("\x1b[1m"), "bold reaches the colourless terminal");

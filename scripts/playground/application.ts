@@ -3,172 +3,455 @@ import {
   createCliBlock,
   renderMarkdownCli,
   TERMINAL_GLYPHS,
+  type TerminalGlyph,
+  type TerminalTextTone,
 } from "@discern-sh/design-system/cli";
-import {
-  type TerminalApplicationOptions,
-  type TerminalApplicationView,
+import type {
+  ApplicationGlyph,
+  DetailBlock,
+  DetailStrip,
+  GroupedListItem,
+  InlineRun,
+  ListGroup,
+  MessageLine,
+  TerminalApplicationContext,
+  TerminalApplicationOptions,
+  TerminalApplicationView,
 } from "@discern-sh/design-system/cli/interactive";
 
-const guide = createCliBlock(renderMarkdownCli, {
-  source: `# A little room to work
+/** One sample job: what its row, detail, and strip show. */
+export interface DemoJob {
+  readonly id: string;
+  readonly title: string;
+  readonly group: string;
+  readonly glyph: TerminalGlyph;
+  readonly tone: TerminalTextTone;
+  readonly status: string;
+  readonly qualifier?: InlineRun;
+  readonly age: string;
+  readonly overlap?: string;
+  readonly explanation: string;
+  readonly facts: readonly (readonly [string, readonly InlineRun[]])[];
+  readonly meter?: number;
+}
 
-This is a small collection of sample projects. Open an item to see its controls.
+const notes = createCliBlock(renderMarkdownCli, {
+  source: `Outputs land in **reports/** and keep the last three runs.
 
-## Keep your place
-
-The list stays open while its status changes. The focus marker belongs to navigation; the small status beside it belongs to the item.
-
-Use **Tab** to move between the list and this reading region. On a small terminal, the focused region gets the whole screen.
-
-## Take a short detour
-
-Open an item and choose **Run sample**. A harmless child fixture borrows the terminal. Press Enter there to come back to the same selection and reading position.
-
-## Read at your own pace
-
-Arrow keys move one line. Page Up and Page Down move a page. Home and End reach the edges.
-
-Resize at any time. Wide terminals put the regions side by side; tall terminals stack them. Short terminals keep the active region reachable.
-
-## No hurry
-
-There are no real projects or actions here. All data is deterministic and every action is a sample.
-`,
-  maxWidth: 68,
+Each run reads the previous quarter's ledger and writes one summary per team.`,
 });
+
+const paused = (title: string): DemoJob => ({
+  id: title.toLowerCase().replaceAll(" ", "-"),
+  title,
+  group: "paused",
+  glyph: TERMINAL_GLYPHS.paused,
+  tone: "muted",
+  status: "Paused",
+  age: "5d",
+  explanation: "Paused on purpose. Its schedule and outputs are kept.",
+  facts: [["Paused", [{ text: "5 days ago" }]]],
+});
+
+/** The sample fleet, in group order. */
+export const DEMO_JOBS: readonly DemoJob[] = [
+  {
+    id: "quarterly-report",
+    title: "Quarterly report",
+    group: "review",
+    glyph: TERMINAL_GLYPHS.done,
+    tone: "success",
+    status: "Ready",
+    age: "20m",
+    explanation:
+      "Finished 20m ago and nothing has changed since. Its outputs wait for a look before they are shared.",
+    facts: [
+      ["Last run", [{ text: "Passed 20m ago" }]],
+      ["Output", [
+        { text: "14 files  " },
+        { text: "+212", tone: "success" },
+        { text: " −18", ascii: " -18", tone: "danger" },
+      ]],
+      ["Schedule", [{ text: "Every Monday" }]],
+      ["Owner", [{ text: "Reporting" }]],
+    ],
+  },
+  {
+    id: "image-resize",
+    title: "Image resize",
+    group: "attention",
+    glyph: TERMINAL_GLYPHS.failed,
+    tone: "danger",
+    status: "Failed",
+    age: "2h",
+    overlap: "thumbnails/",
+    explanation:
+      "The last run stopped at its second step 2h ago. Run it again once the source folder is readable.",
+    facts: [
+      ["Last run", [{ text: "Failed 2h ago at step 2" }]],
+      ["Schedule", [{ text: "Hourly" }]],
+      ["Overlap", [{ text: "thumbnails/" }]],
+    ],
+  },
+  {
+    id: "photo-archive",
+    title: "Photo archive migration",
+    group: "attention",
+    glyph: TERMINAL_GLYPHS.attention,
+    tone: "warning",
+    status: "Stale",
+    qualifier: { text: "↓12", ascii: "", tone: "muted" },
+    age: "11d",
+    explanation:
+      "No run for 11 days, and 12 newer albums have arrived since. Run it again or pause it.",
+    facts: [
+      ["Last run", [{ text: "Passed 11d ago" }]],
+      ["Backlog", [{ text: "12 new albums", tone: "warning" }]],
+    ],
+  },
+  {
+    id: "mail-digest",
+    title: "Mail digest",
+    group: "attention",
+    glyph: TERMINAL_GLYPHS.attention,
+    tone: "warning",
+    status: "Needs input",
+    age: "1h",
+    explanation: "Waiting for a recipient list before its next run.",
+    facts: [
+      ["Last run", [{ text: "None yet" }]],
+      ["Schedule", [{ text: "Daily at 07:00" }]],
+    ],
+  },
+  {
+    id: "search-index",
+    title: "Search index",
+    group: "running",
+    glyph: TERMINAL_GLYPHS.running,
+    tone: "accent",
+    status: "Running",
+    age: "1:12",
+    meter: 0.4,
+    explanation:
+      "Started 1m 12s ago and usually takes about 3 minutes. The new index replaces the old one when it finishes.",
+    facts: [
+      ["Last run", [{ text: "Running now" }]],
+      ["Schedule", [{ text: "Every 6 hours" }]],
+    ],
+  },
+  {
+    id: "log-rotation",
+    title: "Log rotation",
+    group: "running",
+    glyph: TERMINAL_GLYPHS.active,
+    tone: "accent",
+    status: "Writing",
+    age: "3m",
+    overlap: "logs/",
+    explanation: "Compressing yesterday's logs. Another job reads this folder.",
+    facts: [
+      ["Last run", [{ text: "Writing now" }]],
+      ["Overlap", [{ text: "logs/" }]],
+    ],
+  },
+  {
+    id: "nightly-backup",
+    title: "Nightly backup",
+    group: "scheduled",
+    glyph: TERMINAL_GLYPHS.queued,
+    tone: "success",
+    status: "Queued #1",
+    age: "35m",
+    explanation: "Next in line. It starts as soon as the running jobs finish.",
+    facts: [
+      ["Last run", [{ text: "Passed 1d ago" }]],
+      ["Queue", [{ text: "#1" }]],
+    ],
+  },
+  {
+    id: "cache-warmup",
+    title: "Cache warmup",
+    group: "idle",
+    glyph: TERMINAL_GLYPHS.idle,
+    tone: "faint",
+    status: "Idle",
+    age: "2d",
+    explanation: "Nothing to do until the next deploy.",
+    facts: [["Last run", [{ text: "Passed 2d ago" }]]],
+  },
+  paused("Old exports"),
+  paused("Thumbnail sweep"),
+  paused("Weekly stats"),
+];
+
+const GROUPS: readonly {
+  readonly id: string;
+  readonly title: string;
+  readonly foldable?: boolean;
+}[] = [
+  { id: "review", title: "Needs review" },
+  { id: "attention", title: "Needs attention" },
+  { id: "running", title: "Running" },
+  { id: "scheduled", title: "Scheduled" },
+  { id: "idle", title: "Idle" },
+  { id: "paused", title: "Paused", foldable: true },
+];
+
+function marker(job: DemoJob): ApplicationGlyph {
+  return {
+    unicode: job.glyph.unicode,
+    ascii: job.glyph.ascii,
+    tone: job.tone,
+    ...(job.glyph.animation === undefined ? {} : { animation: "spinner" }),
+  };
+}
+
+function labelTone(job: DemoJob): TerminalTextTone {
+  return job.tone === "faint" || job.tone === "accent" ? "muted" : job.tone;
+}
+
+function statusCell(job: DemoJob): readonly InlineRun[] {
+  if (job.meter !== undefined) {
+    const filled = Math.round(job.meter * 4);
+    return [
+      { text: job.status, tone: labelTone(job) },
+      { text: " " },
+      { text: "━".repeat(filled), ascii: "", tone: "accent" },
+      { text: "─".repeat(4 - filled), ascii: "", tone: "faint" },
+    ];
+  }
+  return [
+    { text: job.status, tone: labelTone(job) },
+    ...(job.qualifier === undefined ? [] : [{ text: " " }, job.qualifier]),
+  ];
+}
+
+function row(job: DemoJob): GroupedListItem<string> {
+  return {
+    id: job.id,
+    title: job.title,
+    marker: marker(job),
+    cells: {
+      ...(job.overlap === undefined
+        ? {}
+        : { flag: [{ text: "⇄", ascii: "&", tone: "faint" as const }] }),
+      status: statusCell(job),
+      age: [{ text: job.age, tone: "faint" }],
+    },
+    primary: `run:${job.id}`,
+    keywords: job.status,
+  };
+}
+
+function detail(job: DemoJob): readonly DetailBlock[] {
+  return [
+    { kind: "heading", title: job.title, aside: job.id },
+    { kind: "state", glyph: marker(job), label: job.status, tone: job.tone },
+    ...(job.meter === undefined ? [] : [{
+      kind: "meter" as const,
+      value: job.meter,
+      caption: "1:12 of about 3m",
+    }]),
+    { kind: "text", runs: [{ text: job.explanation }] },
+    {
+      kind: "facts",
+      rows: job.facts.map(([label, value]) => ({ label, value: [value] })),
+    },
+    {
+      kind: "hints",
+      items: [
+        {
+          key: "enter",
+          label: "Run sample",
+          description: "Lend the terminal to a short child",
+          primary: true,
+        },
+        {
+          key: "space",
+          label: "Details",
+          description: "Read this job at full width",
+        },
+      ],
+    },
+    ...(job.id === "quarterly-report"
+      ? [{
+        kind: "section" as const,
+        title: "Notes",
+        blocks: [{ kind: "block" as const, content: notes }],
+      }]
+      : []),
+  ];
+}
+
+function strip(job: DemoJob): DetailStrip {
+  return {
+    title: [
+      { text: job.glyph.unicode, ascii: job.glyph.ascii, tone: job.tone },
+      { text: " " },
+      { text: job.title, role: "title" },
+      { text: "  " },
+      { text: job.status, tone: labelTone(job) },
+    ],
+    facts: job.facts.slice(0, 2).map(([, value]) => value),
+  };
+}
+
+/** The sample view for a set of jobs and an optional message. */
+export function applicationDemoView(
+  jobs: readonly DemoJob[] = DEMO_JOBS,
+  message?: MessageLine,
+): TerminalApplicationView<string> {
+  const groups: ListGroup<string>[] = GROUPS.map((group) => ({
+    ...group,
+    ...(group.foldable === true ? { initiallyFolded: true } : {}),
+    items: jobs.filter((job) => job.group === group.id).map(row),
+  }));
+  const review = jobs.filter((job) => job.group === "review").length;
+  return {
+    header: {
+      leading: [
+        { text: "Studio", role: "title" },
+        { text: "  ·  ", ascii: "  -  ", tone: "faint" },
+        { text: "jobs", tone: "muted" },
+      ],
+      trailing: [
+        { text: String(review), role: "title" },
+        { text: " to review", tone: "muted" },
+      ],
+      liveness: {
+        state: "idle",
+        labels: {
+          idle: "Live",
+          busy: "Refreshing",
+          retrying: "Retrying",
+          stale: "Offline",
+        },
+        busyAfterMs: 1500,
+      },
+    },
+    body: {
+      kind: "master-detail",
+      list: {
+        id: "jobs",
+        groups,
+        columns: [
+          { id: "flag", width: 1, priority: 1 },
+          { id: "status", width: 13, align: "end" },
+          { id: "age", width: 4, align: "end", priority: 2 },
+        ],
+        filter: { placeholder: "Filter" },
+        density: {
+          foldOrder: ["paused", "idle", "scheduled", "running"],
+          neverFold: ["review", "attention"],
+        },
+      },
+      detail: {
+        follows: "jobs",
+        content: Object.fromEntries(jobs.map((job) => [job.id, detail(job)])),
+        strip: Object.fromEntries(jobs.map((job) => [job.id, strip(job)])),
+      },
+    },
+    ...(message === undefined ? {} : { message }),
+    footer: {
+      left: [
+        { key: "enter", label: "Run sample" },
+        { key: "space", label: "Details" },
+      ],
+      right: [{ key: "q", label: "Quit" }],
+      extra: [{ key: "/", label: "Filter" }],
+    },
+    windowTitle: `Studio · ${review} to review`,
+  };
+}
+
+/** The first frame's tip, dismissed by the first key. */
+export const DEMO_TIP: MessageLine = {
+  id: "tip",
+  runs: [
+    { text: "Tip", tone: "faint" },
+    { text: "   Press " },
+    { text: "/", role: "key" },
+    { text: " to filter and " },
+    { text: "Space", role: "key" },
+    { text: " to read a job at full width." },
+  ],
+  dismiss: { onKey: true },
+};
+
+/** The fleet after the running search index finishes and joins those to review. */
+export function finishedDemoJobs(): readonly DemoJob[] {
+  return DEMO_JOBS.map((job): DemoJob => {
+    if (job.id !== "search-index") return job;
+    const { meter: _meter, ...rest } = job;
+    return {
+      ...rest,
+      group: "review",
+      glyph: TERMINAL_GLYPHS.done,
+      tone: "success",
+      status: "Ready",
+      age: "now",
+      explanation: "Finished just now. The new index replaced the old one.",
+      facts: [["Last run", [{ text: "Passed just now" }]]],
+    };
+  });
+}
+
+/** How the demonstration starts. */
+export interface ApplicationDemoSettings {
+  /** When the running job finishes; defaults to 1800 ms. */
+  readonly updateAfterMs?: number;
+  /** Show the tip on the first frame; defaults to true. */
+  readonly tip?: boolean;
+}
 
 /** Build deterministic sample data and caller-owned navigation for the live application review. */
 export function applicationDemoOptions(
-  foreground: () => void | Promise<void>,
-  updateAfterMs = 1800,
+  foreground: (title: string) => void | Promise<void>,
+  settings: ApplicationDemoSettings = {},
 ): TerminalApplicationOptions<string> {
-  let ready = false;
-  let opened: string | undefined;
-  let live: Parameters<
-    NonNullable<TerminalApplicationOptions<string>["start"]>
-  >[0];
-  const labels = [
-    "Field notes",
-    "Small atlas",
-    "Reading room",
-    "Common ground",
-    "Paper trail",
-    "Quiet hours",
-  ];
-  const view = (focus?: string): TerminalApplicationView<string> => ({
-    title: opened === undefined ? "Studio" : `Studio / ${opened}`,
-    tip: opened === undefined
-      ? "Tip: ? opens the guide. Watch Field notes settle."
-      : "Tip: Run sample returns you to the same place.",
-    ...(focus === undefined ? {} : { focusedRegionId: focus }),
-    regions: [
-      opened === undefined
-        ? {
-          kind: "choices",
-          id: "projects",
-          title: "Projects",
-          entries: labels.map((label, index) => ({
-            id: String(index),
-            label,
-            value: label,
-            indicator: index === 0 && !ready
-              ? {
-                content: TERMINAL_GLYPHS.running.unicode,
-                ascii: TERMINAL_GLYPHS.running.ascii,
-                tone: "accent",
-                animation: "spinner",
-              }
-              : {
-                content: TERMINAL_GLYPHS.done.unicode,
-                ascii: TERMINAL_GLYPHS.done.ascii,
-                tone: "success",
-              },
-            status: {
-              content: index === 0 && !ready ? "Working" : "Ready",
-              tone: index === 0 && !ready ? "neutral" : "success",
-            },
-            description: index === 0
-              ? "A small set of observations, nearly ready to read."
-              : "A little space for a useful idea.",
-          })),
-        }
-        : {
-          kind: "choices",
-          id: `actions-${opened}`,
-          title: "Actions",
-          entries: [
-            {
-              id: "read",
-              label: "Read the guide",
-              value: "read",
-              description:
-                "Explore the reading pane without leaving this item.",
-            },
-            {
-              id: "run",
-              label: "Run sample",
-              value: "run",
-              description: "Borrow the terminal for a harmless child fixture.",
-            },
-            {
-              id: "export",
-              label: "Export sample",
-              value: "export",
-              disabled: true,
-              description: "Unavailable in this demonstration.",
-            },
-            { id: "back", label: "Back to projects", value: "back" },
-          ],
-        },
-      { kind: "reading", id: "guide", title: "Guide", content: guide },
-    ],
-  });
+  const updateAfterMs = settings.updateAfterMs ?? 1800;
+  let jobs: readonly DemoJob[] = DEMO_JOBS;
+  let message: MessageLine | undefined = settings.tip === false
+    ? undefined
+    : DEMO_TIP;
+  let live: TerminalApplicationContext<string> | undefined;
+  const publish = () => live?.update(applicationDemoView(jobs, message));
   return {
-    view: view(),
+    view: applicationDemoView(jobs, message),
+    keymap: [{ key: "q", action: "quit" }],
     start(context) {
       live = context;
       const timer = setTimeout(() => {
-        ready = true;
-        context.update(view());
+        jobs = finishedDemoJobs();
+        publish();
       }, updateAfterMs);
       return () => clearTimeout(timer);
     },
-    onKey(key, context) {
-      if (key.kind === "text" && key.text === "q") return { kind: "exit" };
-      if (key.kind === "text" && key.text === "?") {
-        context.update(view("guide"));
-        return { kind: "handled" };
-      }
-      if (
-        key.kind === "named" && key.name === "escape" && opened !== undefined
-      ) {
-        opened = undefined;
-        context.update(view("projects"));
-        return { kind: "handled" };
-      }
-      return undefined;
+    onSelectionMoved(_list, itemId, move) {
+      if (move.kind !== "regrouped") return;
+      const job = jobs.find((candidate) => candidate.id === itemId);
+      const group = GROUPS.find((candidate) => candidate.id === move.to);
+      if (job === undefined || group === undefined) return;
+      message = {
+        id: `moved-${itemId}`,
+        runs: [{ text: `${job.title} moved to ${group.title}` }],
+        dismiss: { afterMs: 6000, onKey: true },
+      };
+      publish();
     },
-    onAction(action, context) {
-      if (action.regionId === "projects") {
-        opened = action.value;
-        context.update(view(`actions-${opened}`));
-        return;
-      }
-      if (action.value === "read") context.update(view("guide"));
-      if (action.value === "back") {
-        opened = undefined;
-        context.update(view("projects"));
-      }
-      if (action.value === "run") {
-        return {
-          kind: "foreground",
-          run: async () => {
-            await foreground();
-            live.update(view());
-          },
-        };
-      }
-      return undefined;
+    onDismiss(target) {
+      if (message?.id === target.message) message = undefined;
+      publish();
+    },
+    onAction(action) {
+      if (action === "quit") return { kind: "exit" };
+      const job = jobs.find((candidate) => `run:${candidate.id}` === action);
+      if (job === undefined) return undefined;
+      return {
+        kind: "foreground",
+        handoff: [{ text: `Running ${job.title} · press Enter to come back` }],
+        run: () => foreground(job.title),
+      };
     },
   };
 }

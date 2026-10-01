@@ -31,14 +31,16 @@ const demo = applicationDemoOptions(async () => {
     stderr: "inherit",
   }).spawn();
   if (!(await child.status).success) throw new Error("child failed");
-}, 250);
+}, { updateAfterMs: 250 });
 let resizeIndex = 0;
 const geometries = [[40, 20], [120, 30], [80, 13], [24, 6], [80, 24]] as const;
 await runTerminalApplication({
   ...demo,
-  onKey: (key, context) => {
-    if (key.kind === "text" && key.text === "r") {
-      const [columns, rows] = geometries[resizeIndex++ % geometries.length]!;
+  keymap: [...demo.keymap ?? [], { key: "r", action: "resize" }],
+  onAction: (action, context, source) => {
+    if (action === "resize") {
+      const [columns, rows] = geometries[resizeIndex++ % geometries.length] ??
+        [80, 24];
       void new Deno.Command("stty", {
         args: ["cols", String(columns), "rows", String(rows)],
         stdin: "inherit",
@@ -48,9 +50,9 @@ await runTerminalApplication({
         if (!result.success) throw new Error("resize failed");
         Deno.kill(Deno.pid, "SIGWINCH");
       }).catch(context.fail);
-      return { kind: "handled" };
+      return undefined;
     }
-    return demo.onKey?.(key, context);
+    return demo.onAction?.(action, context, source);
   },
 });
 if (await lineMode() !== before) {

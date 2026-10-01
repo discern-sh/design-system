@@ -23,7 +23,7 @@ class OwnershipProbe extends DenoTerminalIO {
       injected = true;
       queueMicrotask(() => {
         if (mode === "abort") abort.abort();
-        else context!.fail(new Error("sample provider failed"));
+        else context?.fail(new Error("sample provider failed"));
       });
     }
     return pending;
@@ -38,10 +38,11 @@ const io = observeTerminalIO(
   new OwnershipProbe({ readBufferSize: 1 }),
   () => {},
 );
-const demo = applicationDemoOptions(() => {});
+const demo = applicationDemoOptions(() => {}, { tip: false });
 try {
   await runTerminalApplication({
     ...demo,
+    keymap: [...demo.keymap ?? [], { key: "escape", action: "quit" }],
     start: (value) => {
       context = value;
       return demo.start?.(value);

@@ -17,12 +17,13 @@ try {
     const [name, columns, rows, theme, color, unicode] of [
       ["80x24-dark", 80, 24, "dark", true, true],
       ["120x30-dark", 120, 30, "dark", true, true],
-      ["60x50-dark", 60, 50, "dark", true, true],
+      ["60x20-dark", 60, 20, "dark", true, true],
       ["40x20-dark", 40, 20, "dark", true, true],
       ["80x13-dark", 80, 13, "dark", true, true],
       ["80x24-light", 80, 24, "light", true, true],
       ["80x24-no-color", 80, 24, "dark", false, true],
       ["40x20-ascii", 40, 20, "dark", false, false],
+      ["32x10-dark", 32, 10, "dark", true, true],
       ["24x6-fallback", 24, 6, "dark", false, false],
     ] as const
   ) {
@@ -36,9 +37,7 @@ try {
     const settled = ptySettledFrame(
       size,
       "updated settled overview",
-      (capture) =>
-        capture.text.includes("Field notes") &&
-        !capture.text.includes("Working"),
+      (capture) => capture.state?.selectedItemId === "search-index",
     );
     // A later spinner phase than the first frame shows the tick repainting.
     const spinning = ptySettledFrame(
@@ -46,7 +45,7 @@ try {
       "overview at a later spinner phase",
       (capture) => capture.text.includes("◑") && capture.state !== undefined,
     );
-    const first = columns < 32 ? "Resize" : "Working";
+    const first = columns < 32 ? "Too small" : "Running";
     const phases: readonly PtyInputPhase[] = columns < 32
       ? [{
         waitFor: when(first),
@@ -59,7 +58,8 @@ try {
           capture: { name: "overview", when: when(first) },
           steps: [],
         },
-        ...(unicode
+        // The spinner is visible wherever its group is not folded to fit.
+        ...(unicode && rows > 10
           ? [{
             waitFor: spinning,
             capture: { name: "spinning", when: spinning },
@@ -67,28 +67,55 @@ try {
           }]
           : []),
         {
-          waitFor: settled,
-          capture: { name: "updated", when: settled },
-          steps: [{ bytes: "\x1b[B\r" }],
+          waitFor: when("2 to review"),
+          capture: { name: "updated", when: when("2 to review") },
+          steps: [{ bytes: "\x1b[B" }],
         },
         {
-          waitFor: when("Run sample"),
-          capture: { name: "item", when: when("Run sample") },
-          steps: [{ bytes: "\x1b[B\r" }],
+          waitFor: settled,
+          capture: { name: "selected", when: settled },
+          steps: [{ bytes: " " }],
+        },
+        {
+          waitFor: ptySettledFrame(
+            size,
+            "zoomed detail",
+            (capture) => capture.state?.zoomed === true,
+          ),
+          capture: {
+            name: "zoomed",
+            when: ptySettledFrame(
+              size,
+              "zoomed detail",
+              (capture) => capture.state?.zoomed === true,
+            ),
+          },
+          steps: [{ bytes: " \r" }],
         },
         {
           waitFor: ptyOutputContains("A short detour."),
           steps: [{ bytes: "\r" }],
         },
         {
-          waitFor: when("Run sample"),
-          capture: { name: "returned", when: when("Run sample") },
-          steps: [{ bytes: "?" }],
+          waitFor: when("Image resize"),
+          capture: { name: "returned", when: when("Image resize") },
+          steps: [{ bytes: "/re" }],
         },
         {
-          waitFor: when("Keep your place"),
-          capture: { name: "reading", when: when("Keep your place") },
-          steps: [{ bytes: "q" }],
+          waitFor: ptySettledFrame(
+            size,
+            "filtered list",
+            (capture) => capture.state?.focusedControlId === "jobs:filter",
+          ),
+          capture: {
+            name: "filtered",
+            when: ptySettledFrame(
+              size,
+              "filtered list",
+              (capture) => capture.state?.focusedControlId === "jobs:filter",
+            ),
+          },
+          steps: [{ bytes: "\rq" }],
         },
       ];
     const result = await runPtyProcess({

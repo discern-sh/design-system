@@ -4,22 +4,17 @@ import {
   assertRejects,
   assertStringIncludes,
 } from "@std/assert";
-import {
-  createCliBlock,
-  measureText,
-  renderMarkdownCli,
-  stripAnsi,
-} from "../../src/cli/mod.ts";
+import { stripAnsi } from "../../src/cli/mod.ts";
 import {
   InteractionCancelled,
-  renderTerminalApplication,
   runTerminalApplication,
+  type TerminalApplicationCommand,
   type TerminalApplicationContext,
+  type TerminalApplicationOptions,
   type TerminalApplicationView,
-  transitionTerminalApplication,
-  updateTerminalApplication,
 } from "../../src/cli/interactive/mod.ts";
 import {
+  captureTerminalFrame,
   FakeSignalSource,
   FakeTerminalIO,
 } from "../../src/cli/interactive/testing.ts";
@@ -27,137 +22,292 @@ import {
   BEGIN_SYNCHRONIZED_UPDATE,
   ERASE_TERMINAL_DISPLAY,
 } from "../../src/cli/interactive/painter.ts";
+import { applicationSession, settle } from "../fixtures/application-session.ts";
+import { testView } from "../fixtures/application-views.ts";
 
-const reading = createCliBlock(renderMarkdownCli, {
-  source: Array.from(
-    { length: 50 },
-    (_, i) => `Paragraph ${i}. A short piece of text for reading.`,
-  ).join("\n\n"),
-});
-function view(ids = ["a", "b", "c"]): TerminalApplicationView<string> {
-  return {
-    title: "Projects",
-    tip: "Tab opens the reading pane.",
-    regions: [
-      {
-        kind: "choices",
-        id: "list",
-        title: "Items",
-        entries: ids.map((id) => ({
-          id,
-          label: `Item ${id}`,
-          value: id,
-          indicator: { content: "+", tone: "success" },
-          status: { content: "Ready", tone: "success" },
-          description: "A little supporting detail.",
-          disabled: id === "b",
-        })),
-      },
-      { kind: "reading", id: "read", title: "Guide", content: reading },
-    ],
-  };
+const quit = {
+  keymap: [{ key: "q", action: "quit" }],
+} as const;
+
+/** A lone Escape decodes once the key reader's continuation window passes. */
+async function pressEscape(io: FakeTerminalIO): Promise<void> {
+  io.enqueueKeys("escape");
+  await new Promise((resolve) => setTimeout(resolve, 150));
+  await settle();
 }
 
-Deno.test("application region frames fit every geometry, repertoire, and appearance through repeated resize", () => {
-  for (const colorDepth of ["none", "truecolor"] as const) {
-    for (const unicode of [true, false]) {
-      for (const theme of ["light", "dark"] as const) {
-        let state = updateTerminalApplication(view());
-        for (
-          const [columns, rows] of [
-            [80, 24],
-            [120, 30],
-            [60, 50],
-            [40, 20],
-            [80, 13],
-            [20, 5],
-            [120, 30],
-            [32, 10],
-          ]
-        ) {
-          for (const focus of [0, 1]) {
-            state = { ...state, focusedRegionId: focus ? "read" : "list" };
-            const io = new FakeTerminalIO([], {
-              columns: columns!,
-              rows: rows!,
-              colorDepth,
-              unicode,
-            });
-            const rendered = renderTerminalApplication(
-              state,
-              io.size(),
-              io.capabilities(),
-              { theme, appearance: { accent: 220 } },
-            );
-            state = rendered.state;
-            assertEquals(rendered.frame.split("\n").length, rows);
-            for (const line of rendered.frame.split("\n")) {
-              assert(measureText(line) <= columns!);
-            }
-            assertStringIncludes(
-              stripAnsi(rendered.frame),
-              columns! < 32 ? "Resize" : focus ? "Guide" : "Items",
-            );
-          }
-        }
-      }
-    }
-  }
-});
+function exitOn(
+  action: string,
+): TerminalApplicationCommand | undefined {
+  return action === "quit" ? { kind: "exit" } : undefined;
+}
 
-Deno.test("live rows retain identity on reorder and disability, then choose the removal successor", () => {
-  let state = updateTerminalApplication(view());
-  state =
-    transitionTerminalApplication(state, { kind: "named", name: "down" }).state;
-  assertEquals(state.positions.list?.selectedId, "b");
-  assertEquals(
-    transitionTerminalApplication(state, { kind: "named", name: "enter" })
-      .action,
-    undefined,
-  );
-  state = updateTerminalApplication(view(["c", "a", "b"]), state);
-  assertEquals(state.positions.list?.selectedId, "b");
-  state = updateTerminalApplication(view(["c", "a"]), state);
-  assertEquals(state.positions.list?.selectedId, "a");
-  state = updateTerminalApplication(view([]), state);
-  assertEquals(state.positions.list?.selectedId, undefined);
-});
-
-Deno.test("owned runtime restores modes across foreground work without losing buffered keys or reading scroll", async () => {
-  const io = new FakeTerminalIO(["\x1b[B\x1b[B\r", "\t\x1b[6~", "q"], {
-    rows: 24,
+Deno.test("callbacks follow the package's own transition in a fixed order, and their updates apply before the next key", async () => {
+  const calls: string[] = [];
+  let view = testView(["a", "b"], {
+    message: { id: "tip", runs: [{ text: "Tip" }], dismiss: { onKey: true } },
   });
+  const io = new FakeTerminalIO(["\x1b[Bx\r", "q"]);
+  await runTerminalApplication({
+    view,
+    keymap: [...quit.keymap, { key: "x", action: "retarget" }],
+    onSelectionChange: (_list, item) => calls.push(`change:${item}`),
+    onDismiss: (target, via, context) => {
+      calls.push(`dismiss:${target.message}:${via}`);
+      const { message: _message, ...rest } = view;
+      view = rest;
+      context.update(view);
+    },
+    onAction: (action, context, source) => {
+      calls.push(`action:${action}:${source}`);
+      if (action === "retarget") {
+        // A content change made here governs the very next key.
+        const body = view.body;
+        if (body.kind !== "master-detail") throw new Error("unexpected body");
+        const [group] = body.list.groups;
+        if (group === undefined) throw new Error("no group");
+        view = {
+          ...view,
+          body: {
+            ...body,
+            list: {
+              ...body.list,
+              groups: [{
+                ...group,
+                items: group.items.map((item) => ({
+                  ...item,
+                  primary: `changed:${item.id}`,
+                })),
+              }],
+            },
+          },
+        };
+        context.update(view);
+      }
+      return exitOn(action);
+    },
+  }, { io });
+  assertEquals(calls, [
+    "change:a",
+    "change:b",
+    "dismiss:tip:key",
+    "action:retarget:key",
+    "action:changed:b:enter",
+    "action:quit:key",
+  ]);
+});
+
+Deno.test("selection moves from asynchronous updates are reported, then the new selection", async () => {
+  const calls: string[] = [];
+  const live = await applicationSession(testView(["a", "b", "c"]), {
+    options: {
+      onSelectionMoved: (_list, item, move) =>
+        calls.push(`moved:${item}:${JSON.stringify(move)}`),
+      onSelectionChange: (_list, item) => calls.push(`change:${item}`),
+    },
+  });
+  live.io.enqueueKeys("down");
+  await settle();
+  live.clock.advance(10_000);
+  live.context().update(testView(["a", "c"]));
+  await settle();
+  assertEquals(calls, [
+    "change:a",
+    "change:b",
+    'moved:b:{"kind":"removed","replacement":"c"}',
+    "change:c",
+  ]);
+  assertEquals((await live.finish()).lists.items?.selectedId, "c");
+});
+
+Deno.test("bindings that collide with navigation, repeat, or type in a field throw before the terminal changes", async () => {
+  const invalid: TerminalApplicationOptions<string>["keymap"][] = [
+    [{ key: "enter", action: "x" }],
+    [{ key: "/", action: "x" }],
+    [{ key: "space", action: "x" }],
+    [{ key: "shift+down", action: "x" }],
+    [{ key: "n", action: "x" }, { key: "n", action: "y" }],
+    [{ key: "a", action: "x", inFields: true }],
+    [{ key: "ctrl+a", action: "x", inFields: true }],
+    [{ key: "left", action: "x", inFields: true }],
+    [{ key: "not a key", action: "x" }],
+  ];
+  for (const keymap of invalid) {
+    const io = new FakeTerminalIO([]);
+    await assertRejects(
+      () =>
+        runTerminalApplication({
+          view: testView(),
+          ...(keymap === undefined ? {} : { keymap }),
+        }, { io }),
+      TypeError,
+    );
+    assertEquals(io.writes, [], JSON.stringify(keymap));
+    assertEquals(io.rawTransitions, []);
+  }
+  const vi = new FakeTerminalIO([]);
+  await assertRejects(
+    () =>
+      runTerminalApplication({
+        view: testView(),
+        viKeys: true,
+        keymap: [{ key: "j", action: "x" }],
+      }, { io: vi }),
+    TypeError,
+  );
+});
+
+Deno.test("field bindings fire while the filter owns input; plain bindings wait", async () => {
+  const actions: string[] = [];
+  const io = new FakeTerminalIO(["/n\x0bk\rk", "q"]);
+  const state = await runTerminalApplication({
+    view: testView(["one", "two"], { filter: true }),
+    keymap: [
+      ...quit.keymap,
+      { key: "ctrl+k", action: "palette", inFields: true },
+      { key: "k", action: "plain" },
+    ],
+    onAction: (action) => {
+      actions.push(action);
+      return exitOn(action);
+    },
+  }, { io });
+  assertEquals(actions, ["palette", "plain", "quit"]);
+  assertEquals(state.lists.items?.filter, "nk");
+});
+
+Deno.test("Escape never exits; a bound Escape runs only when nothing else closes", async () => {
+  const actions: string[] = [];
+  const io = new FakeTerminalIO([], { holdOpen: true });
+  const running = runTerminalApplication({
+    view: testView(["a", "b"], { filter: true }),
+    keymap: [...quit.keymap, { key: "escape", action: "back" }],
+    onAction: (action) => {
+      actions.push(action);
+      return exitOn(action);
+    },
+  }, { io });
+  await settle();
+  io.enqueue("/a");
+  await settle();
+  await pressEscape(io);
+  assertEquals(actions, [], "Escape cleared the filter");
+  io.enqueue(" ");
+  await settle();
+  await pressEscape(io);
+  assertEquals(actions, [], "Escape left zoom");
+  await pressEscape(io);
+  assertEquals(actions, ["back"]);
+  io.enqueue("q");
+  const state = await running;
+  io.close();
+  assertEquals(state.lists.items?.zoomed, false);
+});
+
+Deno.test("Ctrl+C cancels after restoration unless a binding claims it", async () => {
+  const io = new FakeTerminalIO(["\x03"]);
+  await assertRejects(
+    () => runTerminalApplication({ view: testView() }, { io }),
+    InteractionCancelled,
+  );
+  assertEquals(io.rawTransitions.at(-1), false);
+  const bound = new FakeTerminalIO(["\x03"]);
+  const actions: string[] = [];
+  await runTerminalApplication({
+    view: testView(),
+    keymap: [{ key: "ctrl-c", action: "quit" }],
+    onAction: (action) => {
+      actions.push(action);
+      return exitOn(action);
+    },
+  }, { io: bound });
+  assertEquals(actions, ["quit"]);
+});
+
+Deno.test("foreground work prints its handoff after restoration and resumes the same place", async () => {
+  const io = new FakeTerminalIO(["\x1b[B\x1b[B\r", "q"], { rows: 24 });
   let foreground = 0;
-  const result = await runTerminalApplication({
-    view: view(),
+  let written = "";
+  const state = await runTerminalApplication({
+    view: testView(["a", "b", "c"]),
+    ...quit,
     onAction: (action, context) => {
-      assertEquals(action.itemId, "c");
+      if (action !== "open:c") return exitOn(action);
       return {
         kind: "foreground",
+        handoff: [{ text: "Opening Item c · exit it to come back" }],
         run: () => {
           foreground++;
+          written = io.output();
           assertEquals(io.rawTransitions.at(-1), false);
           assertEquals(io.resizeListenerCount, 0);
-          assertEquals(context.state.positions.list?.selectedId, "c");
+          assertEquals(context.state.lists.items?.selectedId, "c");
         },
       };
     },
-    onKey: (key) =>
-      key.kind === "text" && key.text === "q" ? { kind: "exit" } : undefined,
   }, { io });
   assertEquals(foreground, 1);
+  assert(
+    written.indexOf("Opening Item c") > written.lastIndexOf("\x1b[?1049l"),
+    "the handoff line follows the released screen",
+  );
   assertEquals(io.rawTransitions, [true, false, true, false]);
-  assertEquals(result.positions.list?.selectedId, "c");
-  assert((result.positions.read?.scrollOffset ?? 0) > 0);
+  assertEquals(state.lists.items?.selectedId, "c");
   assertEquals(io.resizeListenerCount, 0);
 });
 
-Deno.test("background updates coalesce while input remains in order, without restarting providers", async () => {
+Deno.test("an exit command prints its epilogue after the screen is released", async () => {
+  const io = new FakeTerminalIO(["q"]);
+  await runTerminalApplication({
+    view: testView(),
+    ...quit,
+    onAction: () => ({ kind: "exit", epilogue: ["Ran 2 jobs", "Done"] }),
+  }, { io });
+  const output = io.output();
+  assert(
+    output.endsWith("Ran 2 jobs\nDone\n"),
+    JSON.stringify(output.slice(-40)),
+  );
+  assert(output.indexOf("Ran 2 jobs") > output.lastIndexOf("\x1b[?1049l"));
+});
+
+Deno.test("an action returning anything but a command fails after restoration", async () => {
+  const io = new FakeTerminalIO(["\r"]);
+  await assertRejects(
+    () =>
+      runTerminalApplication({
+        view: testView(),
+        onAction: () => ({ kind: "handled" }) as never,
+      }, { io }),
+    TypeError,
+    "foreground or exit",
+  );
+  assertEquals(io.rawTransitions.at(-1), false);
+});
+
+Deno.test("callbacks that never settle fail instead of spinning", async () => {
   const io = new FakeTerminalIO([], { holdOpen: true });
-  let context!: TerminalApplicationContext<string>;
+  const failure = runTerminalApplication({
+    view: testView(["a", "b"]),
+    onSelectionChange: (list, item, context) => {
+      context.select(list, item === "a" ? "b" : "a");
+    },
+  }, { io }).catch((error) => error);
+  const error = await failure;
+  io.close();
+  assert(error instanceof TypeError, String(error));
+  assertStringIncludes(error.message, "did not settle");
+  assertEquals(io.rawTransitions.at(-1), false);
+});
+
+Deno.test("background updates coalesce while input stays in order, without restarting providers", async () => {
+  const io = new FakeTerminalIO([], { holdOpen: true });
+  let context: TerminalApplicationContext<string> | undefined;
   let starts = 0, stops = 0;
   const running = runTerminalApplication({
-    view: view(),
+    view: testView(),
+    ...quit,
+    onAction: exitOn,
     start: (live) => {
       context = live;
       starts++;
@@ -165,21 +315,19 @@ Deno.test("background updates coalesce while input remains in order, without res
         stops++;
       };
     },
-    onKey: (key) =>
-      key.kind === "text" && key.text === "q" ? { kind: "exit" } : undefined,
   }, { io });
-  await new Promise((resolve) => setTimeout(resolve, 0));
+  await settle();
   io.enqueueKeys("down");
-  await new Promise((resolve) => setTimeout(resolve, 0));
-  for (let n = 0; n < 50; n++) context.update(view(["c", "b", "a"]));
+  await settle();
+  for (let n = 0; n < 50; n++) context?.update(testView(["c", "b", "a"]));
   io.enqueue("\x1b[Bq");
   const result = await running;
-  assertEquals(result.positions.list?.selectedId, "a");
+  assertEquals(result.lists.items?.selectedId, "c");
   assertEquals(starts, 1);
   assertEquals(stops, 1);
   assert(
-    io.writes.filter((s) => s.startsWith(BEGIN_SYNCHRONIZED_UPDATE)).length <=
-      5,
+    io.writes.filter((write) => write.startsWith(BEGIN_SYNCHRONIZED_UPDATE))
+      .length <= 5,
   );
   io.close();
 });
@@ -200,22 +348,25 @@ Deno.test("cancel, EOF, abort, provider, render and foreground faults restore te
       { holdOpen: fault === "abort" || fault === "provider" },
     );
     const abort = new AbortController();
+    const view: TerminalApplicationView<string> = fault === "render"
+      ? {
+        header: { leading: [{ text: "Fault" }] },
+        body: {
+          kind: "reading",
+          id: "text",
+          content: {
+            render: () => {
+              throw new Error("render failed");
+            },
+          } as never,
+        },
+        footer: { left: [] },
+      }
+      : testView();
     await assertRejects(
       () =>
         runTerminalApplication({
-          view: fault === "render"
-            ? {
-              title: "Fault",
-              regions: [{
-                kind: "reading",
-                id: "read",
-                title: "Text",
-                content: createCliBlock(() => {
-                  throw new Error("render failed");
-                }, {}),
-              }],
-            }
-            : view(),
+          view,
           start: (context) => {
             if (fault === "provider") {
               context.fail(new Error("provider failed"));
@@ -231,64 +382,19 @@ Deno.test("cancel, EOF, abort, provider, render and foreground faults restore te
         }, { io, abortSignal: abort.signal }),
       ["cancel", "eof", "abort"].includes(fault) ? InteractionCancelled : Error,
     );
-    assertEquals(io.rawTransitions.at(-1), false);
+    assertEquals(io.rawTransitions.at(-1), false, fault);
     assertEquals(io.resizeListenerCount, 0);
     assert(io.output().includes("\x1b[?1049l"));
     io.close();
   }
 });
 
-Deno.test("minimal optional-free application fits and only renders a bounded slice of a large collection", () => {
-  const entries = Array.from(
-    { length: 10000 },
-    (_, i) => ({ id: String(i), label: `Item ${i}`, value: i }),
-  );
-  let state = updateTerminalApplication({
-    title: "Collection",
-    regions: [{ kind: "choices", id: "items", title: "Items", entries }],
-  });
-  const io = new FakeTerminalIO([], { columns: 40, rows: 20 });
-  for (let key = 0; key < 100; key++) {
-    state =
-      transitionTerminalApplication(state, { kind: "named", name: "down" })
-        .state;
-    const rendered = renderTerminalApplication(
-      state,
-      io.size(),
-      io.capabilities(),
-    );
-    assert(rendered.renderCalls <= io.size().rows);
-    assertEquals(rendered.frame.split("\n").length, 20);
-  }
-  assertEquals(state.positions.items?.selectedId, "100");
-});
-
-Deno.test("foreground return preserves an already-scrolled reading region", async () => {
-  const io = new FakeTerminalIO(["\t\x1b[6~\t", "\r", "q"]);
-  let offset = 0;
-  const result = await runTerminalApplication({
-    view: view(),
-    onKey: (key) =>
-      key.kind === "text" && key.text === "q" ? { kind: "exit" } : undefined,
-    onAction: (_action, context) => ({
-      kind: "foreground",
-      run: () => {
-        offset = context.state.positions.read!.scrollOffset;
-        assert(
-          offset > 1,
-          "batched Tab then PageDown must use the newly active reading viewport",
-        );
-        assertEquals(io.rawTransitions.at(-1), false);
-      },
-    }),
-  }, { io });
-  assertEquals(result.positions.read?.scrollOffset, offset);
-});
-
 Deno.test("application refuses unsupported terminals before mutating modes", async () => {
   for (const options of [{ interactive: false }, { ansiControl: false }]) {
     const io = new FakeTerminalIO([], options);
-    await assertRejects(() => runTerminalApplication({ view: view() }, { io }));
+    await assertRejects(() =>
+      runTerminalApplication({ view: testView() }, { io })
+    );
     assertEquals(io.rawTransitions, []);
     assertEquals(io.writes, []);
   }
@@ -299,12 +405,12 @@ Deno.test("application signal restoration stops subscriptions and resize listene
   const signals = new FakeSignalSource();
   let stops = 0;
   const running = runTerminalApplication({
-    view: view(),
+    view: testView(),
     start: () => () => {
       stops++;
     },
   }, { io, signals }).catch((error) => error);
-  await new Promise((resolve) => setTimeout(resolve, 0));
+  await settle();
   signals.deliver();
   assertEquals(signals.raised, 1);
   assertEquals(signals.listenerCount, 0);
@@ -337,7 +443,7 @@ Deno.test("application transport failures preserve the primary fault through cle
     }
     const io = new FaultIO([]);
     const error = await runTerminalApplication({
-      view: view(),
+      view: testView(),
       start: () => () => {
         throw new Error("cleanup");
       },
@@ -348,152 +454,58 @@ Deno.test("application transport failures preserve the primary fault through cle
   }
 });
 
-Deno.test("long grouped labels keep the active choice reachable at minimum geometry", () => {
-  const entries = Array.from({ length: 12 }, (_, i) => [
-    {
-      kind: "group-heading" as const,
-      id: `group-${i}`,
-      label: "An unusually long collection heading ".repeat(8).trim(),
-    },
-    {
-      id: `item-${i}`,
-      label: `Choice ${i} ` + "long label ".repeat(12),
-      value: i,
-      description: "Supporting information ".repeat(20),
-    },
-  ]).flat();
-  let state = updateTerminalApplication({
-    title: "Groups",
-    regions: [{ kind: "choices", id: "items", title: "Items", entries }],
-  });
-  const io = new FakeTerminalIO([], { columns: 32, rows: 10 });
-  for (let i = 0; i < 12; i++) {
-    const result = renderTerminalApplication(
-      state,
-      io.size(),
-      io.capabilities(),
-    );
-    assertEquals(result.frame.split("\n").length, 10);
-    assertStringIncludes(stripAnsi(result.frame), `Choice ${i}`);
-    state = transitionTerminalApplication(result.state, {
-      kind: "named",
-      name: "down",
-    }, result.regionRows).state;
-  }
-});
-
-Deno.test("application paging advances by visible choices rather than group headings", () => {
-  const entries = Array.from({ length: 12 }, (_, index) => [
-    {
-      kind: "group-heading" as const,
-      id: `group-${index}`,
-      label: `Group ${index}`,
-    },
-    { id: `item-${index}`, label: `Choice ${index}`, value: index },
-  ]).flat();
-  const io = new FakeTerminalIO([], { columns: 32, rows: 10 });
-  const state = updateTerminalApplication({
-    title: "Groups",
-    regions: [{ kind: "choices", id: "items", title: "Items", entries }],
-  });
-  const rendered = renderTerminalApplication(
-    state,
-    io.size(),
-    io.capabilities(),
-  );
-  const visibleChoices =
-    stripAnsi(rendered.frame).split("\n").filter((line) =>
-      line.includes("Choice ")
-    ).length;
-  const paged = transitionTerminalApplication(rendered.state, {
-    kind: "named",
-    name: "page-down",
-  }, rendered.regionRows);
-  assertEquals(
-    paged.state.positions.items?.selectedId,
-    `item-${visibleChoices}`,
-  );
-});
-
-Deno.test("application search owns typing, retains its query through updates and routes, and clears without exiting", async () => {
-  const searchable = (
-    ids = ["a", "b", "qr"],
-  ): TerminalApplicationView<string> => {
-    const base = view(ids);
-    return {
-      ...base,
-      help: "? help  q quit",
-      regions: [
-        { ...base.regions[0], search: true } as Extract<
-          TerminalApplicationView<string>["regions"][number],
-          { kind: "choices" }
-        >,
-        base.regions[1]!,
-      ],
-    };
-  };
-  const io = new FakeTerminalIO(["/qr\r\r", "q"], { rows: 24 });
-  let activations = 0;
+Deno.test("below the minimum size bindings still run while navigation waits", async () => {
+  const io = new FakeTerminalIO(["\x1b[B\rq"], { columns: 24, rows: 6 });
+  const actions: string[] = [];
   const state = await runTerminalApplication({
-    view: searchable(),
-    onKey: (key) =>
-      key.kind === "text" && key.text === "q" ? { kind: "exit" } : undefined,
-    onAction: (action, context) => {
-      assertEquals(action.itemId, "qr");
-      activations++;
-      context.update(searchable(["qr", "a", "b"]));
-      return {
-        kind: "foreground",
-        run: () => {
-          assertEquals(context.state.positions.list?.query, "qr");
-        },
-      };
+    view: testView(["a", "b"]),
+    ...quit,
+    onAction: (action) => {
+      actions.push(action);
+      return exitOn(action);
     },
   }, { io });
-  assertEquals(activations, 1);
-  assertEquals(state.positions.list?.selectedId, "qr");
-  assertEquals(state.positions.list?.query, "qr");
-
-  let edited =
-    transitionTerminalApplication(state, { kind: "text", text: "/" }).state;
-  edited =
-    transitionTerminalApplication(edited, { kind: "named", name: "escape" })
-      .state;
-  assertEquals(edited.positions.list?.query, "");
-  assertEquals(edited.positions.list?.selectedId, "qr");
+  assertEquals(actions, ["quit"]);
+  assertEquals(state.lists.items?.selectedId, "a");
+  assertStringIncludes(
+    stripAnsi(captureTerminalFrame(io.output(), io.size()).frame),
+    "Too small",
+  );
 });
 
-Deno.test("peer application regions receive equal usable width", () => {
-  for (const kind of ["choices", "reading"] as const) {
-    const label = "A long recognizable item shared by both panes";
-    const region = (id: string) =>
-      kind === "choices"
-        ? { kind, id, title: id, entries: [{ id, label, value: id }] }
-        : {
-          kind,
-          id,
-          title: id,
-          content: createCliBlock(renderMarkdownCli, { source: label }),
-        };
-    for (const columns of [110, 120, 140]) {
-      const io = new FakeTerminalIO([], {
-        columns,
-        rows: 30,
-        colorDepth: "none",
-      });
-      const result = renderTerminalApplication(
-        updateTerminalApplication({
-          title: "Peer regions",
-          regions: [region("First"), region("Second")],
-        }),
-        io.size(),
-        io.capabilities(),
-      );
-      const rows = stripAnsi(result.frame).split("\n");
-      assert(
-        rows.some((row) => row.split(label).length === 3),
-        `${kind} at ${columns} columns must show both peer labels intact`,
-      );
-    }
-  }
+Deno.test("a large collection navigates and paints only its visible slice", async () => {
+  const items = Array.from({ length: 10_000 }, (_, index) => String(index));
+  const io = new FakeTerminalIO(["\x1b[B".repeat(100), "q"], {
+    columns: 40,
+    rows: 20,
+  });
+  const state = await runTerminalApplication({
+    view: testView(items, { body: "list" }),
+    ...quit,
+    onAction: exitOn,
+  }, { io });
+  assertEquals(state.lists.items?.selectedId, "100");
+  const frame = stripAnsi(captureTerminalFrame(io.output(), io.size()).frame);
+  assertStringIncludes(frame, "Item 100");
+  assertStringIncludes(frame, "↓ 9");
+});
+
+Deno.test("keys typed after a foreground handoff wait for the application's return", async () => {
+  const io = new FakeTerminalIO(["\r\x1b[Bq"]);
+  let foreground = 0;
+  const state = await runTerminalApplication({
+    view: testView(["a", "b"]),
+    ...quit,
+    onAction: (action) =>
+      action === "open:a"
+        ? {
+          kind: "foreground",
+          run: () => {
+            foreground++;
+          },
+        }
+        : exitOn(action),
+  }, { io });
+  assertEquals(foreground, 1);
+  assertEquals(state.lists.items?.selectedId, "b");
 });

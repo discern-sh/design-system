@@ -5,9 +5,9 @@ import {
   assertThrows,
 } from "@std/assert";
 import {
+  createTerminalApplicationModel,
   TERMINAL_ANIMATION_INTERVAL_MS,
   type TerminalApplicationView,
-  updateTerminalApplication,
 } from "../../src/cli/interactive/mod.ts";
 import {
   BEGIN_SYNCHRONIZED_UPDATE,
@@ -19,31 +19,16 @@ import {
   type ApplicationSessionOptions,
   settle,
 } from "../fixtures/application-session.ts";
+import { testView } from "../fixtures/application-views.ts";
 
 function view(animated = true, count = 3): TerminalApplicationView<string> {
-  return {
-    title: "Studio",
-    regions: [{
-      kind: "choices",
-      id: "items",
-      title: "Items",
-      entries: Array.from({ length: count }, (_, index) => ({
-        id: `item-${index}`,
-        label: `Item ${index}`,
-        value: `item-${index}`,
-        ...(index === 0
-          ? {
-            indicator: {
-              content: "◐",
-              ascii: "@",
-              tone: "accent" as const,
-              ...(animated ? { animation: "spinner" as const } : {}),
-            },
-          }
-          : {}),
-      })),
-    }],
-  };
+  return testView(
+    Array.from({ length: count }, (_, index) => ({
+      id: `item-${index}`,
+      animated: animated && index === 0,
+    })),
+    { body: "list" },
+  );
 }
 
 const session = (
@@ -53,7 +38,7 @@ const session = (
 ) => applicationSession(options.view ?? view(), options);
 
 const firstRow = (frame: string): string =>
-  frame.split("\n").find((line) => line.includes("Item 0")) ?? "";
+  frame.split("\n").find((line) => line.includes("Item item-0")) ?? "";
 
 Deno.test("a visible animated glyph ticks at four frames a second and writes only its row", async () => {
   const live = await session();
@@ -171,33 +156,35 @@ Deno.test("a changing screen keyframes at the interval while idle screens write 
   await live.finish();
 });
 
-Deno.test("animated annotations are one plain cell and name the spinner", () => {
-  const annotated = (
-    indicator: Record<string, unknown>,
-  ): TerminalApplicationView<string> => ({
-    title: "Studio",
-    regions: [{
-      kind: "choices" as const,
-      id: "items",
-      title: "Items",
-      entries: [{
-        id: "a",
-        label: "A",
-        value: "a",
-        indicator: indicator as never,
-      }],
-    }],
-  });
+Deno.test("animated markers are one plain cell and name the spinner", () => {
+  const marked = (marker: Record<string, unknown>) => {
+    const base = view(false, 1);
+    const body = base.body;
+    if (body.kind !== "list") throw new Error("expected a list body");
+    const [group] = body.list.groups;
+    const [item] = group?.items ?? [];
+    if (group === undefined || item === undefined) throw new Error("no item");
+    return {
+      ...base,
+      body: {
+        ...body,
+        list: {
+          ...body.list,
+          groups: [{ ...group, items: [{ ...item, marker: marker as never }] }],
+        },
+      },
+    } satisfies TerminalApplicationView<string>;
+  };
   for (
     const invalid of [
-      { content: "Working", animation: "spinner" },
-      { content: "◐", ascii: "@@", animation: "spinner" },
-      { content: [{ kind: "strong", children: ["◐"] }], animation: "spinner" },
-      { content: "◐", animation: "pulse" },
+      { unicode: "Working", ascii: "@", animation: "spinner" },
+      { unicode: "◐", ascii: "@@", animation: "spinner" },
+      { unicode: "", ascii: "@", animation: "spinner" },
+      { unicode: "◐", ascii: "@", animation: "pulse" },
     ]
   ) {
     assertThrows(
-      () => updateTerminalApplication(annotated(invalid)),
+      () => createTerminalApplicationModel(marked(invalid)),
       TypeError,
     );
   }

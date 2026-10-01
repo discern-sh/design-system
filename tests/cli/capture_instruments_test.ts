@@ -5,23 +5,17 @@ import {
   runPtyProcess,
 } from "../../src/cli/interactive/testing.ts";
 import {
+  createTerminalApplicationModel,
   observeTerminalIO,
   renderTerminalApplication,
   type TerminalIOObservation,
-  updateTerminalApplication,
 } from "../../src/cli/interactive/mod.ts";
+import { testView } from "../fixtures/application-views.ts";
 Deno.test("settled capture rejects partial and foreign controls and projects real frames", () => {
   const io = new FakeTerminalIO([], { columns: 40, rows: 13 });
   const rendered = renderTerminalApplication(
-    updateTerminalApplication({
-      title: "Sample",
-      regions: [{
-        kind: "choices",
-        id: "items",
-        title: "Items",
-        entries: [{ id: "a", label: "Alpha", value: 1 }],
-      }],
-    }),
+    createTerminalApplicationModel(testView(["Alpha"], { body: "list" }))
+      .model,
     io.size(),
     io.capabilities(),
   );
