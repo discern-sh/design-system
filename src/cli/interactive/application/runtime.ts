@@ -50,10 +50,10 @@ import {
   updateModelState,
   updateModelStateProvisionally,
 } from "./model.ts";
-import type { ActivitySteps } from "./layer-view.ts";
+import type { ApplicationActivity } from "./layer-view.ts";
 import type {
-  InlineRun,
-  KeymapEntry,
+  ApplicationKeyBinding,
+  ApplicationRun,
   TerminalApplicationView,
 } from "./view.ts";
 
@@ -67,7 +67,7 @@ export type TerminalApplicationCommand =
   | {
     readonly kind: "foreground";
     /** A line printed after the screen is released, before the operation runs. */
-    readonly handoff?: readonly InlineRun[];
+    readonly handoff?: readonly ApplicationRun[];
     /** Runs after every terminal mode restores and before ownership resumes. */
     readonly run: () => void | Promise<void>;
   }
@@ -82,7 +82,7 @@ export type TerminalApplicationCommand =
      * of a key or a terminal signal.
      */
     readonly run: (
-      report: (steps: ActivitySteps) => void,
+      report: (steps: ApplicationActivity) => void,
       signal: AbortSignal,
     ) => Promise<void>;
   }
@@ -138,14 +138,18 @@ export interface TerminalApplicationContext<A> {
 export interface TerminalApplicationOptions<A> {
   readonly view: TerminalApplicationView<A>;
   /** Caller bindings; collisions with reserved keys throw before the terminal changes. */
-  readonly keymap?: readonly KeymapEntry<A>[];
+  readonly keymap?: readonly ApplicationKeyBinding<A>[];
   /** Bind j and k to Down and Up. */
   readonly viKeys?: boolean;
   /** Starts once after the first frame; returns cleanup for timers or subscriptions. */
   readonly start?: (
     context: TerminalApplicationContext<A>,
   ) => void | (() => void);
-  /** An action chose by Enter, a binding, or another route. Return a command to leave or hand off. */
+  /**
+   * An action chosen by Enter, a binding, a menu, a button, a click, or a
+   * chip, as `source` says. Return a command to hand off, run in the
+   * background, or leave.
+   */
   readonly onAction?: (
     action: A,
     context: TerminalApplicationContext<A>,
@@ -182,7 +186,7 @@ export interface TerminalApplicationOptions<A> {
    */
   readonly onReport?: (
     commandId: string,
-    steps: ActivitySteps,
+    steps: ApplicationActivity,
     context: TerminalApplicationContext<A>,
   ) => void;
   /** A background command finished, failed, or was aborted. */
@@ -288,7 +292,7 @@ type RuntimeCallback<A> =
   | {
     readonly kind: "report";
     readonly id: string;
-    readonly steps: ActivitySteps;
+    readonly steps: ApplicationActivity;
   }
   | {
     readonly kind: "settled";
@@ -307,7 +311,7 @@ interface RunningCommand {
 
 /** The plain line a foreground handoff prints on the released screen. */
 function handoffLine(
-  runs: readonly InlineRun[],
+  runs: readonly ApplicationRun[],
   unicode: boolean,
 ): string {
   return runs.map((run) => unicode ? run.text : run.ascii ?? run.text).join("");
@@ -344,7 +348,7 @@ export async function runTerminalApplication<A>(
   /** Background commands by id, until they settle. */
   const running = new Map<string, RunningCommand>();
   /** The newest report per command, waiting for the loop. */
-  const reports = new Map<string, ActivitySteps>();
+  const reports = new Map<string, ApplicationActivity>();
   /** Commands that settled, waiting for the loop, in order. */
   const settled: {
     readonly id: string;
@@ -462,7 +466,7 @@ export async function runTerminalApplication<A>(
       );
     }
     const controller = new AbortController();
-    const report = (steps: ActivitySteps): void => {
+    const report = (steps: ApplicationActivity): void => {
       if (ended || !running.has(command.id)) return;
       reports.set(command.id, steps);
       updates.notify();

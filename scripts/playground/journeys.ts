@@ -1152,20 +1152,20 @@ export const interactiveExportCoverage: Readonly<
     excluded:
       "The English words every application journey screen shows; a table of defaults with no interaction of its own.",
   },
-  DEFAULT_SPLIT_RULES: {
+  DEFAULT_APPLICATION_SPLIT_RULES: {
     excluded:
       "The master-detail split the application journey resizes through.",
   },
-  DEFAULT_LIST_SPACING: {
+  DEFAULT_APPLICATION_LIST_SPACING: {
     excluded: "Row gaps the application journey shows at every width.",
   },
-  DEFAULT_LIST_MIN_TITLE: {
+  DEFAULT_APPLICATION_LIST_MIN_TITLE: {
     excluded: "The column-dropping threshold the journey narrows past.",
   },
-  DEFAULT_LIST_SETTLE_MS: {
+  DEFAULT_APPLICATION_SETTLE_MS: {
     excluded: "The settle window the journey's live update waits behind.",
   },
-  EDITOR_RESERVED_CHORDS: {
+  APPLICATION_EDITOR_KEYS: {
     excluded: "A validation list for field bindings; there is nothing to show.",
   },
   terminalApplicationReservedKeys: {

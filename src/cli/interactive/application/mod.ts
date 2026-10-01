@@ -13,7 +13,7 @@ export {
 } from "./copy.ts";
 export * from "./layer-view.ts";
 export {
-  EDITOR_RESERVED_CHORDS,
+  APPLICATION_EDITOR_KEYS,
   terminalApplicationLayerKeys,
   type TerminalApplicationReservedKeyOptions,
   terminalApplicationReservedKeys,

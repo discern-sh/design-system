@@ -43,20 +43,20 @@ import {
 } from "./layer-model.ts";
 import { menuRows, paletteRows, unavailableMenuItem } from "./layer-search.ts";
 import type {
-  ActivityStep,
-  ActivitySteps,
+  ApplicationActivity,
+  ApplicationActivityStep,
+  ApplicationChoiceField,
+  ApplicationDisclosure,
   ApplicationForm,
   ApplicationLayer,
   ApplicationMenu,
   ApplicationPalette,
   ApplicationReader,
   ApplicationSheet,
-  FormChoiceField,
-  FormTextField,
-  LayerDisclosure,
-  UnavailableMenuItem,
+  ApplicationTextField,
+  ApplicationUnavailableItem,
 } from "./layer-view.ts";
-import type { DetailBlock } from "./view.ts";
+import type { ApplicationDetailBlock } from "./view.ts";
 import {
   clip,
   fitLine,
@@ -68,7 +68,7 @@ import {
   styleGlyph,
   styleRuns,
 } from "./paint.ts";
-import type { InlineRun } from "./view.ts";
+import type { ApplicationRun } from "./view.ts";
 
 /** Where a layer may draw and how its height behaves. */
 export interface LayerBox {
@@ -185,7 +185,7 @@ function raised(
 /** Wrap styled runs to a width, keeping short lines' spacing. */
 function wrapRuns(
   context: PaintContext,
-  runs: readonly InlineRun[],
+  runs: readonly ApplicationRun[],
   width: number,
   fallback: TerminalTextTone,
 ): readonly string[] {
@@ -513,7 +513,7 @@ function fieldArea(
 function disclosureRows(
   context: PaintContext,
   layerId: string,
-  disclosures: readonly LayerDisclosure[],
+  disclosures: readonly ApplicationDisclosure[],
   model: TerminalApplicationLayerModel,
   inField: boolean,
   width: number,
@@ -1074,7 +1074,7 @@ function challengeRows<A>(
 
 function stepRow(
   context: PaintContext,
-  step: ActivityStep,
+  step: ApplicationActivityStep,
   width: number,
   now: number,
 ): PanelRow {
@@ -1133,7 +1133,7 @@ function stepRow(
 
 function activityRows(
   context: PaintContext,
-  activity: ActivitySteps,
+  activity: ApplicationActivity,
   width: number,
   now: number,
 ): readonly PanelRow[] {
@@ -1289,7 +1289,7 @@ function sheetPanel<A>(
 
 function choiceText(
   context: PaintContext,
-  field: FormChoiceField,
+  field: ApplicationChoiceField,
   value: string,
   focused: boolean,
 ): string {
@@ -1320,22 +1320,22 @@ function formPanel<A>(
   model: TerminalApplicationLayerModel,
   width: number,
 ): Panel {
-  const aside = form.aside === undefined
-    ? ""
-    : raised(context, form.aside, "faint");
+  const aside = styleRuns(context, form.aside, RAISED, "faint");
   const head = headRows(context, form.title, aside, width);
   const open = (id: string) => model.open[id] === true;
   const fields = visibleFormFields(form, open);
   const grouped = new Set(
     form.fields.flatMap((field) =>
-      field.kind === "disclosure" ? field.fields.map((inner) => inner.id) : []
+      field.kind === "group" ? field.fields.map((inner) => inner.id) : []
     ),
   );
   const labelWidth = Math.min(
     Math.max(
       8,
-      ...fields.filter((field) => field.kind !== "disclosure").map((field) =>
-        measureText((field as FormTextField<A> | FormChoiceField).label) +
+      ...fields.filter((field) => field.kind !== "group").map((field) =>
+        measureText(
+          (field as ApplicationTextField<A> | ApplicationChoiceField).label,
+        ) +
         (grouped.has(field.id) ? 2 : 0) + 2
       ),
     ),
@@ -1344,9 +1344,9 @@ function formPanel<A>(
   const fieldWidth = Math.max(8, Math.min(width - labelWidth, 60));
   const body: PanelRow[] = [];
   for (const [index, field] of fields.entries()) {
-    if (field.kind === "disclosure") {
+    if (field.kind === "group") {
       const group = form.fields.find((candidate) => candidate.id === field.id);
-      if (group?.kind !== "disclosure") continue;
+      if (group?.kind !== "group") continue;
       const control = groupControl(group.id);
       const focused = model.focus === control;
       const surface: TerminalSurfaceRole = focused ? "selection" : RAISED;
@@ -1394,7 +1394,7 @@ function formPanel<A>(
     );
     const lead = `${" ".repeat(indent)}${label}`;
     const previous = fields[index - 1];
-    if (previous?.kind === "disclosure" && !grouped.has(field.id)) {
+    if (previous?.kind === "group" && !grouped.has(field.id)) {
       body.push(BLANK);
     }
     if (field.kind === "choice") {
@@ -1512,7 +1512,7 @@ function menuItemRow(
  */
 function unavailableRow(
   context: PaintContext,
-  item: UnavailableMenuItem,
+  item: ApplicationUnavailableItem,
   width: number,
   highlighted: boolean,
   inline: boolean,
@@ -1554,9 +1554,7 @@ function menuPanel<A>(
         )
         : ""
     }`
-    : menu.aside === undefined
-    ? ""
-    : raised(context, menu.aside, "faint");
+    : styleRuns(context, menu.aside, RAISED, "faint");
   const head = headRows(context, menu.title, filter, width);
   const gap = 3;
   const columnWidth = columns === 2 ? Math.floor((width - gap) / 2) : width;
@@ -1590,7 +1588,7 @@ function menuPanel<A>(
             item.key === undefined ? "" : keyText(context, item.key),
             columnWidth,
             highlighted,
-            item.tone === "danger" ? "danger" : "ink",
+            item.tone ?? "ink",
           ),
           control,
         });
@@ -1724,11 +1722,14 @@ function menuPanel<A>(
       ...(menu.unavailable?.items ?? []),
     ].map((item) => ({
       label: "",
-      runs: [{ text: item.sentence }] as readonly InlineRun[],
+      runs: [{ text: item.sentence }] as readonly ApplicationRun[],
     })),
   ];
   // The highlighted item's description; an unavailable one's sentence alone.
-  const describe = (label: string, runs: readonly InlineRun[] | undefined) =>
+  const describe = (
+    label: string,
+    runs: readonly ApplicationRun[] | undefined,
+  ) =>
     wrapRuns(
       context,
       [
@@ -1972,12 +1973,12 @@ function readerPanel<A>(
  */
 function twoColumns(
   context: PaintContext,
-  blocks: readonly DetailBlock[],
+  blocks: readonly ApplicationDetailBlock[],
   width: number,
 ): readonly string[] {
   const gap = 3;
   const columnWidth = Math.floor((width - gap) / 2);
-  const render = (part: readonly DetailBlock[]) =>
+  const render = (part: readonly ApplicationDetailBlock[]) =>
     part.flatMap((block, index) => [
       ...(index === 0 ? [] : [""]),
       ...renderDetailBlocks(context, [block], {

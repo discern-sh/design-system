@@ -1,6 +1,6 @@
 import { assert, assertEquals, assertRejects } from "@std/assert";
 import {
-  type ActivitySteps,
+  type ApplicationActivity,
   runTerminalApplication,
   type TerminalApplicationCommand,
   type TerminalApplicationCommandOutcome,
@@ -13,13 +13,13 @@ import {
 import { applicationSession, settle } from "../fixtures/application-session.ts";
 import { testView } from "../fixtures/application-views.ts";
 
-function steps(label: string, state: "active" | "done"): ActivitySteps {
+function steps(label: string, state: "active" | "done"): ApplicationActivity {
   return { startedAt: 0, steps: [{ id: "only", label, state }] };
 }
 
 /** A background operation the test drives step by step. */
 function controlled() {
-  let report: ((value: ActivitySteps) => void) | undefined;
+  let report: ((value: ApplicationActivity) => void) | undefined;
   let signal: AbortSignal | undefined;
   let finish: (() => void) | undefined;
   let fail: ((error: unknown) => void) | undefined;
@@ -38,7 +38,7 @@ function controlled() {
   };
   return {
     command,
-    report: (value: ActivitySteps) => report?.(value),
+    report: (value: ApplicationActivity) => report?.(value),
     signal: () => signal,
     finish: () => finish?.(),
     fail: (error: unknown) => fail?.(error),

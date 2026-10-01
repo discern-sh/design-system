@@ -91,13 +91,13 @@ import {
   type TerminalApplicationMotion,
 } from "./paint.ts";
 import {
-  DEFAULT_SPLIT_RULES,
-  type DetailBlock,
-  type GroupedList,
-  type HeaderBar,
-  type InlineRun,
-  type MasterDetailBody,
-  type SplitRules,
+  type ApplicationDetailBlock,
+  type ApplicationHeader,
+  type ApplicationList,
+  type ApplicationMasterDetailBody,
+  type ApplicationRun,
+  type ApplicationSplitRules,
+  DEFAULT_APPLICATION_SPLIT_RULES,
 } from "./view.ts";
 
 /** Minimum geometry: a header, a list row with its state, a strip line, and key hints. */
@@ -174,7 +174,7 @@ const readingCache = new WeakMap<
 function header<A>(
   context: FrameContext,
   model: ModelState<A>,
-  bar: HeaderBar<A>,
+  bar: ApplicationHeader<A>,
   columns: number,
 ): { readonly line: string; readonly hits: readonly ApplicationHit[] } {
   const now = context.motion.now ?? 0;
@@ -188,9 +188,9 @@ function header<A>(
         tone: "accent",
       })
       : "";
-    leading = `${
-      ink(context, listView.filter.placeholder, { tone: "faint" })
-    }  ${ink(context, list.filter.query, { tone: "ink" })}${cursor}  ${
+    leading = `${ink(context, listView.filter.label, { tone: "faint" })}  ${
+      ink(context, list.filter.query, { tone: "ink" })
+    }${cursor}  ${
       ink(context, context.copy.count(rows.matched, rows.total), {
         tone: "faint",
       })
@@ -433,7 +433,7 @@ function messageLine<A>(
 
 /** The width tier a master-detail body uses at this many columns. */
 function splitTier(
-  split: SplitRules,
+  split: ApplicationSplitRules,
   columns: number,
 ): "wide" | "standard" | "strip" {
   if (columns >= split.wideAtColumns) return "wide";
@@ -441,8 +441,8 @@ function splitTier(
 }
 
 function contentListWidth<A>(
-  list: GroupedList<A>,
-  split: SplitRules,
+  list: ApplicationList<A>,
+  split: ApplicationSplitRules,
   tier: "wide" | "standard",
   columns: number,
 ): number {
@@ -468,7 +468,7 @@ function fitDensity<A>(
   list: ListModel<A>,
   available: number,
   geometry: string,
-  width: (display: GroupedList<A>) => number | undefined,
+  width: (display: ApplicationList<A>) => number | undefined,
 ): ListModel<A> {
   const key = `${geometry}|${listLayoutKey(list.display)}`;
   if (list.density?.key === key) return list;
@@ -543,7 +543,7 @@ function areaHits(
 function paintList<A>(
   context: FrameContext,
   model: ModelState<A>,
-  view: GroupedList<A>,
+  view: ApplicationList<A>,
   list: ListModel<A>,
   width: number,
   height: number,
@@ -602,7 +602,7 @@ function groupRowLabel<A>(
 function groupBlocks<A>(
   row: ListRow<A>,
   copy: TerminalApplicationCopy,
-): readonly DetailBlock[] {
+): readonly ApplicationDetailBlock[] {
   const label = groupRowLabel(row, copy);
   if (label === undefined) return [];
   const groups = row.kind === "fold"
@@ -641,11 +641,11 @@ function groupBlocks<A>(
 }
 
 function detailBlocks<A>(
-  body: MasterDetailBody<A>,
+  body: ApplicationMasterDetailBody<A>,
   itemId: string | undefined,
   row: ListRow<A> | undefined,
   copy: TerminalApplicationCopy,
-): readonly DetailBlock[] {
+): readonly ApplicationDetailBlock[] {
   if (itemId === undefined) {
     return row === undefined ? [] : groupBlocks(row, copy);
   }
@@ -655,7 +655,7 @@ function detailBlocks<A>(
 
 function crumb<A>(
   context: FrameContext,
-  body: MasterDetailBody<A>,
+  body: ApplicationMasterDetailBody<A>,
   rows: ListRows<A>,
   selected: number,
   width: number,
@@ -699,7 +699,7 @@ function crumb<A>(
 function groupStripTitle<A>(
   row: ListRow<A>,
   label: string,
-): readonly InlineRun[] {
+): readonly ApplicationRun[] {
   const groups = row.kind === "fold"
     ? row.groups.map((folded) => ({
       title: folded.group.shortTitle ?? folded.group.title,
@@ -758,14 +758,14 @@ function scrolled<A>(
 function masterDetail<A>(
   context: FrameContext,
   model: ModelState<A>,
-  body: MasterDetailBody<A>,
+  body: ApplicationMasterDetailBody<A>,
   size: TerminalSize,
   region: Region,
   short: boolean,
   covered: boolean,
 ): BodyResult<A> {
   const { columns } = size;
-  const split = body.split ?? DEFAULT_SPLIT_RULES;
+  const split = body.split ?? DEFAULT_APPLICATION_SPLIT_RULES;
   const listModel = model.lists[body.list.id];
   if (listModel === undefined) throw new TypeError("list model is missing");
   const tier = splitTier(split, columns);
@@ -857,7 +857,7 @@ function masterDetail<A>(
     );
     const row = rows.rows[selected];
     const group = groupRowLabel(row, context.copy);
-    const fallback: readonly InlineRun[] = row?.kind === "item"
+    const fallback: readonly ApplicationRun[] = row?.kind === "item"
       ? [
         {
           text: row.item.marker.unicode,
@@ -976,7 +976,7 @@ function masterDetail<A>(
 function listOnly<A>(
   context: FrameContext,
   model: ModelState<A>,
-  view: GroupedList<A>,
+  view: ApplicationList<A>,
   size: TerminalSize,
   region: Region,
 ): BodyResult<A> {
@@ -1317,8 +1317,8 @@ export function renderModelState<A>(
   const { columns, rows } = size;
   const view = model.view;
   const shortBelow = view.body.kind === "master-detail"
-    ? (view.body.split ?? DEFAULT_SPLIT_RULES).strip.shortBelowRows
-    : DEFAULT_SPLIT_RULES.strip.shortBelowRows;
+    ? (view.body.split ?? DEFAULT_APPLICATION_SPLIT_RULES).strip.shortBelowRows
+    : DEFAULT_APPLICATION_SPLIT_RULES.strip.shortBelowRows;
   const short = rows < shortBelow;
   const message = messageLine(context, model, columns);
   const messageRow = message !== undefined && !short;
@@ -1430,11 +1430,11 @@ function detailColumn<A>(
 ): number | undefined {
   const body = model.view.body;
   if (body.kind !== "master-detail") return undefined;
-  const split = body.split ?? DEFAULT_SPLIT_RULES;
+  const split = body.split ?? DEFAULT_APPLICATION_SPLIT_RULES;
   if (splitTier(split, size.columns) !== "wide") return undefined;
   const list = model.lists[body.list.id];
   if (list === undefined || list.zoomed) return undefined;
-  const width = (display: GroupedList<A>) =>
+  const width = (display: ApplicationList<A>) =>
     contentListWidth(display, split, "wide", size.columns);
   const fitted = fitDensity(
     list,
@@ -1502,7 +1502,7 @@ function placeLayer<A>(
 function readerRows<A>(
   context: FrameContext,
   model: ModelState<A>,
-  list: GroupedList<A>,
+  list: ApplicationList<A>,
   width: number,
 ): ReaderRows | undefined {
   const listModel = model.lists[list.id];

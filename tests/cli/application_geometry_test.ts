@@ -21,7 +21,7 @@ import {
 } from "../../src/cli/interactive/application/detail-render.ts";
 import { paintContext } from "../../src/cli/interactive/application/paint.ts";
 import { ApplicationDriver } from "../fixtures/application-driver.ts";
-import type { DetailBlock } from "../../src/cli/interactive/mod.ts";
+import type { ApplicationDetailBlock } from "../../src/cli/interactive/mod.ts";
 import {
   applicationDemoView,
   DEMO_JOBS,
@@ -346,11 +346,11 @@ Deno.test("the header drops chips, then liveness, then counts as it narrows", ()
 Deno.test("every detail block line fits the width it was given", () => {
   // Every block kind, with text long enough to wrap and short enough to take
   // the one-line path, so a prefix that a fast path forgets fails here.
-  const blocks: readonly DetailBlock[] = [
+  const blocks: readonly ApplicationDetailBlock[] = [
     {
       kind: "heading",
       title: "A heading title",
-      aside: "an-aside",
+      aside: [{ text: "an-aside" }],
       subtitle: "A subtitle that is long enough to wrap",
     },
     {

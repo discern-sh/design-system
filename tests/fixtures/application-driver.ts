@@ -1,8 +1,8 @@
 /** A pure application model driven like the runtime drives it: one input, then a render. */
 import { stripAnsi } from "../../src/cli/mod.ts";
 import {
+  type ApplicationKeyBinding,
   createTerminalApplicationModel,
-  type KeymapEntry,
   renderTerminalApplication,
   type TerminalApplicationEffect,
   type TerminalApplicationFrame,
@@ -37,7 +37,7 @@ export function keyOf(name: TerminalKeyName | string): TerminalKey {
 
 /** Options for {@linkcode ApplicationDriver}. */
 export interface ApplicationDriverOptions extends FakeTerminalIOOptions {
-  readonly keymap?: readonly KeymapEntry<string>[];
+  readonly keymap?: readonly ApplicationKeyBinding<string>[];
   readonly viKeys?: boolean;
 }
 

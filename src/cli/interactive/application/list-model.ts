@@ -6,7 +6,11 @@
  * @module
  */
 
-import type { GroupedList, GroupedListItem, ListGroup } from "./view.ts";
+import type {
+  ApplicationList,
+  ApplicationListGroup,
+  ApplicationListItem,
+} from "./view.ts";
 
 /** Selection identity: `i:<item id>` for an item, `g:<group id>` for a fold row or foldable header. */
 export type ListRowKey = string;
@@ -33,7 +37,7 @@ export function keyGroupId(key: ListRowKey | undefined): string | undefined {
 
 /** One folded group inside a fold row, with the count it shows. */
 export interface FoldedGroup<A> {
-  readonly group: ListGroup<A>;
+  readonly group: ApplicationListGroup<A>;
   readonly count: number;
 }
 
@@ -42,15 +46,15 @@ export type ListRow<A> =
   | { readonly kind: "blank" }
   | {
     readonly kind: "header";
-    readonly group: ListGroup<A>;
+    readonly group: ApplicationListGroup<A>;
     readonly count: number;
     /** Present when the header is selectable (a foldable group). */
     readonly key?: ListRowKey;
   }
   | {
     readonly kind: "item";
-    readonly group: ListGroup<A>;
-    readonly item: GroupedListItem<A>;
+    readonly group: ApplicationListGroup<A>;
+    readonly item: ApplicationListItem<A>;
     readonly key: ListRowKey;
   }
   | {
@@ -95,7 +99,7 @@ const layoutKeys = new WeakMap<object, string>();
  * A list's membership and order: which items sit in which group, in what
  * sequence. Content changes leave it unchanged.
  */
-export function listLayoutKey<A>(list: GroupedList<A>): string {
+export function listLayoutKey<A>(list: ApplicationList<A>): string {
   const found = layoutKeys.get(list);
   if (found !== undefined) return found;
   const key = JSON.stringify(
@@ -111,11 +115,11 @@ export function listLayoutKey<A>(list: GroupedList<A>): string {
  * longer has keeps its last version until the change settles.
  */
 export function mergeDisplayList<A>(
-  settled: GroupedList<A>,
-  latest: GroupedList<A>,
-): GroupedList<A> {
+  settled: ApplicationList<A>,
+  latest: ApplicationList<A>,
+): ApplicationList<A> {
   const groups = new Map(latest.groups.map((group) => [group.id, group]));
-  const items = new Map<string, GroupedListItem<A>>();
+  const items = new Map<string, ApplicationListItem<A>>();
   for (const group of latest.groups) {
     for (const item of group.items) items.set(item.id, item);
   }
@@ -140,8 +144,8 @@ function subsequence(haystack: string, needle: string): boolean {
 
 /** Whether an item matches a filter query, case-insensitively. */
 export function itemMatches<A>(
-  list: GroupedList<A>,
-  item: GroupedListItem<A>,
+  list: ApplicationList<A>,
+  item: ApplicationListItem<A>,
   query: string,
 ): boolean {
   const needle = query.trim().toLocaleLowerCase();
@@ -158,9 +162,9 @@ export function itemMatches<A>(
 
 /** Every item, and the items an active filter keeps, by group. */
 function visibleItems<A>(
-  list: GroupedList<A>,
+  list: ApplicationList<A>,
   query: string | undefined,
-): ReadonlyMap<string, readonly GroupedListItem<A>[]> {
+): ReadonlyMap<string, readonly ApplicationListItem<A>[]> {
   return new Map(
     list.groups.map((group) => [
       group.id,
@@ -178,15 +182,15 @@ function visibleItems<A>(
  * each. Blank rows separate groups when `separators` is set.
  */
 export function flattenList<A>(
-  list: GroupedList<A>,
+  list: ApplicationList<A>,
   shape: ListShape,
 ): ListRows<A> {
   const filtering = shape.query !== undefined && shape.query.trim() !== "";
   const shown = visibleItems(list, shape.query);
   type Segment =
     | {
-      readonly open: ListGroup<A>;
-      readonly items: readonly GroupedListItem<A>[];
+      readonly open: ApplicationListGroup<A>;
+      readonly items: readonly ApplicationListItem<A>[];
     }
     | { readonly folded: FoldedGroup<A>[]; density: boolean };
   const segments: Segment[] = [];
@@ -453,7 +457,7 @@ export function successorRow<A>(
 }
 
 /** How many rows a list needs with these folds and separators. */
-function rowCount<A>(list: GroupedList<A>, shape: ListShape): number {
+function rowCount<A>(list: ApplicationList<A>, shape: ListShape): number {
   return flattenList(list, shape).rows.length;
 }
 
@@ -470,7 +474,7 @@ export interface ListDensityDecision {
  * may fold; the rest scrolls.
  */
 export function decideListDensity<A>(
-  list: GroupedList<A>,
+  list: ApplicationList<A>,
   folds: ReadonlySet<string>,
   available: number,
   selectedGroups: readonly string[],

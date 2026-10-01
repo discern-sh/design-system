@@ -695,7 +695,7 @@ Deno.test("the layer rules report every broken rule as data", () => {
         withLayers({
           ...demoNewJobForm(),
           fields: demoNewJobForm().fields.map((field) =>
-            field.kind === "disclosure"
+            field.kind === "group"
               ? {
                 ...field,
                 fields: field.fields.map((inner) =>
@@ -782,7 +782,7 @@ Deno.test("no single key reaches a confirm or destructive action around its gate
   const editor = validateTerminalApplicationView(withLayers({
     ...form,
     fields: form.fields.map((field) =>
-      field.kind === "disclosure"
+      field.kind === "group"
         ? {
           ...field,
           fields: field.fields.map((inner) =>

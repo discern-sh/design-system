@@ -30,7 +30,11 @@ import {
   styleRuns,
 } from "./paint.ts";
 import { fitCell } from "./list-render.ts";
-import type { DetailBlock, DetailStrip, InlineRun } from "./view.ts";
+import type {
+  ApplicationDetailBlock,
+  ApplicationDetailStrip,
+  ApplicationRun,
+} from "./view.ts";
 
 /** How blocks render at one place. */
 export interface DetailLayout {
@@ -48,7 +52,7 @@ export interface DetailLayout {
 /** The widest key any hints block among these blocks shows, sections included. */
 export function hintsKeyWidth(
   context: PaintContext,
-  blocks: readonly DetailBlock[],
+  blocks: readonly ApplicationDetailBlock[],
 ): number {
   let widest = 1;
   for (const block of blocks) {
@@ -74,7 +78,7 @@ const blockCache = new WeakMap<
 /** Wrap styled runs, indenting continuation lines by `indent` cells. */
 function wrapRuns(
   context: PaintContext,
-  runs: readonly InlineRun[],
+  runs: readonly ApplicationRun[],
   width: number,
   layout: DetailLayout,
   fallback: "ink" | "muted",
@@ -93,7 +97,7 @@ function wrapRuns(
 
 function heading(
   context: PaintContext,
-  block: Extract<DetailBlock, { kind: "heading" }>,
+  block: Extract<ApplicationDetailBlock, { kind: "heading" }>,
   layout: DetailLayout,
 ): readonly string[] {
   const title = ink(
@@ -103,19 +107,16 @@ function heading(
     layout.surface,
   );
   const lines: string[] = [];
-  const aside = block.aside === undefined
-    ? ""
-    : ink(context, block.aside, { tone: "faint" }, layout.surface);
+  const aside = styleRuns(context, block.aside, layout.surface, "faint");
   const beside = layout.wide && aside !== "" &&
     measureText(title) + 2 + measureText(aside) <= layout.width;
   lines.push(beside ? spread(context, title, aside, layout.width) : title);
   if (aside !== "" && !beside) {
     lines.push(
-      ink(
-        context,
-        clip(context, block.aside ?? "", layout.width),
-        { tone: "faint" },
-        layout.surface,
+      truncateStyledText(
+        aside,
+        layout.width,
+        terminalGlyph("ellipsis", context.capabilities),
       ),
     );
   }
@@ -135,14 +136,14 @@ function heading(
 
 function state(
   context: PaintContext,
-  block: Extract<DetailBlock, { kind: "state" }>,
+  block: Extract<ApplicationDetailBlock, { kind: "state" }>,
   layout: DetailLayout,
 ): readonly string[] {
   const separator = terminalGlyph("separator", context.capabilities);
   const labelTone = block.tone === "muted" || block.tone === "faint"
     ? "ink"
     : block.tone;
-  const runs: InlineRun[] = [
+  const runs: ApplicationRun[] = [
     { text: block.label, tone: labelTone, role: "title" },
     ...(block.qualifier === undefined ? [] : [{
       text: ` ${separator} ${block.qualifier}`,
@@ -160,7 +161,7 @@ function state(
 
 function facts(
   context: PaintContext,
-  block: Extract<DetailBlock, { kind: "facts" }>,
+  block: Extract<ApplicationDetailBlock, { kind: "facts" }>,
   layout: DetailLayout,
 ): readonly string[] {
   const longest = Math.max(
@@ -209,7 +210,7 @@ function facts(
 
 function meter(
   context: PaintContext,
-  block: Extract<DetailBlock, { kind: "meter" }>,
+  block: Extract<ApplicationDetailBlock, { kind: "meter" }>,
   layout: DetailLayout,
 ): readonly string[] {
   const ratio = Math.max(0, Math.min(1, block.value / (block.max ?? 1)));
@@ -249,7 +250,7 @@ const MARK_LINE_INDENT = 2;
 
 function marks(
   context: PaintContext,
-  block: Extract<DetailBlock, { kind: "marks" }>,
+  block: Extract<ApplicationDetailBlock, { kind: "marks" }>,
   layout: DetailLayout,
 ): readonly string[] {
   const hanging = MARK_INDENT + MARK_LINE_INDENT;
@@ -278,7 +279,7 @@ const ROW_MIN_TEXT = 12;
  */
 function rows(
   context: PaintContext,
-  block: Extract<DetailBlock, { kind: "rows" }>,
+  block: Extract<ApplicationDetailBlock, { kind: "rows" }>,
   layout: DetailLayout,
 ): readonly string[] {
   const gap = 2;
@@ -323,7 +324,7 @@ function rows(
 
 function hints(
   context: PaintContext,
-  block: Extract<DetailBlock, { kind: "hints" }>,
+  block: Extract<ApplicationDetailBlock, { kind: "hints" }>,
   layout: DetailLayout,
 ): readonly string[] {
   const keys = block.items.map((item) =>
@@ -378,7 +379,7 @@ function hints(
  */
 function cliBlock(
   context: PaintContext,
-  block: Extract<DetailBlock, { kind: "block" }>,
+  block: Extract<ApplicationDetailBlock, { kind: "block" }>,
   layout: DetailLayout,
 ): readonly string[] {
   const capabilities = { ...context.capabilities, columns: layout.width };
@@ -408,7 +409,7 @@ function cliBlock(
 
 function section(
   context: PaintContext,
-  block: Extract<DetailBlock, { kind: "section" }>,
+  block: Extract<ApplicationDetailBlock, { kind: "section" }>,
   layout: DetailLayout,
 ): readonly string[] {
   const title = [
@@ -429,7 +430,7 @@ function section(
 
 function renderBlock(
   context: PaintContext,
-  block: DetailBlock,
+  block: ApplicationDetailBlock,
   layout: DetailLayout,
 ): readonly string[] {
   switch (block.kind) {
@@ -472,14 +473,14 @@ function renderBlock(
  */
 export function renderDetailBlocks(
   context: PaintContext,
-  blocks: readonly DetailBlock[],
+  blocks: readonly ApplicationDetailBlock[],
   given: DetailLayout,
 ): readonly string[] {
   const layout = given.keyWidth === undefined
     ? { ...given, keyWidth: hintsKeyWidth(context, blocks) }
     : given;
   const lines: string[] = [];
-  let previous: DetailBlock["kind"] | undefined;
+  let previous: ApplicationDetailBlock["kind"] | undefined;
   for (const block of blocks) {
     const rendered = renderBlock(context, block, layout);
     if (rendered.length === 0) continue;
@@ -591,8 +592,8 @@ export function scrollDetail(
  */
 export function renderStrip(
   context: PaintContext,
-  strip: DetailStrip | undefined,
-  fallback: readonly InlineRun[],
+  strip: ApplicationDetailStrip | undefined,
+  fallback: readonly ApplicationRun[],
   width: number,
   lines: 1 | 2,
   surface: TerminalSurfaceRole | undefined,

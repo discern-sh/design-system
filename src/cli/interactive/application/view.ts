@@ -18,7 +18,7 @@ import type { ApplicationLayer } from "./layer-view.ts";
  * are bold, `label` defaults to faint, `code` is bold — and the tone, when
  * given, sets the colour. Text is plain and control-free.
  */
-export interface InlineRun {
+export interface ApplicationRun {
   readonly text: string;
   readonly tone?: TerminalTextTone;
   readonly role?: "title" | "body" | "label" | "key" | "code";
@@ -38,7 +38,7 @@ export interface ApplicationGlyph {
 }
 
 /** How fresh the screen's data is, as the header's last word shows it. */
-export type HeaderLivenessState = "idle" | "busy" | "retrying" | "stale";
+export type ApplicationLivenessState = "idle" | "busy" | "retrying" | "stale";
 
 /**
  * The header's liveness word. The caller names each state; the package
@@ -46,15 +46,15 @@ export type HeaderLivenessState = "idle" | "busy" | "retrying" | "stale";
  * busy only once it has lasted `busyAfterMs`, so quick refreshes never
  * flicker.
  */
-export interface HeaderLiveness {
-  readonly state: HeaderLivenessState;
-  readonly labels: Readonly<Record<HeaderLivenessState, string>>;
+export interface ApplicationLiveness {
+  readonly state: ApplicationLivenessState;
+  readonly labels: Readonly<Record<ApplicationLivenessState, string>>;
   readonly busyAfterMs?: number;
 }
 
 /** One compact fact on the header's right, optionally bound to an action. */
-export interface HeaderChip<A> {
-  readonly runs: readonly InlineRun[];
+export interface ApplicationHeaderChip<A> {
+  readonly runs: readonly ApplicationRun[];
   readonly action?: A;
 }
 
@@ -63,15 +63,15 @@ export interface HeaderChip<A> {
  * the right. While a list filter is being edited the left side becomes the
  * filter field.
  */
-export interface HeaderBar<A> {
-  readonly leading: readonly InlineRun[];
-  readonly chips?: readonly HeaderChip<A>[];
-  readonly trailing?: readonly InlineRun[];
-  readonly liveness?: HeaderLiveness;
+export interface ApplicationHeader<A> {
+  readonly leading: readonly ApplicationRun[];
+  readonly chips?: readonly ApplicationHeaderChip<A>[];
+  readonly trailing?: readonly ApplicationRun[];
+  readonly liveness?: ApplicationLiveness;
 }
 
 /** Cell gaps around a list row's trailing columns. */
-export interface ListGaps {
+export interface ApplicationListGaps {
   /** Cells between the title and the first column. */
   readonly afterTitle: number;
   /** Cells between two columns. */
@@ -84,14 +84,14 @@ export interface ListGaps {
  * Roomy and tight gaps. A list is roomy beside a wide detail, or when it
  * fills a terminal at least `tightBelowColumns` wide; otherwise it is tight.
  */
-export interface ListSpacing {
-  readonly roomy: ListGaps;
-  readonly tight: ListGaps;
+export interface ApplicationListSpacing {
+  readonly roomy: ApplicationListGaps;
+  readonly tight: ApplicationListGaps;
   readonly tightBelowColumns?: number;
 }
 
 /** One trailing, aligned column of a list row. */
-export interface ListColumn {
+export interface ApplicationListColumn {
   readonly id: string;
   readonly width: number;
   readonly align?: "start" | "end";
@@ -103,9 +103,9 @@ export interface ListColumn {
 }
 
 /** How typing narrows a list. */
-export interface ListFilter {
-  /** The field's label, shown before the typed text. */
-  readonly placeholder: string;
+export interface ApplicationListFilter {
+  /** The field's label, shown before the typed text, such as `Filter`. */
+  readonly label: string;
   /** Item text the filter searches; defaults to both. */
   readonly fields?: readonly ("title" | "keywords")[];
   /** Substring (the default) or in-order fuzzy matching. */
@@ -117,20 +117,20 @@ export interface ListFilter {
  * fold in `foldOrder` (by default bottom-up); `neverFold` groups and the
  * group holding the selection never fold. Without `density` nothing folds.
  */
-export interface ListDensity {
+export interface ApplicationListDensity {
   readonly foldOrder?: readonly string[];
   readonly neverFold?: readonly string[];
 }
 
 /** One selectable row. */
-export interface GroupedListItem<A> {
+export interface ApplicationListItem<A> {
   readonly id: string;
   readonly title: string;
   /** Faint text kept after the title when it truncates, such as an id. */
   readonly titleSuffix?: string;
   readonly marker: ApplicationGlyph;
   /** Runs for each declared column, by column id. */
-  readonly cells?: Readonly<Record<string, readonly InlineRun[]>>;
+  readonly cells?: Readonly<Record<string, readonly ApplicationRun[]>>;
   /** The action Enter runs. */
   readonly primary?: A;
   /** Text only the filter searches. */
@@ -138,7 +138,7 @@ export interface GroupedListItem<A> {
 }
 
 /** One group of items under a header. Empty groups are not shown. */
-export interface ListGroup<A> {
+export interface ApplicationListGroup<A> {
   readonly id: string;
   readonly title: string;
   /** The name a summary row uses; defaults to the title. */
@@ -150,8 +150,8 @@ export interface ListGroup<A> {
   /** Fold the group the first time it appears. */
   readonly initiallyFolded?: boolean;
   /** Faint text after the header's count. */
-  readonly aside?: readonly InlineRun[];
-  readonly items: readonly GroupedListItem<A>[];
+  readonly aside?: readonly ApplicationRun[];
+  readonly items: readonly ApplicationListItem<A>[];
 }
 
 /**
@@ -159,16 +159,16 @@ export interface ListGroup<A> {
  * across updates; the package remembers selection, filter, folds, zoom, and
  * scroll by it.
  */
-export interface GroupedList<A> {
+export interface ApplicationList<A> {
   readonly id: string;
-  readonly groups: readonly ListGroup<A>[];
-  readonly columns?: readonly ListColumn[];
+  readonly groups: readonly ApplicationListGroup<A>[];
+  readonly columns?: readonly ApplicationListColumn[];
   /** Title cells kept before columns drop; defaults to 16. */
   readonly minTitle?: number;
-  readonly spacing?: ListSpacing;
+  readonly spacing?: ApplicationListSpacing;
   /** Offer `/` to filter. */
-  readonly filter?: ListFilter;
-  readonly density?: ListDensity;
+  readonly filter?: ApplicationListFilter;
+  readonly density?: ApplicationListDensity;
   /**
    * Membership and order changes wait until no key has been pressed for this
    * long, so a row never moves under a moving selection; content updates at
@@ -178,12 +178,12 @@ export interface GroupedList<A> {
 }
 
 /** A detail or sheet block. Every block renders at the width it is given. */
-export type DetailBlock =
+export type ApplicationDetailBlock =
   | {
     readonly kind: "heading";
     readonly title: string;
     /** Right-aligned on wide screens and in zoom, otherwise on its own line. */
-    readonly aside?: string;
+    readonly aside?: readonly ApplicationRun[];
     readonly subtitle?: string;
   }
   | {
@@ -193,13 +193,13 @@ export type DetailBlock =
     readonly tone: TerminalTextTone;
     readonly qualifier?: string;
   }
-  | { readonly kind: "text"; readonly runs: readonly InlineRun[] }
+  | { readonly kind: "text"; readonly runs: readonly ApplicationRun[] }
   | {
     readonly kind: "facts";
     readonly rows: readonly {
       readonly label: string;
       /** One entry per line. */
-      readonly value: readonly (readonly InlineRun[])[];
+      readonly value: readonly (readonly ApplicationRun[])[];
     }[];
   }
   | {
@@ -210,7 +210,7 @@ export type DetailBlock =
   }
   | {
     readonly kind: "marks";
-    readonly items: readonly DetailMark[];
+    readonly items: readonly ApplicationDetailMark[];
   }
   | {
     readonly kind: "hints";
@@ -224,10 +224,10 @@ export type DetailBlock =
   | {
     readonly kind: "rows";
     /** A fixed column before the text, such as a short id. */
-    readonly lead?: ListColumn;
+    readonly lead?: ApplicationListColumn;
     /** Trailing aligned columns, dropping by priority like a list's. */
-    readonly columns?: readonly ListColumn[];
-    readonly items: readonly DetailRow[];
+    readonly columns?: readonly ApplicationListColumn[];
+    readonly items: readonly ApplicationDetailRow[];
   }
   | { readonly kind: "block"; readonly content: CliBlock }
   | { readonly kind: "pending"; readonly label: string }
@@ -236,35 +236,35 @@ export type DetailBlock =
     readonly title: string;
     readonly count?: number;
     readonly caption?: string;
-    readonly blocks: readonly DetailBlock[];
+    readonly blocks: readonly ApplicationDetailBlock[];
   };
 
 /**
  * One consequence line: a one-cell mark, its text, and indented lines that
  * belong to it, such as the files a step touched.
  */
-export interface DetailMark {
+export interface ApplicationDetailMark {
   readonly mark: ApplicationGlyph;
-  readonly runs: readonly InlineRun[];
+  readonly runs: readonly ApplicationRun[];
   /** Lines hanging under the text, each wrapped on its own. */
-  readonly lines?: readonly (readonly InlineRun[])[];
+  readonly lines?: readonly (readonly ApplicationRun[])[];
 }
 
 /**
  * One aligned row: an optional lead cell, text that takes the remaining
  * width, and cells for the block's trailing columns.
  */
-export interface DetailRow {
-  readonly lead?: readonly InlineRun[];
-  readonly text: readonly InlineRun[];
-  readonly cells?: Readonly<Record<string, readonly InlineRun[]>>;
+export interface ApplicationDetailRow {
+  readonly lead?: readonly ApplicationRun[];
+  readonly text: readonly ApplicationRun[];
+  readonly cells?: Readonly<Record<string, readonly ApplicationRun[]>>;
 }
 
 /** The compact summary a narrow screen shows above the footer. */
-export interface DetailStrip {
-  readonly title: readonly InlineRun[];
+export interface ApplicationDetailStrip {
+  readonly title: readonly ApplicationRun[];
   /** Whole facts, each kept or dropped as one. */
-  readonly facts: readonly (readonly InlineRun[])[];
+  readonly facts: readonly (readonly ApplicationRun[])[];
 }
 
 /**
@@ -272,14 +272,14 @@ export interface DetailStrip {
  * Page Up and Page Down scroll it, Shift+Up and Shift+Down move it a line,
  * and Space zooms it to the full body while Up and Down keep walking items.
  */
-export interface FollowingDetail {
+export interface ApplicationDetail {
   /** The id of the list it follows. */
   readonly follows: string;
   /** Blocks by item id; an item without content shows `pending`. */
-  readonly content: Readonly<Record<string, readonly DetailBlock[]>>;
-  readonly strip?: Readonly<Record<string, DetailStrip>>;
+  readonly content: Readonly<Record<string, readonly ApplicationDetailBlock[]>>;
+  readonly strip?: Readonly<Record<string, ApplicationDetailStrip>>;
   /** Replaces the zoom breadcrumb's default group and item titles. */
-  readonly breadcrumb?: Readonly<Record<string, readonly InlineRun[]>>;
+  readonly breadcrumb?: Readonly<Record<string, readonly ApplicationRun[]>>;
   /** What an item without content shows; defaults to "Loading…". */
   readonly pending?: string;
 }
@@ -290,7 +290,7 @@ export interface FollowingDetail {
  * beside a standard detail; below that the list fills the width and the
  * detail becomes a strip above the footer, reached in full with Space.
  */
-export interface SplitRules {
+export interface ApplicationSplitRules {
   readonly wideAtColumns: number;
   readonly collapseBelowColumns: number;
   /**
@@ -321,11 +321,11 @@ export interface SplitRules {
 }
 
 /** A grouped list with a detail that follows its selection. */
-export interface MasterDetailBody<A> {
+export interface ApplicationMasterDetailBody<A> {
   readonly kind: "master-detail";
-  readonly list: GroupedList<A>;
-  readonly detail: FollowingDetail;
-  readonly split?: SplitRules;
+  readonly list: ApplicationList<A>;
+  readonly detail: ApplicationDetail;
+  readonly split?: ApplicationSplitRules;
   /**
    * The footer while the detail is zoomed. By default the package adds
    * Up/Down after the primary hint and a Back hint on the right.
@@ -334,13 +334,13 @@ export interface MasterDetailBody<A> {
 }
 
 /** A grouped list on its own. */
-export interface ListBody<A> {
+export interface ApplicationListBody<A> {
   readonly kind: "list";
-  readonly list: GroupedList<A>;
+  readonly list: ApplicationList<A>;
 }
 
 /** One scrolling document, remembered by id. */
-export interface ReadingBody {
+export interface ApplicationReadingBody {
   readonly kind: "reading";
   readonly id: string;
   readonly content: CliBlock;
@@ -350,7 +350,7 @@ export interface ReadingBody {
  * A key hint that runs an action itself: an empty body's primary, which
  * Enter runs, or a reader's own key.
  */
-export interface ActionHint<A> {
+export interface ApplicationActionHint<A> {
   readonly key: KeyChord;
   readonly label: string;
   readonly action: A;
@@ -360,35 +360,35 @@ export interface ActionHint<A> {
  * Nothing to list yet: a title, a short explanation, the one thing to do
  * next, and optionally a list below (such as folded groups).
  */
-export interface EmptyBody<A> {
+export interface ApplicationEmptyBody<A> {
   readonly kind: "empty";
   readonly title: string;
-  readonly body: readonly InlineRun[];
+  readonly body: readonly ApplicationRun[];
   /** Selected first; Enter runs its action. */
-  readonly primary: ActionHint<A>;
+  readonly primary: ApplicationActionHint<A>;
   /** Further keys to show; each must be bound, like every advertised key. */
   readonly secondary?: readonly KeyHint[];
-  readonly list?: GroupedList<A>;
+  readonly list?: ApplicationList<A>;
 }
 
 /** The region between the header and the footer. */
 export type ApplicationBody<A> =
-  | MasterDetailBody<A>
-  | ListBody<A>
-  | ReadingBody
-  | EmptyBody<A>;
+  | ApplicationMasterDetailBody<A>
+  | ApplicationListBody<A>
+  | ApplicationReadingBody
+  | ApplicationEmptyBody<A>;
 
 /**
  * One row above the footer, shown only while present. It dismisses after
  * `afterMs`, at the next key when `onKey` is set, or with Escape; each
  * dismissal is reported through `onDismiss`, and the next view must omit it.
  */
-export interface MessageLine {
+export interface ApplicationMessage {
   readonly id: string;
   /** Tone for runs that set none; defaults to muted. */
   readonly tone?: TerminalTextTone;
-  readonly runs: readonly InlineRun[];
-  readonly trailing?: readonly InlineRun[];
+  readonly runs: readonly ApplicationRun[];
+  readonly trailing?: readonly ApplicationRun[];
   readonly dismiss?: { readonly afterMs?: number; readonly onKey?: boolean };
 }
 
@@ -403,14 +403,14 @@ export interface TerminalApplicationInputPreferences {
    * The message shown once when mouse input turns on, naming how to select
    * text natively; defaults to `Shift-drag to select text`.
    */
-  readonly selectionHint?: readonly InlineRun[];
+  readonly selectionHint?: readonly ApplicationRun[];
 }
 
 /** Caller-authored screen contents. Replace the value to update the screen. */
 export interface TerminalApplicationView<A> {
-  readonly header: HeaderBar<A>;
+  readonly header: ApplicationHeader<A>;
   readonly body: ApplicationBody<A>;
-  readonly message?: MessageLine;
+  readonly message?: ApplicationMessage;
   /**
    * Key hints while no layer is open; layers show their own. Hints only
    * name keys: each must be one the body reserves, Escape, Ctrl+C, or a
@@ -447,9 +447,9 @@ export interface TerminalApplicationView<A> {
  * also accepts `ctrl+k`. Base entries apply while no layer is open and the
  * list owns input; `{ layer }` entries apply while that layer is on top.
  * `inFields` entries also apply while a text field owns input, and must be
- * non-printing chords outside `EDITOR_RESERVED_CHORDS`.
+ * non-printing chords outside `APPLICATION_EDITOR_KEYS`.
  */
-export interface KeymapEntry<A> {
+export interface ApplicationKeyBinding<A> {
   readonly key: KeyChord;
   readonly action: A;
   readonly scope?: "base" | { readonly layer: string };
@@ -457,27 +457,29 @@ export interface KeymapEntry<A> {
 }
 
 /** The split the package uses when a master-detail body declares none. */
-export const DEFAULT_SPLIT_RULES: SplitRules = Object.freeze({
-  wideAtColumns: 100,
-  collapseBelowColumns: 80,
-  list: Object.freeze({ sizing: "content", min: 36, maxTitle: 32 } as const),
-  detailMin: Object.freeze({ standard: 39, wide: 48 }),
-  detailPadding: Object.freeze({
-    standard: Object.freeze([2, 1] as const),
-    wide: Object.freeze([3, 2] as const),
-  }),
-  strip: Object.freeze({ shortBelowRows: 14 }),
-});
+export const DEFAULT_APPLICATION_SPLIT_RULES: ApplicationSplitRules = Object
+  .freeze({
+    wideAtColumns: 100,
+    collapseBelowColumns: 80,
+    list: Object.freeze({ sizing: "content", min: 36, maxTitle: 32 } as const),
+    detailMin: Object.freeze({ standard: 39, wide: 48 }),
+    detailPadding: Object.freeze({
+      standard: Object.freeze([2, 1] as const),
+      wide: Object.freeze([3, 2] as const),
+    }),
+    strip: Object.freeze({ shortBelowRows: 14 }),
+  });
 
 /** List gaps when a list declares none. */
-export const DEFAULT_LIST_SPACING: ListSpacing = Object.freeze({
-  roomy: Object.freeze({ afterTitle: 1, between: 2, pad: 2 }),
-  tight: Object.freeze({ afterTitle: 1, between: 1, pad: 1 }),
-  tightBelowColumns: 56,
-});
+export const DEFAULT_APPLICATION_LIST_SPACING: ApplicationListSpacing = Object
+  .freeze({
+    roomy: Object.freeze({ afterTitle: 1, between: 2, pad: 2 }),
+    tight: Object.freeze({ afterTitle: 1, between: 1, pad: 1 }),
+    tightBelowColumns: 56,
+  });
 
 /** Title cells kept before a list drops a column, when a list declares none. */
-export const DEFAULT_LIST_MIN_TITLE = 16;
+export const DEFAULT_APPLICATION_LIST_MIN_TITLE = 16;
 
 /** Key idle before membership changes apply, when a list declares none. */
-export const DEFAULT_LIST_SETTLE_MS = 1500;
+export const DEFAULT_APPLICATION_SETTLE_MS = 1500;

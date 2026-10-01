@@ -2,9 +2,9 @@
 import { TERMINAL_GLYPHS } from "../../src/cli/mod.ts";
 import type {
   ApplicationGlyph,
-  GroupedListItem,
-  ListGroup,
-  MessageLine,
+  ApplicationListGroup,
+  ApplicationListItem,
+  ApplicationMessage,
   TerminalApplicationView,
 } from "../../src/cli/interactive/mod.ts";
 
@@ -23,7 +23,7 @@ const idle: ApplicationGlyph = {
 };
 
 /** A list item titled `Item <id>` whose Enter action is `open:<id>`. */
-export function testItem(item: TestItem): GroupedListItem<string> {
+export function testItem(item: TestItem): ApplicationListItem<string> {
   return {
     id: item.id,
     title: `Item ${item.id}`,
@@ -44,8 +44,8 @@ export function testItem(item: TestItem): GroupedListItem<string> {
 /** Options for {@linkcode testView}. */
 export interface TestViewOptions {
   readonly body?: "list" | "master-detail";
-  readonly groups?: readonly Omit<ListGroup<string>, "items">[];
-  readonly message?: MessageLine;
+  readonly groups?: readonly Omit<ApplicationListGroup<string>, "items">[];
+  readonly message?: ApplicationMessage;
   readonly filter?: boolean;
   readonly density?: boolean;
   readonly settleMs?: number;
@@ -63,7 +63,7 @@ export function testView(
     typeof item === "string" ? { id: item } : item
   );
   const declared = options.groups ?? [{ id: "main", title: "Items" }];
-  const groups: ListGroup<string>[] = declared.map((group) => ({
+  const groups: ApplicationListGroup<string>[] = declared.map((group) => ({
     ...group,
     items: entries.filter((item) => (item.group ?? "main") === group.id).map(
       testItem,
@@ -73,7 +73,7 @@ export function testView(
     id: "items",
     groups,
     columns: [{ id: "status", width: 9, align: "end" as const }],
-    ...(options.filter === true ? { filter: { placeholder: "Filter" } } : {}),
+    ...(options.filter === true ? { filter: { label: "Filter" } } : {}),
     ...(options.density === true ? { density: {} } : {}),
     ...(options.settleMs === undefined ? {} : { settleMs: options.settleMs }),
   };

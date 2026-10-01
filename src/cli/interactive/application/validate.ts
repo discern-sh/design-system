@@ -33,8 +33,8 @@ import {
   tone,
 } from "./validate-rules.ts";
 import type {
-  KeymapEntry,
-  SplitRules,
+  ApplicationKeyBinding,
+  ApplicationSplitRules,
   TerminalApplicationView,
 } from "./view.ts";
 
@@ -48,7 +48,7 @@ export interface TerminalApplicationViewContext<A> {
    * binding may not take a key its layer uses or reach a confirm or
    * destructive button's action.
    */
-  readonly keymap?: readonly KeymapEntry<A>[];
+  readonly keymap?: readonly ApplicationKeyBinding<A>[];
   /** Whether j and k move, so the body reserves them. */
   readonly viKeys?: boolean;
   /**
@@ -65,7 +65,11 @@ export interface ViewRuleContext<A> {
   readonly dismissedLayers?: readonly string[];
 }
 
-function split(issues: Issues, path: string, value: SplitRules): void {
+function split(
+  issues: Issues,
+  path: string,
+  value: ApplicationSplitRules,
+): void {
   count(issues, `${path}.wideAtColumns`, value.wideAtColumns, 1);
   count(issues, `${path}.collapseBelowColumns`, value.collapseBelowColumns, 1);
   if (value.wideAtColumns < value.collapseBelowColumns) {

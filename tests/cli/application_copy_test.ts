@@ -229,7 +229,7 @@ const SCENES: readonly Scene[] = [
         layers: [{
           ...form,
           fields: form.fields.map((field) =>
-            field.kind === "disclosure"
+            field.kind === "group"
               ? {
                 ...field,
                 initiallyOpen: true,

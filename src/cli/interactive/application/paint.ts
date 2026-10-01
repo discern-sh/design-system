@@ -33,7 +33,7 @@ import {
   DEFAULT_TERMINAL_APPLICATION_COPY,
   type TerminalApplicationCopy,
 } from "./copy.ts";
-import type { ApplicationGlyph, InlineRun } from "./view.ts";
+import type { ApplicationGlyph, ApplicationRun } from "./view.ts";
 
 /** Where the application's animation and clock stand when a frame renders. */
 export interface TerminalApplicationMotion {
@@ -122,14 +122,14 @@ export function ink(
  * text with typographic marks spelled in ASCII; an empty ASCII form drops
  * the run.
  */
-export function runText(context: PaintContext, run: InlineRun): string {
+export function runText(context: PaintContext, run: ApplicationRun): string {
   return context.capabilities.unicode
     ? run.text
     : run.ascii ?? asciiSpelling(run.text);
 }
 
 /** The tone and weight a run's role and tone give it. */
-export function runInk(run: InlineRun, fallback: TerminalTextTone): Ink {
+export function runInk(run: ApplicationRun, fallback: TerminalTextTone): Ink {
   switch (run.role) {
     case "title":
     case "key":
@@ -145,7 +145,7 @@ export function runInk(run: InlineRun, fallback: TerminalTextTone): Ink {
 /** Style a sequence of runs. */
 export function styleRuns(
   context: PaintContext,
-  runs: readonly InlineRun[] | undefined,
+  runs: readonly ApplicationRun[] | undefined,
   surface: TerminalSurfaceRole | undefined,
   fallback: TerminalTextTone = "ink",
   bold = false,
@@ -164,7 +164,7 @@ export function styleRuns(
 /** The plain width of a sequence of runs. */
 export function runsWidth(
   context: PaintContext,
-  runs: readonly InlineRun[] | undefined,
+  runs: readonly ApplicationRun[] | undefined,
 ): number {
   return measureText((runs ?? []).map((run) => runText(context, run)).join(""));
 }

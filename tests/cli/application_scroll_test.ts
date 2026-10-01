@@ -1,8 +1,8 @@
 import { assert, assertEquals } from "@std/assert";
 import { createCliBlock, renderMarkdownCli } from "../../src/cli/mod.ts";
 import type {
+  ApplicationDetailBlock,
   ApplicationLayer,
-  DetailBlock,
   TerminalApplicationView,
 } from "../../src/cli/interactive/mod.ts";
 import { ApplicationDriver } from "../fixtures/application-driver.ts";
@@ -26,7 +26,7 @@ function line(index: number): string {
   return `line ${String(index + 1).padStart(2, "0")}`;
 }
 
-const MARKS: DetailBlock = {
+const MARKS: ApplicationDetailBlock = {
   kind: "marks",
   items: Array.from({ length: LINES }, (_, index) => ({
     mark: { unicode: "·", ascii: "-", tone: "faint" as const },
@@ -231,7 +231,7 @@ Deno.test("every line of a tiny viewport is on screen at some scroll", async (t)
           id: "pick",
           scope: "global",
           title: "Pick one of the lines below",
-          aside: "Forty lines to choose from",
+          aside: [{ text: "Forty lines to choose from" }],
           footnote: [{ text: "Every line is a choice; Enter picks it." }],
           sections: [{
             title: "Lines",

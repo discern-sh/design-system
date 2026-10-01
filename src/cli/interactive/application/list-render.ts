@@ -27,13 +27,13 @@ import {
   styleGlyph,
 } from "./paint.ts";
 import {
-  DEFAULT_LIST_MIN_TITLE,
-  DEFAULT_LIST_SPACING,
-  type GroupedList,
-  type GroupedListItem,
-  type InlineRun,
-  type ListColumn,
-  type ListGaps,
+  type ApplicationList,
+  type ApplicationListColumn,
+  type ApplicationListGaps,
+  type ApplicationListItem,
+  type ApplicationRun,
+  DEFAULT_APPLICATION_LIST_MIN_TITLE,
+  DEFAULT_APPLICATION_LIST_SPACING,
 } from "./view.ts";
 
 /** Cells before an item's title: selection bar, space, marker, space. */
@@ -45,12 +45,15 @@ const SCROLL_MARGIN = 1;
 /** Which columns a list row shows at one width, and the title's share. */
 export interface ListColumnLayout {
   readonly title: number;
-  readonly columns: readonly ListColumn[];
-  readonly gaps: ListGaps;
+  readonly columns: readonly ApplicationListColumn[];
+  readonly gaps: ApplicationListGaps;
 }
 
 /** Cells a row needs besides its title. */
-function fixedCells(columns: readonly ListColumn[], gaps: ListGaps): number {
+function fixedCells(
+  columns: readonly ApplicationListColumn[],
+  gaps: ApplicationListGaps,
+): number {
   if (columns.length === 0) return LIST_GUTTER + gaps.pad;
   return LIST_GUTTER + gaps.afterTitle +
     columns.reduce((total, column) => total + column.width, 0) +
@@ -58,19 +61,23 @@ function fixedCells(columns: readonly ListColumn[], gaps: ListGaps): number {
 }
 
 /** Gaps for a list: roomy beside a wide detail or at full width on a roomy terminal. */
-export function listGaps<A>(list: GroupedList<A>, roomy: boolean): ListGaps {
-  const spacing = list.spacing ?? DEFAULT_LIST_SPACING;
+export function listGaps<A>(
+  list: ApplicationList<A>,
+  roomy: boolean,
+): ApplicationListGaps {
+  const spacing = list.spacing ?? DEFAULT_APPLICATION_LIST_SPACING;
   return roomy ? spacing.roomy : spacing.tight;
 }
 
 /** Whether a full-width list on this terminal is roomy. */
 export function fullWidthRoomy<A>(
-  list: GroupedList<A>,
+  list: ApplicationList<A>,
   columns: number,
 ): boolean {
-  const spacing = list.spacing ?? DEFAULT_LIST_SPACING;
+  const spacing = list.spacing ?? DEFAULT_APPLICATION_LIST_SPACING;
   return columns >=
-    (spacing.tightBelowColumns ?? DEFAULT_LIST_SPACING.tightBelowColumns ?? 56);
+    (spacing.tightBelowColumns ??
+      DEFAULT_APPLICATION_LIST_SPACING.tightBelowColumns ?? 56);
 }
 
 /**
@@ -78,12 +85,12 @@ export function fullWidthRoomy<A>(
  * than the list's minimum; columns without a priority never drop.
  */
 export function layoutListColumns<A>(
-  list: GroupedList<A>,
+  list: ApplicationList<A>,
   width: number,
-  gaps: ListGaps,
+  gaps: ApplicationListGaps,
 ): ListColumnLayout {
   let shown = [...(list.columns ?? [])];
-  const minimum = list.minTitle ?? DEFAULT_LIST_MIN_TITLE;
+  const minimum = list.minTitle ?? DEFAULT_APPLICATION_LIST_MIN_TITLE;
   while (width - fixedCells(shown, gaps) < minimum) {
     let drop = -1;
     for (const [index, column] of shown.entries()) {
@@ -108,8 +115,8 @@ export function layoutListColumns<A>(
  * `maxTitle`, fits whole.
  */
 export function neededListWidth<A>(
-  list: GroupedList<A>,
-  gaps: ListGaps,
+  list: ApplicationList<A>,
+  gaps: ApplicationListGaps,
   maxTitle: number,
 ): number {
   let longest = 0;
@@ -246,11 +253,11 @@ function bar(context: PaintContext, paint: RowPaint): string {
 /** Fit a cell's runs, dropping whole trailing runs before truncating the first. */
 export function fitCell(
   context: PaintContext,
-  runs: readonly InlineRun[],
-  column: ListColumn,
+  runs: readonly ApplicationRun[],
+  column: ApplicationListColumn,
   surface: TerminalSurfaceRole | undefined,
 ): string {
-  const blank = (run: InlineRun | undefined) =>
+  const blank = (run: ApplicationRun | undefined) =>
     run !== undefined && runText(context, run).trim() === "";
   const kept = runs.filter((run) => runText(context, run) !== "");
   // Spacing that only separated runs which dropped out — such as an ASCII
@@ -276,7 +283,7 @@ export function fitCell(
 
 function titleCell<A>(
   context: PaintContext,
-  item: GroupedListItem<A>,
+  item: ApplicationListItem<A>,
   width: number,
   paint: RowPaint,
 ): string {
@@ -294,7 +301,7 @@ function titleCell<A>(
 
 function itemLine<A>(
   context: PaintContext,
-  item: GroupedListItem<A>,
+  item: ApplicationListItem<A>,
   layout: ListColumnLayout,
   width: number,
   paint: RowPaint,
@@ -438,7 +445,7 @@ export interface RenderedList {
 /** Inputs for one list viewport. */
 export interface ListViewport<A> {
   readonly rows: ListRows<A>;
-  readonly list: GroupedList<A>;
+  readonly list: ApplicationList<A>;
   readonly layout: ListColumnLayout;
   readonly width: number;
   readonly height: number;

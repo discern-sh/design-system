@@ -10,10 +10,10 @@
 import type { KeyChord, KeyHint } from "../../key-hints.ts";
 import type { TerminalTextTone } from "../../theme.ts";
 import type {
-  ActionHint,
-  DetailBlock,
-  GroupedList,
-  InlineRun,
+  ApplicationActionHint,
+  ApplicationDetailBlock,
+  ApplicationList,
+  ApplicationRun,
 } from "./view.ts";
 
 /**
@@ -58,7 +58,7 @@ export interface ApplicationLayerBase {
  * A collapsed section of a sheet or form, such as a technical plan, that one
  * key opens. The package remembers whether each is open.
  */
-export interface LayerDisclosure {
+export interface ApplicationDisclosure {
   readonly id: string;
   /** The row's text, such as `Plan · 13 steps`. */
   readonly label: string;
@@ -74,7 +74,7 @@ export interface LayerDisclosure {
    * editor's chords.
    */
   readonly fieldKey?: KeyChord;
-  readonly content: readonly DetailBlock[];
+  readonly content: readonly ApplicationDetailBlock[];
   /** Start open. */
   readonly initiallyOpen?: boolean;
 }
@@ -83,7 +83,7 @@ export interface LayerDisclosure {
  * A sheet's lifecycle. `loading`, `changed`, and `gone` disable every button
  * but the safe one; `loading` and `working` show the busy line.
  */
-export type SheetState =
+export type ApplicationSheetState =
   | "loading"
   | "ready"
   | "changed"
@@ -97,17 +97,17 @@ export type SheetState =
  * `destructive` buttons never take a key and never activate on the first
  * click; `alternative` buttons may declare a key.
  */
-export type SheetButtonRole =
+export type ApplicationButtonRole =
   | "safe"
   | "confirm"
   | "destructive"
   | "alternative";
 
 /** One button in a sheet's or form's button row. */
-export interface SheetButton<A> {
+export interface ApplicationButton<A> {
   readonly id: string;
   readonly label: string;
-  readonly role: SheetButtonRole;
+  readonly role: ApplicationButtonRole;
   /** What the button runs; required except on the safe button, which dismisses. */
   readonly action?: A;
   /** Defaults to true. The package disables more buttons on its own rules. */
@@ -125,23 +125,23 @@ export interface SheetButton<A> {
  * until the field's text equals `mustEqual` exactly. The package owns the
  * value.
  */
-export interface SheetChallenge {
+export interface ApplicationChallenge {
   readonly fieldId: string;
   /** The words above the field, such as `Type <name> to remove it`. */
-  readonly label: readonly InlineRun[];
+  readonly label: readonly ApplicationRun[];
   readonly mustEqual: string;
   /** Replaces the package's remaining-characters hint beside the field. */
-  readonly hint?: readonly InlineRun[];
+  readonly hint?: readonly ApplicationRun[];
 }
 
 /** A line across the top of a sheet, such as a notice that its subject changed. */
-export interface SheetBanner {
+export interface ApplicationBanner {
   readonly tone: TerminalTextTone;
-  readonly runs: readonly InlineRun[];
+  readonly runs: readonly ApplicationRun[];
 }
 
 /** One step of an operation a sheet shows while it runs. */
-export interface ActivityStep {
+export interface ApplicationActivityStep {
   readonly id: string;
   readonly label: string;
   readonly state: "pending" | "active" | "done" | "failed" | "skipped";
@@ -154,8 +154,8 @@ export interface ActivityStep {
  * The steps of a running operation, in order. Finished steps show their
  * duration, the active step its running time, and the title row the total.
  */
-export interface ActivitySteps {
-  readonly steps: readonly ActivityStep[];
+export interface ApplicationActivity {
+  readonly steps: readonly ApplicationActivityStep[];
   /** Clock time the operation started. */
   readonly startedAt: number;
   /** The usual duration; a meter compares the total against it. */
@@ -163,9 +163,9 @@ export interface ActivitySteps {
   /** Words after the total beside the meter, such as `usually about 1m`. */
   readonly typicalLabel?: string;
   /** Lines above the steps while the operation waits. */
-  readonly waits?: readonly (readonly InlineRun[])[];
+  readonly waits?: readonly (readonly ApplicationRun[])[];
   /** Work that follows, under a `Then` label. */
-  readonly then?: readonly (readonly InlineRun[])[];
+  readonly then?: readonly (readonly ApplicationRun[])[];
 }
 
 /**
@@ -178,26 +178,26 @@ export interface ActivitySteps {
 export interface ApplicationSheet<A> extends ApplicationLayerBase {
   readonly kind: "sheet";
   readonly title: string;
-  readonly aside?: readonly InlineRun[];
-  readonly state: SheetState;
+  readonly aside?: readonly ApplicationRun[];
+  readonly state: ApplicationSheetState;
   /** The busy line while `loading` or `working`, such as `Checking…`. */
   readonly busy?: string;
-  readonly banner?: SheetBanner;
-  readonly body: readonly DetailBlock[];
+  readonly banner?: ApplicationBanner;
+  readonly body: readonly ApplicationDetailBlock[];
   /** Defaults to true when a confirm or destructive button exists. */
   readonly requireFullRead?: boolean;
   /** Words after the unread count, such as `to read before applying`. */
   readonly readHint?: string;
-  readonly disclosures?: readonly LayerDisclosure[];
-  readonly challenge?: SheetChallenge;
-  readonly footnote?: readonly InlineRun[];
-  readonly buttons: readonly SheetButton<A>[];
+  readonly disclosures?: readonly ApplicationDisclosure[];
+  readonly challenge?: ApplicationChallenge;
+  readonly footnote?: readonly ApplicationRun[];
+  readonly buttons: readonly ApplicationButton<A>[];
   /**
    * Progress mode: the steps replace the body and the challenge, and the
    * buttons are the safe one (such as Hide) and at most one destructive
    * one (such as Stop).
    */
-  readonly activity?: ActivitySteps;
+  readonly activity?: ApplicationActivity;
   /**
    * In progress mode, false hides the button row: Escape stays the safe
    * choice and Enter does nothing. Defaults to true.
@@ -206,34 +206,35 @@ export interface ApplicationSheet<A> extends ApplicationLayerBase {
 }
 
 /** One menu row that runs an action. */
-export interface MenuItem<A> {
+export interface ApplicationMenuItem<A> {
   readonly id: string;
   readonly label: string;
   /** Shown in the key column; runs the item when the menu lets letters activate. */
   readonly key?: KeyChord;
   readonly action: A;
-  readonly tone?: "danger";
+  /** The label's tone, such as `danger` for an action that removes things. */
+  readonly tone?: TerminalTextTone;
   /** Muted runs after the label on the row itself. */
-  readonly detail?: readonly InlineRun[];
+  readonly detail?: readonly ApplicationRun[];
   /** Shown beneath the menu while the item is highlighted. */
-  readonly description?: readonly InlineRun[];
+  readonly description?: readonly ApplicationRun[];
 }
 
 /** A titled run of menu items. */
-export interface MenuSection<A> {
+export interface ApplicationMenuSection<A> {
   readonly title: string;
   readonly tone?: TerminalTextTone;
-  readonly items: readonly MenuItem<A>[];
+  readonly items: readonly ApplicationMenuItem<A>[];
   /**
    * Items of this section that cannot run now, shown after its items with
    * their sentence beside them; Enter shows the sentence in full and never
    * activates.
    */
-  readonly unavailable?: readonly UnavailableMenuItem[];
+  readonly unavailable?: readonly ApplicationUnavailableItem[];
 }
 
 /** A menu row that cannot run now, with the sentence that says why. */
-export interface UnavailableMenuItem {
+export interface ApplicationUnavailableItem {
   readonly id: string;
   readonly label: string;
   readonly sentence: string;
@@ -250,13 +251,13 @@ export interface UnavailableMenuItem {
 export interface ApplicationMenu<A> extends ApplicationLayerBase {
   readonly kind: "menu";
   readonly title: string;
-  readonly aside?: string;
+  readonly aside?: readonly ApplicationRun[];
   /** Two columns read top to bottom, left then right; sections never split. */
   readonly columns?: 1 | 2;
-  readonly sections: readonly MenuSection<A>[];
+  readonly sections: readonly ApplicationMenuSection<A>[];
   readonly unavailable?: {
     readonly title: string;
-    readonly items: readonly UnavailableMenuItem[];
+    readonly items: readonly ApplicationUnavailableItem[];
   };
   /** Highlighted on open; defaults to the first item. */
   readonly initialItemId?: string;
@@ -270,16 +271,16 @@ export interface ApplicationMenu<A> extends ApplicationLayerBase {
   /** Offer `/` to filter the menu; defaults to true. */
   readonly filter?: boolean;
   /** Runs beneath the menu, after the highlighted item's description. */
-  readonly footnote?: readonly InlineRun[];
+  readonly footnote?: readonly ApplicationRun[];
 }
 
 /** One palette result. Its meta and key render in their own columns. */
-export interface PaletteItem<A> {
+export interface ApplicationPaletteItem<A> {
   readonly id: string;
   readonly label: string;
   /** Muted text after the label, such as the item it concerns. */
   readonly context?: string;
-  readonly meta?: readonly InlineRun[];
+  readonly meta?: readonly ApplicationRun[];
   /** A key that reaches the same thing outside the palette, shown for learning. */
   readonly key?: KeyChord;
   readonly action: A;
@@ -288,9 +289,9 @@ export interface PaletteItem<A> {
 }
 
 /** A titled run of palette items. */
-export interface PaletteSection<A> {
+export interface ApplicationPaletteSection<A> {
   readonly title: string;
-  readonly items: readonly PaletteItem<A>[];
+  readonly items: readonly ApplicationPaletteItem<A>[];
 }
 
 /**
@@ -301,17 +302,17 @@ export interface PaletteSection<A> {
 export interface ApplicationPalette<A> extends ApplicationLayerBase {
   readonly kind: "palette";
   readonly placeholder: string;
-  readonly sections: readonly PaletteSection<A>[];
+  readonly sections: readonly ApplicationPaletteSection<A>[];
 }
 
 /** A one-line or multi-line text field. */
-export interface FormTextField<A> {
+export interface ApplicationTextField<A> {
   readonly kind: "text";
   readonly id: string;
   readonly label: string;
   readonly initial: string;
   /** Runs beneath the field, such as a value derived from it. */
-  readonly hint?: readonly InlineRun[];
+  readonly hint?: readonly ApplicationRun[];
   /** Confirm buttons stay disabled while the field is blank. */
   readonly required?: boolean;
   readonly multiline?: boolean;
@@ -328,7 +329,7 @@ export interface FormTextField<A> {
 }
 
 /** One choice of a choice field. */
-export interface FormChoiceOption {
+export interface ApplicationChoiceOption {
   readonly id: string;
   readonly label: string;
   /** Present when the option cannot be chosen now. */
@@ -336,30 +337,31 @@ export interface FormChoiceOption {
 }
 
 /** A field whose value is one of its options. Left and Right change it. */
-export interface FormChoiceField {
+export interface ApplicationChoiceField {
   readonly kind: "choice";
   readonly id: string;
   readonly label: string;
   /** The option id chosen first. */
   readonly initial: string;
-  readonly options: readonly FormChoiceOption[];
+  readonly options: readonly ApplicationChoiceOption[];
 }
 
 /** Fields folded behind one row, with a summary of their values beside it. */
-export interface FormFieldGroup<A> {
-  readonly kind: "disclosure";
+export interface ApplicationFieldGroup<A> {
+  readonly kind: "group";
   readonly id: string;
   readonly label: string;
   readonly summary?: string;
   readonly initiallyOpen?: boolean;
-  readonly fields: readonly (FormTextField<A> | FormChoiceField)[];
+  readonly fields:
+    readonly (ApplicationTextField<A> | ApplicationChoiceField)[];
 }
 
 /** One form control. */
-export type FormField<A> =
-  | FormTextField<A>
-  | FormChoiceField
-  | FormFieldGroup<A>;
+export type ApplicationFormField<A> =
+  | ApplicationTextField<A>
+  | ApplicationChoiceField
+  | ApplicationFieldGroup<A>;
 
 /**
  * Fields, a live preview the caller recomputes from `onField` values,
@@ -370,12 +372,12 @@ export type FormField<A> =
 export interface ApplicationForm<A> extends ApplicationLayerBase {
   readonly kind: "form";
   readonly title: string;
-  readonly aside?: string;
-  readonly fields: readonly FormField<A>[];
-  readonly preview?: readonly DetailBlock[];
-  readonly disclosures?: readonly LayerDisclosure[];
-  readonly footnote?: readonly InlineRun[];
-  readonly buttons: readonly SheetButton<A>[];
+  readonly aside?: readonly ApplicationRun[];
+  readonly fields: readonly ApplicationFormField<A>[];
+  readonly preview?: readonly ApplicationDetailBlock[];
+  readonly disclosures?: readonly ApplicationDisclosure[];
+  readonly footnote?: readonly ApplicationRun[];
+  readonly buttons: readonly ApplicationButton<A>[];
 }
 
 /**
@@ -386,11 +388,11 @@ export interface ApplicationForm<A> extends ApplicationLayerBase {
 export interface ApplicationReader<A> extends ApplicationLayerBase {
   readonly kind: "reader";
   readonly title: string;
-  readonly aside?: readonly InlineRun[];
-  readonly blocks: readonly DetailBlock[];
-  readonly rows?: GroupedList<A>;
+  readonly aside?: readonly ApplicationRun[];
+  readonly blocks: readonly ApplicationDetailBlock[];
+  readonly rows?: ApplicationList<A>;
   /** Keys that run their action while the reader is on top. */
-  readonly keys?: readonly ActionHint<A>[];
+  readonly keys?: readonly ApplicationActionHint<A>[];
   /**
    * Two lays the blocks out in two columns read top to bottom, left then
    * right, never splitting a block, when the reader is at least 56 cells
@@ -398,7 +400,7 @@ export interface ApplicationReader<A> extends ApplicationLayerBase {
    */
   readonly columns?: 1 | 2;
   /** Runs after the blocks and rows. */
-  readonly footnote?: readonly InlineRun[];
+  readonly footnote?: readonly ApplicationRun[];
 }
 
 /** Any layer, bottom to top in the view's `layers`. */

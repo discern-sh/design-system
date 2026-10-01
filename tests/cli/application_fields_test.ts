@@ -46,7 +46,7 @@ function formView(): TerminalApplicationView<string> {
     layers: [{
       ...form,
       fields: form.fields.map((field) =>
-        field.kind === "disclosure" ? { ...field, initiallyOpen: true } : field
+        field.kind === "group" ? { ...field, initiallyOpen: true } : field
       ),
     }],
   });

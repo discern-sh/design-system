@@ -1,8 +1,8 @@
 import { assert } from "@std/assert";
 import { createCliBlock, renderMarkdownCli } from "../../src/cli/mod.ts";
 import type {
+  ApplicationDetailBlock,
   ApplicationSheet,
-  DetailBlock,
   TerminalApplicationView,
 } from "../../src/cli/interactive/mod.ts";
 import { renderDetailBlocks } from "../../src/cli/interactive/application/detail-render.ts";
@@ -19,8 +19,14 @@ import { testView } from "../fixtures/application-views.ts";
 const glyph = { unicode: "●", ascii: "*", tone: "success" } as const;
 
 /** One sample of every detail block kind; a new kind must add its own. */
-const EVERY_KIND: { readonly [K in DetailBlock["kind"]]: DetailBlock } = {
-  heading: { kind: "heading", title: "Heading", aside: "aside" },
+const EVERY_KIND: {
+  readonly [K in ApplicationDetailBlock["kind"]]: ApplicationDetailBlock;
+} = {
+  heading: {
+    kind: "heading",
+    title: "Heading",
+    aside: [{ text: "aside" }],
+  },
   state: { kind: "state", glyph, label: "Ready", tone: "success" },
   text: { kind: "text", runs: [{ text: "Bold words", role: "title" }] },
   facts: {
@@ -65,7 +71,7 @@ const EVERY_KIND: { readonly [K in DetailBlock["kind"]]: DetailBlock } = {
   },
 };
 
-const BLOCKS: readonly DetailBlock[] = Object.values(EVERY_KIND);
+const BLOCKS: readonly ApplicationDetailBlock[] = Object.values(EVERY_KIND);
 
 /** The foreground and weight of every non-blank run of a styled line. */
 function runs(line: string): readonly { bold: boolean; colour: string }[] {

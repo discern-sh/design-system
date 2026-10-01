@@ -8,25 +8,25 @@
 
 import type { KeyChord } from "../../key-hints.ts";
 import {
+  APPLICATION_EDITOR_KEYS,
   type CompiledBinding,
   decodableChord,
-  EDITOR_RESERVED_CHORDS,
   fieldOwnsChord,
   terminalApplicationLayerKeys,
 } from "./keymap.ts";
 import { formTextFields, layerHasTextField } from "./layer-controls.ts";
 import {
   APPLICATION_LAYER_DEPTH,
+  type ApplicationButton,
+  type ApplicationChoiceField,
+  type ApplicationDisclosure,
   type ApplicationForm,
   type ApplicationLayer,
   type ApplicationMenu,
   type ApplicationPalette,
   type ApplicationReader,
   type ApplicationSheet,
-  type FormChoiceField,
-  type FormTextField,
-  type LayerDisclosure,
-  type SheetButton,
+  type ApplicationTextField,
 } from "./layer-view.ts";
 import {
   blocks,
@@ -122,7 +122,7 @@ const STEP_STATES: ReadonlySet<string> = new Set([
   "failed",
   "skipped",
 ]);
-const EDITOR_CHORDS: ReadonlySet<string> = new Set(EDITOR_RESERVED_CHORDS);
+const EDITOR_CHORDS: ReadonlySet<string> = new Set(APPLICATION_EDITOR_KEYS);
 
 /** Keys one layer already gives meaning to, so nothing else may take them. */
 class LayerKeys<A> {
@@ -172,7 +172,7 @@ function fieldChord(issues: Issues, path: string, chord: KeyChord): void {
 function disclosures<A>(
   issues: Issues,
   path: string,
-  value: readonly LayerDisclosure[] | undefined,
+  value: readonly ApplicationDisclosure[] | undefined,
   keys: LayerKeys<A>,
   textFields: boolean,
 ): void {
@@ -215,7 +215,7 @@ function disclosures<A>(
 function buttons<A>(
   issues: Issues,
   path: string,
-  value: readonly SheetButton<A>[],
+  value: readonly ApplicationButton<A>[],
   keys: LayerKeys<A>,
   challenge: boolean,
 ): void {
@@ -378,7 +378,7 @@ function menu<A>(
   keys: LayerKeys<A>,
 ): void {
   text(issues, `${path}.title`, layer.title);
-  if (layer.aside !== undefined) text(issues, `${path}.aside`, layer.aside);
+  runs(issues, `${path}.aside`, layer.aside);
   if (layer.enterLabel !== undefined) {
     text(issues, `${path}.enterLabel`, layer.enterLabel);
   }
@@ -411,9 +411,7 @@ function menu<A>(
       if (item.key !== undefined) {
         keys.claim(`${where}.key`, item.key, `item ${item.id}`);
       }
-      if (item.tone !== undefined && item.tone !== "danger") {
-        issues.push({ path: `${where}.tone`, message: 'must be "danger"' });
-      }
+      tone(issues, `${where}.tone`, item.tone);
       runs(issues, `${where}.detail`, item.detail);
       runs(issues, `${where}.description`, item.description);
     }
@@ -491,7 +489,7 @@ function palette<A>(
 function textField<A>(
   issues: Issues,
   path: string,
-  field: FormTextField<A>,
+  field: ApplicationTextField<A>,
   keys: LayerKeys<A>,
 ): void {
   if (typeof field.initial !== "string") {
@@ -530,7 +528,7 @@ function textField<A>(
 function choiceField(
   issues: Issues,
   path: string,
-  field: FormChoiceField,
+  field: ApplicationChoiceField,
 ): void {
   const options = new Set<string>();
   for (const [index, option] of field.options.entries()) {
@@ -567,7 +565,7 @@ function form<A>(
   keys: LayerKeys<A>,
 ): void {
   text(issues, `${path}.title`, layer.title);
-  if (layer.aside !== undefined) text(issues, `${path}.aside`, layer.aside);
+  runs(issues, `${path}.aside`, layer.aside);
   const ids = new Set<string>();
   const field = (at: string, id: string, label: string) => {
     text(issues, `${at}.id`, id);
@@ -582,7 +580,7 @@ function form<A>(
     field(at, entry.id, entry.label);
     if (entry.kind === "text") textField(issues, at, entry, keys);
     else if (entry.kind === "choice") choiceField(issues, at, entry);
-    else if (entry.kind === "disclosure") {
+    else if (entry.kind === "group") {
       if (entry.summary !== undefined) {
         text(issues, `${at}.summary`, entry.summary);
       }

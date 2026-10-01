@@ -6,7 +6,7 @@
  * @module
  */
 
-import type { InlineRun } from "./view.ts";
+import type { ApplicationRun } from "./view.ts";
 
 /**
  * The words the package writes: generated key hint labels, empty and
@@ -90,7 +90,7 @@ export interface TerminalApplicationCopy {
   /** The size now, such as `now 30 × 9`. */
   readonly now: (columns: number, rows: number, times: string) => string;
   /** Shown once when mouse input turns on: how to select text natively. */
-  readonly selectionHint: readonly InlineRun[];
+  readonly selectionHint: readonly ApplicationRun[];
 }
 
 /** The English copy the package uses where a view supplies none. */

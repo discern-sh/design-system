@@ -1,16 +1,16 @@
 /** Sample layers for the generic terminal application: a sheet, a menu, a palette, a form, and readers. */
 import { TERMINAL_GLYPHS } from "@discern-sh/design-system/cli";
 import type {
-  ActivitySteps,
+  ApplicationActivity,
+  ApplicationDetailBlock,
   ApplicationForm,
   ApplicationGlyph,
   ApplicationMenu,
   ApplicationPalette,
   ApplicationReader,
+  ApplicationRun,
   ApplicationSheet,
-  DetailBlock,
-  InlineRun,
-  SheetState,
+  ApplicationSheetState,
 } from "@discern-sh/design-system/cli/interactive";
 import type { DemoJob } from "./application.ts";
 
@@ -24,8 +24,8 @@ const mark = (
 });
 
 const marks = (
-  items: readonly (readonly [ApplicationGlyph, readonly InlineRun[]])[],
-): DetailBlock => ({
+  items: readonly (readonly [ApplicationGlyph, readonly ApplicationRun[]])[],
+): ApplicationDetailBlock => ({
   kind: "marks",
   items: items.map(([glyph, runs]) => ({ mark: glyph, runs })),
 });
@@ -39,14 +39,16 @@ export function demoSlug(title: string): string {
 }
 
 /** Numbered steps; a digit is a one-cell mark. */
-const stepsBlock = (steps: readonly string[]): readonly DetailBlock[] => [
+const stepsBlock = (
+  steps: readonly string[],
+): readonly ApplicationDetailBlock[] => [
   marks(steps.map((step, index) => {
     const digit = String(index + 1);
     return [{ unicode: digit, ascii: digit, tone: "faint" }, [{ text: step }]];
   })),
 ];
 
-const commandBlock = (command: string): readonly DetailBlock[] => [{
+const commandBlock = (command: string): readonly ApplicationDetailBlock[] => [{
   kind: "text",
   runs: [{ text: command, role: "code" }],
 }];
@@ -64,7 +66,7 @@ export interface DemoRunProgress {
  */
 export function demoRunSheet(
   job: DemoJob,
-  state: SheetState = "ready",
+  state: ApplicationSheetState = "ready",
   progress?: DemoRunProgress,
 ): ApplicationSheet<string> {
   const steps = [
@@ -73,7 +75,7 @@ export function demoRunSheet(
     "Write the thumbnails",
     "Clear the scratch folder",
   ];
-  const activity: ActivitySteps | undefined = progress === undefined
+  const activity: ApplicationActivity | undefined = progress === undefined
     ? undefined
     : {
       startedAt: progress.startedAt,
@@ -253,13 +255,13 @@ export function demoDeleteSheet(job: DemoJob): ApplicationSheet<string> {
 
 /** Every action a job offers, in two columns, with the ones that cannot run now folded. */
 export function demoActionsMenu(job: DemoJob): ApplicationMenu<string> {
-  const describe = (text: string): readonly InlineRun[] => [{ text }];
+  const describe = (text: string): readonly ApplicationRun[] => [{ text }];
   return {
     kind: "menu",
     id: "actions",
     scope: "item",
     title: job.title,
-    aside: "Actions · 6 of 8 available",
+    aside: [{ text: "Actions · 6 of 8 available" }],
     columns: 2,
     lettersActivate: true,
     initialItemId: "run",
@@ -350,7 +352,7 @@ export function demoPalette(
   jobs: readonly DemoJob[],
   mouse: boolean,
 ): ApplicationPalette<string> {
-  const toned = (job: DemoJob): readonly InlineRun[] => [{
+  const toned = (job: DemoJob): readonly ApplicationRun[] => [{
     text: job.status,
     tone: job.tone === "faint" || job.tone === "accent" ? "muted" : job.tone,
   }];
@@ -436,7 +438,7 @@ export function demoNewJobForm(
     id: "new",
     scope: "global",
     title: "New job",
-    aside: "from a template",
+    aside: [{ text: "from a template" }],
     fields: [
       {
         kind: "text",
@@ -449,7 +451,7 @@ export function demoNewJobForm(
           : [{ text: "Folder ", tone: "faint" }, { text: slug }],
       },
       {
-        kind: "disclosure",
+        kind: "group",
         id: "options",
         label: "More options",
         summary: `${values.schedule} · ${
@@ -592,7 +594,7 @@ export function demoLogReader(job: DemoJob): ApplicationReader<string> {
 export function demoKeysReader(): ApplicationReader<string> {
   const keys = (
     items: readonly (readonly [string | readonly string[], string])[],
-  ): DetailBlock => ({
+  ): ApplicationDetailBlock => ({
     kind: "hints",
     items: items.map(([key, label]) => ({ key, label })),
   });

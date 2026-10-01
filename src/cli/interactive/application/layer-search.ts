@@ -14,19 +14,19 @@ import {
 } from "./layer-controls.ts";
 import type {
   ApplicationMenu,
+  ApplicationMenuItem,
+  ApplicationMenuSection,
   ApplicationPalette,
-  MenuItem,
-  MenuSection,
-  PaletteItem,
-  UnavailableMenuItem,
+  ApplicationPaletteItem,
+  ApplicationUnavailableItem,
 } from "./layer-view.ts";
 
 /** One menu section and the items its filter keeps. */
 export interface MenuSectionRows<A> {
-  readonly section: MenuSection<A>;
-  readonly items: readonly MenuItem<A>[];
+  readonly section: ApplicationMenuSection<A>;
+  readonly items: readonly ApplicationMenuItem<A>[];
   /** The section's own unavailable items the filter keeps. */
-  readonly unavailable: readonly UnavailableMenuItem[];
+  readonly unavailable: readonly ApplicationUnavailableItem[];
 }
 
 /** What a menu shows for its query and fold. */
@@ -34,7 +34,7 @@ export interface MenuRows<A> {
   /** Sections with matches, split into one or two columns read in order. */
   readonly columns: readonly (readonly MenuSectionRows<A>[])[];
   /** Unavailable items shown, or undefined when the section is absent. */
-  readonly unavailable?: readonly UnavailableMenuItem[];
+  readonly unavailable?: readonly ApplicationUnavailableItem[];
   /** Whether the unavailable section shows its rows. */
   readonly unavailableOpen: boolean;
   /** Every highlightable control in reading order. */
@@ -139,7 +139,7 @@ export function menuRows<A>(
 export function unavailableMenuItem<A>(
   menu: ApplicationMenu<A>,
   id: string,
-): UnavailableMenuItem | undefined {
+): ApplicationUnavailableItem | undefined {
   for (const section of menu.sections) {
     const found = section.unavailable?.find((item) => item.id === id);
     if (found !== undefined) return found;
@@ -151,7 +151,7 @@ export function unavailableMenuItem<A>(
 export function menuItem<A>(
   menu: ApplicationMenu<A>,
   id: string,
-): MenuItem<A> | undefined {
+): ApplicationMenuItem<A> | undefined {
   for (const section of menu.sections) {
     const found = section.items.find((item) => item.id === id);
     if (found !== undefined) return found;
@@ -191,7 +191,7 @@ export type PaletteRow<A> =
   | { readonly kind: "section"; readonly title: string }
   | {
     readonly kind: "item";
-    readonly item: PaletteItem<A>;
+    readonly item: ApplicationPaletteItem<A>;
     readonly section: string;
   };
 
@@ -199,7 +199,7 @@ export type PaletteRow<A> =
 export interface PaletteRows<A> {
   readonly rows: readonly PaletteRow<A>[];
   /** Items in display order, for movement. */
-  readonly items: readonly PaletteItem<A>[];
+  readonly items: readonly ApplicationPaletteItem<A>[];
 }
 
 /** Rankings by palette value, then query; one keystroke reads them several times. */
@@ -248,7 +248,7 @@ function rankPalette<A>(
     };
   }
   const ranked: {
-    readonly item: PaletteItem<A>;
+    readonly item: ApplicationPaletteItem<A>;
     readonly section: string;
     readonly score: number;
     readonly order: number;

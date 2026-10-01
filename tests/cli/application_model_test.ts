@@ -273,7 +273,7 @@ Deno.test("fuzzy filters match characters in order", () => {
       ...body,
       list: {
         ...body.list,
-        filter: { placeholder: "Find", match: "fuzzy" as const },
+        filter: { label: "Find", match: "fuzzy" as const },
       },
     },
   };

@@ -10,13 +10,17 @@ import { type KeyChord, normalizeKeyChord } from "../../key-hints.ts";
 import { isTerminalKeyName, type TerminalKey } from "../keys.ts";
 import type { ApplicationLayer, ApplicationLayerKind } from "./layer-view.ts";
 import type { TerminalApplicationViewIssue } from "./validate-rules.ts";
-import type { ApplicationBody, GroupedList, KeymapEntry } from "./view.ts";
+import type {
+  ApplicationBody,
+  ApplicationKeyBinding,
+  ApplicationList,
+} from "./view.ts";
 
 /**
  * Chords a text field keeps for editing, following readline conventions. An
  * `inFields` binding may not use them, so typing never runs an action.
  */
-export const EDITOR_RESERVED_CHORDS: readonly KeyChord[] = Object.freeze([
+export const APPLICATION_EDITOR_KEYS: readonly KeyChord[] = Object.freeze([
   "ctrl-a",
   "ctrl-b",
   "ctrl-d",
@@ -66,7 +70,7 @@ export function terminalApplicationReservedKeys<A>(
   options: TerminalApplicationReservedKeyOptions = {},
 ): readonly KeyChord[] {
   const vi: readonly KeyChord[] = options.viKeys === true ? ["j", "k"] : [];
-  const filter = (list: GroupedList<A> | undefined): readonly KeyChord[] =>
+  const filter = (list: ApplicationList<A> | undefined): readonly KeyChord[] =>
     list?.filter === undefined ? [] : ["/"];
   switch (body.kind) {
     case "master-detail":
@@ -200,7 +204,7 @@ const FIELD_KEYS: ReadonlySet<string> = new Set([
   "escape",
   "tab",
   "shift-tab",
-  ...EDITOR_RESERVED_CHORDS,
+  ...APPLICATION_EDITOR_KEYS,
 ]);
 
 const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
@@ -251,7 +255,7 @@ export interface CompiledBinding<A> {
 /** Validated bindings, ready to match decoded keys. */
 export interface CompiledKeymap<A> {
   /** The entries as the caller wrote them, for checking each adopted view. */
-  readonly entries: readonly KeymapEntry<A>[];
+  readonly entries: readonly ApplicationKeyBinding<A>[];
   readonly base: ReadonlyMap<KeyChord, CompiledBinding<A>>;
   readonly layers: ReadonlyMap<
     string,
@@ -261,7 +265,9 @@ export interface CompiledKeymap<A> {
 }
 
 /** The scope a keymap entry binds in: `base` or a layer id. */
-export function entryScope<A>(entry: KeymapEntry<A>): string | undefined {
+export function entryScope<A>(
+  entry: ApplicationKeyBinding<A>,
+): string | undefined {
   const scope = entry.scope ?? "base";
   if (scope === "base") return "base";
   return typeof scope.layer === "string" && scope.layer !== ""
@@ -276,7 +282,7 @@ export function entryScope<A>(entry: KeymapEntry<A>): string | undefined {
  * Each broken rule is an issue located by `keymap[index]`.
  */
 export function keymapIssues<A>(
-  entries: readonly KeymapEntry<A>[],
+  entries: readonly ApplicationKeyBinding<A>[],
 ): readonly TerminalApplicationViewIssue[] {
   const issues: TerminalApplicationViewIssue[] = [];
   const seen = new Map<string, Set<KeyChord>>();
@@ -372,7 +378,7 @@ export function throwIssues(
  * checked as each view is adopted.
  */
 export function compileKeymap<A>(
-  entries: readonly KeymapEntry<A>[] = [],
+  entries: readonly ApplicationKeyBinding<A>[] = [],
   viKeys = false,
 ): CompiledKeymap<A> {
   throwIssues("application keymap", keymapIssues(entries));

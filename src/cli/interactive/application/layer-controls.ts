@@ -6,12 +6,12 @@
  */
 
 import type {
+  ApplicationButton,
+  ApplicationChoiceField,
   ApplicationForm,
   ApplicationLayer,
   ApplicationSheet,
-  FormChoiceField,
-  FormTextField,
-  SheetButton,
+  ApplicationTextField,
 } from "./layer-view.ts";
 
 /**
@@ -80,12 +80,12 @@ export function visibleFormFields<A>(
   form: ApplicationForm<A>,
   open: (groupId: string) => boolean,
 ): readonly (
-  | FormTextField<A>
-  | FormChoiceField
-  | { readonly kind: "disclosure"; readonly id: string }
+  | ApplicationTextField<A>
+  | ApplicationChoiceField
+  | { readonly kind: "group"; readonly id: string }
 )[] {
   return form.fields.flatMap((field) =>
-    field.kind === "disclosure"
+    field.kind === "group"
       ? [field, ...(open(field.id) ? field.fields : [])]
       : [field]
   );
@@ -94,12 +94,12 @@ export function visibleFormFields<A>(
 /** Every text field a form declares, inside groups too. */
 export function formTextFields<A>(
   form: ApplicationForm<A>,
-): readonly FormTextField<A>[] {
+): readonly ApplicationTextField<A>[] {
   return form.fields.flatMap((field) =>
     field.kind === "text"
       ? [field]
-      : field.kind === "disclosure"
-      ? field.fields.filter((inner): inner is FormTextField<A> =>
+      : field.kind === "group"
+      ? field.fields.filter((inner): inner is ApplicationTextField<A> =>
         inner.kind === "text"
       )
       : []
@@ -109,7 +109,7 @@ export function formTextFields<A>(
 /** The buttons a sheet or form declares, shown or not. */
 export function layerButtons<A>(
   layer: ApplicationLayer<A>,
-): readonly SheetButton<A>[] {
+): readonly ApplicationButton<A>[] {
   return layer.kind === "sheet" || layer.kind === "form" ? layer.buttons : [];
 }
 
@@ -123,7 +123,7 @@ export function buttonRowShown<A>(layer: ApplicationLayer<A>): boolean {
 /** The safe button of a sheet or form. */
 export function safeButton<A>(
   layer: ApplicationLayer<A>,
-): SheetButton<A> | undefined {
+): ApplicationButton<A> | undefined {
   return layerButtons(layer).find((button) => button.role === "safe");
 }
 
@@ -146,9 +146,7 @@ export function tabOrder<A>(
       ? [fieldControl(layer.challenge.fieldId)]
       : []
     : visibleFormFields(layer, open).map((field) =>
-      field.kind === "disclosure"
-        ? groupControl(field.id)
-        : fieldControl(field.id)
+      field.kind === "group" ? groupControl(field.id) : fieldControl(field.id)
     );
   return [
     ...fields,

@@ -53,10 +53,10 @@ import {
 } from "./validate.ts";
 import { fieldText } from "./validate-rules.ts";
 import {
-  DEFAULT_LIST_SETTLE_MS,
-  type GroupedList,
-  type KeymapEntry,
-  type MessageLine,
+  type ApplicationKeyBinding,
+  type ApplicationList,
+  type ApplicationMessage,
+  DEFAULT_APPLICATION_SETTLE_MS,
   type TerminalApplicationView,
 } from "./view.ts";
 
@@ -100,11 +100,11 @@ export interface DensityDecision {
 /** Everything the package remembers about one list, by its id. */
 export interface ListModel<A> {
   /** The newest list the caller supplied. */
-  readonly latest: GroupedList<A>;
+  readonly latest: ApplicationList<A>;
   /** The list whose membership and order are on screen. */
-  readonly settled: GroupedList<A>;
+  readonly settled: ApplicationList<A>;
   /** The settled membership with the newest content. */
-  readonly display: GroupedList<A>;
+  readonly display: ApplicationList<A>;
   /** Whether a membership change waits for the settle window. */
   readonly pending: boolean;
   readonly selection?: ListRowKey;
@@ -230,7 +230,7 @@ export type TerminalApplicationSelectionMove =
   | { readonly kind: "regrouped"; readonly from: string; readonly to: string }
   | { readonly kind: "removed"; readonly replacement?: string };
 
-/** How a message was dismissed. */
+/** How a message or layer was dismissed. */
 export type TerminalApplicationDismissal =
   | "safe"
   | "escape"
@@ -418,7 +418,7 @@ export type TerminalApplicationInput =
 
 /** Bindings the model carries. */
 export interface TerminalApplicationConfig<A> {
-  readonly keymap?: readonly KeymapEntry<A>[];
+  readonly keymap?: readonly ApplicationKeyBinding<A>[];
   /** Bind j and k to Down and Up. */
   readonly viKeys?: boolean;
 }
@@ -465,7 +465,7 @@ export function topLayer<A>(
 /** The list the body shows, if any. */
 export function bodyList<A>(
   view: TerminalApplicationView<A>,
-): GroupedList<A> | undefined {
+): ApplicationList<A> | undefined {
   const body = view.body;
   if (body.kind === "master-detail" || body.kind === "list") return body.list;
   return body.kind === "empty" ? body.list : undefined;
@@ -500,7 +500,7 @@ export function listModelRows<A>(
 }
 
 function groupOfItem<A>(
-  list: GroupedList<A>,
+  list: ApplicationList<A>,
   id: string,
 ): string | undefined {
   return list.groups.find((group) => group.items.some((item) => item.id === id))
@@ -587,10 +587,10 @@ function withSelection<A>(
 /** Adopt one list version, deferring membership changes inside the settle window. */
 function adoptList<A>(
   previous: ListModel<A> | undefined,
-  list: GroupedList<A>,
+  list: ApplicationList<A>,
   settleDeferred: boolean,
 ): ListModel<A> {
-  const initialFolds = (groups: GroupedList<A>["groups"]) =>
+  const initialFolds = (groups: ApplicationList<A>["groups"]) =>
     groups.filter((group) =>
       group.foldable === true && group.initiallyFolded === true
     ).map((group) => group.id);
@@ -624,17 +624,17 @@ function adoptList<A>(
 
 function settleWindowOpen<A>(
   model: ModelState<A> | undefined,
-  list: GroupedList<A>,
+  list: ApplicationList<A>,
   now: number,
 ): boolean {
   return model?.lastKeyAt !== undefined &&
-    now - model.lastKeyAt < (list.settleMs ?? DEFAULT_LIST_SETTLE_MS);
+    now - model.lastKeyAt < (list.settleMs ?? DEFAULT_APPLICATION_SETTLE_MS);
 }
 
 /** The rows of each visible reader, which hold selections of their own. */
 function readerLists<A>(
   layers: readonly ApplicationLayer<A>[],
-): readonly GroupedList<A>[] {
+): readonly ApplicationList<A>[] {
   return layers.flatMap((layer) =>
     layer.kind === "reader" && layer.rows !== undefined ? [layer.rows] : []
   );
@@ -678,7 +678,7 @@ function selectionEffects<A>(
 
 function messageTiming<A>(
   previous: ModelState<A> | undefined,
-  message: MessageLine | undefined,
+  message: ApplicationMessage | undefined,
   now: number,
 ): number | undefined {
   if (message === undefined) return undefined;
@@ -922,7 +922,7 @@ function applyTime<A>(
 /** The message the screen shows: the view's, unless it was dismissed. */
 export function visibleMessage<A>(
   model: ModelState<A>,
-): MessageLine | undefined {
+): ApplicationMessage | undefined {
   const message = model.view.message;
   return message === undefined || model.dismissed.includes(message.id)
     ? undefined
@@ -941,7 +941,8 @@ export function modelStateDeadline<A>(
   for (const list of Object.values(model.lists)) {
     if (list.pending && model.lastKeyAt !== undefined) {
       deadlines.push(
-        model.lastKeyAt + (list.latest.settleMs ?? DEFAULT_LIST_SETTLE_MS),
+        model.lastKeyAt +
+          (list.latest.settleMs ?? DEFAULT_APPLICATION_SETTLE_MS),
       );
     }
   }

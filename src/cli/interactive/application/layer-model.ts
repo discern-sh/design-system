@@ -30,6 +30,9 @@ import {
 } from "./layer-controls.ts";
 import { menuItem, menuRows, paletteRows } from "./layer-search.ts";
 import type {
+  ApplicationButton,
+  ApplicationChoiceField,
+  ApplicationDisclosure,
   ApplicationForm,
   ApplicationLayer,
   ApplicationLayerKind,
@@ -37,11 +40,8 @@ import type {
   ApplicationPalette,
   ApplicationReader,
   ApplicationSheet,
-  FormChoiceField,
-  FormTextField,
-  LayerDisclosure,
-  SheetButton,
-  SheetState,
+  ApplicationSheetState,
+  ApplicationTextField,
 } from "./layer-view.ts";
 
 /** Everything the package remembers about one open layer, by its id. */
@@ -81,7 +81,7 @@ export interface TerminalApplicationLayerModel {
   /** A confirm or destructive button a first click focused. */
   readonly armed?: string;
   /** The sheet state last adopted, so a new review resets read progress. */
-  readonly state?: SheetState;
+  readonly state?: ApplicationSheetState;
   /** Scrolling rows in the last frame, for paging. */
   readonly page: number;
 }
@@ -125,7 +125,7 @@ export function sameChord(
   return declared !== undefined && decodableChord(declared) === chord;
 }
 
-const BLOCKING_STATES: ReadonlySet<SheetState> = new Set([
+const BLOCKING_STATES: ReadonlySet<ApplicationSheetState> = new Set([
   "loading",
   "changed",
   "gone",
@@ -133,7 +133,7 @@ const BLOCKING_STATES: ReadonlySet<SheetState> = new Set([
 
 function disclosuresOf<A>(
   layer: ApplicationLayer<A>,
-): readonly LayerDisclosure[] {
+): readonly ApplicationDisclosure[] {
   return layer.kind === "sheet" || layer.kind === "form"
     ? layer.disclosures ?? []
     : [];
@@ -150,7 +150,7 @@ function initialValues<A>(
   if (layer.kind !== "form") return {};
   const values: Record<string, string> = {};
   for (const field of layer.fields) {
-    const fields = field.kind === "disclosure" ? field.fields : [field];
+    const fields = field.kind === "group" ? field.fields : [field];
     for (const inner of fields) values[inner.id] = inner.initial;
   }
   return values;
@@ -165,7 +165,7 @@ function initialOpen<A>(
   }
   if (layer.kind === "form") {
     for (const field of layer.fields) {
-      if (field.kind === "disclosure") {
+      if (field.kind === "group") {
         open[field.id] = field.initiallyOpen === true;
       }
     }
@@ -319,9 +319,9 @@ function validValue<A>(
 export function formField<A>(
   form: ApplicationForm<A>,
   id: string,
-): FormTextField<A> | FormChoiceField | undefined {
+): ApplicationTextField<A> | ApplicationChoiceField | undefined {
   for (const field of form.fields) {
-    if (field.kind === "disclosure") {
+    if (field.kind === "group") {
       const inner = field.fields.find((candidate) => candidate.id === id);
       if (inner !== undefined) return inner;
     } else if (field.id === id) return field;
@@ -347,7 +347,7 @@ export function requiresFullRead<A>(sheet: ApplicationSheet<A>): boolean {
 export function buttonEnabled<A>(
   layer: ApplicationLayer<A>,
   model: TerminalApplicationLayerModel,
-  button: SheetButton<A>,
+  button: ApplicationButton<A>,
 ): boolean {
   if (button.role === "safe") return true;
   if (button.enabled === false) return false;
@@ -393,7 +393,7 @@ function dismiss<A>(
 export function activateButton<A>(
   layer: ApplicationLayer<A>,
   model: TerminalApplicationLayerModel,
-  button: SheetButton<A>,
+  button: ApplicationButton<A>,
   source: "button" | "key" | "click",
   step: LayerStepContext<A>,
 ): TerminalApplicationLayerModel {
@@ -536,7 +536,7 @@ function disclosureFor<A>(
   layer: ApplicationLayer<A>,
   chord: string,
   inField: boolean,
-): LayerDisclosure | undefined {
+): ApplicationDisclosure | undefined {
   return disclosuresOf(layer).find((disclosure) =>
     sameChord(disclosure.fieldKey, chord) ||
     (!inField && sameChord(disclosure.key, chord))

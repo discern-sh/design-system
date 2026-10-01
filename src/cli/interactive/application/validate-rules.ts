@@ -10,12 +10,12 @@ import { measureText } from "../../text.ts";
 import { TERMINAL_TEXT_TONES } from "../../theme.ts";
 import type { KeyHints } from "../../key-hints.ts";
 import type {
+  ApplicationDetailBlock,
   ApplicationGlyph,
-  DetailBlock,
-  GroupedList,
-  InlineRun,
-  ListColumn,
-  ListGaps,
+  ApplicationList,
+  ApplicationListColumn,
+  ApplicationListGaps,
+  ApplicationRun,
 } from "./view.ts";
 
 /** One broken view rule, located by a path into the view. */
@@ -119,7 +119,7 @@ export function tone(issues: Issues, path: string, value: unknown): void {
 export function runs(
   issues: Issues,
   path: string,
-  value: readonly InlineRun[] | undefined,
+  value: readonly ApplicationRun[] | undefined,
 ): void {
   if (value === undefined) return;
   if (!Array.isArray(value)) {
@@ -162,7 +162,7 @@ export function glyph(
   }
 }
 
-function gaps(issues: Issues, path: string, value: ListGaps): void {
+function gaps(issues: Issues, path: string, value: ApplicationListGaps): void {
   count(issues, `${path}.afterTitle`, value.afterTitle, 0);
   count(issues, `${path}.between`, value.between, 0);
   count(issues, `${path}.pad`, value.pad, 0);
@@ -198,7 +198,7 @@ export function hints(
 function columns(
   issues: Issues,
   path: string,
-  value: readonly ListColumn[],
+  value: readonly ApplicationListColumn[],
 ): ReadonlySet<string> {
   const ids = new Set<string>();
   for (const [index, column] of value.entries()) {
@@ -220,7 +220,7 @@ function columns(
 export function list<A>(
   issues: Issues,
   path: string,
-  value: GroupedList<A>,
+  value: ApplicationList<A>,
 ): void {
   text(issues, `${path}.id`, value.id);
   const declared = columns(issues, `${path}.columns`, value.columns ?? []);
@@ -243,7 +243,7 @@ export function list<A>(
     count(issues, `${path}.settleMs`, value.settleMs, 0);
   }
   if (value.filter !== undefined) {
-    text(issues, `${path}.filter.placeholder`, value.filter.placeholder);
+    text(issues, `${path}.filter.label`, value.filter.label);
   }
   const groups = new Set<string>();
   const items = new Set<string>();
@@ -289,7 +289,7 @@ export function list<A>(
 export function blocks(
   issues: Issues,
   path: string,
-  value: readonly DetailBlock[],
+  value: readonly ApplicationDetailBlock[],
   depth = 0,
 ): void {
   for (const [index, block] of value.entries()) {
@@ -297,7 +297,7 @@ export function blocks(
     switch (block.kind) {
       case "heading":
         text(issues, `${at}.title`, block.title);
-        if (block.aside !== undefined) text(issues, `${at}.aside`, block.aside);
+        runs(issues, `${at}.aside`, block.aside);
         if (block.subtitle !== undefined) {
           text(issues, `${at}.subtitle`, block.subtitle);
         }

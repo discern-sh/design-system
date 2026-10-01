@@ -7,17 +7,17 @@ import {
   type TerminalTextTone,
 } from "@discern-sh/design-system/cli";
 import type {
+  ApplicationDetailBlock,
+  ApplicationDetailMark,
+  ApplicationDetailRow,
+  ApplicationDetailStrip,
   ApplicationGlyph,
+  ApplicationKeyBinding,
   ApplicationLayer,
-  DetailBlock,
-  DetailMark,
-  DetailRow,
-  DetailStrip,
-  GroupedListItem,
-  InlineRun,
-  KeymapEntry,
-  ListGroup,
-  MessageLine,
+  ApplicationListGroup,
+  ApplicationListItem,
+  ApplicationMessage,
+  ApplicationRun,
   TerminalApplicationContext,
   TerminalApplicationOptions,
   TerminalApplicationView,
@@ -41,16 +41,16 @@ export interface DemoJob {
   readonly glyph: TerminalGlyph;
   readonly tone: TerminalTextTone;
   readonly status: string;
-  readonly qualifier?: InlineRun;
+  readonly qualifier?: ApplicationRun;
   readonly age: string;
   readonly overlap?: string;
   readonly explanation: string;
-  readonly facts: readonly (readonly [string, readonly InlineRun[]])[];
+  readonly facts: readonly (readonly [string, readonly ApplicationRun[]])[];
   readonly meter?: number;
   /** What went wrong in the last run, with the lines that belong to it. */
-  readonly failure?: DetailMark;
+  readonly failure?: ApplicationDetailMark;
   /** Recent runs, newest first. */
-  readonly runs?: readonly DetailRow[];
+  readonly runs?: readonly ApplicationDetailRow[];
 }
 
 const notes = createCliBlock(renderMarkdownCli, {
@@ -59,7 +59,7 @@ const notes = createCliBlock(renderMarkdownCli, {
 Each run reads the previous quarter's ledger and writes one summary per team.`,
 });
 
-function run(id: string, summary: string, age: string): DetailRow {
+function run(id: string, summary: string, age: string): ApplicationDetailRow {
   return {
     lead: [{ text: id, tone: "faint" }],
     text: [{ text: summary }],
@@ -249,7 +249,7 @@ function labelTone(job: DemoJob): TerminalTextTone {
   return job.tone === "faint" || job.tone === "accent" ? "muted" : job.tone;
 }
 
-function statusCell(job: DemoJob): readonly InlineRun[] {
+function statusCell(job: DemoJob): readonly ApplicationRun[] {
   if (job.meter !== undefined) {
     const filled = Math.round(job.meter * 4);
     return [
@@ -265,7 +265,7 @@ function statusCell(job: DemoJob): readonly InlineRun[] {
   ];
 }
 
-function row(job: DemoJob): GroupedListItem<string> {
+function row(job: DemoJob): ApplicationListItem<string> {
   return {
     id: job.id,
     title: job.title,
@@ -282,9 +282,9 @@ function row(job: DemoJob): GroupedListItem<string> {
   };
 }
 
-function detail(job: DemoJob): readonly DetailBlock[] {
+function detail(job: DemoJob): readonly ApplicationDetailBlock[] {
   return [
-    { kind: "heading", title: job.title, aside: job.id },
+    { kind: "heading", title: job.title, aside: [{ text: job.id }] },
     { kind: "state", glyph: marker(job), label: job.status, tone: job.tone },
     ...(job.meter === undefined ? [] : [{
       kind: "meter" as const,
@@ -338,7 +338,7 @@ function detail(job: DemoJob): readonly DetailBlock[] {
   ];
 }
 
-function strip(job: DemoJob): DetailStrip {
+function strip(job: DemoJob): ApplicationDetailStrip {
   return {
     title: [
       { text: job.glyph.unicode, ascii: job.glyph.ascii, tone: job.tone },
@@ -360,10 +360,10 @@ export interface ApplicationDemoViewOptions {
 /** The sample view for a set of jobs, an optional message, and open layers. */
 export function applicationDemoView(
   jobs: readonly DemoJob[] = DEMO_JOBS,
-  message?: MessageLine,
+  message?: ApplicationMessage,
   options: ApplicationDemoViewOptions = {},
 ): TerminalApplicationView<string> {
-  const groups: ListGroup<string>[] = GROUPS.map((group) => ({
+  const groups: ApplicationListGroup<string>[] = GROUPS.map((group) => ({
     ...group,
     ...(group.foldable === true ? { initiallyFolded: true } : {}),
     items: jobs.filter((job) => job.group === group.id).map(row),
@@ -401,7 +401,7 @@ export function applicationDemoView(
           { id: "status", width: 13, align: "end" },
           { id: "age", width: 4, align: "end", priority: 2 },
         ],
-        filter: { placeholder: "Filter" },
+        filter: { label: "Filter" },
         density: {
           foldOrder: ["paused", "idle", "scheduled", "running"],
           neverFold: ["review", "attention"],
@@ -435,7 +435,7 @@ export function applicationDemoView(
 }
 
 /** The sample's key bindings: quit, actions, commands, a new job, and shortcuts. */
-export const DEMO_KEYMAP: readonly KeymapEntry<string>[] = [
+export const DEMO_KEYMAP: readonly ApplicationKeyBinding<string>[] = [
   { key: "q", action: "quit" },
   { key: ".", action: "menu" },
   { key: "ctrl-k", action: "palette" },
@@ -452,7 +452,7 @@ export const DEMO_KEYMAP: readonly KeymapEntry<string>[] = [
 ];
 
 /** The first frame's tip, dismissed by the first key. */
-export const DEMO_TIP: MessageLine = {
+export const DEMO_TIP: ApplicationMessage = {
   id: "tip",
   runs: [
     { text: "Tip", tone: "faint" },
@@ -498,7 +498,7 @@ export function applicationDemoOptions(
 ): TerminalApplicationOptions<string> {
   const updateAfterMs = settings.updateAfterMs ?? 1800;
   let jobs: readonly DemoJob[] = DEMO_JOBS;
-  let message: MessageLine | undefined = settings.tip === false
+  let message: ApplicationMessage | undefined = settings.tip === false
     ? undefined
     : DEMO_TIP;
   let layers: readonly ApplicationLayer<string>[] = [];
