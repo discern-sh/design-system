@@ -260,7 +260,11 @@ export interface ApplicationPendingBlock {
   readonly label: string;
 }
 
-/** A titled group of blocks, one level deep. */
+/**
+ * A titled group of blocks, one level deep. The title shows only while one
+ * of its blocks renders lines: a section whose blocks all render nothing at
+ * a width, such as hints below the wide tier, renders nothing either.
+ */
 export interface ApplicationSectionBlock {
   readonly kind: "section";
   readonly title: string;

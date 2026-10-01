@@ -407,11 +407,18 @@ function cliBlock(
   return lines;
 }
 
+/**
+ * A section's title over its blocks. A title never stands over nothing:
+ * when every block renders no lines at this layout, such as hints below
+ * the wide tier, the section renders none either.
+ */
 function section(
   context: PaintContext,
   block: Extract<ApplicationDetailBlock, { kind: "section" }>,
   layout: DetailLayout,
 ): readonly string[] {
+  const content = renderDetailBlocks(context, block.blocks, layout);
+  if (content.length === 0) return [];
   const title = [
     block.title,
     ...(block.count === undefined ? [] : [String(block.count)]),
@@ -424,7 +431,7 @@ function section(
       { tone: "faint" },
       layout.surface,
     ),
-    ...renderDetailBlocks(context, block.blocks, layout),
+    ...content,
   ];
 }
 

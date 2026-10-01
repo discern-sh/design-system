@@ -429,6 +429,79 @@ Deno.test("every detail block line fits the width it was given", () => {
   }
 });
 
+Deno.test("a block that renders nothing leaves no trace, and a section never heads nothing", () => {
+  const hints: ApplicationDetailBlock = {
+    kind: "hints",
+    items: [{ key: "enter", label: "Open", description: "Open it" }],
+  };
+  // Below the wide tier every one of these renders no lines.
+  const silent: readonly ApplicationDetailBlock[] = [
+    hints,
+    {
+      kind: "section",
+      title: "Next",
+      count: 1,
+      caption: "keys",
+      blocks: [hints],
+    },
+    { kind: "section", title: "Next", blocks: [hints, hints] },
+    { kind: "section", title: "Empty", blocks: [] },
+  ];
+  const base: readonly ApplicationDetailBlock[] = [
+    { kind: "heading", title: "Title", aside: [{ text: "aside" }] },
+    {
+      kind: "state",
+      glyph: { unicode: "●", ascii: "*" },
+      label: "Ready",
+      tone: "success",
+    },
+    { kind: "text", runs: [{ text: "A sentence beneath the state." }] },
+    {
+      kind: "section",
+      title: "Shown",
+      blocks: [hints, { kind: "text", runs: [{ text: "Visible" }] }],
+    },
+    { kind: "pending", label: "Loading" },
+  ];
+  for (const width of [24, 40, 60]) {
+    const context = paintContext(
+      { colorDepth: "truecolor", unicode: true, columns: width },
+      {},
+      { phase: 0 },
+    );
+    const narrow = { width, wide: false, surface: "surface" } as const;
+    const without = renderDetailBlocks(context, base, narrow);
+    for (const block of silent) {
+      assertEquals(renderDetailBlocks(context, [block], narrow), []);
+      for (let at = 0; at <= base.length; at += 1) {
+        assertEquals(
+          renderDetailBlocks(context, [
+            ...base.slice(0, at),
+            block,
+            ...base.slice(at),
+          ], narrow),
+          without,
+          `${JSON.stringify(block)} at ${at} left a trace at ${width} columns`,
+        );
+      }
+    }
+    // A section with something left to show keeps its title.
+    assertStringIncludes(stripAnsi(without.join("\n")), "Shown\nVisible");
+  }
+  // Wide, the section heads the hints it holds.
+  const context = paintContext(
+    { colorDepth: "truecolor", unicode: true, columns: 60 },
+    {},
+    { phase: 0 },
+  );
+  const wide = renderDetailBlocks(context, [silent[1] ?? hints], {
+    width: 60,
+    wide: true,
+    surface: "surface",
+  }).map((line) => stripAnsi(line).trimEnd());
+  assertEquals(wide, ["Next  1  keys", "↵  Open   Open it"]);
+});
+
 Deno.test("a list viewport of any height keeps the selection in view", () => {
   const view = applicationDemoView();
   const list = view.body.kind === "master-detail" ? view.body.list : undefined;
