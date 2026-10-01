@@ -1199,6 +1199,10 @@ export const interactiveExportCoverage: Readonly<
   TERMINAL_ANIMATION_INTERVAL_MS: {
     excluded: "Tick cadence of the application journey's animated working row.",
   },
+  TERMINAL_LONE_ESCAPE_DELAY_MS: {
+    excluded:
+      "The key reader's continuation window every journey's Escape waits out; a timing bound tests advance a manual clock by.",
+  },
   TERMINAL_STATE_REPORT_OSC: {
     excluded:
       "Protocol constant for opt-in test reports; terminals ignore the sequence, so a journey has nothing to show.",
