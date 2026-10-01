@@ -171,7 +171,8 @@ Deno.test("the ban keeps the grapheme and interactive-clock exemptions scoped", 
     "the scoped grapheme exemption must not admit a banned formatter",
   );
 
-  const interactiveClock = "src/cli/interactive/background.ts";
+  // The interactive adapter reads time only through its process clock.
+  const interactiveClock = "src/cli/interactive/clock.ts";
   assert(
     !modules.includes(interactiveClock),
     "the pure chart projector graph reached the interactive adapter",
@@ -180,7 +181,7 @@ Deno.test("the ban keeps the grapheme and interactive-clock exemptions scoped", 
     join(PACKAGE_ROOT, interactiveClock),
   );
   assert(
-    /\bDate\s*\.\s*now\s*\(/u.test(interactiveSource),
+    /\bperformance\s*\.\s*now\s*\(/u.test(interactiveSource),
     "premise: the interactive adapter still owns legitimate clock access",
   );
 });
