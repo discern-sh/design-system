@@ -211,7 +211,7 @@ Deno.test("Escape never exits; a bound Escape runs only when nothing else closes
 Deno.test("Ctrl+C cancels after restoration unless a binding claims it", async () => {
   const io = new FakeTerminalIO(["\x03"]);
   await assertRejects(
-    () => runTerminalApplication({ view: testView() }, { io }),
+    () => runTerminalApplication({ view: testView(), ...quit }, { io }),
     InteractionCancelled,
   );
   assertEquals(io.rawTransitions.at(-1), false);
@@ -219,7 +219,7 @@ Deno.test("Ctrl+C cancels after restoration unless a binding claims it", async (
   const actions: string[] = [];
   await runTerminalApplication({
     view: testView(),
-    keymap: [{ key: "ctrl-c", action: "quit" }],
+    keymap: [...quit.keymap, { key: "ctrl-c", action: "quit" }],
     onAction: (action) => {
       actions.push(action);
       return exitOn(action);
@@ -281,10 +281,11 @@ Deno.test("an action returning anything but a command fails after restoration", 
     () =>
       runTerminalApplication({
         view: testView(),
+        ...quit,
         onAction: () => ({ kind: "handled" }) as never,
       }, { io }),
     TypeError,
-    "foreground or exit",
+    "a foreground, background, or exit command, or nothing",
   );
   assertEquals(io.rawTransitions.at(-1), false);
 });
@@ -293,6 +294,7 @@ Deno.test("callbacks that never settle fail instead of spinning", async () => {
   const io = new FakeTerminalIO([], { holdOpen: true });
   const failure = runTerminalApplication({
     view: testView(["a", "b"]),
+    ...quit,
     onSelectionChange: (list, item, context) => {
       context.select(list, item === "a" ? "b" : "a");
     },
@@ -371,6 +373,7 @@ Deno.test("cancel, EOF, abort, provider, render and foreground faults restore te
       () =>
         runTerminalApplication({
           view,
+          ...quit,
           start: (context) => {
             if (fault === "provider") {
               context.fail(new Error("provider failed"));
@@ -410,6 +413,7 @@ Deno.test("application signal restoration stops subscriptions and resize listene
   let stops = 0;
   const running = runTerminalApplication({
     view: testView(),
+    ...quit,
     start: () => () => {
       stops++;
     },
@@ -448,6 +452,7 @@ Deno.test("application transport failures preserve the primary fault through cle
     const io = new FaultIO([]);
     const error = await runTerminalApplication({
       view: testView(),
+      ...quit,
       start: () => () => {
         throw new Error("cleanup");
       },

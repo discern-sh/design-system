@@ -267,10 +267,12 @@ function assertCommand(command: unknown): TerminalApplicationCommand | void {
     typeof command !== "object" || command === null ||
     !COMMAND_KINDS.has(String((command as { kind?: unknown }).kind))
   ) {
+    const kinds = [...COMMAND_KINDS];
+    const last = kinds.pop() ?? "";
     throw new TypeError(
       `application actions return a ${
-        [...COMMAND_KINDS].join(", ")
-      } command, or nothing`,
+        kinds.join(", ")
+      }, or ${last} command, or nothing`,
     );
   }
   const typed = command as TerminalApplicationCommand;
