@@ -760,14 +760,14 @@ function panelFoot<A>(
   return (hidden, seenThrough, moved) => {
     const fitted = model(seenThrough);
     const reason = disabledReason(layer, fitted);
-    const prompt = layer.kind === "sheet" && layer.readPrompt !== undefined &&
+    const unread = layer.kind === "sheet" && layer.readHint !== undefined &&
         requiresFullRead(layer) && !fitted.fullyRead
-      ? ` ${layer.readPrompt}`
+      ? ` ${layer.readHint}`
       : "";
     const left = hidden > 0
       ? raised(
         context,
-        `${overflowMarker(context, "down", hidden, "PgDn")}${prompt}`,
+        `${overflowMarker(context, "down", hidden, "PgDn")}${unread}`,
         "faint",
       )
       : reason !== undefined
@@ -1545,13 +1545,13 @@ function palettePanel<A>(
   model: TerminalApplicationLayerModel,
   width: number,
 ): Panel {
-  const prompt = raised(
+  const lead = raised(
     context,
     terminalGlyph("crumb", context.capabilities),
     "accent",
   );
   const head: PanelRow[] = [{
-    text: `${prompt} ${
+    text: `${lead} ${
       fieldBox(
         context,
         model.query,

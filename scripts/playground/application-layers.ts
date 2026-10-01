@@ -149,7 +149,7 @@ export function demoRunSheet(
     ...(progress === undefined
       ? { footnote: [{ text: "Nothing runs until you choose Run." }] }
       : {}),
-    readPrompt: "to read before running",
+    readHint: "to read before running",
     buttons: progress === undefined
       ? [
         { id: "keep", label: "Keep", role: "safe" },

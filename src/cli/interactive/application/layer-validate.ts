@@ -234,8 +234,8 @@ function sheet<A>(
     runs(issues, `${path}.banner.runs`, layer.banner.runs);
   }
   blocks(issues, `${path}.body`, layer.body);
-  if (layer.readPrompt !== undefined) {
-    text(issues, `${path}.readPrompt`, layer.readPrompt);
+  if (layer.readHint !== undefined) {
+    text(issues, `${path}.readHint`, layer.readHint);
   }
   const challenge = layer.challenge;
   if (challenge !== undefined) {

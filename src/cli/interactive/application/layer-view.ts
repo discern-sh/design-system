@@ -109,7 +109,7 @@ export interface SheetButton<A> {
  */
 export interface SheetChallenge {
   readonly fieldId: string;
-  /** The prompt above the field, such as `Type <name> to remove it`. */
+  /** The words above the field, such as `Type <name> to remove it`. */
   readonly label: readonly InlineRun[];
   readonly mustEqual: string;
   /** Replaces the package's remaining-characters hint beside the field. */
@@ -169,7 +169,7 @@ export interface ApplicationSheet<A> extends ApplicationLayerBase {
   /** Defaults to true when a confirm or destructive button exists. */
   readonly requireFullRead?: boolean;
   /** Words after the unread count, such as `to read before applying`. */
-  readonly readPrompt?: string;
+  readonly readHint?: string;
   readonly disclosures?: readonly LayerDisclosure[];
   readonly challenge?: SheetChallenge;
   readonly footnote?: readonly InlineRun[];
