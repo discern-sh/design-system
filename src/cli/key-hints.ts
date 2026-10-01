@@ -217,9 +217,11 @@ function validColumns(label: string, value: number, minimum: number): void {
  * fixed: extras join the right cluster in order while the whole left
  * cluster still leaves six cells between the clusters; left hints then
  * drop from the end, never the primary; below `compactBelowColumns` gaps
- * tighten from three cells to two and right labels drop from the end; the
- * primary label then shortens with an ellipsis; any right label that is
- * left drops; right hints drop from the end; and finally the line clips.
+ * tighten from three cells to two and right labels drop from the end —
+ * a hint whose key is one printable character drops whole instead, since
+ * such a key says nothing alone; the primary label then shortens with an
+ * ellipsis; any right label that is left drops; right hints drop from the
+ * end; and finally the line clips.
  * The primary key is strong accent, other keys strong ink, and labels
  * muted, so the key stays distinct from its words; without colour the
  * key keeps bold where the capabilities allow it.
@@ -259,14 +261,20 @@ export function layoutKeyHintsCli(
     right = next;
   }
   while (!fits() && left.length > 1) left = left.slice(0, -1);
+  // A key of one printable ASCII character, such as "." or "q", says
+  // nothing on its own, so such a hint drops whole rather than its label.
+  const bare = (hint: Shown): boolean => /^[!-~]$/u.test(hint.key);
   const dropRightLabel = (): boolean => {
     const index = right.findLastIndex((hint) =>
       hint.withLabel && hint.label !== ""
     );
     if (index < 0) return false;
-    right = right.map((hint, at) =>
-      at === index ? { ...hint, withLabel: false } : hint
-    );
+    const target = right[index];
+    right = target !== undefined && bare(target)
+      ? right.filter((_, at) => at !== index)
+      : right.map((hint, at) =>
+        at === index ? { ...hint, withLabel: false } : hint
+      );
     return true;
   };
   if (compact) { while (!fits() && dropRightLabel()); }

@@ -67,7 +67,19 @@ Deno.test("key hints collapse through the documented ladder", () => {
     "Enter Open...          . Actions  ^K",
   );
   assertEquals(plain(overview, 28), "↵ Open…        . Actions  ^K");
-  assertEquals(plain(overview, 16), "↵ Open…    .  ^K");
+  // A bare one-character key drops whole rather than standing unlabelled.
+  assertEquals(plain(overview, 16), "↵ Open…       ^K");
+  for (let width = 0; width <= 120; width += 1) {
+    const layout = layoutKeyHintsCli(overview, width, capabilities(width));
+    for (const placed of layout.placed) {
+      assert(
+        placed.labelShown || !/^[!-~]$/u.test(
+          formatKeyChord(placed.hint.key, { unicode: true }),
+        ),
+        `width ${width}: a bare ${String(placed.hint.key)} lost its label`,
+      );
+    }
+  }
 });
 
 Deno.test("extras join only while the whole left cluster leaves room", () => {
