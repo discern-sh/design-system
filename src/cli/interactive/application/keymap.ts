@@ -245,6 +245,13 @@ export function compileKeymap<A>(
       if (typeof scope.layer !== "string" || scope.layer === "") {
         throw new TypeError("a layer binding names its layer");
       }
+      // Ctrl+C means one thing everywhere: a base binding applies beneath
+      // every layer and at every size.
+      if (chord === "ctrl-c") {
+        throw new TypeError(
+          '"ctrl-c" is bound in the base scope only; it applies under every layer',
+        );
+      }
       table = layers.get(scope.layer) ?? new Map();
       layers.set(scope.layer, table);
     }

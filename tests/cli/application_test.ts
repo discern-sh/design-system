@@ -3,9 +3,11 @@ import {
   assertEquals,
   assertRejects,
   assertStringIncludes,
+  assertThrows,
 } from "@std/assert";
 import { stripAnsi } from "../../src/cli/mod.ts";
 import {
+  createTerminalApplicationModel,
   InteractionCancelled,
   runTerminalApplication,
   type TerminalApplicationCommand,
@@ -472,6 +474,39 @@ Deno.test("below the minimum size bindings still run while navigation waits", as
   assertStringIncludes(
     stripAnsi(captureTerminalFrame(io.output(), io.size()).frame),
     "Too small",
+  );
+});
+
+Deno.test("below the minimum size a field keeps the keys it would type", async () => {
+  const live = await applicationSession(testView(["a", "b"], { filter: true }));
+  live.io.enqueue("/q");
+  await settle();
+  assertEquals(live.context().state.lists.items?.filter, "q");
+  live.io.resize(30, 9);
+  await settle();
+  live.io.enqueue("q");
+  await settle();
+  live.io.resize(80, 24);
+  await settle();
+  // Enter keeps the filter only if the session is still running.
+  live.io.enqueue("\r");
+  await settle();
+  assertEquals(
+    live.context().state.lists.items?.filtering,
+    false,
+    "q below the minimum quit while the filter owned input",
+  );
+  await live.finish();
+});
+
+Deno.test("Ctrl+C is bound in the base scope only", () => {
+  assertThrows(
+    () =>
+      createTerminalApplicationModel(testView(["a"]), {
+        keymap: [{ key: "ctrl-c", action: "back", scope: { layer: "sheet" } }],
+      }),
+    TypeError,
+    "base scope only",
   );
 });
 

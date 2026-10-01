@@ -10,6 +10,7 @@
 import { GraphemeTextEditor } from "../editor.ts";
 import type { TerminalKey, TerminalMouseEvent } from "../keys.ts";
 import {
+  type CompiledBinding,
   type CompiledKeymap,
   compileKeymap,
   keyChordOf,
@@ -24,6 +25,7 @@ import {
   type LayerStepContext,
   type TerminalApplicationLayerModel,
 } from "./layer-model.ts";
+import { isTextControl } from "./layer-controls.ts";
 import type { ApplicationLayer, ApplicationReader } from "./layer-view.ts";
 import type { ApplicationHit } from "./hits.ts";
 import { mouseTransition } from "./mouse.ts";
@@ -1290,6 +1292,45 @@ function baseKey<A>(
   return navigate(model, listView.id, navigation);
 }
 
+/**
+ * What Ctrl+C does in every scope and at every size: the base binding's
+ * action when one claims it, otherwise cancelling the session. Layers
+ * cannot bind it, so it means one thing everywhere.
+ */
+export function interruptEffect<A>(
+  model: TerminalApplicationModel<A>,
+): TerminalApplicationEffect<A> {
+  const binding = model.keymap.base.get("ctrl-c");
+  return binding === undefined
+    ? { kind: "cancel" }
+    : { kind: "action", action: binding.action, source: "key" };
+}
+
+/**
+ * The caller binding a key reaches in the scope in force — the top
+ * layer's while one is open, else the base — skipping bindings that do not
+ * apply in fields while a text field, a palette's query, or a filter owns
+ * input. Navigation waits below the minimum size, but these still run.
+ */
+export function bindingInForce<A>(
+  model: TerminalApplicationModel<A>,
+  chord: string,
+): CompiledBinding<A> | undefined {
+  const layer = topLayer(model);
+  if (layer === undefined) {
+    const list = bodyList(model.view);
+    const filtering = list !== undefined &&
+      model.lists[list.id]?.filter?.editing === true;
+    const binding = model.keymap.base.get(chord);
+    return filtering && binding?.inFields !== true ? undefined : binding;
+  }
+  const stored = model.layers[layer.id];
+  const inField = layer.kind === "palette" || stored?.filtering === true ||
+    (stored !== undefined && isTextControl(layer, stored.focus));
+  const binding = model.keymap.layers.get(layer.id)?.get(chord);
+  return inField && binding?.inFields !== true ? undefined : binding;
+}
+
 function keyTransition<A>(
   model: TerminalApplicationModel<A>,
   key: TerminalKey,
@@ -1297,12 +1338,7 @@ function keyTransition<A>(
 ): TerminalApplicationModel<A> {
   const chord = keyChordOf(key);
   if (chord === "ctrl-c") {
-    const binding = model.keymap.base.get("ctrl-c");
-    step.effects.push(
-      binding === undefined
-        ? { kind: "cancel" }
-        : { kind: "action", action: binding.action, source: "key" },
-    );
+    step.effects.push(interruptEffect(model));
     return model;
   }
   const message = visibleMessage(model);
@@ -1466,7 +1502,10 @@ function writeField<A>(
     }
     written = value;
   } else {
-    written = fieldText(value, field?.kind === "text" && field.multiline === true);
+    written = fieldText(
+      value,
+      field?.kind === "text" && field.multiline === true,
+    );
   }
   return replaceLayer(model, {
     ...stored,

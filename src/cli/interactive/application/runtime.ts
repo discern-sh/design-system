@@ -36,7 +36,9 @@ import {
 import { keyChordOf } from "./keymap.ts";
 import {
   assertDismissalsHonoured,
+  bindingInForce,
   createTerminalApplicationModel,
+  interruptEffect,
   type TerminalApplicationActionSource,
   terminalApplicationDeadline,
   type TerminalApplicationDismissal,
@@ -47,7 +49,6 @@ import {
   type TerminalApplicationSelectionMove,
   type TerminalApplicationState,
   terminalApplicationState,
-  topLayer,
   transitionTerminalApplication,
   updateTerminalApplication,
   updateTerminalApplicationProvisionally,
@@ -415,23 +416,25 @@ export async function runTerminalApplication<A>(
     return dispatch();
   };
   /**
-   * Below the minimum size navigation waits; the bindings of the scope in
-   * force — the top layer's while one is open — still run, and Ctrl+C still
-   * cancels unless a binding claims it.
+   * Below the minimum size navigation waits; the bindings in force still
+   * run as they would at full size — the top layer's while one is open,
+   * only field bindings while a field owns input — and Ctrl+C keeps its
+   * one meaning.
    */
   const suspendedKey = (
     event: TerminalInputEvent,
   ): TerminalApplicationCommand | void => {
     if (event.kind !== "key") return undefined;
     const chord = keyChordOf(event.key);
-    const layer = topLayer(model);
-    const scope = layer === undefined
-      ? model.keymap.base
-      : model.keymap.layers.get(layer.id);
-    const binding = chord === undefined ? undefined : scope?.get(chord);
-    if (binding !== undefined) {
-      queue.push({ kind: "action", action: binding.action, source: "key" });
-    } else if (chord === "ctrl-c") queue.push({ kind: "cancel" });
+    if (chord === "ctrl-c") queue.push(interruptEffect(model));
+    else {
+      const binding = chord === undefined
+        ? undefined
+        : bindingInForce(model, chord);
+      if (binding !== undefined) {
+        queue.push({ kind: "action", action: binding.action, source: "key" });
+      }
+    }
     return dispatch();
   };
 

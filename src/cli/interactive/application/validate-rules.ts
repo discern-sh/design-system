@@ -67,10 +67,13 @@ export function fieldText(value: string, multiline: boolean): string {
   const broken = multiline ? lines : lines.replaceAll("\n", " ");
   return broken
     .replaceAll("\t", multiline ? FIELD_TAB : " ")
-    .replace(/[\p{Cc}\p{Cf}]/gu, (character) =>
-      character === "\n" || character === "\u200c" || character === "\u200d"
-        ? character
-        : "");
+    .replace(
+      /[\p{Cc}\p{Cf}]/gu,
+      (character) =>
+        character === "\n" || character === "\u200c" || character === "\u200d"
+          ? character
+          : "",
+    );
 }
 
 /** A control-free string, non-blank unless `empty` allows it. */
