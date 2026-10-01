@@ -33,6 +33,20 @@ export const BEGIN_SYNCHRONIZED_UPDATE = "\x1b[?2026h";
 /** DECRST 2026: show everything written since the matching begin. */
 export const END_SYNCHRONIZED_UPDATE = "\x1b[?2026l";
 
+/** Save the terminal's window title on its title stack (XTWINOPS 22). */
+export const PUSH_TERMINAL_TITLE = "\x1b[22;0t";
+
+/** Restore the window title saved by {@linkcode PUSH_TERMINAL_TITLE}. */
+export const POP_TERMINAL_TITLE = "\x1b[23;0t";
+
+/** The OSC 2 sequence that sets the window title to plain text. */
+export function terminalWindowTitle(title: string): string {
+  if (/[\p{Cc}\p{Cf}]/u.test(title)) {
+    throw new TypeError("a window title must not contain control characters");
+  }
+  return `\x1b]2;${title}\x1b\\`;
+}
+
 /** Move the cursor to the first cell of a one-based viewport row. */
 export function terminalRowCursor(row: number): string {
   return `\x1b[${row};1H`;
@@ -232,6 +246,13 @@ export interface TerminalScreenPaint {
   readonly layer?: string;
   /** Announced before the paint when present; omitted reports stay silent. */
   readonly report?: TerminalApplicationStateReport;
+  /**
+   * The window title. The painter saves the terminal's own title before
+   * setting the first one, sets it again with every keyframe and whenever
+   * it changes, and restores the saved title when a paint omits it or
+   * {@linkcode TerminalScreenPainter.release} runs.
+   */
+  readonly title?: string;
 }
 
 /** What one paint did. */
@@ -270,6 +291,8 @@ export class TerminalScreenPainter {
   #size: TerminalSize | undefined;
   #layer: string | undefined;
   #report: string | undefined;
+  #title: string | undefined;
+  #pushed = false;
   #keyframeAt = 0;
 
   constructor(
@@ -283,6 +306,17 @@ export class TerminalScreenPainter {
   /** Forget the screen so the next paint is a keyframe. */
   invalidate(): void {
     this.#rows = undefined;
+  }
+
+  /**
+   * Restore the window title saved before the first title this painter
+   * set, so the terminal's own title returns when the screen is released.
+   */
+  release(): void {
+    if (!this.#pushed) return;
+    this.#pushed = false;
+    this.#title = undefined;
+    this.io.write(POP_TERMINAL_TITLE);
   }
 
   /**
@@ -312,12 +346,24 @@ export class TerminalScreenPainter {
     const report = request.report === undefined
       ? undefined
       : encodeTerminalStateReport(request.report);
-    if (!recomposed && differing.length === 0 && report === this.#report) {
+    if (
+      !recomposed && differing.length === 0 && report === this.#report &&
+      request.title === this.#title
+    ) {
       return { status: "unchanged" };
     }
     const now = this.now();
     const keyframe = recomposed || !this.options.rowDiff ||
       now - this.#keyframeAt >= this.options.keyframeEveryMs;
+    // A title in force is restated with every keyframe, so a replay from the
+    // last keyframe knows it; dropping the title restores the saved one.
+    const title = request.title === undefined
+      ? this.#pushed ? POP_TERMINAL_TITLE : ""
+      : !keyframe && request.title === this.#title
+      ? ""
+      : `${this.#pushed ? "" : PUSH_TERMINAL_TITLE}${
+        terminalWindowTitle(request.title)
+      }`;
     const changed = keyframe ? rows.map((_, index) => index) : differing;
     for (const index of differing) {
       assertPaintableRow(rows[index]!, size.columns);
@@ -328,10 +374,10 @@ export class TerminalScreenPainter {
         `${terminalRowCursor(index + 1)}${ERASE_TERMINAL_LINE}${rows[index]}`
       ).join("");
     const output = this.options.synchronized
-      ? `${BEGIN_SYNCHRONIZED_UPDATE}${
+      ? `${BEGIN_SYNCHRONIZED_UPDATE}${title}${
         report ?? ""
       }${body}${END_SYNCHRONIZED_UPDATE}`
-      : `${report ?? ""}${body}`;
+      : `${title}${report ?? ""}${body}`;
     // A failed write leaves the screen unknown, so the next paint is a keyframe.
     this.#rows = undefined;
     this.io.write(output);
@@ -339,6 +385,8 @@ export class TerminalScreenPainter {
     this.#size = size;
     this.#layer = request.layer;
     this.#report = report;
+    this.#title = request.title;
+    if (title !== "") this.#pushed = request.title !== undefined;
     if (keyframe) this.#keyframeAt = now;
     return {
       status: "painted",

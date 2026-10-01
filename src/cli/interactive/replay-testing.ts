@@ -5,18 +5,21 @@
  * not a terminal emulator.
  *
  * ```text
- * paint      = [BSU] [report] body [ESU]
- * body       = keyframe | row-write* | (empty: a report alone)
+ * paint      = [BSU] [push] [title] [report] body [ESU]
+ * body       = keyframe | row-write* | (empty: a title or report alone)
  * keyframe   = ESC[2J ESC[H row (CR LF row)*      rows exactly the viewport
  * row-write  = ESC[<row>;1H ESC[2K row             one-based row, column 1
  * row        = text with closed SGR and OSC 8 styling, no control characters
  * report     = ESC]<private OSC>;<flat JSON object> ESC\
+ * title      = ESC]2;<plain text> ESC\                window title
+ * push, pop  = ESC[22;0t, ESC[23;0t                save and restore the title
  * BSU, ESU   = ESC[?2026h, ESC[?2026l               synchronized update
  * boundary   = ESC[?25h | ESC[?1049l               restoration ends the session
  * ```
  *
- * Replay starts at the last keyframe (with the synchronized-update and report
- * prefix that opened its paint) and stops at the first restoration boundary,
+ * Replay starts at the last keyframe (with the synchronized-update, title,
+ * and report prefix that opened its paint) and stops at the first
+ * restoration boundary; a title pop may precede that boundary,
  * so earlier output, earlier sessions and foreground children never reach
  * the frame. A synchronized update is a transaction: an update still open at
  * the end of the transcript is in flight and leaves the previous settled
@@ -36,6 +39,8 @@ import {
   ERASE_TERMINAL_DISPLAY,
   ERASE_TERMINAL_LINE,
   HOME_TERMINAL_CURSOR,
+  POP_TERMINAL_TITLE,
+  PUSH_TERMINAL_TITLE,
 } from "./painter.ts";
 import {
   decodeTerminalStateReport,
@@ -49,12 +54,14 @@ export interface ReplayedTerminalFrame {
   readonly frame: string;
   /** The state report in force when the frame settled, if any was emitted. */
   readonly state?: TerminalApplicationStateReport;
+  /** The window title in force when the frame settled, if one was set. */
+  readonly title?: string;
   /** Transcript offset just after the paint that settled the frame. */
   readonly end: number;
 }
 
 const KEYFRAME = `${ERASE_TERMINAL_DISPLAY}${HOME_TERMINAL_CURSOR}`;
-const STRING_TERMINATOR = "\x1b\\";
+const TITLE_PREFIX = "\x1b]2;";
 const RESTORATION_BOUNDARIES = ["\x1b[?25h", "\x1b[?1049l"] as const;
 
 function literal(value: string): string {
@@ -73,16 +80,29 @@ const TOKEN = new RegExp(
     `(?:${
       literal(TERMINAL_STATE_REPORT_PREFIX)
     }(?<report>[^\\x07\\x1b]*)\\x1b\\\\)`,
+    `(?:${literal(TITLE_PREFIX)}(?<title>[^\\x07\\x1b]*)\\x1b\\\\)`,
+    `(?<push>${literal(PUSH_TERMINAL_TITLE)})`,
+    `(?<pop>${literal(POP_TERMINAL_TITLE)})`,
     `(?<newline>\\r\\r?\\n)`,
     `(?<boundary>${RESTORATION_BOUNDARIES.map(literal).join("|")})`,
   ].join("|"),
   "gu",
 );
 
-const REPORT_ONLY = new RegExp(
-  `^${literal(TERMINAL_STATE_REPORT_PREFIX)}[^\\x07\\x1b]*\\x1b\\\\$`,
-  "u",
-);
+/** The optional sequences a paint may carry before its body, last first. */
+const PAINT_PREFIXES = [
+  new RegExp(
+    `${literal(TERMINAL_STATE_REPORT_PREFIX)}[^\\x07\\x1b]*\\x1b\\\\$`,
+    "u",
+  ),
+  new RegExp(
+    `(?:${literal(TITLE_PREFIX)}[^\\x07\\x1b]*\\x1b\\\\|${
+      literal(POP_TERMINAL_TITLE)
+    })$`,
+    "u",
+  ),
+  new RegExp(`${literal(PUSH_TERMINAL_TITLE)}$`, "u"),
+] as const;
 
 function reject(reason: string, transcript: string, at: number): never {
   throw new TypeError(
@@ -90,14 +110,16 @@ function reject(reason: string, transcript: string, at: number): never {
   );
 }
 
-/** Back up from a keyframe to the synchronized update and report that opened its paint. */
+/**
+ * Back up from a keyframe across the push, title, and report that opened its
+ * paint, then the synchronized update around them.
+ */
 function paintStart(transcript: string, keyframe: number): number {
   let start = keyframe;
-  if (transcript.endsWith(STRING_TERMINATOR, start)) {
-    const report = transcript.lastIndexOf(TERMINAL_STATE_REPORT_PREFIX, start);
-    if (report >= 0 && REPORT_ONLY.test(transcript.slice(report, start))) {
-      start = report;
-    }
+  for (const prefix of PAINT_PREFIXES) {
+    const window = transcript.slice(Math.max(0, start - 4096), start);
+    const found = prefix.exec(window);
+    if (found !== null) start -= found[0].length;
   }
   return transcript.endsWith(BEGIN_SYNCHRONIZED_UPDATE, start)
     ? start - BEGIN_SYNCHRONIZED_UPDATE.length
@@ -107,6 +129,8 @@ function paintStart(transcript: string, keyframe: number): number {
 interface Transaction {
   rows: string[] | undefined;
   report: TerminalApplicationStateReport | undefined;
+  /** A title set inside the update; null when the update restored the saved one. */
+  title: string | null | undefined;
 }
 
 /** Replay from one paint start; undefined when no paint has completed yet. */
@@ -117,6 +141,7 @@ function replayFrom(
 ): ReplayedTerminalFrame | undefined {
   let screen: string[] | undefined;
   let state: TerminalApplicationStateReport | undefined;
+  let title: string | undefined;
   let settled: ReplayedTerminalFrame | undefined;
   let transaction: Transaction | undefined;
   let target: { readonly row: number; readonly keyframe: boolean } | undefined;
@@ -127,6 +152,7 @@ function replayFrom(
     settled = {
       frame: screen.join("\n"),
       ...(state === undefined ? {} : { state }),
+      ...(title === undefined ? {} : { title }),
       end,
     };
   };
@@ -191,6 +217,7 @@ function replayFrom(
       transaction = {
         rows: screen === undefined ? undefined : [...screen],
         report: undefined,
+        title: undefined,
       };
       continue;
     }
@@ -203,6 +230,9 @@ function replayFrom(
       }
       screen = transaction.rows;
       state = transaction.report ?? state;
+      title = transaction.title === undefined
+        ? title
+        : transaction.title ?? undefined;
       transaction = undefined;
       settle(cursor);
       continue;
@@ -215,6 +245,14 @@ function replayFrom(
       } else transaction.report = report;
       continue;
     }
+    if (groups.title !== undefined || groups.pop !== undefined) {
+      if (transaction === undefined) {
+        title = groups.title;
+        settle(cursor);
+      } else transaction.title = groups.title ?? null;
+      continue;
+    }
+    if (groups.push !== undefined) continue;
     if (groups.keyframe !== undefined) {
       const blank = Array.from({ length: size.rows }, () => "");
       if (transaction === undefined) screen = blank;

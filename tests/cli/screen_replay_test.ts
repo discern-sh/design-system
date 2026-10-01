@@ -6,9 +6,12 @@ import {
   ERASE_TERMINAL_DISPLAY,
   ERASE_TERMINAL_LINE,
   HOME_TERMINAL_CURSOR,
+  POP_TERMINAL_TITLE,
+  PUSH_TERMINAL_TITLE,
   type TerminalPaintOptions,
   terminalRowCursor,
   TerminalScreenPainter,
+  terminalWindowTitle,
 } from "../../src/cli/interactive/painter.ts";
 import { replayTerminalFrame } from "../../src/cli/interactive/replay-testing.ts";
 import { encodeTerminalStateReport } from "../../src/cli/interactive/state-report.ts";
@@ -59,6 +62,7 @@ Deno.test("every painter output replays to the latest frame under every paint op
       const painter = new TerminalScreenPainter(io, () => clock.now(), option);
       let current = { ...size };
       let rows = Array.from({ length: current.rows }, () => " ".repeat(10));
+      let lastTitle: string | undefined;
       for (let paint = 0; paint < 30; paint += 1) {
         clock.advance(Math.floor(next() * 3));
         if (next() < 0.1) {
@@ -69,16 +73,20 @@ Deno.test("every painter output replays to the latest frame under every paint op
           rows = rows.map((value) => next() < 0.3 ? row(next, 10) : value);
         }
         const report = next() < 0.5 ? { selectedItemId: `item-${paint}` } : {};
+        const title = next() < 0.3 ? `Title ${paint % 3}` : undefined;
         painter.paint({
           frame: rows.join("\n"),
           size: current,
           ...(next() < 0.2 ? { layer: `layer-${paint % 2}` } : {}),
           report,
+          ...(title === undefined ? {} : { title }),
         });
+        lastTitle = title;
         const transcript = io.output();
         const replayed = replayTerminalFrame(transcript, current);
         assertEquals(replayed.frame, rows.join("\n"));
         assertEquals(replayed.state, report);
+        assertEquals(replayed.title, lastTitle);
         assertEquals(replayed.end, transcript.length);
         // A PTY may expand LF into CR LF; the settled frame must not change.
         assertEquals(
@@ -152,6 +160,20 @@ Deno.test("capture requires a paint after the requested offset and returns its r
       .text.split("\n")[1],
     "> two     ",
   );
+});
+
+Deno.test("a window title replays with its keyframe and its restoration ends it", () => {
+  const titled = keyframe.replace(
+    ERASE_TERMINAL_DISPLAY,
+    `${PUSH_TERMINAL_TITLE}${
+      terminalWindowTitle("Studio")
+    }${ERASE_TERMINAL_DISPLAY}`,
+  );
+  assertEquals(replayTerminalFrame(titled, size).title, "Studio");
+  const released = `${titled}${POP_TERMINAL_TITLE}\x1b[?25h\x1b[?1049l`;
+  const replayed = replayTerminalFrame(released, size);
+  assertEquals(replayed.title, undefined, "the saved title is back");
+  assertEquals(replayed.frame, rows.join("\n"));
 });
 
 Deno.test("restoration ends the session; a later session replays from its own keyframe", () => {
