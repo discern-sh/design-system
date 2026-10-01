@@ -55,14 +55,6 @@ export interface TerminalRowAnnotation {
   /** Optional replacement text for terminals without Unicode. */
   readonly ascii?: SemanticInlineContent;
   readonly tone?: TerminalSemanticTone;
-  /**
-   * Animate a one-cell glyph inside a running application: `content` is the
-   * resting form, and with Unicode and full motion the bound motif's spinner
-   * replaces it on every animation tick. Omit it to freeze the glyph, for
-   * example while the work it marks is no longer being observed. One-shot
-   * requests and reduced motion show the resting form.
-   */
-  readonly animation?: "spinner";
 }
 
 /** One addressable option displayed by selection-like frames. */
