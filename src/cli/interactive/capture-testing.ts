@@ -43,7 +43,7 @@ function settledReplay(
 /**
  * Replay the package's paints and return the one settled frame they leave,
  * preserving its styled bytes. Keyframes, synchronized row writes, window
- * titles and state reports replay through the package screen model; any other control, a
+ * titles, mouse modes and state reports replay through the package screen model; any other control, a
  * partial row, or a frame that does not fill the viewport exactly throws.
  */
 export function settledTerminalFrame(
@@ -66,6 +66,8 @@ export interface TerminalFrameCapture {
   readonly state?: TerminalApplicationStateReport;
   /** The window title the application set, when it set one. */
   readonly title?: string;
+  /** True when the application had mouse reports on. */
+  readonly mouse?: true;
 }
 
 /** Settling and HTML projection options for {@linkcode captureTerminalFrame}. */
@@ -91,6 +93,7 @@ export function captureTerminalFrame(
     geometry: replayed.geometry,
     ...(replayed.state === undefined ? {} : { state: replayed.state }),
     ...(replayed.title === undefined ? {} : { title: replayed.title }),
+    ...(replayed.mouse === undefined ? {} : { mouse: replayed.mouse }),
   };
 }
 

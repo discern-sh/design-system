@@ -1,7 +1,10 @@
 import { assertEquals, assertThrows } from "@std/assert";
 import { styleText } from "../../src/cli/ansi.ts";
+import { QUERY_TERMINAL_CURSOR_POSITION } from "../../src/cli/interactive/mouse-input.ts";
 import {
   BEGIN_SYNCHRONIZED_UPDATE,
+  DISABLE_TERMINAL_MOUSE_REPORTS,
+  ENABLE_TERMINAL_MOUSE_REPORTS,
   END_SYNCHRONIZED_UPDATE,
   ERASE_TERMINAL_DISPLAY,
   ERASE_TERMINAL_LINE,
@@ -63,6 +66,7 @@ Deno.test("every painter output replays to the latest frame under every paint op
       let current = { ...size };
       let rows = Array.from({ length: current.rows }, () => " ".repeat(10));
       let lastTitle: string | undefined;
+      let mouse = false;
       for (let paint = 0; paint < 30; paint += 1) {
         clock.advance(Math.floor(next() * 3));
         if (next() < 0.1) {
@@ -74,12 +78,14 @@ Deno.test("every painter output replays to the latest frame under every paint op
         }
         const report = next() < 0.5 ? { selectedItemId: `item-${paint}` } : {};
         const title = next() < 0.3 ? `Title ${paint % 3}` : undefined;
+        if (next() < 0.15) mouse = !mouse;
         painter.paint({
           frame: rows.join("\n"),
           size: current,
           ...(next() < 0.2 ? { layer: `layer-${paint % 2}` } : {}),
           report,
           ...(title === undefined ? {} : { title }),
+          mouse,
         });
         lastTitle = title;
         const transcript = io.output();
@@ -87,6 +93,7 @@ Deno.test("every painter output replays to the latest frame under every paint op
         assertEquals(replayed.frame, rows.join("\n"));
         assertEquals(replayed.state, report);
         assertEquals(replayed.title, lastTitle);
+        assertEquals(replayed.mouse, mouse ? true : undefined);
         assertEquals(replayed.end, transcript.length);
         // A PTY may expand LF into CR LF; the settled frame must not change.
         assertEquals(
@@ -95,6 +102,13 @@ Deno.test("every painter output replays to the latest frame under every paint op
           rows.join("\n"),
         );
       }
+      // Release turns reports off and restores the title before restoration.
+      painter.release();
+      io.write(`${QUERY_TERMINAL_CURSOR_POSITION}\x1b[?25h\x1b[?1049l`);
+      const released = replayTerminalFrame(io.output(), current);
+      assertEquals(released.frame, rows.join("\n"));
+      assertEquals(released.mouse, undefined);
+      assertEquals(released.title, undefined);
     }
   }
 });
@@ -176,6 +190,42 @@ Deno.test("a window title replays with its keyframe and its restoration ends it"
   assertEquals(replayed.frame, rows.join("\n"));
 });
 
+Deno.test("mouse reports replay with their keyframe and turn off before restoration", () => {
+  const reporting = keyframe.replace(
+    ERASE_TERMINAL_DISPLAY,
+    `${ENABLE_TERMINAL_MOUSE_REPORTS}${ERASE_TERMINAL_DISPLAY}`,
+  );
+  assertEquals(replayTerminalFrame(reporting, size).mouse, true);
+  assertEquals(
+    replayTerminalFrame(
+      `${reporting}${BEGIN_SYNCHRONIZED_UPDATE}${DISABLE_TERMINAL_MOUSE_REPORTS}${
+        rowWrite(2, "> two     ")
+      }${END_SYNCHRONIZED_UPDATE}`,
+      size,
+    ).mouse,
+    undefined,
+  );
+  const released =
+    `${reporting}${DISABLE_TERMINAL_MOUSE_REPORTS}${QUERY_TERMINAL_CURSOR_POSITION}\x1b[?25h`;
+  const replayed = replayTerminalFrame(released, size);
+  assertEquals(replayed.mouse, undefined);
+  assertEquals(replayed.frame, rows.join("\n"));
+  const painter = new TerminalScreenPainter(
+    new FakeTerminalIO([], size),
+    () => 0,
+  );
+  painter.paint({ frame: rows.join("\n"), size, mouse: true });
+  const io = painter.io as FakeTerminalIO;
+  const before = io.output().length;
+  painter.paint({ frame: rows.join("\n"), size, mouse: true });
+  assertEquals(io.output().length, before, "an unchanged mouse mode is quiet");
+  painter.paint({ frame: rows.join("\n"), size, mouse: false });
+  assertEquals(
+    io.output().slice(before),
+    `${BEGIN_SYNCHRONIZED_UPDATE}${DISABLE_TERMINAL_MOUSE_REPORTS}${END_SYNCHRONIZED_UPDATE}`,
+  );
+});
+
 Deno.test("restoration ends the session; a later session replays from its own keyframe", () => {
   const child = "\x1b[?25h\x1b[?1049lchild output\r\nmore\r\n";
   assertEquals(
@@ -218,6 +268,12 @@ Deno.test("replay rejects every byte outside the paint grammar", () => {
     ["an open style", keyframe + diff(2, "\x1b[1mopen      ")],
     ["a tab inside a row", keyframe + diff(2, "one\ttwo   ")],
     ["a carriage return inside a row", keyframe + diff(2, "one\rtwo   ")],
+    [
+      "a cursor query inside an update",
+      `${keyframe}${BEGIN_SYNCHRONIZED_UPDATE}${QUERY_TERMINAL_CURSOR_POSITION}${
+        rowWrite(2, blank)
+      }${END_SYNCHRONIZED_UPDATE}`,
+    ],
     [
       "a malformed report",
       keyframe +

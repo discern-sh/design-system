@@ -5,7 +5,7 @@
  * not a terminal emulator.
  *
  * ```text
- * paint      = [BSU] [push] [title] [report] body [ESU]
+ * paint      = [BSU] [mouse] [push] [title] [report] body [ESU]
  * body       = keyframe | row-write* | (empty: a title or report alone)
  * keyframe   = ESC[2J ESC[H row (CR LF row)*      rows exactly the viewport
  * row-write  = ESC[<row>;1H ESC[2K row             one-based row, column 1
@@ -13,13 +13,17 @@
  * report     = ESC]<private OSC>;<flat JSON object> ESC\
  * title      = ESC]2;<plain text> ESC\                window title
  * push, pop  = ESC[22;0t, ESC[23;0t                save and restore the title
+ * mouse      = ESC[?1000h ESC[?1006h | ESC[?1006l ESC[?1000l   SGR mouse reports on, off
+ * query      = ESC[6n                               fences input after reports stop
  * BSU, ESU   = ESC[?2026h, ESC[?2026l               synchronized update
  * boundary   = ESC[?25h | ESC[?1049l               restoration ends the session
  * ```
  *
- * Replay starts at the last keyframe (with the synchronized-update, title,
- * and report prefix that opened its paint) and stops at the first
- * restoration boundary; a title pop may precede that boundary,
+ * Replay starts at the last keyframe (with the synchronized-update, mouse,
+ * title, and report prefix that opened its paint) and stops at the first
+ * restoration boundary; a title pop, mouse reports turning off, and the
+ * cursor-position query that fences their late input may precede that
+ * boundary,
  * so earlier output, earlier sessions and foreground children never reach
  * the frame. A synchronized update is a transaction: an update still open at
  * the end of the transcript is in flight and leaves the previous settled
@@ -32,9 +36,12 @@
 import { projectTerminalSpans } from "../projection.ts";
 import { measureText } from "../text.ts";
 import type { TerminalSize } from "./io.ts";
+import { QUERY_TERMINAL_CURSOR_POSITION } from "./mouse-input.ts";
 import {
   assertPaintableRow,
   BEGIN_SYNCHRONIZED_UPDATE,
+  DISABLE_TERMINAL_MOUSE_REPORTS,
+  ENABLE_TERMINAL_MOUSE_REPORTS,
   END_SYNCHRONIZED_UPDATE,
   ERASE_TERMINAL_DISPLAY,
   ERASE_TERMINAL_LINE,
@@ -56,6 +63,8 @@ export interface ReplayedTerminalFrame {
   readonly state?: TerminalApplicationStateReport;
   /** The window title in force when the frame settled, if one was set. */
   readonly title?: string;
+  /** True when mouse reports were on as the frame settled. */
+  readonly mouse?: true;
   /** Transcript offset just after the paint that settled the frame. */
   readonly end: number;
 }
@@ -83,6 +92,9 @@ const TOKEN = new RegExp(
     `(?:${literal(TITLE_PREFIX)}(?<title>[^\\x07\\x1b]*)\\x1b\\\\)`,
     `(?<push>${literal(PUSH_TERMINAL_TITLE)})`,
     `(?<pop>${literal(POP_TERMINAL_TITLE)})`,
+    `(?<mouseOn>${literal(ENABLE_TERMINAL_MOUSE_REPORTS)})`,
+    `(?<mouseOff>${literal(DISABLE_TERMINAL_MOUSE_REPORTS)})`,
+    `(?<query>${literal(QUERY_TERMINAL_CURSOR_POSITION)})`,
     `(?<newline>\\r\\r?\\n)`,
     `(?<boundary>${RESTORATION_BOUNDARIES.map(literal).join("|")})`,
   ].join("|"),
@@ -102,6 +114,12 @@ const PAINT_PREFIXES = [
     "u",
   ),
   new RegExp(`${literal(PUSH_TERMINAL_TITLE)}$`, "u"),
+  new RegExp(
+    `(?:${literal(ENABLE_TERMINAL_MOUSE_REPORTS)}|${
+      literal(DISABLE_TERMINAL_MOUSE_REPORTS)
+    })$`,
+    "u",
+  ),
 ] as const;
 
 function reject(reason: string, transcript: string, at: number): never {
@@ -111,8 +129,8 @@ function reject(reason: string, transcript: string, at: number): never {
 }
 
 /**
- * Back up from a keyframe across the push, title, and report that opened its
- * paint, then the synchronized update around them.
+ * Back up from a keyframe across the mouse reports, push, title, and report
+ * that opened its paint, then the synchronized update around them.
  */
 function paintStart(transcript: string, keyframe: number): number {
   let start = keyframe;
@@ -131,6 +149,8 @@ interface Transaction {
   report: TerminalApplicationStateReport | undefined;
   /** A title set inside the update; null when the update restored the saved one. */
   title: string | null | undefined;
+  /** Mouse reports turned on or off inside the update. */
+  mouse: boolean | undefined;
 }
 
 /** Replay from one paint start; undefined when no paint has completed yet. */
@@ -142,6 +162,7 @@ function replayFrom(
   let screen: string[] | undefined;
   let state: TerminalApplicationStateReport | undefined;
   let title: string | undefined;
+  let mouse = false;
   let settled: ReplayedTerminalFrame | undefined;
   let transaction: Transaction | undefined;
   let target: { readonly row: number; readonly keyframe: boolean } | undefined;
@@ -153,6 +174,7 @@ function replayFrom(
       frame: screen.join("\n"),
       ...(state === undefined ? {} : { state }),
       ...(title === undefined ? {} : { title }),
+      ...(mouse ? { mouse: true as const } : {}),
       end,
     };
   };
@@ -218,6 +240,7 @@ function replayFrom(
         rows: screen === undefined ? undefined : [...screen],
         report: undefined,
         title: undefined,
+        mouse: undefined,
       };
       continue;
     }
@@ -233,6 +256,7 @@ function replayFrom(
       title = transaction.title === undefined
         ? title
         : transaction.title ?? undefined;
+      mouse = transaction.mouse ?? mouse;
       transaction = undefined;
       settle(cursor);
       continue;
@@ -250,6 +274,20 @@ function replayFrom(
         title = groups.title;
         settle(cursor);
       } else transaction.title = groups.title ?? null;
+      continue;
+    }
+    if (groups.mouseOn !== undefined || groups.mouseOff !== undefined) {
+      const on = groups.mouseOn !== undefined;
+      if (transaction === undefined) {
+        mouse = on;
+        settle(cursor);
+      } else transaction.mouse = on;
+      continue;
+    }
+    if (groups.query !== undefined) {
+      if (transaction !== undefined) {
+        reject("queries the cursor inside an update", transcript, match.index);
+      }
       continue;
     }
     if (groups.push !== undefined) continue;

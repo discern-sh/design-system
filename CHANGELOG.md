@@ -46,6 +46,10 @@ Each release is cut from a green run of the full release gate — formatting, li
 - The painter saves the terminal's window title before setting the view's first one, restates it with every keyframe, and restores it when a view drops it, before foreground work, and on exit; the replay enrols the title sequences. `isTerminalKeyName` tests a decoder key name.
 - `TerminalRowAnnotation.animation`, added earlier in this release cycle, is removed; application glyphs carry `animation` instead.
 
+### Layers and mouse
+
+- The application painter turns SGR mouse reports on or off with a paint (`CSI ? 1000 h` `CSI ? 1006 h`, and the reverse), restates them with every keyframe while they are on, and turns them off when it releases the screen. The replay enrols both sequences and the cursor-position query that fences late reports, and `captureTerminalFrame` returns `mouse: true` while reports were on.
+
 ## 0.37.0
 
 Approach becomes a hero piece — emitted from its station, answered by one wave of light, and still within five seconds, with an opt-in arrival, endless drift, and scroll dolly — and every staggered Artwork phrase plays in full again instead of stopping short before the first frame.

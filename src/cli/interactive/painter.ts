@@ -8,6 +8,12 @@ import { measureText } from "../text.ts";
 import { parseStyledSource } from "../styled-sequences.ts";
 import type { TerminalIO, TerminalSize } from "./io.ts";
 import {
+  DISABLE_TERMINAL_MOUSE_BUTTON_TRACKING,
+  DISABLE_TERMINAL_MOUSE_SGR_MODE,
+  ENABLE_TERMINAL_MOUSE_BUTTON_TRACKING,
+  ENABLE_TERMINAL_MOUSE_SGR_MODE,
+} from "./lifecycle.ts";
+import {
   encodeTerminalStateReport,
   type TerminalApplicationStateReport,
 } from "./state-report.ts";
@@ -38,6 +44,14 @@ export const PUSH_TERMINAL_TITLE = "\x1b[22;0t";
 
 /** Restore the window title saved by {@linkcode PUSH_TERMINAL_TITLE}. */
 export const POP_TERMINAL_TITLE = "\x1b[23;0t";
+
+/** Turn on button and wheel reports in SGR form (DECSET 1000 and 1006). */
+export const ENABLE_TERMINAL_MOUSE_REPORTS =
+  `${ENABLE_TERMINAL_MOUSE_BUTTON_TRACKING}${ENABLE_TERMINAL_MOUSE_SGR_MODE}`;
+
+/** Turn mouse reports off again, in the reverse order. */
+export const DISABLE_TERMINAL_MOUSE_REPORTS =
+  `${DISABLE_TERMINAL_MOUSE_SGR_MODE}${DISABLE_TERMINAL_MOUSE_BUTTON_TRACKING}`;
 
 /** The OSC 2 sequence that sets the window title to plain text. */
 export function terminalWindowTitle(title: string): string {
@@ -253,6 +267,13 @@ export interface TerminalScreenPaint {
    * {@linkcode TerminalScreenPainter.release} runs.
    */
   readonly title?: string;
+  /**
+   * Whether the terminal reports mouse input while this frame is up. A
+   * change turns SGR mouse reports on or off with the paint, a keyframe
+   * restates them while they are on, and
+   * {@linkcode TerminalScreenPainter.release} turns them off.
+   */
+  readonly mouse?: boolean;
 }
 
 /** What one paint did. */
@@ -262,7 +283,7 @@ export type TerminalScreenPaintResult =
     readonly status: "resized";
   }
   | {
-    /** Rows, layer and report all match the screen; nothing was written. */
+    /** Rows, layer, report, title and mouse mode all match; nothing was written. */
     readonly status: "unchanged";
   }
   | {
@@ -293,6 +314,7 @@ export class TerminalScreenPainter {
   #report: string | undefined;
   #title: string | undefined;
   #pushed = false;
+  #mouse = false;
   #keyframeAt = 0;
 
   constructor(
@@ -309,14 +331,17 @@ export class TerminalScreenPainter {
   }
 
   /**
-   * Restore the window title saved before the first title this painter
-   * set, so the terminal's own title returns when the screen is released.
+   * Turn mouse reports off and restore the window title saved before the
+   * first title this painter set, so the terminal's own behaviour returns
+   * when the screen is released.
    */
   release(): void {
-    if (!this.#pushed) return;
+    const mouse = this.#mouse ? DISABLE_TERMINAL_MOUSE_REPORTS : "";
+    const title = this.#pushed ? POP_TERMINAL_TITLE : "";
+    this.#mouse = false;
     this.#pushed = false;
     this.#title = undefined;
-    this.io.write(POP_TERMINAL_TITLE);
+    if (mouse !== "" || title !== "") this.io.write(`${mouse}${title}`);
   }
 
   /**
@@ -346,15 +371,20 @@ export class TerminalScreenPainter {
     const report = request.report === undefined
       ? undefined
       : encodeTerminalStateReport(request.report);
+    const mouse = request.mouse === true;
     if (
       !recomposed && differing.length === 0 && report === this.#report &&
-      request.title === this.#title
+      request.title === this.#title && mouse === this.#mouse
     ) {
       return { status: "unchanged" };
     }
     const now = this.now();
     const keyframe = recomposed || !this.options.rowDiff ||
       now - this.#keyframeAt >= this.options.keyframeEveryMs;
+    // Mouse reports in force are restated with every keyframe, like the title.
+    const reports = mouse !== this.#mouse || (keyframe && mouse)
+      ? mouse ? ENABLE_TERMINAL_MOUSE_REPORTS : DISABLE_TERMINAL_MOUSE_REPORTS
+      : "";
     // A title in force is restated with every keyframe, so a replay from the
     // last keyframe knows it; dropping the title restores the saved one.
     const title = request.title === undefined
@@ -374,10 +404,10 @@ export class TerminalScreenPainter {
         `${terminalRowCursor(index + 1)}${ERASE_TERMINAL_LINE}${rows[index]}`
       ).join("");
     const output = this.options.synchronized
-      ? `${BEGIN_SYNCHRONIZED_UPDATE}${title}${
+      ? `${BEGIN_SYNCHRONIZED_UPDATE}${reports}${title}${
         report ?? ""
       }${body}${END_SYNCHRONIZED_UPDATE}`
-      : `${title}${report ?? ""}${body}`;
+      : `${reports}${title}${report ?? ""}${body}`;
     // A failed write leaves the screen unknown, so the next paint is a keyframe.
     this.#rows = undefined;
     this.io.write(output);
@@ -386,6 +416,7 @@ export class TerminalScreenPainter {
     this.#layer = request.layer;
     this.#report = report;
     this.#title = request.title;
+    this.#mouse = mouse;
     if (title !== "") this.#pushed = request.title !== undefined;
     if (keyframe) this.#keyframeAt = now;
     return {
