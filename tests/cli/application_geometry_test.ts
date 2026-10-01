@@ -8,6 +8,12 @@ import {
 } from "../../src/cli/interactive/mod.ts";
 import { FakeTerminalIO } from "../../src/cli/interactive/testing.ts";
 import {
+  layoutListColumns,
+  listGaps,
+  renderListRow,
+} from "../../src/cli/interactive/application/list-render.ts";
+import { paintContext } from "../../src/cli/interactive/application/paint.ts";
+import {
   applicationDemoView,
   DEMO_JOBS,
   DEMO_TIP,
@@ -195,4 +201,32 @@ Deno.test("below the minimum the notice names the size it needs", () => {
       );
     }
   }
+});
+
+Deno.test("a selection under a layer recedes to the muted fill and keeps its bar", () => {
+  const io = new FakeTerminalIO([], { columns: 40, rows: 10 });
+  const capabilities = {
+    ...io.capabilities(),
+    colorDepth: "truecolor" as const,
+  };
+  const context = paintContext(capabilities, {}, { phase: 0 });
+  const view = applicationDemoView();
+  if (view.body.kind !== "master-detail") throw new Error("expected a list");
+  const list = view.body.list;
+  const [group] = list.groups;
+  const [item] = group?.items ?? [];
+  if (group === undefined || item === undefined) throw new Error("no item");
+  const row = { kind: "item" as const, group, item, key: `i:${item.id}` };
+  const layout = layoutListColumns(list, 40, listGaps(list, false));
+  const background = (role: "selection" | "selectionMuted") => {
+    const fill = context.theme.surfaces[role];
+    return `48;2;${fill.red};${fill.green};${fill.blue}`;
+  };
+  const active = renderListRow(context, row, layout, 40, true);
+  const receded = renderListRow(context, row, layout, 40, true, true);
+  assert(active.includes(background("selection")));
+  assert(receded.includes(background("selectionMuted")));
+  assert(!receded.includes(background("selection")));
+  assertEquals(stripAnsi(receded), stripAnsi(active));
+  assert(stripAnsi(receded).startsWith("▌ ✓ Quarterly report"));
 });

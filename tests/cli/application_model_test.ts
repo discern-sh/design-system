@@ -3,6 +3,7 @@ import { createCliBlock, stripAnsi } from "../../src/cli/mod.ts";
 import {
   createTerminalApplicationModel,
   renderTerminalApplication,
+  TERMINAL_APPLICATION_RESERVED_KEYS,
   terminalApplicationDeadline,
   type TerminalApplicationEffect,
   type TerminalApplicationInput,
@@ -14,7 +15,10 @@ import {
   validateTerminalApplicationView,
 } from "../../src/cli/interactive/mod.ts";
 import type { TerminalKeyName } from "../../src/cli/interactive/keys.ts";
-import { FakeTerminalIO } from "../../src/cli/interactive/testing.ts";
+import {
+  FakeTerminalIO,
+  TERMINAL_KEY_SEQUENCES,
+} from "../../src/cli/interactive/testing.ts";
 import { type TestItem, testView } from "../fixtures/application-views.ts";
 
 const GROUPS = [
@@ -662,4 +666,77 @@ Deno.test("the view rules report every broken rule as data", () => {
   );
   assertEquals(validateTerminalApplicationView(testView(["a", "b"])), []);
   assertThrows(() => createTerminalApplicationModel(view), TypeError);
+});
+
+Deno.test("every key the package acts on in a list is reserved from caller bindings", () => {
+  // Iterate the decoder's whole key vocabulary plus printable navigation
+  // keys, so a newly handled key that is not reserved fails here.
+  const keys: readonly string[] = [
+    ...Object.keys(TERMINAL_KEY_SEQUENCES),
+    "/",
+    " ",
+    "j",
+    "k",
+  ];
+  const view = grouped([
+    { id: "a", group: "first" },
+    { id: "b", group: "first" },
+    { id: "c", group: "second" },
+    { id: "d", group: "second" },
+    { id: "e", group: "third" },
+  ], { filter: true });
+  const body = view.body;
+  if (body.kind !== "master-detail") throw new Error("expected master-detail");
+  const long = {
+    ...view,
+    body: {
+      ...body,
+      detail: {
+        ...body.detail,
+        content: Object.fromEntries(
+          ["a", "b", "c", "d", "e"].map((id) => [
+            id,
+            Array.from({ length: 60 }, (_, index) => ({
+              kind: "text" as const,
+              runs: [{ text: `${id} line ${index}` }],
+            })),
+          ]),
+        ),
+      },
+    },
+  };
+  const prepared = [
+    (driver: Driver) => driver.key("down", "down"),
+    (driver: Driver) => driver.key("down", "down", "page-down"),
+    (driver: Driver) => driver.key("down", "down", "space"),
+  ];
+  const handled = new Set<string>();
+  for (const key of keys) {
+    for (const prepare of prepared) {
+      const driver = prepare(new Driver(long));
+      const before = JSON.stringify(terminalApplicationState(driver.model));
+      driver.take();
+      driver.key(key === " " ? "space" : key);
+      const effects = driver.take().filter((effect) =>
+        effect.kind !== "selection-change"
+      );
+      if (
+        JSON.stringify(terminalApplicationState(driver.model)) !== before ||
+        effects.length > 0
+      ) handled.add(key === " " ? "space" : key);
+    }
+  }
+  // Escape closes what is open before a binding may see it, and Ctrl+C
+  // cancels unless a binding claims it; both stay bindable on purpose.
+  const bindable = new Set(["escape", "ctrl-c"]);
+  for (const key of handled) {
+    if (bindable.has(key)) continue;
+    assert(
+      TERMINAL_APPLICATION_RESERVED_KEYS.includes(key),
+      `the package acts on ${key}, so a binding for it must be refused`,
+    );
+  }
+  for (const key of TERMINAL_APPLICATION_RESERVED_KEYS) {
+    assert(handled.has(key), `${key} is reserved but the list ignores it`);
+  }
 });

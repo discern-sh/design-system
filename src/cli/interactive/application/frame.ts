@@ -832,15 +832,18 @@ function tooSmall<A>(
   size: TerminalSize,
 ): TerminalApplicationFrame<A> {
   const times = terminalGlyph("times", context.capabilities);
+  const inset = size.columns >= 24 ? "  " : "";
+  const needs =
+    `Needs ${TERMINAL_APPLICATION_MINIMUM.columns} ${times} ${TERMINAL_APPLICATION_MINIMUM.rows}`;
+  const now = `now ${size.columns} ${times} ${size.rows}`;
+  // One line when it fits; otherwise the need and the current size apart.
+  const sizes = measureText(`${needs}; ${now}`) <= size.columns - inset.length
+    ? [`${needs}; ${now}`]
+    : [needs, now];
   const notice = [
     ink(context, "Too small", { tone: "ink", bold: true }),
-    ink(
-      context,
-      `Needs ${TERMINAL_APPLICATION_MINIMUM.columns} ${times} ${TERMINAL_APPLICATION_MINIMUM.rows}; now ${size.columns} ${times} ${size.rows}`,
-      { tone: "muted" },
-    ),
+    ...sizes.map((line) => ink(context, line, { tone: "muted" })),
   ];
-  const inset = size.columns >= 24 ? "  " : "";
   const top = Math.max(0, Math.floor((size.rows - notice.length) / 2));
   return {
     frame: Array.from(
