@@ -154,12 +154,19 @@ export class InlineFramePainter {
 }
 
 /**
- * Throw unless one painted row closes its styling and hyperlink and fits the
- * viewport. Every row an owned screen writes passes through here.
+ * Throw unless one painted row is a single line of cells: package styling
+ * and hyperlinks only, both closed, no control character that would move the
+ * cursor, and no cell beyond the viewport. Every row an owned screen writes
+ * passes through here.
  */
 export function assertPaintableRow(line: string, columns: number): void {
   const sentinel = "~";
   const segments = parseStyledSource(`${line}${sentinel}`);
+  if (segments.some((segment) => /\p{Cc}/u.test(segment.text))) {
+    throw new TypeError(
+      "complete frame rows must not contain control characters",
+    );
+  }
   const last = segments.at(-1);
   if (
     last === undefined || !last.text.endsWith(sentinel) ||

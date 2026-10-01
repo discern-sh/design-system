@@ -9,7 +9,7 @@
  * body       = keyframe | row-write* | (empty: a report alone)
  * keyframe   = ESC[2J ESC[H row (CR LF row)*      rows exactly the viewport
  * row-write  = ESC[<row>;1H ESC[2K row             one-based row, column 1
- * row        = text with closed SGR and OSC 8 styling only
+ * row        = text with closed SGR and OSC 8 styling, no control characters
  * report     = ESC]<private OSC>;<flat JSON object> ESC\
  * BSU, ESU   = ESC[?2026h, ESC[?2026l               synchronized update
  * boundary   = ESC[?25h | ESC[?1049l               restoration ends the session

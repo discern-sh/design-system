@@ -161,6 +161,9 @@ Deno.test("every written row is validated before anything reaches the terminal",
       frame("Title", "\x1b[1mopen", "  two", "Footer"),
       frame("Title", `${"x".repeat(13)}`, "  two", "Footer"),
       frame("Title", "two rows"),
+      frame("Title", "one\ttab", "  two", "Footer"),
+      frame("Title", "bell\u0007", "  two", "Footer"),
+      frame("Title", "c1\u009b2J", "  two", "Footer"),
     ]
   ) {
     const fresh = painterFor();

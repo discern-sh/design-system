@@ -193,6 +193,8 @@ Deno.test("replay rejects every byte outside the paint grammar", () => {
     ["too few keyframe rows", `${keyframe}`.replace("\r\nFooter    ", "")],
     ["a row narrower than the viewport", keyframe + diff(2, "short")],
     ["an open style", keyframe + diff(2, "\x1b[1mopen      ")],
+    ["a tab inside a row", keyframe + diff(2, "one\ttwo   ")],
+    ["a carriage return inside a row", keyframe + diff(2, "one\rtwo   ")],
     [
       "a malformed report",
       keyframe +
