@@ -20,7 +20,7 @@ import {
   ManualTerminalClock,
 } from "../../src/cli/interactive/testing.ts";
 import { applicationDemoOptions } from "../../scripts/playground/application.ts";
-import { settle } from "../fixtures/application-session.ts";
+import { pressLoneEscape, settle } from "../fixtures/application-session.ts";
 import { testView } from "../fixtures/application-views.ts";
 
 /** The sample application on a fake terminal, with its callbacks recorded. */
@@ -81,12 +81,8 @@ async function demo(options: FakeTerminalIOOptions = {}) {
       io.enqueue(bytes);
       await settle();
     },
-    /** A lone Escape reaches the reader only after its timing window. */
-    escape: async () => {
-      io.enqueueKeys("escape");
-      await new Promise((resolve) => setTimeout(resolve, 150));
-      await settle();
-    },
+    /** A lone Escape reaches the reader once the clock passes its window. */
+    escape: () => pressLoneEscape(io, clock),
     /** Cancel with Ctrl+C, which works whatever layer is open. */
     finish: async () => {
       io.enqueue("\x03");
@@ -315,6 +311,7 @@ async function messageAndSheet() {
     input: { mouse: true },
   });
   let outcome = "running";
+  const clock = new ManualTerminalClock();
   const running = runTerminalApplication<string>({
     view: view(),
     keymap: [{ key: "q", action: "quit" }],
@@ -326,13 +323,14 @@ async function messageAndSheet() {
       else caller.message = false;
       context.update(view());
     },
-  }, { io, clock: new ManualTerminalClock() }).then(
+  }, { io, clock }).then(
     () => (outcome = "resolved"),
     (error: Error) => (outcome = `rejected: ${error.message}`),
   );
   await settle();
   return {
     io,
+    clock,
     dismissals,
     outcome: () => outcome,
     finish: async () => {
@@ -347,20 +345,19 @@ Deno.test("one input that dismisses a message and a layer leaves a rebuilding ca
   const routes: readonly {
     readonly name: string;
     readonly via: string;
-    readonly send: (io: FakeTerminalIO) => Promise<void>;
+    readonly send: (
+      session: { io: FakeTerminalIO; clock: ManualTerminalClock },
+    ) => Promise<void>;
   }[] = [
     {
       name: "Escape",
       via: "escape",
-      send: async (io) => {
-        io.enqueueKeys("escape");
-        await new Promise((resolve) => setTimeout(resolve, 150));
-      },
+      send: ({ io, clock }) => pressLoneEscape(io, clock),
     },
     {
       name: "Enter on the safe button",
       via: "safe",
-      send: async (io) => {
+      send: async ({ io }) => {
         io.enqueue("\r");
         await settle();
       },
@@ -368,7 +365,7 @@ Deno.test("one input that dismisses a message and a layer leaves a rebuilding ca
     {
       name: "a click outside",
       via: "click-outside",
-      send: async (io) => {
+      send: async ({ io }) => {
         io.enqueueMouse(press(4, 1));
         await settle();
       },
@@ -377,7 +374,7 @@ Deno.test("one input that dismisses a message and a layer leaves a rebuilding ca
   for (const route of routes) {
     await t.step(route.name, async () => {
       const session = await messageAndSheet();
-      await route.send(session.io);
+      await route.send(session);
       await settle();
       assertEquals(session.outcome(), "running");
       assert(session.dismissals.includes(`ask:${route.via}`));
@@ -436,8 +433,8 @@ Deno.test("a handoff fences queued mouse reports and drops clicks read before it
   const mark = io.output().length;
   // A key that hands off, and a wheel report the same read already holds.
   io.enqueue("o\x1b[<65;20;4M");
+  // The terminal's cursor-position reply ends the fence without a timeout.
   io.enqueue("\x1b[24;1R");
-  await new Promise((resolve) => setTimeout(resolve, 150));
   await settle();
   assertEquals(handoffs, 1);
   const after = io.output().slice(mark);

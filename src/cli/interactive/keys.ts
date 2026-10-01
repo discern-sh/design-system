@@ -7,6 +7,7 @@
 import { raceTerminalDelay } from "./clock.ts";
 import type { TerminalIO } from "./io.ts";
 import { adoptTerminalRead } from "./read-broker.ts";
+import type { InteractionDelayScheduler } from "./types.ts";
 
 /**
  * Control chords decoded as names: every Ctrl+letter whose byte is not
@@ -384,8 +385,13 @@ export class BufferedTerminalKeyDecoder {
   }
 }
 
-/** Default milliseconds a lone Escape waits for sequence continuation bytes. */
-const LONE_ESCAPE_DELAY_MS = 100;
+/**
+ * Default milliseconds a lone Escape waits for sequence continuation bytes
+ * before it is delivered as the `escape` key. A test on a manual clock
+ * delivers a lone Escape by advancing the reader's clock this far once the
+ * byte has been read.
+ */
+export const TERMINAL_LONE_ESCAPE_DELAY_MS = 100;
 
 const LONE_ESCAPE_ELAPSED = Symbol("lone-escape-elapsed");
 
@@ -393,31 +399,40 @@ const LONE_ESCAPE_ELAPSED = Symbol("lone-escape-elapsed");
 export interface TerminalKeyReaderOptions {
   /**
    * Milliseconds a lone Escape byte waits for escape-sequence continuation
-   * bytes before it is delivered as the `escape` key. Defaults to 100.
-   * Continuation bytes arriving later than this window decode on their own,
-   * so an escape sequence split across a slower link than the window reads
-   * as Escape followed by the remainder.
+   * bytes before it is delivered as the `escape` key. Defaults to
+   * {@linkcode TERMINAL_LONE_ESCAPE_DELAY_MS}. Continuation bytes arriving
+   * later than this window decode on their own, so an escape sequence split
+   * across a slower link than the window reads as Escape followed by the
+   * remainder.
    */
   readonly escapeDelayMs?: number;
+  /**
+   * Times the lone-Escape window. Defaults to the process clock; an owned
+   * screen passes its own, so a manual clock delivers a lone Escape when it
+   * is advanced and never in wall time.
+   */
+  readonly clock?: InteractionDelayScheduler;
 }
 
 /** Shared raw-chunk reader behind the key and semantic-event surfaces. */
 class TerminalKeyBatchReader {
   readonly #decoder = new BufferedTerminalKeyDecoder();
   readonly #escapeDelayMs: number;
+  readonly #clock: InteractionDelayScheduler | undefined;
   #ended = false;
 
   constructor(
     readonly io: TerminalIO,
     options: TerminalKeyReaderOptions = {},
   ) {
-    const delay = options.escapeDelayMs ?? LONE_ESCAPE_DELAY_MS;
+    const delay = options.escapeDelayMs ?? TERMINAL_LONE_ESCAPE_DELAY_MS;
     if (!Number.isSafeInteger(delay) || delay < 1) {
       throw new TypeError(
         `escape delay must be a positive safe integer of milliseconds; received ${delay}`,
       );
     }
     this.#escapeDelayMs = delay;
+    this.#clock = options.clock;
   }
 
   /**
@@ -434,6 +449,7 @@ class TerminalKeyBatchReader {
             read.result,
             this.#escapeDelayMs,
             LONE_ESCAPE_ELAPSED,
+            this.#clock,
           )
           : await read.result;
       } catch (error) {

@@ -10,6 +10,7 @@ import {
   createTerminalApplicationModel,
   InteractionCancelled,
   runTerminalApplication,
+  TERMINAL_LONE_ESCAPE_DELAY_MS,
   type TerminalApplicationCommand,
   type TerminalApplicationContext,
   type TerminalApplicationOptions,
@@ -19,25 +20,23 @@ import {
   captureTerminalFrame,
   FakeSignalSource,
   FakeTerminalIO,
+  ManualTerminalClock,
 } from "../../src/cli/interactive/testing.ts";
 import {
   BEGIN_SYNCHRONIZED_UPDATE,
   ERASE_TERMINAL_DISPLAY,
 } from "../../src/cli/interactive/painter.ts";
 import { COMMAND_KINDS } from "../../src/cli/interactive/application/session.ts";
-import { applicationSession, settle } from "../fixtures/application-session.ts";
+import {
+  applicationSession,
+  pressLoneEscape,
+  settle,
+} from "../fixtures/application-session.ts";
 import { testView } from "../fixtures/application-views.ts";
 
 const quit = {
   keymap: [{ key: "q", action: "quit" }],
 } as const;
-
-/** A lone Escape decodes once the key reader's continuation window passes. */
-async function pressEscape(io: FakeTerminalIO): Promise<void> {
-  io.enqueueKeys("escape");
-  await new Promise((resolve) => setTimeout(resolve, 150));
-  await settle();
-}
 
 function exitOn(
   action: string,
@@ -184,6 +183,7 @@ Deno.test("field bindings fire while the filter owns input; plain bindings wait"
 Deno.test("Escape never exits; a bound Escape runs only when nothing else closes", async () => {
   const actions: string[] = [];
   const io = new FakeTerminalIO([], { holdOpen: true });
+  const clock = new ManualTerminalClock();
   const running = runTerminalApplication({
     view: testView(["a", "b"], { filter: true }),
     keymap: [...quit.keymap, { key: "escape", action: "back" }],
@@ -191,22 +191,61 @@ Deno.test("Escape never exits; a bound Escape runs only when nothing else closes
       actions.push(action);
       return exitOn(action);
     },
-  }, { io });
+  }, { io, clock });
   await settle();
   io.enqueue("/a");
   await settle();
-  await pressEscape(io);
+  await pressLoneEscape(io, clock);
   assertEquals(actions, [], "Escape cleared the filter");
   io.enqueue(" ");
   await settle();
-  await pressEscape(io);
+  await pressLoneEscape(io, clock);
   assertEquals(actions, [], "Escape left zoom");
-  await pressEscape(io);
+  await pressLoneEscape(io, clock);
   assertEquals(actions, ["back"]);
   io.enqueue("q");
   const state = await running;
   io.close();
   assertEquals(state.lists.items?.zoomed, false);
+});
+
+Deno.test("the lone-Escape window runs on the application's clock", async () => {
+  const actions: string[] = [];
+  const io = new FakeTerminalIO([], { holdOpen: true });
+  const clock = new ManualTerminalClock();
+  let live: TerminalApplicationContext<string> | undefined;
+  const running = runTerminalApplication({
+    view: testView(["a", "b"]),
+    keymap: [...quit.keymap, { key: "escape", action: "back" }],
+    start: (context) => {
+      live = context;
+    },
+    onAction: (action) => {
+      actions.push(action);
+      return exitOn(action);
+    },
+  }, { io, clock });
+  await settle();
+  io.enqueueKeys("escape");
+  await settle();
+  clock.advance(TERMINAL_LONE_ESCAPE_DELAY_MS - 1);
+  await settle();
+  assertEquals(actions, [], "the window is still open");
+  clock.advance(1);
+  await settle();
+  assertEquals(actions, ["back"], "the window closed on the clock");
+  // Continuation bytes inside the window still complete a sequence.
+  io.enqueue("\x1b");
+  await settle();
+  io.enqueue("[B");
+  await settle();
+  assertEquals(live?.state.lists.items?.selectedId, "b");
+  clock.advance(TERMINAL_LONE_ESCAPE_DELAY_MS);
+  await settle();
+  assertEquals(actions, ["back"], "no Escape was left behind");
+  io.enqueue("q");
+  await running;
+  io.close();
 });
 
 Deno.test("Ctrl+C cancels after restoration unless a binding claims it", async () => {

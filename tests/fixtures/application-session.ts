@@ -1,6 +1,7 @@
 /** A live application on a held-open fake terminal and a manual clock, for runtime tests. */
 import {
   runTerminalApplication,
+  TERMINAL_LONE_ESCAPE_DELAY_MS,
   type TerminalApplicationCommand,
   type TerminalApplicationContext,
   type TerminalApplicationObservation,
@@ -21,6 +22,20 @@ export async function settle(): Promise<void> {
   for (let turn = 0; turn < 5; turn += 1) {
     await new Promise((resolve) => setTimeout(resolve, 0));
   }
+}
+
+/**
+ * Press a lone Escape: let the reader take the byte, then pass its
+ * continuation window on the session's clock, so no wall time is spent.
+ */
+export async function pressLoneEscape(
+  io: FakeTerminalIO,
+  clock: ManualTerminalClock,
+): Promise<void> {
+  io.enqueueKeys("escape");
+  await settle();
+  clock.advance(TERMINAL_LONE_ESCAPE_DELAY_MS);
+  await settle();
 }
 
 /** A running session and the instruments around it. */

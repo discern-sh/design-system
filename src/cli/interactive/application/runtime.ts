@@ -339,7 +339,9 @@ export async function runTerminalApplication<A>(
   const front = (): RunningSession => stack[stack.length - 1] ?? root;
   const ticker = new TerminalAnimationTicker(clock, updates.notify);
   const abort = new AbortMailbox(runtime.abortSignal);
-  const reader = new TerminalInputReader(io);
+  // The lone-Escape window runs on the application's clock like every other
+  // timed transition, so a manual clock delivers Escape when advanced.
+  const reader = new TerminalInputReader(io, { clock });
   let failure: { error: unknown } | undefined;
   let signalRestored = false;
   let timer: { readonly at: number; readonly cancel: () => void } | undefined;
