@@ -298,7 +298,7 @@ function header<A>(
   return {
     line: fitLine(
       context,
-      `  ${spread(left, right.text, room, Math.max(1, separation))}`,
+      `  ${spread(context, left, right.text, room, Math.max(1, separation))}`,
       columns,
     ),
     hits,
@@ -424,7 +424,11 @@ function messageLine<A>(
     message.tone ?? "muted",
   );
   const right = styleRuns(context, message.trailing, undefined, "faint");
-  return fitLine(context, `  ${spread(left, right, columns - 4)}`, columns);
+  return fitLine(
+    context,
+    `  ${spread(context, left, right, columns - 4)}`,
+    columns,
+  );
 }
 
 /** The width tier a master-detail body uses at this many columns. */
@@ -688,7 +692,7 @@ function crumb<A>(
       "surface",
     )
     : "";
-  return spread(left, position, width);
+  return spread(context, left, position, width);
 }
 
 /** A selected group row's strip line: its groups, counts, and what Enter does. */

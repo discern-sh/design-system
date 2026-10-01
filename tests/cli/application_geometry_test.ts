@@ -17,6 +17,7 @@ import { flattenList } from "../../src/cli/interactive/application/list-model.ts
 import { modelState } from "../../src/cli/interactive/application/model.ts";
 import { renderDetailBlocks } from "../../src/cli/interactive/application/detail-render.ts";
 import { paintContext } from "../../src/cli/interactive/application/paint.ts";
+import { ApplicationDriver } from "../fixtures/application-driver.ts";
 import type { DetailBlock } from "../../src/cli/interactive/mod.ts";
 import {
   applicationDemoView,
@@ -457,6 +458,49 @@ Deno.test("a list viewport of any height keeps the selection in view", () => {
         );
         assertEquals(rendered.lines.length, height);
       }
+    }
+  }
+});
+
+Deno.test("chrome rows keep their two-cell gutters at every width", async (t) => {
+  const long = "Photo archive migration from the old storage server";
+  const jobs = DEMO_JOBS.map((job) =>
+    job.id === "photo-archive" ? { ...job, title: long } : job
+  );
+  const scenes = [
+    { name: "list", keys: ["down", "down"] },
+    { name: "zoom", keys: ["down", "down", "space"] },
+  ] as const;
+  for (const scene of scenes) {
+    for (const columns of [32, 34, 40, 60, 80, 120]) {
+      await t.step(`${scene.name} at ${columns}`, () => {
+        const driver = new ApplicationDriver(
+          applicationDemoView(jobs, {
+            id: "moved",
+            runs: [{ text: `${long} paused until its source returns` }],
+            trailing: [{ text: "u Undo" }],
+          }),
+          { columns, rows: 20, colorDepth: "none" },
+        );
+        driver.key(...scene.keys);
+        const lines = driver.text.split("\n");
+        const chrome = [
+          lines[0],
+          lines.at(-1),
+          lines.at(-2),
+          ...(driver.last.layout === "zoom" ? [lines[2]] : []),
+          ...(driver.last.layout === "strip"
+            ? [lines.at(-3), lines.at(-4)]
+            : []),
+        ];
+        for (const line of chrome) {
+          if (line === undefined || line.trim() === "") continue;
+          assert(
+            line.startsWith("  ") && line.endsWith("  "),
+            `${scene.name} at ${columns}: text in a gutter\n${line}`,
+          );
+        }
+      });
     }
   }
 });

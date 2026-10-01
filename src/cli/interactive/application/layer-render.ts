@@ -243,7 +243,7 @@ function headRows(
   const room = asideWidth === 0 ? width : Math.max(8, width - asideWidth - 2);
   const lines = titleLines(context, title, room);
   return lines.map((line, index) => ({
-    text: index === 0 ? spread(line, aside, width) : line,
+    text: index === 0 ? spread(context, line, aside, width) : line,
   }));
 }
 
@@ -530,7 +530,7 @@ function disclosureRows(
       : ink(context, key, { tone: "ink", bold: true }, surface);
     if (open) {
       flush();
-      const line = spread(`${marker} ${label}`, keyed, width);
+      const line = spread(context, `${marker} ${label}`, keyed, width);
       rows.push({
         text: focused ? fitLine(context, line, width, "selection") : line,
         hits: [{ start: 0, end: width, target: controlHit(layerId, control) }],
@@ -757,6 +757,7 @@ function composePanel(
     key: "page-up" | "page-down",
   ) => ({
     text: spread(
+      context,
       "",
       raised(context, overflowMarker(context, direction, count, key), "faint"),
       width,
@@ -1046,6 +1047,7 @@ function stepRow(
   );
   return {
     text: spread(
+      context,
       `${
         styleGlyph(context, {
           unicode: glyph.unicode,
@@ -1429,7 +1431,7 @@ function menuItemRow(
     room,
     ellipsis(context),
   );
-  const text = spread(left, keyed, width);
+  const text = spread(context, left, keyed, width);
   return highlighted ? fitLine(context, text, width, "selection") : text;
 }
 
@@ -1801,7 +1803,7 @@ function palettePanel<A>(
         room,
         ellipsis(context),
       );
-      const text = spread(label, trailing, width);
+      const text = spread(context, label, trailing, width);
       return highlighted ? fitLine(context, text, width, "selection") : text;
     };
     body.push({

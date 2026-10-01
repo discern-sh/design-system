@@ -107,7 +107,7 @@ function heading(
     : ink(context, block.aside, { tone: "faint" }, layout.surface);
   const beside = layout.wide && aside !== "" &&
     measureText(title) + 2 + measureText(aside) <= layout.width;
-  lines.push(beside ? spread(title, aside, layout.width) : title);
+  lines.push(beside ? spread(context, title, aside, layout.width) : title);
   if (aside !== "" && !beside) {
     lines.push(
       ink(
@@ -546,7 +546,7 @@ export function scrollDetail(
   const scroll = Math.max(0, Math.min(requested, maxScroll));
   const at = viewport(scroll);
   const marker = (text: string) =>
-    spread("", ink(context, text, { tone: "faint" }), width);
+    spread(context, "", ink(context, text, { tone: "faint" }), width);
   const top: string[] = [];
   if (scroll > 0 && (topPadding || costs)) {
     top.push(
@@ -629,7 +629,7 @@ export function renderStrip(
         terminalGlyph("ellipsis", context.capabilities),
       )
       : facts;
-    return [`  ${spread(shown, key, room)}`];
+    return [`  ${spread(context, shown, key, room)}`];
   }
-  return [`  ${spread(title, key, room)}`, `  ${factsLine(room)}`];
+  return [`  ${spread(context, title, key, room)}`, `  ${factsLine(room)}`];
 }

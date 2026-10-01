@@ -14,7 +14,12 @@ import {
   terminalGlyphFrame,
 } from "../../glyph-motion.ts";
 import { terminalGlyph } from "../../terminal-glyphs.ts";
-import { fillStyledLine, measureText, truncateText } from "../../text.ts";
+import {
+  fillStyledLine,
+  measureText,
+  truncateStyledText,
+  truncateText,
+} from "../../text.ts";
 import {
   resolveTerminalTheme,
   type TerminalSurfaceRole,
@@ -232,9 +237,12 @@ export function clip(
 
 /**
  * Place `right` against the end of a `width`-cell line after `left`, keeping
- * at least `gap` cells between them; `right` is dropped when it cannot fit.
+ * at least `gap` cells between them. When both cannot fit, `right` is
+ * dropped and `left` truncates with the repertoire's ellipsis, so the line
+ * never runs past `width`.
  */
 export function spread(
+  context: PaintContext,
   left: string,
   right: string,
   width: number,
@@ -242,7 +250,13 @@ export function spread(
 ): string {
   const used = measureText(left);
   const extra = measureText(right);
-  if (right === "" || used + gap + extra > width) return left;
+  if (right === "" || used + gap + extra > width) {
+    return used <= width ? left : truncateStyledText(
+      left,
+      Math.max(0, width),
+      terminalGlyph("ellipsis", context.capabilities),
+    );
+  }
   return `${left}${" ".repeat(width - used - extra)}${right}`;
 }
 

@@ -333,7 +333,12 @@ function headerLine<A>(
   const content = `${lead}${
     ink(context, row.group.title, { tone: "ink", bold: true }, paint.surface)
   }${ink(context, `  ${row.count}`, { tone: "faint" }, paint.surface)}${aside}`;
-  return fitLine(context, spread(content, marker, width), width, paint.surface);
+  return fitLine(
+    context,
+    spread(context, content, marker, width),
+    width,
+    paint.surface,
+  );
 }
 
 function foldLine<A>(
@@ -382,7 +387,12 @@ function foldLine<A>(
       tone: "faint",
     }, paint.surface)
   } ${compose(shown)}${aside}`;
-  return fitLine(context, spread(content, marker, width), width, paint.surface);
+  return fitLine(
+    context,
+    spread(context, content, marker, width),
+    width,
+    paint.surface,
+  );
 }
 
 /**
@@ -401,7 +411,7 @@ export function renderListRow<A>(
   const paint = rowPaint(selected, receded);
   switch (row.kind) {
     case "blank":
-      return fitLine(context, spread("", marker, width), width);
+      return fitLine(context, spread(context, "", marker, width), width);
     case "header":
       return headerLine(context, row, width, paint, marker);
     case "item":
@@ -505,7 +515,11 @@ export function renderListViewport<A>(
   }
   if (window.below > 0) {
     lines.push(
-      fitLine(context, spread("", marker("down", window.below), width), width),
+      fitLine(
+        context,
+        spread(context, "", marker("down", window.below), width),
+        width,
+      ),
     );
     keys.push(undefined);
   }
