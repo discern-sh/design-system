@@ -9,7 +9,12 @@
 import { terminalGlyph } from "../../terminal-glyphs.ts";
 import { measureText, padText } from "../../text.ts";
 import type { TerminalSurfaceRole } from "../../theme.ts";
-import type { ListRow, ListRows } from "./list-model.ts";
+import {
+  type ListRow,
+  type ListRowKey,
+  type ListRows,
+  rowKey,
+} from "./list-model.ts";
 import {
   clip,
   fitLine,
@@ -409,6 +414,8 @@ export function renderListRow<A>(
 /** One rendered list viewport. */
 export interface RenderedList {
   readonly lines: readonly string[];
+  /** The selectable row each line shows, for clicks; undefined elsewhere. */
+  readonly keys: readonly (ListRowKey | undefined)[];
   readonly scroll: number;
   /** The selection's line, when visible. */
   readonly line?: number;
@@ -447,6 +454,7 @@ export function renderListViewport<A>(
         { length: height },
         (_, index) => fitLine(context, index === 0 ? `  ${empty}` : "", width),
       ),
+      keys: Array.from({ length: height }, () => undefined),
       scroll: 0,
     };
   }
@@ -460,6 +468,7 @@ export function renderListViewport<A>(
   );
   const window = listWindow(rows, height, scroll);
   const lines: string[] = [];
+  const keys: (ListRowKey | undefined)[] = [];
   let line: number | undefined;
   const marker = (direction: "up" | "down", count: number) =>
     count > 0
@@ -483,6 +492,7 @@ export function renderListViewport<A>(
   };
   const first = window.sticky ?? scroll;
   lines.push(render(first, marker("up", window.above)));
+  keys.push(rowKey(rows.rows[first]));
   if (first === viewport.selected) line = 0;
   for (
     let index = scroll + (window.sticky === undefined ? 1 : 0);
@@ -491,15 +501,21 @@ export function renderListViewport<A>(
   ) {
     if (index === viewport.selected) line = lines.length;
     lines.push(render(index, ""));
+    keys.push(rowKey(rows.rows[index]));
   }
   if (window.below > 0) {
     lines.push(
       fitLine(context, spread("", marker("down", window.below), width), width),
     );
+    keys.push(undefined);
   }
-  while (lines.length < height) lines.push(fitLine(context, "", width));
+  while (lines.length < height) {
+    lines.push(fitLine(context, "", width));
+    keys.push(undefined);
+  }
   return {
     lines: lines.slice(0, height),
+    keys: keys.slice(0, height),
     scroll,
     ...(line === undefined ? {} : { line }),
   };

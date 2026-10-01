@@ -1,6 +1,6 @@
 # ADR 0053: Applications paint incrementally and animate
 
-**Status**: accepted; window titles joined the paint grammar under [ADR-0050](0050-applications-compose-a-grouped-list-a-following-detail-and-modal-layers.md)
+**Status**: accepted; window titles joined the paint grammar under [ADR-0050](0050-applications-compose-a-grouped-list-a-following-detail-and-modal-layers.md), and mouse modes and layer ids in the composition under [ADR-0051](0051-layers-own-focus-and-make-the-safe-choice-one-key-away.md)
 
 ## Context
 

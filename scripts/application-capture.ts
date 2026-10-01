@@ -99,8 +99,34 @@ try {
         {
           waitFor: when("Image resize"),
           capture: { name: "returned", when: when("Image resize") },
-          steps: [{ bytes: "/re" }],
+          steps: [{ bytes: "r" }],
         },
+        // Each layer opens from the list, is captured, and closes with Escape.
+        ...([["sheet", "run", "."], ["menu", "actions", "\x0b"], [
+          "palette",
+          "palette",
+          "/re",
+        ]] as const).flatMap(([state, layer, next]) => {
+          const open = ptySettledFrame(
+            size,
+            `${layer} layer on top`,
+            (capture) => capture.state?.topLayerId === layer,
+          );
+          return [{
+            waitFor: open,
+            capture: { name: state, when: open },
+            steps: [{ bytes: "\x1b", allowLoneEscape: true }],
+          }, {
+            waitFor: ptySettledFrame(
+              size,
+              `${layer} layer closed`,
+              (capture) =>
+                capture.state !== undefined &&
+                capture.state.topLayerId === undefined,
+            ),
+            steps: [{ bytes: next }],
+          }];
+        }),
         {
           waitFor: ptySettledFrame(
             size,

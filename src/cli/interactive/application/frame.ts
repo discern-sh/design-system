@@ -25,6 +25,17 @@ import {
   truncateStyledText,
   wrapStyledText,
 } from "../../text.ts";
+import type { ApplicationHit } from "./hits.ts";
+import { layerHints } from "./layer-hints.ts";
+import { requiresFullRead } from "./layer-model.ts";
+import {
+  type LayerBox,
+  layerContentWidth,
+  type LayerPaint,
+  type ReaderRows,
+  renderLayer,
+} from "./layer-render.ts";
+import type { ApplicationLayer } from "./layer-view.ts";
 import type { TerminalSize } from "../io.ts";
 import { isTerminalKeyName } from "../keys.ts";
 import type { TerminalApplicationStateReport } from "../state-report.ts";
@@ -38,24 +49,29 @@ import {
   decideListDensity,
   keyItemId,
   listLayoutKey,
+  type ListRowKey,
   type ListRows,
   rowGroupIds,
   rowIndexForKey,
+  rowKey,
 } from "./list-model.ts";
 import {
   fullWidthRoomy,
   layoutListColumns,
   listGaps,
   neededListWidth,
+  renderListRow,
   renderListViewport,
 } from "./list-render.ts";
 import {
   bodyList,
   listModelRows,
+  replaceLayer,
   type TerminalApplicationLayout,
   type TerminalApplicationListModel,
   type TerminalApplicationModel,
   terminalApplicationState,
+  visibleLayers,
   visibleMessage,
 } from "./model.ts";
 import {
@@ -73,6 +89,7 @@ import {
   type DetailBlock,
   type GroupedList,
   type HeaderBar,
+  type InlineRun,
   type MasterDetailBody,
   type SplitRules,
 } from "./view.ts";
@@ -90,11 +107,19 @@ const SPACIOUS_ROWS = 20;
 export interface TerminalApplicationFrame<A> {
   readonly frame: string;
   readonly model: TerminalApplicationModel<A>;
+  /** How the body is laid out, beneath any layers. */
   readonly layout: TerminalApplicationLayout;
+  /**
+   * The frame's composition: its layout and the ids of open layers. A
+   * change of composition paints a keyframe.
+   */
+  readonly composition: string;
   /** Caller blocks rendered for this frame; cached blocks are not counted. */
   readonly renderCalls: number;
   /** Whether a visible glyph moves, so the animation tick should keep running. */
   readonly animated: boolean;
+  /** Whether a visible clock, such as a running step's time, should tick each second. */
+  readonly clock: boolean;
   /** The window title the view asks for. */
   readonly windowTitle?: string;
   /** The navigation identities a state report announces. */
@@ -116,17 +141,24 @@ interface FrameContext extends PaintContext {
   renderCalls: number;
 }
 
+/** The selection hint shown once when mouse input turns on. */
+const SELECTION_HINT: readonly InlineRun[] = [
+  { text: "Shift-drag", role: "key" },
+  { text: " to select text" },
+];
+
 const readingCache = new WeakMap<
   object,
   { readonly key: string; readonly lines: readonly string[] }
 >();
 
+/** The header line, with a hit for every chip that carries an action. */
 function header<A>(
   context: FrameContext,
   model: TerminalApplicationModel<A>,
   bar: HeaderBar<A>,
   columns: number,
-): string {
+): { readonly line: string; readonly hits: readonly ApplicationHit[] } {
   const now = context.motion.now ?? 0;
   const listView = bodyList(model.view);
   const list = listView === undefined ? undefined : model.lists[listView.id];
@@ -177,38 +209,64 @@ function header<A>(
   );
   const trailing = styleRuns(context, bar.trailing, undefined);
   const room = columns - 4;
-  const compose = (
-    parts: readonly string[],
-    withLive: boolean,
-    gap: number,
-  ): string => {
-    const right = parts.filter((part) => part !== "").join(" ".repeat(gap));
-    return withLive && live !== ""
-      ? right === "" ? live : `${right}${" ".repeat(gap + 1)}${live}`
-      : right;
+  /** The right side for the first `shown` chips, and where each chip starts. */
+  const compose = (shown: number, withLive: boolean, gap: number) => {
+    const parts = [
+      ...chips.slice(0, shown).map((text, index) => ({ text, index })),
+      { text: trailing, index: -1 },
+    ].filter((part) => part.text !== "");
+    const starts: { readonly index: number; readonly at: number }[] = [];
+    let at = 0;
+    for (const part of parts) {
+      starts.push({ index: part.index, at });
+      at += measureText(part.text) + gap;
+    }
+    const right = parts.map((part) => part.text).join(" ".repeat(gap));
+    return {
+      text: withLive && live !== ""
+        ? right === "" ? live : `${right}${" ".repeat(gap + 1)}${live}`
+        : right,
+      starts,
+    };
   };
   const leadWidth = measureText(leading);
-  const ladder: (() => string)[] = [
-    () => compose([...chips, trailing], true, 3),
-    () => compose([...chips, trailing], true, 2),
+  const ladder = [
+    () => compose(chips.length, true, 3),
+    () => compose(chips.length, true, 2),
     ...chips.map((_, index) => () =>
-      compose([...chips.slice(0, chips.length - index - 1), trailing], true, 2)
+      compose(chips.length - index - 1, true, 2)
     ),
-    () => compose([trailing], false, 2),
-    () => "",
+    () => compose(0, false, 2),
+    () => ({ text: "", starts: [] }),
   ];
-  let right = "";
+  let right: ReturnType<typeof compose> = { text: "", starts: [] };
   for (const step of ladder) {
     right = step();
-    if (right === "" || leadWidth + 2 + measureText(right) <= room) break;
+    if (
+      right.text === "" || leadWidth + 2 + measureText(right.text) <= room
+    ) break;
   }
-  const rightWidth = measureText(right);
+  const rightWidth = measureText(right.text);
   const left = truncateStyledText(
     leading,
     Math.max(0, room - (rightWidth === 0 ? 0 : rightWidth + 2)),
     terminalGlyph("ellipsis", context.capabilities),
   );
-  return fitLine(context, `  ${spread(left, right, room)}`, columns);
+  const origin = 2 + room - rightWidth;
+  const hits: ApplicationHit[] = right.starts.flatMap(({ index, at }) => {
+    const chip = bar.chips?.[index];
+    const text = chips[index];
+    return chip?.action === undefined || text === undefined ? [] : [{
+      row: 0,
+      start: origin + at,
+      end: origin + at + measureText(text),
+      target: { kind: "chip" as const, index },
+    }];
+  });
+  return {
+    line: fitLine(context, `  ${spread(left, right.text, room)}`, columns),
+    hits,
+  };
 }
 
 function footerHints<A>(
@@ -248,18 +306,32 @@ function footerHints<A>(
   return view.footer;
 }
 
+/** A footer line and a hit for every single-key hint it shows. */
 function footer<A>(
   context: FrameContext,
-  model: TerminalApplicationModel<A>,
+  hints: KeyHints<A>,
   columns: number,
-): string {
+  row: number,
+): { readonly line: string; readonly hits: readonly ApplicationHit[] } {
   const layout = layoutKeyHintsCli(
-    footerHints(model),
+    hints,
     Math.max(0, columns - 4),
     context.capabilities,
     cliPresentationPassthrough(context.presentation),
   );
-  return fitLine(context, `  ${layout.line}`, columns);
+  return {
+    line: fitLine(context, `  ${layout.line}`, columns),
+    hits: layout.placed.flatMap((placed) =>
+      typeof placed.hint.key === "string"
+        ? [{
+          row,
+          start: 2 + placed.start,
+          end: 2 + placed.end,
+          target: { kind: "hint" as const, chord: placed.hint.key },
+        }]
+        : []
+    ),
+  };
 }
 
 function messageLine<A>(
@@ -268,7 +340,16 @@ function messageLine<A>(
   columns: number,
 ): string | undefined {
   const message = visibleMessage(model);
-  if (message === undefined) return undefined;
+  if (message === undefined) {
+    if (model.mouseHintSince === undefined) return undefined;
+    const hint = styleRuns(
+      context,
+      model.view.input?.selectionHint ?? SELECTION_HINT,
+      undefined,
+      "muted",
+    );
+    return fitLine(context, `  ${hint}`, columns);
+  }
   const left = styleRuns(
     context,
     message.runs,
@@ -345,7 +426,47 @@ function fitDensity<A>(
 
 interface ListPaint<A> {
   readonly lines: readonly string[];
+  /** The selectable row each line shows. */
+  readonly keys: readonly (ListRowKey | undefined)[];
   readonly list: TerminalApplicationListModel<A>;
+}
+
+/** Hits for a list's lines: the viewport for the wheel, each row for clicks. */
+function listHits(
+  listId: string,
+  keys: readonly (ListRowKey | undefined)[],
+  top: number,
+  start: number,
+  end: number,
+): readonly ApplicationHit[] {
+  return keys.flatMap((key, index) => [
+    {
+      row: top + index,
+      start,
+      end,
+      target: { kind: "list" as const, listId },
+    },
+    ...(key === undefined ? [] : [{
+      row: top + index,
+      start,
+      end,
+      target: { kind: "row" as const, listId, key },
+    }]),
+  ]);
+}
+
+/** Hits covering whole rows of one region. */
+function areaHits(
+  rows: number,
+  top: number,
+  start: number,
+  end: number,
+  target: ApplicationHit["target"],
+): readonly ApplicationHit[] {
+  return Array.from(
+    { length: rows },
+    (_, index) => ({ row: top + index, start, end, target }),
+  );
 }
 
 function paintList<A>(
@@ -377,12 +498,13 @@ function paintList<A>(
     scroll: list.scroll,
     ...(list.anchor === undefined ? {} : { anchor: list.anchor }),
     ...(reveal < 0 ? {} : { reveal }),
-    receded,
+    receded: receded || context.recede === true,
     filtering: list.filter !== undefined,
   });
   const { anchor: _anchor, line: _line, reveal: _reveal, ...rest } = list;
   return {
     lines: rendered.lines,
+    keys: rendered.keys,
     list: {
       ...rest,
       scroll: rendered.scroll,
@@ -440,6 +562,8 @@ interface BodyResult<A> {
   readonly listRows: number;
   readonly detailRows: number;
   readonly readingRows: number;
+  /** Clickable and scrollable regions, rows counted from the body's top. */
+  readonly hits: readonly ApplicationHit[];
 }
 
 function withList<A>(
@@ -471,14 +595,20 @@ function masterDetail<A>(
   size: TerminalSize,
   region: Region,
   short: boolean,
+  covered: boolean,
 ): BodyResult<A> {
   const { columns } = size;
   const split = body.split ?? DEFAULT_SPLIT_RULES;
   const listModel = model.lists[body.list.id];
   if (listModel === undefined) throw new TypeError("list model is missing");
   const tier = splitTier(split, columns);
-  const stripLines = short || size.rows < split.strip.shortBelowRows ? 1 : 2;
-  const rule = context.painted ? 0 : 1;
+  // A layer across the bottom covers the strip, so the list takes its rows.
+  const stripLines = covered
+    ? 0
+    : short || size.rows < split.strip.shortBelowRows
+    ? 1
+    : 2;
+  const rule = context.painted || covered ? 0 : 1;
   const listHeight = tier === "strip"
     ? Math.max(1, region.height - stripLines - rule)
     : region.height;
@@ -529,6 +659,7 @@ function masterDetail<A>(
       listRows: listHeight,
       detailRows: region.height,
       readingRows: 0,
+      hits: areaHits(region.height, 0, 0, columns, { kind: "detail" }),
     };
   }
   if (tier === "strip") {
@@ -553,12 +684,12 @@ function masterDetail<A>(
         { text: row.item.title, role: "title" as const },
       ]
       : [];
-    const strip = renderStrip(
+    const strip = stripLines === 0 ? [] : renderStrip(
       context,
       itemId === undefined ? undefined : body.detail.strip?.[itemId],
       fallback,
       columns,
-      stripLines,
+      stripLines === 1 ? 1 : 2,
       "surface",
     ).map((line) =>
       fitLine(context, itemId === undefined ? "" : line, columns, "surface")
@@ -584,6 +715,7 @@ function masterDetail<A>(
       listRows: listHeight,
       detailRows: 0,
       readingRows: 0,
+      hits: listHits(body.list.id, painted.keys, 0, 0, columns),
     };
   }
   const listWidth = fitted.density?.width ??
@@ -634,6 +766,10 @@ function masterDetail<A>(
     listRows: region.height,
     detailRows: region.height,
     readingRows: 0,
+    hits: [
+      ...listHits(body.list.id, painted.keys, 0, 0, listWidth),
+      ...areaHits(region.height, 0, listWidth, columns, { kind: "detail" }),
+    ],
   };
 }
 
@@ -668,6 +804,7 @@ function listOnly<A>(
     listRows: region.height,
     detailRows: 0,
     readingRows: 0,
+    hits: listHits(view.id, painted.keys, 0, 0, size.columns),
   };
 }
 
@@ -717,6 +854,7 @@ function reading<A>(
     listRows: 0,
     detailRows: 0,
     readingRows: region.height,
+    hits: areaHits(region.height, 0, 0, size.columns, { kind: "reading" }),
   };
 }
 
@@ -800,6 +938,7 @@ function empty<A>(
     (_, index) => center(block[index - offset] ?? ""),
   );
   let next = model;
+  let hits: readonly ApplicationHit[] = [];
   if (body.list !== undefined && listModel !== undefined && listRows > 0) {
     const painted = paintList(
       context,
@@ -810,7 +949,9 @@ function empty<A>(
       listRows,
       fullWidthRoomy(body.list, columns),
     );
-    lines.push(fitLine(context, "", columns), ...painted.lines);
+    lines.push(fitLine(context, "", columns));
+    hits = listHits(body.list.id, painted.keys, lines.length, 0, columns);
+    lines.push(...painted.lines);
     next = withList(model, body.list.id, painted.list);
   }
   while (lines.length < region.height) {
@@ -823,6 +964,7 @@ function empty<A>(
     listRows,
     detailRows: 0,
     readingRows: 0,
+    hits,
   };
 }
 
@@ -853,8 +995,10 @@ function tooSmall<A>(
     ).join("\n"),
     model,
     layout: "too-small",
+    composition: "too-small",
     renderCalls: 0,
     animated: false,
+    clock: false,
     report: terminalApplicationStateReport(model),
   };
 }
@@ -926,40 +1070,323 @@ export function renderTerminalApplication<A>(
     height: Math.max(1, bottom - top),
     borrowed: messageRow ? 1 : 0,
   };
-  const body = view.body;
-  const result = body.kind === "master-detail"
-    ? masterDetail(context, model, body, size, region, short)
-    : body.kind === "list"
-    ? listOnly(context, model, body.list, size, region)
-    : body.kind === "reading"
-    ? reading(context, model, body, size, region)
-    : empty(context, model, body, size, region);
-  const fitted: TerminalApplicationModel<A> = {
-    ...result.model,
-    geometry: {
-      layout: result.layout,
-      listRows: result.listRows,
-      detailRows: result.detailRows,
-      readingRows: result.readingRows,
-    },
-  };
-  const headerLine = header(context, fitted, view.header, columns);
+  const layers = visibleLayers(model);
+  let fitted: TerminalApplicationModel<A>;
+  let bodyLines: readonly string[];
+  let layout: TerminalApplicationLayout;
+  let hits: readonly ApplicationHit[];
+  let hints: KeyHints<A>;
+  if (layers.length === 0) {
+    const result = renderBody(context, model, size, region, short, false);
+    fitted = {
+      ...result.model,
+      geometry: {
+        layout: result.layout,
+        listRows: result.listRows,
+        detailRows: result.detailRows,
+        readingRows: result.readingRows,
+      },
+    };
+    bodyLines = result.lines;
+    layout = result.layout;
+    hits = result.hits.map((hit) => ({ ...hit, row: hit.row + region.top }));
+    hints = footerHints(fitted);
+  } else {
+    const result = renderLayers(context, model, layers, size, region, short);
+    fitted = result.model;
+    bodyLines = result.lines;
+    layout = result.layout;
+    hits = result.hits;
+    hints = result.hints;
+  }
+  const head = header(context, fitted, view.header, columns);
+  const replaced = message !== undefined && short;
+  const foot = footer(context, hints, columns, rows - 1);
   const lines = [
-    headerLine,
+    head.line,
     ...(top > 1 ? [fitLine(context, "", columns)] : []),
-    ...result.lines,
+    ...bodyLines,
     ...(messageRow && message !== undefined ? [message] : []),
-    message !== undefined && short ? message : footer(context, fitted, columns),
+    replaced ? message : foot.line,
   ];
+  fitted = {
+    ...fitted,
+    hits: [...head.hits, ...hits, ...(replaced ? [] : foot.hits)],
+  };
   return {
     frame: lines.join("\n"),
     model: fitted,
-    layout: result.layout,
+    layout,
+    composition: layers.length === 0
+      ? layout
+      : `${layout}+${layers.map((layer) => layer.id).join("+")}`,
     renderCalls: context.renderCalls,
     animated: context.animated,
+    clock: context.clock,
     ...(view.windowTitle === undefined
       ? {}
       : { windowTitle: view.windowTitle }),
     report: terminalApplicationStateReport(fitted),
   };
+}
+
+/** Render the body for a region; `covered` hides the strip beneath a bottom layer. */
+function renderBody<A>(
+  context: FrameContext,
+  model: TerminalApplicationModel<A>,
+  size: TerminalSize,
+  region: Region,
+  short: boolean,
+  covered: boolean,
+): BodyResult<A> {
+  const body = model.view.body;
+  return body.kind === "master-detail"
+    ? masterDetail(context, model, body, size, region, short, covered)
+    : body.kind === "list"
+    ? listOnly(context, model, body.list, size, region)
+    : body.kind === "reading"
+    ? reading(context, model, body, size, region)
+    : empty(context, model, body, size, region);
+}
+
+/** Where a layer sits on screen and the box it may fill. */
+interface LayerPlacement {
+  readonly anchor: "detail" | "bottom" | "top" | "full";
+  /** The first column, inside the body region. */
+  readonly left: number;
+  readonly box: LayerBox;
+}
+
+/** Columns below which every layer takes the whole body. */
+const NARROW_LAYER_COLUMNS = 56;
+
+/**
+ * The column a wide master-detail body's detail starts at, when the detail
+ * sits beside the list; layers anchored to the detail occupy it.
+ */
+function detailColumn<A>(
+  model: TerminalApplicationModel<A>,
+  size: TerminalSize,
+  region: Region,
+): number | undefined {
+  const body = model.view.body;
+  if (body.kind !== "master-detail") return undefined;
+  const split = body.split ?? DEFAULT_SPLIT_RULES;
+  if (splitTier(split, size.columns) !== "wide") return undefined;
+  const list = model.lists[body.list.id];
+  if (list === undefined || list.zoomed) return undefined;
+  const width = (display: GroupedList<A>) =>
+    contentListWidth(display, split, "wide", size.columns);
+  const fitted = fitDensity(
+    list,
+    region.height + region.borrowed,
+    `${size.columns}x${size.rows}`,
+    width,
+  );
+  return fitted.density?.width ?? width(fitted.display);
+}
+
+/**
+ * Place a layer. Beside a wide detail every layer occupies the detail
+ * column unless it asks for another anchor; elsewhere sheets, menus, and
+ * forms sit at the bottom, a palette at the top, and a reader takes the
+ * body. Below 56 columns every layer takes the body. An item layer at the
+ * bottom leaves one row so the selected item stays in view.
+ */
+function placeLayer<A>(
+  layer: ApplicationLayer<A>,
+  size: TerminalSize,
+  region: Region,
+  column: number | undefined,
+): LayerPlacement {
+  const narrow = size.columns < NARROW_LAYER_COLUMNS;
+  const stretch = layer.kind === "reader" || layer.kind === "palette";
+  const fallback = layer.kind === "palette"
+    ? "top"
+    : layer.kind === "reader"
+    ? "full"
+    : "bottom";
+  const wanted = layer.anchor ?? "detail";
+  const anchor = narrow
+    ? "full"
+    : wanted === "detail"
+    ? column === undefined ? fallback : "detail"
+    : wanted;
+  if (anchor === "detail" && column !== undefined) {
+    return {
+      anchor,
+      left: column,
+      box: {
+        width: size.columns - column,
+        height: region.height,
+        stretch,
+        narrow: false,
+      },
+    };
+  }
+  const height = anchor === "bottom" && layer.scope === "item"
+    ? Math.max(3, region.height - 1)
+    : region.height;
+  return {
+    anchor,
+    left: 0,
+    box: {
+      width: size.columns,
+      height,
+      stretch: anchor === "full" || stretch,
+      narrow,
+    },
+  };
+}
+
+/** A reader's focusable rows, each rendered at the layer's content width. */
+function readerRows<A>(
+  context: FrameContext,
+  model: TerminalApplicationModel<A>,
+  list: GroupedList<A>,
+  width: number,
+): ReaderRows | undefined {
+  const listModel = model.lists[list.id];
+  if (listModel === undefined) return undefined;
+  const rows = listModelRows(listModel);
+  const selected = rowIndexForKey(rows.rows, listModel.selection);
+  const layout = layoutListColumns(
+    list,
+    width,
+    listGaps(list, fullWidthRoomy(list, width)),
+  );
+  return {
+    listId: list.id,
+    lines: rows.rows.map((row, index) =>
+      renderListRow(
+        context,
+        row,
+        layout,
+        width,
+        index === selected,
+        context.recede === true,
+      )
+    ),
+    keys: rows.rows.map(rowKey),
+    ...(selected < 0 ? {} : { selected }),
+  };
+}
+
+interface LayeredBody<A> {
+  readonly lines: readonly string[];
+  readonly model: TerminalApplicationModel<A>;
+  readonly layout: TerminalApplicationLayout;
+  /** Hits in screen rows: the top layer's controls only. */
+  readonly hits: readonly ApplicationHit[];
+  readonly hints: KeyHints<A>;
+}
+
+/**
+ * Paint the open layers over a receded body. The body keeps every decision
+ * it made without them — density, width, scroll — so closing a layer
+ * restores it exactly; beneath a bottom layer it shows the rows above, so
+ * the selected item stays in view. Only the top layer takes clicks.
+ */
+function renderLayers<A>(
+  context: FrameContext,
+  model: TerminalApplicationModel<A>,
+  layers: readonly ApplicationLayer<A>[],
+  size: TerminalSize,
+  region: Region,
+  short: boolean,
+): LayeredBody<A> {
+  const column = detailColumn(model, size, region);
+  let next = model;
+  const painted: {
+    readonly layer: ApplicationLayer<A>;
+    readonly place: LayerPlacement;
+    readonly paint: LayerPaint;
+  }[] = [];
+  for (const [index, layer] of layers.entries()) {
+    const state = next.layers[layer.id];
+    if (state === undefined) continue;
+    const place = placeLayer(layer, size, region, column);
+    const inner: FrameContext = {
+      ...context,
+      ground: "raised",
+      recede: index < layers.length - 1,
+      animated: false,
+      clock: false,
+    };
+    const rows = layer.kind === "reader" && layer.rows !== undefined
+      ? readerRows(inner, next, layer.rows, layerContentWidth(place.box))
+      : undefined;
+    const paint = renderLayer(inner, layer, state, place.box, rows);
+    context.animated ||= inner.animated;
+    context.clock ||= inner.clock;
+    context.renderCalls = inner.renderCalls;
+    next = replaceLayer(next, paint.model);
+    painted.push({ layer, place, paint });
+  }
+  const covered = Math.max(
+    0,
+    ...painted.filter((entry) => entry.place.anchor === "bottom").map((
+      entry,
+    ) => entry.paint.lines.length),
+  );
+  const receded: FrameContext = {
+    ...context,
+    recede: true,
+    animated: false,
+    clock: false,
+  };
+  const base = renderBody(
+    receded,
+    model,
+    size,
+    covered > 0
+      ? {
+        top: region.top,
+        height: Math.max(1, region.height - covered),
+        borrowed: region.borrowed + covered,
+      }
+      : region,
+    short,
+    covered > 0,
+  );
+  context.animated ||= receded.animated;
+  context.renderCalls = receded.renderCalls;
+  const lines = [...base.lines.slice(0, region.height)];
+  while (lines.length < region.height) {
+    lines.push(fitLine(context, "", size.columns));
+  }
+  let hits: readonly ApplicationHit[] = [];
+  for (const [index, entry] of painted.entries()) {
+    const top = entry.place.anchor === "bottom"
+      ? region.height - entry.paint.lines.length
+      : 0;
+    for (const [offset, line] of entry.paint.lines.entries()) {
+      const row = top + offset;
+      const current = lines[row];
+      if (current === undefined) continue;
+      lines[row] = entry.place.left === 0 ? line : `${
+        padText(
+          truncateStyledText(current, entry.place.left, ""),
+          entry.place.left,
+        )
+      }${line}`;
+    }
+    if (index === painted.length - 1) {
+      hits = entry.paint.hits.map((hit) => ({
+        ...hit,
+        row: hit.row + region.top + top,
+        start: hit.start + entry.place.left,
+        end: hit.end + entry.place.left,
+      }));
+    }
+  }
+  const last = painted.at(-1);
+  const state = last === undefined ? undefined : next.layers[last.layer.id];
+  const hints = last === undefined || state === undefined
+    ? footerHints(next)
+    : layerHints(last.layer, state, {
+      unread: last.layer.kind === "sheet" && requiresFullRead(last.layer) &&
+        !state.fullyRead && last.paint.hiddenBelow > 0,
+    });
+  return { lines, model: next, layout: base.layout, hits, hints };
 }

@@ -36,7 +36,7 @@ let resizeIndex = 0;
 const geometries = [[40, 20], [120, 30], [80, 13], [24, 6], [80, 24]] as const;
 await runTerminalApplication({
   ...demo,
-  keymap: [...demo.keymap ?? [], { key: "r", action: "resize" }],
+  keymap: [...demo.keymap ?? [], { key: "R", action: "resize" }],
   onAction: (action, context, source) => {
     if (action === "resize") {
       const [columns, rows] = geometries[resizeIndex++ % geometries.length] ??

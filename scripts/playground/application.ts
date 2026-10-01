@@ -8,16 +8,28 @@ import {
 } from "@discern-sh/design-system/cli";
 import type {
   ApplicationGlyph,
+  ApplicationLayer,
   DetailBlock,
   DetailStrip,
   GroupedListItem,
   InlineRun,
+  KeymapEntry,
   ListGroup,
   MessageLine,
   TerminalApplicationContext,
   TerminalApplicationOptions,
   TerminalApplicationView,
 } from "@discern-sh/design-system/cli/interactive";
+import {
+  demoActionsMenu,
+  demoDeleteSheet,
+  type DemoFormValues,
+  demoKeysReader,
+  demoLogReader,
+  demoNewJobForm,
+  demoPalette,
+  demoRunSheet,
+} from "./application-layers.ts";
 
 /** One sample job: what its row, detail, and strip show. */
 export interface DemoJob {
@@ -296,10 +308,17 @@ function strip(job: DemoJob): DetailStrip {
   };
 }
 
-/** The sample view for a set of jobs and an optional message. */
+/** Layers and preferences the sample view carries besides its jobs. */
+export interface ApplicationDemoViewOptions {
+  readonly layers?: readonly ApplicationLayer<string>[];
+  readonly mouse?: boolean;
+}
+
+/** The sample view for a set of jobs, an optional message, and open layers. */
 export function applicationDemoView(
   jobs: readonly DemoJob[] = DEMO_JOBS,
   message?: MessageLine,
+  options: ApplicationDemoViewOptions = {},
 ): TerminalApplicationView<string> {
   const groups: ListGroup<string>[] = GROUPS.map((group) => ({
     ...group,
@@ -357,12 +376,36 @@ export function applicationDemoView(
         { key: "enter", label: "Run sample" },
         { key: "space", label: "Details" },
       ],
-      right: [{ key: "q", label: "Quit" }],
-      extra: [{ key: "/", label: "Filter" }],
+      right: [{ key: ".", label: "Actions" }, {
+        key: "ctrl-k",
+        label: "Commands",
+      }],
+      extra: [{ key: "/", label: "Filter" }, { key: "q", label: "Quit" }],
     },
+    ...(options.layers === undefined || options.layers.length === 0
+      ? {}
+      : { layers: options.layers }),
     windowTitle: `Studio · ${review} to review`,
+    ...(options.mouse === true ? { input: { mouse: true } } : {}),
   };
 }
+
+/** The sample's key bindings: quit, actions, commands, a new job, and shortcuts. */
+export const DEMO_KEYMAP: readonly KeymapEntry<string>[] = [
+  { key: "q", action: "quit" },
+  { key: ".", action: "menu" },
+  { key: "ctrl-k", action: "palette" },
+  { key: "n", action: "new" },
+  { key: "?", action: "keys" },
+  { key: "r", action: "rerun" },
+  { key: "D", action: "delete" },
+  {
+    key: "ctrl-k",
+    action: "palette-close",
+    scope: { layer: "palette" },
+    inFields: true,
+  },
+];
 
 /** The first frame's tip, dismissed by the first key. */
 export const DEMO_TIP: MessageLine = {
@@ -414,11 +457,37 @@ export function applicationDemoOptions(
   let message: MessageLine | undefined = settings.tip === false
     ? undefined
     : DEMO_TIP;
+  let layers: readonly ApplicationLayer<string>[] = [];
+  let mouse = false;
+  let selected: string | undefined = DEMO_JOBS[0]?.id;
+  let form: DemoFormValues = { title: "", schedule: "daily", notes: "" };
   let live: TerminalApplicationContext<string> | undefined;
-  const publish = () => live?.update(applicationDemoView(jobs, message));
+  const view = () => applicationDemoView(jobs, message, { layers, mouse });
+  const publish = () => live?.update(view());
+  const find = (id: string | undefined) =>
+    jobs.find((candidate) => candidate.id === id);
+  const toast = (text: string) => {
+    message = {
+      id: `toast-${text}`,
+      runs: [{ text }],
+      dismiss: { afterMs: 6000, onKey: true },
+    };
+  };
+  /** A sheet replaces the menu that opened it; any other layer stacks. */
+  const open = (layer: ApplicationLayer<string>) => {
+    layers = [
+      ...layers.filter((existing) =>
+        existing.kind !== "menu" && existing.id !== layer.id
+      ),
+      layer,
+    ].slice(-2);
+  };
+  const close = (id: string) => {
+    layers = layers.filter((layer) => layer.id !== id);
+  };
   return {
-    view: applicationDemoView(jobs, message),
-    keymap: [{ key: "q", action: "quit" }],
+    view: view(),
+    keymap: DEMO_KEYMAP,
     start(context) {
       live = context;
       const timer = setTimeout(() => {
@@ -426,6 +495,9 @@ export function applicationDemoOptions(
         publish();
       }, updateAfterMs);
       return () => clearTimeout(timer);
+    },
+    onSelectionChange(listId, itemId) {
+      if (listId === "jobs") selected = itemId;
     },
     onSelectionMoved(_list, itemId, move) {
       if (move.kind !== "regrouped") return;
@@ -439,19 +511,127 @@ export function applicationDemoOptions(
       };
       publish();
     },
-    onDismiss(target) {
-      if (message?.id === target.message) message = undefined;
-      publish();
+    onDismiss(target, _via, context) {
+      if ("message" in target) {
+        if (message?.id === target.message) message = undefined;
+      } else close(target.layer);
+      context.update(view());
     },
-    onAction(action) {
-      if (action === "quit") return { kind: "exit" };
-      const job = jobs.find((candidate) => `run:${candidate.id}` === action);
-      if (job === undefined) return undefined;
-      return {
-        kind: "foreground",
-        handoff: [{ text: `Running ${job.title} · press Enter to come back` }],
-        run: () => foreground(job.title),
-      };
+    onField(layerId, fieldId, value, context) {
+      if (layerId !== "new") return;
+      if (fieldId === "title") form = { ...form, title: value };
+      if (fieldId === "schedule") form = { ...form, schedule: value };
+      if (fieldId === "notes") form = { ...form, notes: value };
+      open(demoNewJobForm(form));
+      context.update(view());
+    },
+    onAction(action, context) {
+      const [verb, id] = action.split(":");
+      const job = find(id ?? selected);
+      switch (verb) {
+        case "quit":
+          return { kind: "exit" };
+        case "menu":
+          if (job !== undefined) open(demoActionsMenu(job));
+          break;
+        case "palette":
+          open(demoPalette(jobs, mouse));
+          break;
+        case "palette-close":
+          close("palette");
+          break;
+        case "keys":
+          open(demoKeysReader());
+          break;
+        case "new":
+          form = { title: "", schedule: "daily", notes: "" };
+          open(demoNewJobForm(form));
+          break;
+        case "rerun":
+          if (job !== undefined) open(demoRunSheet(job));
+          break;
+        case "delete":
+          if (job !== undefined) open(demoDeleteSheet(job));
+          break;
+        case "log":
+          if (job !== undefined) open(demoLogReader(job));
+          break;
+        case "mouse":
+          // Turning mouse input on shows the package's selection hint.
+          mouse = !mouse;
+          close("palette");
+          if (!mouse) toast("Mouse off");
+          break;
+        case "confirm-run":
+          if (job !== undefined) {
+            // The sample shows a run that started eleven seconds ago.
+            const now = context.now();
+            open(
+              demoRunSheet(job, "working", { startedAt: now - 11_000, now }),
+            );
+          }
+          break;
+        case "stop":
+          close("run");
+          if (job !== undefined) toast(`Stopped ${job.title}`);
+          break;
+        case "confirm-delete":
+          close("delete");
+          if (job !== undefined) {
+            jobs = jobs.filter((candidate) => candidate.id !== job.id);
+            toast(`Deleted ${job.title}; its last output is kept for a while`);
+          }
+          break;
+        case "pause":
+          close("delete");
+          close("actions");
+          if (job !== undefined) toast(`Paused ${job.title}`);
+          break;
+        case "schedule":
+          close("actions");
+          toast("Schedules are not part of this sample");
+          break;
+        case "create":
+        case "create-run":
+          close("new");
+          toast(`Created ${form.title === "" ? "a job" : form.title}`);
+          break;
+        case "edit-notes":
+          return {
+            kind: "foreground",
+            handoff: [{ text: "Editing the notes · press Enter to come back" }],
+            run: async () => {
+              await foreground("the notes");
+              context.setField("new", "notes", `${form.notes}Edited outside.`);
+            },
+          };
+        case "paused":
+          close("palette");
+          if (jobs.some((candidate) => candidate.group === "paused")) {
+            context.select("jobs", "old-exports", { reveal: true });
+          }
+          break;
+        case "open":
+          return {
+            kind: "foreground",
+            handoff: [{ text: `Opening ${id ?? "the output"}` }],
+            run: () => foreground(id ?? "the output"),
+          };
+        case "run": {
+          if (job === undefined) return undefined;
+          return {
+            kind: "foreground",
+            handoff: [{
+              text: `Running ${job.title} · press Enter to come back`,
+            }],
+            run: () => foreground(job.title),
+          };
+        }
+        default:
+          return undefined;
+      }
+      context.update(view());
+      return undefined;
     },
   };
 }

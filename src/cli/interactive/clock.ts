@@ -29,9 +29,13 @@ export const systemTerminalClock: TerminalClock = Object.freeze({
 /** Interval between animation frames: four frames a second. */
 export const TERMINAL_ANIMATION_INTERVAL_MS = 250;
 
+/** Interval between repaints of a visible clock, such as elapsed time, when nothing moves. */
+export const TERMINAL_CLOCK_INTERVAL_MS = 1000;
+
 /**
  * Advances one shared animation phase while, and only while, the latest
- * painted frame shows a moving glyph. Each tick schedules at most one
+ * painted frame shows a moving glyph, and repaints once a second while it
+ * shows a clock but nothing moves. Each tick schedules at most one
  * successor, after the repaint it caused, so a slow paint delays the next
  * frame instead of queueing ticks behind it.
  */
@@ -54,18 +58,24 @@ export class TerminalAnimationTicker {
     return this.#cancel !== undefined;
   }
 
-  /** Follow the latest frame: schedule the next tick while it animates, stop otherwise. */
-  sync(animating: boolean): void {
-    if (!animating) {
+  /**
+   * Follow the latest frame: schedule the next tick while it animates, or
+   * while it shows a clock, and stop otherwise.
+   */
+  sync(animating: boolean, clock = false): void {
+    if (!animating && !clock) {
       this.stop();
       return;
     }
     if (this.#cancel !== undefined) return;
-    this.#cancel = this.clock.delay(() => {
-      this.#cancel = undefined;
-      this.#phase += 1;
-      this.onTick();
-    }, TERMINAL_ANIMATION_INTERVAL_MS);
+    this.#cancel = this.clock.delay(
+      () => {
+        this.#cancel = undefined;
+        if (animating) this.#phase += 1;
+        this.onTick();
+      },
+      animating ? TERMINAL_ANIMATION_INTERVAL_MS : TERMINAL_CLOCK_INTERVAL_MS,
+    );
   }
 
   /** Cancel a scheduled tick; the phase is kept for the next start. */

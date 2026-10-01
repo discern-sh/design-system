@@ -14,8 +14,9 @@ import {
 } from "../clock.ts";
 import { InteractionCancelled } from "../errors.ts";
 import { DenoTerminalIO, type TerminalSize } from "../io.ts";
-import { TerminalInputReader, type TerminalKey } from "../keys.ts";
+import { type TerminalInputEvent, TerminalInputReader } from "../keys.ts";
 import { assertInteractiveTerminal, withRawTerminal } from "../lifecycle.ts";
+import { drainTerminalMouseInput } from "../mouse-input.ts";
 import {
   AbortMailbox,
   ResizeMailbox,
@@ -38,6 +39,7 @@ import {
   type TerminalApplicationActionSource,
   terminalApplicationDeadline,
   type TerminalApplicationDismissal,
+  type TerminalApplicationDismissTarget,
   type TerminalApplicationEffect,
   type TerminalApplicationInput,
   type TerminalApplicationLayout,
@@ -88,6 +90,11 @@ export interface TerminalApplicationContext<A> {
     itemId: string,
     options?: { readonly reveal?: boolean },
   ): void;
+  /**
+   * Write a field's value in an open layer, such as text an external editor
+   * returned. Applies like `update`; the cursor moves to the end.
+   */
+  setField(layerId: string, fieldId: string, value: string): void;
   /** End the session with this error after restoring the terminal. */
   fail(error: unknown): void;
   /** The runtime clock's time. */
@@ -124,10 +131,25 @@ export interface TerminalApplicationOptions<A> {
     move: TerminalApplicationSelectionMove,
     context: TerminalApplicationContext<A>,
   ) => void;
-  /** A message was dismissed; the next view must omit it. */
+  /**
+   * A message or layer was dismissed — by timeout, a key, Escape, the safe
+   * button, or a click outside — and the package already hides it. The next
+   * view must omit it.
+   */
   readonly onDismiss?: (
-    target: { readonly message: string },
+    target: TerminalApplicationDismissTarget,
     via: TerminalApplicationDismissal,
+    context: TerminalApplicationContext<A>,
+  ) => void;
+  /**
+   * A field in an open layer changed: typing, a choice, or a challenge. It
+   * runs before any other callback of the same input, so a preview built
+   * from it is current before an action reads it.
+   */
+  readonly onField?: (
+    layerId: string,
+    fieldId: string,
+    value: string,
     context: TerminalApplicationContext<A>,
   ) => void;
 }
@@ -204,11 +226,12 @@ function handoffLine(
 /**
  * Own an alternate-screen application until an action exits. Input is
  * decoded one event at a time: the package applies its own transition,
- * then calls `onSelectionMoved`, `onSelectionChange`, `onDismiss`, and
- * `onAction` in that order; an update made inside them applies before the
- * next input. Escape never exits by itself. Ctrl+C, EOF, and abort throw
- * `InteractionCancelled` after restoration unless a binding claims Ctrl+C.
- * Resolves with the final state.
+ * then calls `onField`, `onSelectionMoved`, `onSelectionChange`,
+ * `onDismiss`, and `onAction` in that order; an update made inside them
+ * applies before the next input, so a key typed after one that opens a
+ * layer lands on that layer. Escape never exits by itself. Ctrl+C, EOF, and
+ * abort throw `InteractionCancelled` after restoration unless a binding
+ * claims Ctrl+C. Resolves with the final state.
  */
 export async function runTerminalApplication<A>(
   options: TerminalApplicationOptions<A>,
@@ -242,8 +265,9 @@ export async function runTerminalApplication<A>(
   let failure: { error: unknown } | undefined;
   let signalRestored = false;
   let timer: { readonly at: number; readonly cancel: () => void } | undefined;
-  /** Keys read but not yet applied; they survive a foreground handoff. */
-  const pendingKeys: TerminalKey[] = [];
+  /** Input read but not yet applied; it survives a foreground handoff. */
+  const pendingEvents: TerminalInputEvent[] = [];
+  let mouseObserved = false;
   let painter: TerminalScreenPainter | undefined;
 
   const disposeSubscription = (): void => {
@@ -287,6 +311,23 @@ export async function runTerminalApplication<A>(
       pendingInputs.push(input);
       updates.notify();
     },
+    setField(layerId, fieldId, value) {
+      if (ended) return;
+      const input: TerminalApplicationInput = {
+        kind: "field",
+        layerId,
+        fieldId,
+        value,
+      };
+      if (dispatching) {
+        const step = transitionTerminalApplication(model, input, clock.now());
+        model = step.model;
+        queue.push(...step.effects);
+        return;
+      }
+      pendingInputs.push(input);
+      updates.notify();
+    },
     fail(error) {
       if (!ended) {
         fault = { error };
@@ -308,6 +349,14 @@ export async function runTerminalApplication<A>(
         const effect = queue.shift();
         if (effect === undefined) break;
         switch (effect.kind) {
+          case "field":
+            options.onField?.(
+              effect.layerId,
+              effect.fieldId,
+              effect.value,
+              context,
+            );
+            break;
           case "selection-moved":
             options.onSelectionMoved?.(
               effect.listId,
@@ -351,9 +400,10 @@ export async function runTerminalApplication<A>(
    * still cancels unless a binding claims it.
    */
   const suspendedKey = (
-    key: TerminalKey,
+    event: TerminalInputEvent,
   ): TerminalApplicationCommand | void => {
-    const chord = keyChordOf(key);
+    if (event.kind !== "key") return undefined;
+    const chord = keyChordOf(event.key);
     const binding = chord === undefined
       ? undefined
       : model.keymap.base.get(chord);
@@ -438,18 +488,20 @@ export async function runTerminalApplication<A>(
               const painted = screen.paint({
                 frame: frame.frame,
                 size: facts.size,
-                layer: frame.layout,
+                layer: frame.composition,
                 ...(frame.windowTitle === undefined
                   ? {}
                   : { title: frame.windowTitle }),
                 ...(facts.capabilities.applicationStateReports === true
                   ? { report: frame.report }
                   : {}),
+                mouse: model.view.input?.mouse === true &&
+                  facts.capabilities.mouseTracking !== false,
               });
               if (painted.status === "resized") continue;
               rendered = frame;
               paintedSize = facts.size;
-              ticker.sync(frame.animated);
+              ticker.sync(frame.animated, frame.clock);
               schedule();
               runtime.observe?.({
                 size: facts.size,
@@ -497,7 +549,7 @@ export async function runTerminalApplication<A>(
               if (runtime.abortSignal?.aborted) {
                 throw new InteractionCancelled("Cancelled.");
               }
-              if (pendingKeys.length === 0) {
+              if (pendingEvents.length === 0) {
                 inputRead ??= reader.readEvents();
                 const received = await Promise.race([
                   inputRead.then((events) => ({
@@ -521,9 +573,9 @@ export async function runTerminalApplication<A>(
                 if (received.events === null) {
                   throw new InteractionCancelled("Input ended.");
                 }
-                pendingKeys.push(
-                  ...received.events.flatMap((event) =>
-                    event.kind === "key" ? [event.key] : []
+                pendingEvents.push(
+                  ...received.events.filter((event) =>
+                    event.kind === "key" || event.kind === "mouse"
                   ),
                 );
               }
@@ -533,15 +585,20 @@ export async function runTerminalApplication<A>(
                 paintedSize?.rows !== size.rows ||
                 paintedSize.columns !== size.columns
               ) paint();
-              const key = pendingKeys.shift();
-              if (key === undefined) continue;
+              const event = pendingEvents.shift();
+              if (event === undefined) continue;
               const waiting = drainMailbox();
               if (waiting !== undefined) return waiting;
+              if (event.kind === "mouse") mouseObserved = true;
               const command = rendered?.layout === "too-small"
-                ? suspendedKey(key)
-                : apply({ kind: "key", key });
+                ? suspendedKey(event)
+                : event.kind === "key"
+                ? apply({ kind: "key", key: event.key })
+                : event.kind === "mouse"
+                ? apply({ kind: "mouse", event })
+                : undefined;
               if (command !== undefined) return command;
-              if (pendingKeys.length === 0) paint();
+              if (pendingEvents.length === 0) paint();
             }
           } finally {
             ticker.stop();
@@ -549,6 +606,11 @@ export async function runTerminalApplication<A>(
             stopResize();
             screen.release();
             painter = undefined;
+            // Reports already queued when tracking stopped must not reach a child.
+            if (mouseObserved) {
+              mouseObserved = false;
+              await drainTerminalMouseInput(io);
+            }
           }
         },
         {

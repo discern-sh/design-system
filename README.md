@@ -622,11 +622,48 @@ await runTerminalApplication({
 
 Below 80 columns the detail becomes a strip above the footer and Space shows it at full width; on wider screens the list is sized to its content beside the detail. Columns drop by priority, quiet groups fold into one summary row on short screens, and the list scrolls at its edge with a sticky group header. Each paint is one synchronized update that rewrites only the rows that changed, with a complete keyframe after a resize or layout change and at least every 30 seconds while the screen changes. Mark a one-cell glyph with `animation: "spinner"` to have it move at four frames a second while visible; ASCII output and `reducedMotion: true` keep it still. `windowTitle` sets the terminal's title and restores the previous one on exit. Pass `clock` to control time and `paint` to change painting.
 
+Open a modal layer by returning a view whose `layers` holds it — a `sheet` that asks before an effect, a `menu`, a `palette`, a `form`, or a `reader`, at most two deep. The package owns focus, fields, disclosures, scrolling, and the safe choice inside it; your code decides which layers exist and closes one by leaving it out of the next view after `onDismiss` reports it:
+
+```ts
+const review = {
+  kind: "sheet" as const,
+  id: "review",
+  scope: "item" as const,
+  title: "Run Quarterly report again?",
+  state: "ready" as const,
+  body: [{
+    kind: "marks" as const,
+    items: [{
+      mark: { ...TERMINAL_GLYPHS.changes, tone: "muted" as const },
+      runs: [{ text: "Rewrites its 14 output files" }],
+    }],
+  }],
+  disclosures: [{
+    id: "steps",
+    label: "Steps · 2",
+    key: "d",
+    content: [{
+      kind: "text" as const,
+      runs: [{ text: "Fetch, then write." }],
+    }],
+  }],
+  footnote: [{ text: "Nothing runs until you choose Run." }],
+  buttons: [
+    { id: "keep", label: "Keep", role: "safe" as const },
+    { id: "run", label: "Run", role: "confirm" as const, action: "run" },
+  ],
+};
+// Inside onAction: context.update({ ...view, layers: [review] });
+// Inside onDismiss: context.update(view); // without the dismissed layer
+```
+
+A layer opens on its safe button, or its first text field, where Enter moves to the safe button; Escape and a click outside choose the safe button; letters never reach a confirm or destructive button; a sheet that is `loading`, `changed`, or `gone`, has an unread body, or an unmatched `challenge` keeps those buttons disabled. Keys typed after the key that opened a layer land on it. `onField` reports each field change before any other callback of the same input, and `context.setField` writes one back. Set `input: { mouse: true }` to accept clicks and the wheel: a click selects, a click on the selection is Enter, a confirm or destructive button needs a focusing click and an activating click, and a click outside a layer is the safe choice.
+
 The minimum is **32 × 10**; below it the screen names the size it needs while your bindings still work. Ctrl+C, EOF and cooperative abort clean up and throw `InteractionCancelled` unless a binding claims Ctrl+C. Unsupported TTY/control capabilities refuse before entering raw mode. Default appearance remains monochrome; use explicit appearance inputs when reviewing semantic color.
 
 Run `deno task playground:application` for the live sample with a harmless foreground child, or choose `application` in `deno task playground:cli`. `deno run --config deno.json -A scripts/application-capture.ts` captures named real-PTY states as HTML and PNGs. Optional `./cli/interactive/testing` exports `runPtyProcess` with controlled geometry, observable readiness and named keyframes; `captureTerminalFrame` replays the application's paints to one settled frame, returns its HTML projection, its window title and, when `TERMINAL_APPLICATION_STATE_REPORTS=1`, its state report; `ptySettledFrame` builds readiness from that replay; and `ManualTerminalClock` drives animation, settle windows, and keyframe timing without real delays. The pure `createTerminalApplicationModel`, `updateTerminalApplication`, `transitionTerminalApplication`, and `renderTerminalApplication` test views without a terminal. `observeTerminalIO` and runtime `observe` expose writes, geometry and rendering work. PTY transport supports macOS/BSD and Linux/util-linux with `script`, `stty` and `ps`; Windows and arbitrary cursor-driven transcripts are unsupported. Broad behavioral tests should continue to use FakeTerminalIO.
 
-See the [application and migration guide](map/70-cli/applications.md) for exact focus, geometry and callback rules, ownership, capture examples and migration from the region model. Existing request defaults are unchanged. For standalone actions, discover Select's canonical **Action menu** example and pass `presentation: "menu"`; consumers wrapping the older `InteractionChoicePresentation` must use `InteractionSelectionPresentation` for a single selection.
+See the [application and migration guide](map/70-cli/applications.md) for exact focus, layer, mouse, geometry and callback rules, ownership, capture examples and migration from the region model. Existing request defaults are unchanged. For standalone actions, discover Select's canonical **Action menu** example and pass `presentation: "menu"`; consumers wrapping the older `InteractionChoicePresentation` must use `InteractionSelectionPresentation` for a single selection.
 
 The optional `./cli/interactive` adapter turns raw terminal input into typed interaction state and renders it through the package's Forms Component renderers. Running an interaction is the effects boundary; importing the module does not mutate the terminal:
 

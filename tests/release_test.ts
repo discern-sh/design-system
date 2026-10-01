@@ -467,16 +467,20 @@ Deno.test("the publish-shaped artifact serves the neutral consumer alone", async
         2,
       ),
     );
-    await Deno.copyFile(
-      join(PACKAGE_ROOT, "scripts/playground/application.ts"),
-      join(consumer, "application-demo.ts"),
-    );
+    // The sample spans files that import each other by their own names.
+    await Deno.mkdir(join(consumer, "sample"));
+    for (const file of ["application.ts", "application-layers.ts"]) {
+      await Deno.copyFile(
+        join(PACKAGE_ROOT, "scripts/playground", file),
+        join(consumer, "sample", file),
+      );
+    }
     await Deno.writeTextFile(
       join(consumer, "application.ts"),
       `
 import { runTerminalApplication } from "${config.name}/cli/interactive";
 import { FakeTerminalIO, captureTerminalFrame, runPtyProcess } from "${config.name}/cli/interactive/testing";
-import { applicationDemoOptions } from "./application-demo.ts";
+import { applicationDemoOptions } from "./sample/application.ts";
 const io = new FakeTerminalIO(["\\x1b[B", "\\r", "q"]);
 let calls = 0;
 const state = await runTerminalApplication(applicationDemoOptions(() => { calls++; }), { io });

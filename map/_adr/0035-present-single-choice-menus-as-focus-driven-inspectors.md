@@ -1,6 +1,6 @@
 # ADR 0035: Present single-choice menus as focus-driven inspectors
 
-**Status**: accepted
+**Status**: accepted; amended by [ADR-0051](0051-layers-own-focus-and-make-the-safe-choice-one-key-away.md), under which application menus are layers with key columns, two columns, and an Unavailable section while one-shot menus keep these bytes
 
 ## Context
 

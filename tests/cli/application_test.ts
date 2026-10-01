@@ -53,7 +53,9 @@ Deno.test("callbacks follow the package's own transition in a fixed order, and t
     keymap: [...quit.keymap, { key: "x", action: "retarget" }],
     onSelectionChange: (_list, item) => calls.push(`change:${item}`),
     onDismiss: (target, via, context) => {
-      calls.push(`dismiss:${target.message}:${via}`);
+      calls.push(
+        `dismiss:${"message" in target ? target.message : target.layer}:${via}`,
+      );
       const { message: _message, ...rest } = view;
       view = rest;
       context.update(view);

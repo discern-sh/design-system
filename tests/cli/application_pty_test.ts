@@ -45,7 +45,7 @@ Deno.test({
         {
           waitFor: ready("Run sample"),
           capture: { name: "returned", when: ready("Run sample") },
-          steps: [{ bytes: "r" }],
+          steps: [{ bytes: "R" }],
         },
         ...([
           { columns: 40, rows: 20 },
@@ -65,7 +65,7 @@ Deno.test({
           return {
             waitFor: when,
             capture: { name: `resize-${i}`, when },
-            steps: [{ bytes: i === 4 ? "q" : "r" }] as const,
+            steps: [{ bytes: i === 4 ? "q" : "R" }] as const,
           };
         }),
       ],

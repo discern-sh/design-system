@@ -8,13 +8,24 @@
  */
 
 import { GraphemeTextEditor } from "../editor.ts";
-import type { TerminalKey } from "../keys.ts";
+import type { TerminalKey, TerminalMouseEvent } from "../keys.ts";
 import {
   type CompiledKeymap,
   compileKeymap,
   keyChordOf,
   reservedBaseChords,
 } from "./keymap.ts";
+import {
+  adoptLayerModel,
+  createLayerModel,
+  layerFieldValues,
+  layerKey,
+  type LayerStepContext,
+  type TerminalApplicationLayerModel,
+} from "./layer-model.ts";
+import type { ApplicationLayer, ApplicationReader } from "./layer-view.ts";
+import type { ApplicationHit } from "./hits.ts";
+import { mouseTransition } from "./mouse.ts";
 import {
   firstSelectable,
   flattenList,
@@ -133,7 +144,15 @@ export interface TerminalApplicationModel<A> {
   readonly messageSince?: number;
   /** Message ids reported dismissed that the next view must omit. */
   readonly dismissed: readonly string[];
+  /** Open layers by id. */
+  readonly layers: Readonly<Record<string, TerminalApplicationLayerModel>>;
+  /** Layer ids reported dismissed that the next view must omit. */
+  readonly dismissedLayers: readonly string[];
+  /** When mouse input turned on, while its selection hint shows. */
+  readonly mouseHintSince?: number;
   readonly geometry?: TerminalApplicationGeometry;
+  /** Where the last frame put each clickable thing. */
+  readonly hits?: readonly ApplicationHit[];
 }
 
 /** One list's navigation state as callers read it. */
@@ -152,20 +171,43 @@ export interface TerminalApplicationListState {
   readonly scroll: number;
 }
 
+/** One open layer's navigation state as callers read it. */
+export interface TerminalApplicationLayerState {
+  /**
+   * The layer's focused control: `button:<id>`, `field:<id>`,
+   * `disclosure:<id>`, `group:<id>`, `item:<id>`, `unavailable` or
+   * `unavailable:<id>`, `filter` while a menu filter owns input, `input` for
+   * a palette's query, `rows` for a reader's rows, or `body`.
+   */
+  readonly focusedControlId: string;
+  /** The highlighted palette item. */
+  readonly highlightedId?: string;
+  /** A palette's or menu's query. */
+  readonly query: string;
+  /** Open disclosures and field groups. */
+  readonly open: readonly string[];
+  readonly scroll: number;
+}
+
 /** A read-only snapshot of what the package owns, for building views and saving preferences. */
 export interface TerminalApplicationState {
   /** The topmost open layer, when one is open. */
   readonly topLayerId?: string;
-  /** The list, field, document, or hint that receives the next key. */
+  /**
+   * What receives the next key: inside the top layer, `<layer>:<control>`;
+   * otherwise the list, `<list>:filter`, `primary`, or a reading id.
+   */
   readonly focusedControlId?: string;
   readonly lists: Readonly<Record<string, TerminalApplicationListState>>;
   /** Detail scroll by item id. */
   readonly detailScroll: Readonly<Record<string, number>>;
   /** Reading scroll by body id. */
   readonly readingScroll: Readonly<Record<string, number>>;
+  /** Open layers by id. */
+  readonly layers: Readonly<Record<string, TerminalApplicationLayerState>>;
   /** Field values by layer, then field. */
   readonly fields: Readonly<Record<string, Readonly<Record<string, string>>>>;
-  /** Whether each layer's body has been read to its end. */
+  /** Whether each sheet's body has been read to its end in this review. */
   readonly fullyRead: Readonly<Record<string, boolean>>;
 }
 
@@ -191,11 +233,22 @@ export type TerminalApplicationActionSource =
   | "click"
   | "chip";
 
+/** What a dismissal closed: a message or a layer, by id. */
+export type TerminalApplicationDismissTarget =
+  | { readonly message: string }
+  | { readonly layer: string };
+
 /**
- * One caller callback a step owes. A step's effects are ordered:
- * selection moves and changes, then dismissals, then actions.
+ * One caller callback a step owes. A step's effects are ordered: field
+ * changes, selection moves and changes, then dismissals, then actions.
  */
 export type TerminalApplicationEffect<A> =
+  | {
+    readonly kind: "field";
+    readonly layerId: string;
+    readonly fieldId: string;
+    readonly value: string;
+  }
   | {
     readonly kind: "selection-moved";
     readonly listId: string;
@@ -209,7 +262,7 @@ export type TerminalApplicationEffect<A> =
   }
   | {
     readonly kind: "dismiss";
-    readonly target: { readonly message: string };
+    readonly target: TerminalApplicationDismissTarget;
     readonly via: TerminalApplicationDismissal;
   }
   | {
@@ -228,6 +281,8 @@ export interface TerminalApplicationTransition<A> {
 /** Input the model applies one at a time. */
 export type TerminalApplicationInput =
   | { readonly kind: "key"; readonly key: TerminalKey }
+  /** A click or wheel turn, applied only while the view asks for mouse input. */
+  | { readonly kind: "mouse"; readonly event: TerminalMouseEvent }
   /** Time has passed: settle windows, message timeouts. */
   | { readonly kind: "time" }
   /** The caller selects an item; `reveal` unfolds its group. */
@@ -236,6 +291,13 @@ export type TerminalApplicationInput =
     readonly listId: string;
     readonly itemId: string;
     readonly reveal?: boolean;
+  }
+  /** The caller writes a field's value, such as text an external editor returned. */
+  | {
+    readonly kind: "field";
+    readonly layerId: string;
+    readonly fieldId: string;
+    readonly value: string;
   };
 
 /** Bindings the model carries. */
@@ -248,12 +310,16 @@ export interface TerminalApplicationConfig<A> {
 const EFFECT_ORDER: Readonly<
   Record<TerminalApplicationEffect<unknown>["kind"], number>
 > = {
-  "selection-moved": 0,
-  "selection-change": 1,
-  dismiss: 2,
-  action: 3,
-  cancel: 4,
+  field: 0,
+  "selection-moved": 1,
+  "selection-change": 2,
+  dismiss: 3,
+  action: 4,
+  cancel: 5,
 };
+
+/** How long the selection hint shows after mouse input turns on. */
+export const MOUSE_HINT_MS = 6000;
 
 function ordered<A>(
   effects: readonly TerminalApplicationEffect<A>[],
@@ -261,6 +327,23 @@ function ordered<A>(
   return [...effects].sort((left, right) =>
     EFFECT_ORDER[left.kind] - EFFECT_ORDER[right.kind]
   );
+}
+
+/** The layers on screen, bottom to top: the view's, less any dismissed. */
+export function visibleLayers<A>(
+  model: Pick<TerminalApplicationModel<A>, "view" | "dismissedLayers">,
+): readonly ApplicationLayer<A>[] {
+  const layers = model.view.layers ?? [];
+  return model.dismissedLayers.length === 0
+    ? layers
+    : layers.filter((layer) => !model.dismissedLayers.includes(layer.id));
+}
+
+/** The layer that owns focus, if one is open. */
+export function topLayer<A>(
+  model: Pick<TerminalApplicationModel<A>, "view" | "dismissedLayers">,
+): ApplicationLayer<A> | undefined {
+  return visibleLayers(model).at(-1);
 }
 
 /** The list the body shows, if any. */
@@ -432,19 +515,33 @@ function settleWindowOpen<A>(
     now - model.lastKeyAt < (list.settleMs ?? DEFAULT_LIST_SETTLE_MS);
 }
 
-/** The selected item id of the body's list. */
-function selectedItem<A>(
+/** The rows of each visible reader, which hold selections of their own. */
+function readerLists<A>(
+  layers: readonly ApplicationLayer<A>[],
+): readonly GroupedList<A>[] {
+  return layers.flatMap((layer) =>
+    layer.kind === "reader" && layer.rows !== undefined ? [layer.rows] : []
+  );
+}
+
+/** The selected item id of the body's list and of each reader's rows. */
+function selectedItems<A>(
   model: TerminalApplicationModel<A>,
-): { readonly listId: string; readonly itemId?: string } | undefined {
+): ReadonlyMap<string, string | undefined> {
+  const selected = new Map<string, string | undefined>();
   const list = bodyList(model.view);
-  if (list === undefined) return undefined;
-  if (model.view.body.kind === "empty" && model.primaryFocused) {
-    return { listId: list.id };
+  if (list !== undefined) {
+    selected.set(
+      list.id,
+      model.view.body.kind === "empty" && model.primaryFocused
+        ? undefined
+        : keyItemId(model.lists[list.id]?.selection),
+    );
   }
-  const itemId = keyItemId(model.lists[list.id]?.selection);
-  return itemId === undefined
-    ? { listId: list.id }
-    : { listId: list.id, itemId };
+  for (const rows of readerLists(visibleLayers(model))) {
+    selected.set(rows.id, keyItemId(model.lists[rows.id]?.selection));
+  }
+  return selected;
 }
 
 function selectionEffects<A>(
@@ -452,15 +549,15 @@ function selectionEffects<A>(
   after: TerminalApplicationModel<A>,
   effects: TerminalApplicationEffect<A>[],
 ): void {
-  const was = before === undefined ? undefined : selectedItem(before);
-  const now = selectedItem(after);
-  if (now === undefined) return;
-  if (was?.listId === now.listId && was.itemId === now.itemId) return;
-  effects.push({
-    kind: "selection-change",
-    listId: now.listId,
-    ...(now.itemId === undefined ? {} : { itemId: now.itemId }),
-  });
+  const was = before === undefined ? undefined : selectedItems(before);
+  for (const [listId, itemId] of selectedItems(after)) {
+    if (was?.has(listId) === true && was.get(listId) === itemId) continue;
+    effects.push({
+      kind: "selection-change",
+      listId,
+      ...(itemId === undefined ? {} : { itemId }),
+    });
+  }
 }
 
 function messageTiming<A>(
@@ -483,26 +580,47 @@ function adopt<A>(
 ): TerminalApplicationTransition<A> {
   const context: TerminalApplicationViewContext = {
     dismissedMessages: previous?.dismissed ?? [],
+    dismissedLayers: previous?.dismissedLayers ?? [],
+    layerBindings: keymap.layers,
   };
   assertTerminalApplicationView(view, context);
   const effects: TerminalApplicationEffect<A>[] = [];
   const lists = { ...previous?.lists };
   const list = bodyList(view);
-  if (list !== undefined) {
-    const before = lists[list.id];
-    const adopted = adoptList(
-      before,
-      list,
-      settleWindowOpen(previous, list, now),
-    );
-    lists[list.id] = reconcileSelection(
-      list.id,
+  const viewLayers = view.layers ?? [];
+  for (
+    const adopted of [
+      ...(list === undefined ? [] : [list]),
+      ...readerLists(viewLayers),
+    ]
+  ) {
+    const before = lists[adopted.id];
+    const next = adoptList(
       before,
       adopted,
+      settleWindowOpen(previous, adopted, now),
+    );
+    lists[adopted.id] = reconcileSelection(
+      adopted.id,
+      before,
+      next,
       effects,
       before !== undefined,
     );
   }
+  const layers: Record<string, TerminalApplicationLayerModel> = {};
+  for (const layer of viewLayers) {
+    const before = previous?.layers[layer.id];
+    layers[layer.id] = before === undefined
+      ? createLayerModel(layer)
+      : adoptLayerModel(before, layer);
+  }
+  const mouse = view.input?.mouse === true;
+  const mouseHintSince = !mouse
+    ? undefined
+    : previous?.view.input?.mouse === true
+    ? previous.mouseHintSince
+    : now;
   const busy = view.header.liveness?.state === "busy";
   const busySince = busy
     ? previous?.view.header.liveness?.state === "busy"
@@ -525,9 +643,13 @@ function adopt<A>(
     ...(busySince === undefined ? {} : { busySince }),
     ...(messageSince === undefined ? {} : { messageSince }),
     dismissed: [],
+    layers,
+    dismissedLayers: [],
+    ...(mouseHintSince === undefined ? {} : { mouseHintSince }),
     ...(previous?.geometry === undefined
       ? {}
       : { geometry: previous.geometry }),
+    ...(previous?.hits === undefined ? {} : { hits: previous.hits }),
   };
   selectionEffects(previous, model, effects);
   return { model, effects: ordered(effects) };
@@ -562,7 +684,8 @@ export function updateTerminalApplication<A>(
   return adopt(model, view, model.keymap, now);
 }
 
-function replaceList<A>(
+/** Replace one list's model. */
+export function replaceList<A>(
   model: TerminalApplicationModel<A>,
   id: string,
   list: TerminalApplicationListModel<A>,
@@ -590,6 +713,13 @@ function applyTime<A>(
       id,
       reconcileSelection(id, list, settled, effects, true),
     );
+  }
+  if (
+    next.mouseHintSince !== undefined &&
+    now - next.mouseHintSince >= MOUSE_HINT_MS
+  ) {
+    const { mouseHintSince: _shown, ...rest } = next;
+    next = rest;
   }
   const message = visibleMessage(next);
   const after = message?.dismiss?.afterMs;
@@ -637,6 +767,9 @@ export function terminalApplicationDeadline<A>(
   if (
     message?.dismiss?.afterMs !== undefined && model.messageSince !== undefined
   ) deadlines.push(model.messageSince + message.dismiss.afterMs);
+  if (model.mouseHintSince !== undefined) {
+    deadlines.push(model.mouseHintSince + MOUSE_HINT_MS);
+  }
   const liveness = model.view.header.liveness;
   const reveal = model.busySince === undefined
     ? undefined
@@ -647,8 +780,8 @@ export function terminalApplicationDeadline<A>(
   return deadlines.length === 0 ? undefined : Math.min(...deadlines);
 }
 
-/** Select a row by index in the body list, keeping the model's other state. */
-function selectRow<A>(
+/** Select a row by index in a list, keeping the model's other state. */
+export function selectRow<A>(
   model: TerminalApplicationModel<A>,
   listId: string,
   rows: ListRows<A>,
@@ -763,7 +896,8 @@ function filterAfterEdit<A>(
   );
 }
 
-interface KeyStep<A> {
+/** The effects one input owes, collected as it applies. */
+export interface KeyStep<A> {
   readonly model: TerminalApplicationModel<A>;
   readonly effects: TerminalApplicationEffect<A>[];
 }
@@ -934,30 +1068,38 @@ function enter<A>(
     return model;
   }
   const listView = bodyList(model.view);
-  const list = listView === undefined ? undefined : model.lists[listView.id];
-  if (listView === undefined || list === undefined) return model;
+  return listView === undefined
+    ? model
+    : enterRow(model, listView.id, step, "enter");
+}
+
+/** Run a list's selected item, or fold or unfold its selected group row. */
+export function enterRow<A>(
+  model: TerminalApplicationModel<A>,
+  listId: string,
+  step: KeyStep<A>,
+  source: "enter" | "click",
+): TerminalApplicationModel<A> {
+  const list = model.lists[listId];
+  if (list === undefined) return model;
   const rows = listModelRows(list);
   const row = rows.rows[rowIndexForKey(rows.rows, list.selection)];
   if (row === undefined || row.kind === "blank") return model;
   if (row.kind === "item") {
     if (row.item.primary !== undefined) {
-      step.effects.push({
-        kind: "action",
-        action: row.item.primary,
-        source: "enter",
-      });
+      step.effects.push({ kind: "action", action: row.item.primary, source });
     }
     return model;
   }
   if (row.kind === "fold") {
     return unfold(
       model,
-      listView.id,
+      listId,
       row.groups.map((folded) => folded.group.id),
     );
   }
   if (row.group.foldable !== true) return model;
-  return replaceList(model, listView.id, {
+  return replaceList(model, listId, {
     ...list,
     folds: [...list.folds, row.group.id],
   });
@@ -1100,9 +1242,10 @@ function keyTransition<A>(
   const listView = bodyList(model.view);
   const list = listView === undefined ? undefined : model.lists[listView.id];
   const filter = list?.filter;
+  const layer = topLayer(model);
   // Escape with nothing else to close dismisses the message itself.
-  const escapeDismisses = chord === "escape" && filter === undefined &&
-    list?.zoomed !== true;
+  const escapeDismisses = chord === "escape" && layer === undefined &&
+    filter === undefined && list?.zoomed !== true;
   if (message?.dismiss?.onKey === true && !escapeDismisses) {
     step.effects.push({
       kind: "dismiss",
@@ -1111,10 +1254,129 @@ function keyTransition<A>(
     });
     next = { ...next, dismissed: [...next.dismissed, message.id] };
   }
+  if (layer !== undefined) return layerStep(next, layer, key, step);
   if (listView !== undefined && filter?.editing === true) {
     return filterKey(next, listView.id, filter, key, step);
   }
   return baseKey(next, key, step);
+}
+
+/** Apply one key as if pressed, as a click on its key hint does. */
+export function applyKey<A>(
+  model: TerminalApplicationModel<A>,
+  key: TerminalKey,
+  step: KeyStep<A>,
+): TerminalApplicationModel<A> {
+  return keyTransition(model, key, step);
+}
+
+/** Replace one layer's model. */
+export function replaceLayer<A>(
+  model: TerminalApplicationModel<A>,
+  layer: TerminalApplicationLayerModel,
+): TerminalApplicationModel<A> {
+  return { ...model, layers: { ...model.layers, [layer.id]: layer } };
+}
+
+/** Report a layer step's effects, hiding a dismissed layer at once. */
+export function applyLayerEffects<A>(
+  model: TerminalApplicationModel<A>,
+  effects: LayerStepContext<A>["effects"],
+  step: KeyStep<A>,
+): TerminalApplicationModel<A> {
+  let next = model;
+  for (const effect of effects) {
+    step.effects.push(effect);
+    if (effect.kind === "dismiss") {
+      next = {
+        ...next,
+        dismissedLayers: [...next.dismissedLayers, effect.target.layer],
+      };
+    }
+  }
+  return next;
+}
+
+/** Move between a reader's rows; undefined when the key is not row movement. */
+function readerRowsKey<A>(
+  model: TerminalApplicationModel<A>,
+  layer: ApplicationReader<A>,
+  key: TerminalKey,
+  step: KeyStep<A>,
+): TerminalApplicationModel<A> | undefined {
+  const chord = keyChordOf(key);
+  const listId = layer.rows?.id;
+  const list = listId === undefined ? undefined : model.lists[listId];
+  if (listId === undefined || list === undefined || chord === undefined) {
+    return undefined;
+  }
+  const rows = listModelRows(list);
+  const at = rowIndexForKey(rows.rows, list.selection);
+  const page = Math.max(1, (model.layers[layer.id]?.page ?? 2) - 1);
+  switch (chord) {
+    case "up":
+    case "shift-tab":
+      return selectRow(model, listId, rows, stepSelection(rows.rows, at, -1));
+    case "down":
+    case "tab":
+      return selectRow(model, listId, rows, stepSelection(rows.rows, at, 1));
+    case "page-up":
+    case "page-down":
+      return selectRow(
+        model,
+        listId,
+        rows,
+        stepSelection(rows.rows, at, chord === "page-up" ? -page : page),
+      );
+    case "home":
+      return selectRow(model, listId, rows, firstSelectable(rows.rows));
+    case "end":
+      return selectRow(model, listId, rows, lastSelectable(rows.rows));
+    case "enter":
+      return enterRow(model, listId, step, "enter");
+    default:
+      return undefined;
+  }
+}
+
+/** Apply one key to the top layer. */
+function layerStep<A>(
+  model: TerminalApplicationModel<A>,
+  layer: ApplicationLayer<A>,
+  key: TerminalKey,
+  step: KeyStep<A>,
+): TerminalApplicationModel<A> {
+  const stored = model.layers[layer.id];
+  if (stored === undefined) return model;
+  // A key ends any two-click confirmation a click began.
+  const { armed: _armed, ...current } = stored;
+  if (layer.kind === "reader") {
+    const moved = readerRowsKey(model, layer, key, step);
+    if (moved !== undefined) return moved;
+  }
+  const bindings = model.keymap.layers.get(layer.id);
+  const context: LayerStepContext<A> = {
+    ...(bindings === undefined ? {} : { bindings }),
+    effects: [],
+  };
+  const next = layerKey(layer, current, key, context);
+  return applyLayerEffects(replaceLayer(model, next), context.effects, step);
+}
+
+/** The caller writes a field's value; the cursor moves to its end. */
+function writeField<A>(
+  model: TerminalApplicationModel<A>,
+  layerId: string,
+  fieldId: string,
+  value: string,
+): TerminalApplicationModel<A> {
+  const layer = model.layers[layerId];
+  if (layer === undefined || !(fieldId in layer.values)) return model;
+  return replaceLayer(model, {
+    ...layer,
+    values: { ...layer.values, [fieldId]: value },
+    cursors: { ...layer.cursors, [fieldId]: [...value].length },
+  });
 }
 
 /**
@@ -1132,10 +1394,18 @@ export function transitionTerminalApplication<A>(
   switch (input.kind) {
     case "key":
       next = keyTransition(
-        { ...model, lastKeyAt: now },
+        withoutHint({ ...model, lastKeyAt: now }),
         input.key,
         { model, effects },
       );
+      break;
+    case "mouse":
+      next = model.view.input?.mouse === true
+        ? mouseTransition(withoutHint(model), input.event, { model, effects })
+        : model;
+      break;
+    case "field":
+      next = writeField(model, input.layerId, input.fieldId, input.value);
       break;
     case "time":
       next = applyTime(model, now, effects);
@@ -1154,10 +1424,29 @@ export function transitionTerminalApplication<A>(
   return { model: next, effects: ordered(effects) };
 }
 
+/** Hide the mouse selection hint: any input means the person has seen it. */
+function withoutHint<A>(
+  model: TerminalApplicationModel<A>,
+): TerminalApplicationModel<A> {
+  if (model.mouseHintSince === undefined) return model;
+  const { mouseHintSince: _shown, ...rest } = model;
+  return rest;
+}
+
+/** A layer's focused control, as its state reports it. */
+function layerFocus(layer: TerminalApplicationLayerModel): string {
+  return layer.filtering ? "filter" : layer.focus;
+}
+
 /** The control that receives the next key. */
 function focusedControl<A>(
   model: TerminalApplicationModel<A>,
 ): string | undefined {
+  const top = topLayer(model);
+  const layer = top === undefined ? undefined : model.layers[top.id];
+  if (top !== undefined && layer !== undefined) {
+    return `${top.id}:${layerFocus(layer)}`;
+  }
   const body = model.view.body;
   if (body.kind === "reading") return body.id;
   if (body.kind === "empty" && model.primaryFocused) return "primary";
@@ -1187,12 +1476,38 @@ export function terminalApplicationState<A>(
     });
   }
   const focusedControlId = focusedControl(model);
+  const layers: Record<string, TerminalApplicationLayerState> = {};
+  const fields: Record<string, Readonly<Record<string, string>>> = {};
+  const fullyRead: Record<string, boolean> = {};
+  for (const layer of visibleLayers(model)) {
+    const state = model.layers[layer.id];
+    if (state === undefined) continue;
+    layers[layer.id] = Object.freeze({
+      focusedControlId: layerFocus(state),
+      ...(state.highlight === undefined
+        ? {}
+        : { highlightedId: state.highlight }),
+      query: state.query,
+      open: Object.freeze(
+        Object.entries(state.open).flatMap(([id, open]) => open ? [id] : []),
+      ),
+      scroll: state.scroll,
+    });
+    const values = layerFieldValues(layer, state);
+    if (Object.keys(values).length > 0) {
+      fields[layer.id] = Object.freeze(values);
+    }
+    if (layer.kind === "sheet") fullyRead[layer.id] = state.fullyRead;
+  }
+  const top = topLayer(model);
   return Object.freeze({
+    ...(top === undefined ? {} : { topLayerId: top.id }),
     ...(focusedControlId === undefined ? {} : { focusedControlId }),
     lists: Object.freeze(lists),
     detailScroll: Object.freeze({ ...model.detailScroll }),
     readingScroll: Object.freeze({ ...model.readingScroll }),
-    fields: Object.freeze({}),
-    fullyRead: Object.freeze({}),
+    layers: Object.freeze(layers),
+    fields: Object.freeze(fields),
+    fullyRead: Object.freeze(fullyRead),
   });
 }

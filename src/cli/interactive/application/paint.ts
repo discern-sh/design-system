@@ -42,8 +42,17 @@ export interface PaintContext {
   readonly painted: boolean;
   readonly presentation: CliPresentationOptions;
   readonly motion: TerminalApplicationMotion;
+  /**
+   * Under an open layer the base recedes once: every tone becomes faint and
+   * weight drops, while the selection keeps its muted fill.
+   */
+  readonly recede?: boolean;
+  /** The surface text sits on when a call names none, such as a layer's raised fill. */
+  readonly ground?: TerminalSurfaceRole;
   /** Set when a visible glyph moves, so the tick keeps running. */
   animated: boolean;
+  /** Set when a visible clock, such as an elapsed time, should tick. */
+  clock: boolean;
 }
 
 /** Build the styling context for one frame. */
@@ -59,6 +68,7 @@ export function paintContext(
     presentation,
     motion,
     animated: false,
+    clock: false,
   };
 }
 
@@ -68,20 +78,26 @@ export interface Ink {
   readonly bold?: boolean;
 }
 
-/** Style text in a tone on a surface; fills that do not paint fall back to the canvas colour. */
+/**
+ * Style text in a tone on a surface (the context's ground when none is
+ * named); fills that do not paint fall back to the canvas colour. A
+ * receded context draws every tone faint and without weight.
+ */
 export function ink(
   context: PaintContext,
   text: string,
   style: Ink,
   surface?: TerminalSurfaceRole,
 ): string {
+  const on = surface ?? context.ground;
+  const receded = context.recede === true;
   return styleText(text, {
     color: terminalTextToneColor(
       context.theme,
-      style.tone,
-      context.painted ? surface : undefined,
+      receded ? "faint" : style.tone,
+      context.painted ? on : undefined,
     ),
-    ...(style.bold === true ? { bold: true } : {}),
+    ...(style.bold === true && !receded ? { bold: true } : {}),
   }, context.capabilities);
 }
 

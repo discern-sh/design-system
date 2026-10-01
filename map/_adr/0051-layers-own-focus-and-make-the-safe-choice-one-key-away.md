@@ -1,0 +1,41 @@
+# ADR 0051: Layers own focus and make the safe choice one key away
+
+**Status**: accepted; amends [ADR-0050](0050-applications-compose-a-grouped-list-a-following-detail-and-modal-layers.md) by settling how layers behave, [ADR-0053](0053-applications-paint-incrementally-and-animate.md) by adding layer ids to the composition and mouse modes to the paint grammar, and [ADR-0035](0035-present-single-choice-menus-as-focus-driven-inspectors.md) by adding application menus beside one-shot ones
+
+## Context
+
+[ADR-0050](0050-applications-compose-a-grouped-list-a-following-detail-and-modal-layers.md) gave applications one focus owner and promised that sheets, menus, a palette, forms, and readers would join the same model as layers the caller declares. Those are the surfaces where a terminal application commits effects: a sheet asks before something irreversible, a form collects what an effect needs, a menu or palette chooses which effect runs. Every consumer that built them by hand reimplemented the same defences — a safe default, a typed confirmation, read-before-confirm — and each got some of them wrong in a different way: Enter on a freshly opened confirmation applying the change, a letter shortcut on a destructive button, a plan that could not be reached from the text field that had focus, a stale keystroke landing on a dialog that had replaced the screen beneath it.
+
+Mouse input raises the same question from a different side: a single click on a destructive button is as easy to make by accident as a stray keystroke, and a click on a row has to reach the row that was on screen when the person aimed, not the one a live update put there since.
+
+## Decision
+
+**The caller declares layers; the package owns everything inside them.** `view.layers` lists at most two layers, bottom to top. Only the view opens or removes one. The package owns the focused control, field values and cursors, open disclosures and field groups, scroll, read progress, a menu's or palette's query and highlight, and two-click arming. A dismissal — Escape, the safe button, a click outside — is reported through `onDismiss({ layer }, via)`, the package hides the layer at once, and a view that still declares it is refused, exactly as for messages.
+
+**The safe choice is one key away, and confirmation is never one keystroke from opening.** Every sheet and form has exactly one `safe` button; Escape and a click outside choose it. A layer opens on its safe button, or on its first text field, where Enter moves to the safe button rather than confirming. Keys belong only to `alternative` buttons, so no letter can reach a confirm or destructive button. `loading`, `changed`, and `gone` sheets disable every other button. With `requireFullRead`, confirm and destructive buttons stay disabled until every body line has been on screen, the gate lifting once per review. A `challenge` enables its destructive button only on an exact match. A focused button that cannot run keeps its focus markers around a faint label, so focus never reads as permission.
+
+**Disclosures stay one key from wherever focus is.** A disclosure declares a letter for focus outside text fields and, whenever a text field can own focus, a non-printing field chord outside the editor's chords. The view rules refuse a disclosure without one.
+
+**One meaning per key per layer.** `TERMINAL_APPLICATION_LAYER_KEYS` names what each layer kind does with navigation keys; disclosure, alternative, menu item, editor, and reader keys are claimed per layer; and a layer-scoped binding may take none of them. Base bindings never fire while a layer is open. A guard iterates every decoder key and printable character against each kind of layer and fails on a key the package acts on without reserving or declaring it.
+
+**Type-ahead lands where the person aimed.** The opening key is the last key the layer beneath sees: the caller's view update inside the callback applies before the next key is decoded, so keys typed ahead reach the new layer's initial control — the safe button or a field — never something beneath it.
+
+**Placement follows the body, never clips it.** Beside a wide list a layer occupies the detail column; elsewhere it spans the width at the bottom, at the top, or over the whole body, and below 56 columns it takes the body. An item layer at the bottom leaves the selected row in view. The body beneath recedes once and keeps every decision it made without the layer, so closing restores it exactly. Where fills paint, a layer is a raised panel; at 16 colours and without colour it is a rounded box of the same geometry.
+
+**Mouse input is opt-in and resolves against the frame on screen.** `view.input.mouse` turns SGR reports on through the painter, which restates them with every keyframe and turns them off on release; a hint names native selection once. Each frame records its hit regions, and a click resolves against exactly that frame. A click selects a row and a click on the selected row is Enter; the wheel moves a list or scrolls a detail, reading body, or sheet; a click on a hint presses its key and on a chip runs its action. A confirm or destructive button needs a focusing click and then an activating click, and any key in between starts over. A click outside the top layer is the safe choice.
+
+**Application menus differ from one-shot menus.** A one-shot `requestSelection({ presentation: "menu" })` keeps [ADR-0035](0035-present-single-choice-menus-as-focus-driven-inspectors.md)'s bytes. An application menu is a layer: it may read in two columns, shows each item's key, lets letters run items when asked, and folds unavailable items into one section whose Enter explains rather than activates. Both keep the focus-driven inspector: the highlighted item's description sits beneath the list in a space sized for the longest one.
+
+**What stays with the caller.** The caller decides which layers exist and in what order, what they say, whether a sheet is `changed` or `gone`, and what each action does — a sheet that replaces the menu that opened it, a preview rebuilt from `onField`, the text an external editor returned written back with `context.setField`. Commands that run beside the screen while a progress sheet shows their steps remain a later decision; the sheet's `activity` display does not run anything.
+
+## Consequences
+
+Consumers stop building confirmation, field editing, and menus themselves, and the safety properties hold for every consumer at once: the layer tests enforce Enter-on-open, Escape from every control, letters against every focus state, disclosure reach, the read and challenge gates, dismissal, and type-ahead, and the guard enrols each new key a layer handles. In return, a consumer that wants a key on a confirm button, a second safe button, or a layer opened by the package itself cannot have one, and a consumer with a disclosure on a sheet with a text field must find a field chord for it.
+
+The package now ships generic English words in layer footers and hints — `Buttons`, `Choose`, `Show`, `Hide`, `Why`, `Read more`, `Matches`, `N more characters` — beside the words it already used for filters and zoom. A caller that needs other words supplies its own hint or footnote where the API allows, and otherwise lives with them.
+
+Hit regions make clicks exact but tie mouse input to the last painted frame: a click that arrives after an update but before the repaint resolves against what the person saw, which is the intent, and never against rows they have not seen. Receded bodies render each frame without saving their scroll, so a body under a layer costs a render it does not keep.
+
+## Alternatives considered
+
+Letting the package open and close its own layers (a confirmation it shows by itself) would split ownership of what is on screen and make the caller's view stale; the dismissal handshake keeps one owner. Making confirm a double-press or a hold instead of a separate focus would still put a confirming key one keystroke from opening. Allowing letter keys on confirm buttons behind an option would make the safety tests conditional; keys on alternatives cover the need. Hit-testing against the model instead of the painted frame would let a live update move a row under a click.
