@@ -125,13 +125,13 @@ interface Panel {
   /** Body rows, from the top, that must pass through view before confirming. */
   readonly read: number;
   /**
-   * The pinned foot, given how many body rows are hidden below, how far
-   * the body has been on screen, and whether the footnote moved into the
-   * body. A panel whose foot names what is hidden sets `footOverflow`.
+   * The pinned foot, given how many body rows are hidden below, the body
+   * rows this frame shows, and whether the footnote moved into the body. A
+   * panel whose foot names what is hidden sets `footOverflow`.
    */
   readonly foot: (
     hidden: number,
-    seenThrough: number,
+    shown: BodySpan,
     moved: boolean,
   ) => readonly PanelRow[];
   readonly footOverflow: boolean;
@@ -140,6 +140,14 @@ interface Panel {
   /** Keep the body row holding this control in view. */
   readonly follow?: LayerControl;
 }
+
+/** Body rows a frame shows, from `start` up to but not including `end`. */
+interface BodySpan {
+  readonly start: number;
+  readonly end: number;
+}
+
+const NOTHING_SHOWN: BodySpan = { start: 0, end: 0 };
 
 const BLANK: PanelRow = { text: "" };
 const RAISED: TerminalSurfaceRole = "raised";
@@ -570,8 +578,8 @@ interface Fitted {
   readonly lines: readonly string[];
   readonly hits: readonly ApplicationHit[];
   readonly scroll: number;
-  /** Body rows from the top that are, or have been, on screen. */
-  readonly seenThrough: number;
+  /** The body rows this frame shows. */
+  readonly shown: BodySpan;
   /** Body rows visible at once. */
   readonly page: number;
   /** Non-blank body rows hidden below. */
@@ -601,8 +609,8 @@ function composePanel(
   const pad = sidePadding(box);
   const width = layerContentWidth(box);
   const footRows = Math.max(
-    panel.foot(0, 0, false).length,
-    panel.foot(999, 0, true).length,
+    panel.foot(0, NOTHING_SHOWN, false).length,
+    panel.foot(999, NOTHING_SHOWN, true).length,
   );
   let gapAfterHead = panel.head.length > 0 ? 1 : 0;
   let gapBeforeFoot = footRows > 0 ? 1 : 0;
@@ -669,7 +677,8 @@ function composePanel(
       : []),
   ];
   while (bodyRows.length < visible) bodyRows.push(BLANK);
-  const foot = [...panel.foot(below > 0 ? hidden : 0, scroll + rows, moved)];
+  const shown = { start: scroll, end: scroll + rows };
+  const foot = [...panel.foot(below > 0 ? hidden : 0, shown, moved)];
   while (foot.length < footRows) foot.unshift(BLANK);
   const content: PanelRow[] = [
     ...panel.head,
@@ -744,7 +753,7 @@ function composePanel(
     lines,
     hits,
     scroll,
-    seenThrough: scroll + rows,
+    shown,
     page: visible,
     hidden: below > 0 ? hidden : 0,
   };
@@ -754,11 +763,11 @@ function composePanel(
 function panelFoot<A>(
   context: PaintContext,
   layer: ApplicationSheet<A> | ApplicationForm<A>,
-  model: (seenThrough: number) => TerminalApplicationLayerModel,
+  model: (shown: BodySpan) => TerminalApplicationLayerModel,
   width: number,
 ): Panel["foot"] {
-  return (hidden, seenThrough, moved) => {
-    const fitted = model(seenThrough);
+  return (hidden, shown, moved) => {
+    const fitted = model(shown);
     const reason = disabledReason(layer, fitted);
     const unread = layer.kind === "sheet" && layer.readHint !== undefined &&
         requiresFullRead(layer) && !fitted.fullyRead
@@ -793,15 +802,43 @@ function footnoteRows<A>(
   }));
 }
 
-/** Read progress after a frame showed body rows through `seenThrough`. */
+/** Add one `[start, end)` range to sorted, disjoint ranges, merging neighbours. */
+function addRange(
+  ranges: readonly (readonly [number, number])[],
+  start: number,
+  end: number,
+): readonly (readonly [number, number])[] {
+  if (start >= end) return ranges;
+  const merged: [number, number][] = [];
+  let next: [number, number] = [start, end];
+  for (const [from, to] of ranges) {
+    if (to < next[0]) merged.push([from, to]);
+    else if (from > next[1]) {
+      merged.push(next);
+      next = [from, to];
+    } else next = [Math.min(from, next[0]), Math.max(to, next[1])];
+  }
+  merged.push(next);
+  return merged;
+}
+
+/**
+ * Read progress after a frame showed the body rows in `shown`. Only lines
+ * that were on screen count, so a jump past the middle of the body leaves
+ * the gate closed; the body is read once every line in `[0, read)` has
+ * been shown.
+ */
 function readProgress(
   model: TerminalApplicationLayerModel,
   read: number,
-  seenThrough: number,
+  shown: BodySpan,
 ): TerminalApplicationLayerModel {
-  const seen = Math.max(model.seen, Math.min(read, seenThrough));
-  const fullyRead = model.fullyRead || seen >= read;
-  return seen === model.seen && fullyRead === model.fullyRead
+  if (model.fullyRead) return model;
+  const seen = addRange(model.seen, shown.start, Math.min(read, shown.end));
+  const first = seen[0];
+  const fullyRead = read === 0 ||
+    (first !== undefined && first[0] === 0 && first[1] >= read);
+  return seen === model.seen && !fullyRead
     ? model
     : { ...model, seen, fullyRead };
 }
@@ -1001,6 +1038,7 @@ function sheetPanel<A>(
   sheet: ApplicationSheet<A>,
   model: TerminalApplicationLayerModel,
   width: number,
+  top: boolean,
 ): { readonly panel: Panel; readonly read: number } {
   const now = context.motion.now ?? 0;
   const activity = sheet.activity;
@@ -1074,7 +1112,7 @@ function sheetPanel<A>(
       foot: panelFoot(
         context,
         sheet,
-        (seenThrough) => readProgress(model, read, seenThrough),
+        (shown) => top ? readProgress(model, read, shown) : model,
         width,
       ),
     },
@@ -1699,22 +1737,23 @@ function readerPanel<A>(
 /**
  * Render one layer into its box. Returns exactly the box's width on each
  * line, at most its height in lines, hits relative to the layer's first
- * cell, and the layer model with its scroll, page, and read progress
- * fitted to this frame.
+ * cell, and the layer model with its scroll and page fitted to this frame;
+ * the top layer's read progress also counts the body rows it showed.
  */
 export function renderLayer<A>(
   context: PaintContext,
   layer: ApplicationLayer<A>,
   model: TerminalApplicationLayerModel,
   box: LayerBox,
-  rows?: ReaderRows,
+  rows: ReaderRows | undefined,
+  top: boolean,
 ): LayerPaint {
   const width = layerContentWidth(box);
   let read = 0;
   let panel: Panel;
   switch (layer.kind) {
     case "sheet": {
-      const built = sheetPanel(context, layer, model, width);
+      const built = sheetPanel(context, layer, model, width, top);
       panel = built.panel;
       read = built.read;
       break;
@@ -1741,8 +1780,9 @@ export function renderLayer<A>(
     model.reveal,
   );
   const { reveal: _reveal, ...rest } = model;
-  const next = layer.kind === "sheet"
-    ? readProgress(rest, read, fitted.seenThrough)
+  // Only the top layer is being read; a layer beneath it is covered or receded.
+  const next = layer.kind === "sheet" && top
+    ? readProgress(rest, read, fitted.shown)
     : rest;
   return {
     lines: fitted.lines,

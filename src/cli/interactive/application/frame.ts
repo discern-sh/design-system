@@ -1316,7 +1316,14 @@ function renderLayers<A>(
     const rows = layer.kind === "reader" && layer.rows !== undefined
       ? readerRows(inner, next, layer.rows, layerContentWidth(place.box))
       : undefined;
-    const paint = renderLayer(inner, layer, state, place.box, rows);
+    const paint = renderLayer(
+      inner,
+      layer,
+      state,
+      place.box,
+      rows,
+      index === layers.length - 1,
+    );
     context.animated ||= inner.animated;
     context.clock ||= inner.clock;
     context.renderCalls = inner.renderCalls;

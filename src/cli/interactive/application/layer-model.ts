@@ -59,8 +59,11 @@ export interface TerminalApplicationLayerModel {
   readonly scroll: number;
   /** A control the next frame scrolls into view. */
   readonly reveal?: LayerControl;
-  /** Body lines that have been on screen. */
-  readonly seen: number;
+  /**
+   * Body lines that have been on screen in this review, as sorted,
+   * disjoint `[start, end)` ranges of line indexes.
+   */
+  readonly seen: readonly (readonly [number, number])[];
   /** Whether every body line has been on screen since the review began. */
   readonly fullyRead: boolean;
   /** A palette's or menu filter's query and cursor. */
@@ -188,7 +191,7 @@ export function createLayerModel<A>(
     cursors,
     open,
     scroll: 0,
-    seen: 0,
+    seen: [],
     fullyRead: false,
     query: "",
     queryCursor: 0,
@@ -260,7 +263,7 @@ export function adoptLayerModel<A>(
     layer.kind === "sheet" && layer.state === "loading" &&
     previous.state !== "loading"
   ) {
-    next = { ...next, seen: 0, fullyRead: false };
+    next = { ...next, seen: [], fullyRead: false };
   }
   if (!focusable(layer, next).includes(next.focus)) {
     next = { ...next, focus: fresh.focus };
