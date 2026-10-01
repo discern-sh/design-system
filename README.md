@@ -10,21 +10,21 @@ deno add jsr:@discern-sh/design-system
 
 ## Public imports
 
-| Import                                              | Contract                                                                                  |
-| --------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `@discern-sh/design-system`                         | Token metadata, component/group metadata types, the package manifest, and `semanticClass` |
-| `@discern-sh/design-system/components`              | Generated Component Metadata and author guide                                             |
-| `@discern-sh/design-system/chart`                   | Typed chart specs, descriptions, kind Metadata, and portable standalone SVG               |
-| `@discern-sh/design-system/cli`                     | Pure React-free terminal renderers, capabilities, themes, and semantic motif primitives   |
-| `@discern-sh/design-system/cli/interactive`         | Optional Deno terminal driver and typed interaction state machines                        |
-| `@discern-sh/design-system/cli/interactive/testing` | Fake terminal, real-PTY fixtures, named captures, I/O observation, and frame assertions   |
-| `@discern-sh/design-system/cli/projection`          | Package-output decoding, browser projection, and explicit layout inspection               |
-| `@discern-sh/design-system/glyphs`                  | Typed Unicode glyphs, discovery metadata, and explicit ASCII resolution                   |
-| `@discern-sh/design-system/diagram`                 | Typed diagram specs, descriptions, kind Metadata, and portable standalone SVG             |
-| `@discern-sh/design-system/manifest`                | Framework-neutral manifest schema and the complete package ownership manifest             |
-| `@discern-sh/design-system/runtime`                 | Deterministic selected-runtime emitter                                                    |
-| `@discern-sh/design-system/tokens`                  | Appearance evaluation, admission, scopes, and primitive/semantic pole metadata            |
-| `@discern-sh/design-system/react`                   | Optional React components and their public prop types                                     |
+| Import                                              | Contract                                                                                                                         |
+| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `@discern-sh/design-system`                         | Token metadata, component/group metadata types, the package manifest, and `semanticClass`                                        |
+| `@discern-sh/design-system/components`              | Generated Component Metadata and author guide                                                                                    |
+| `@discern-sh/design-system/chart`                   | Typed chart specs, descriptions, kind Metadata, and portable standalone SVG                                                      |
+| `@discern-sh/design-system/cli`                     | Pure React-free terminal renderers, capabilities, themes and surfaces, the glyph table, key hints, and semantic motif primitives |
+| `@discern-sh/design-system/cli/interactive`         | Optional Deno terminal driver, typed requests, terminal applications, and the Markdown browser                                   |
+| `@discern-sh/design-system/cli/interactive/testing` | Fake terminal, real-PTY fixtures, named captures, I/O observation, and frame assertions                                          |
+| `@discern-sh/design-system/cli/projection`          | Package-output decoding, browser projection, and explicit layout inspection                                                      |
+| `@discern-sh/design-system/glyphs`                  | Typed Unicode glyphs, discovery metadata, and explicit ASCII resolution                                                          |
+| `@discern-sh/design-system/diagram`                 | Typed diagram specs, descriptions, kind Metadata, and portable standalone SVG                                                    |
+| `@discern-sh/design-system/manifest`                | Framework-neutral manifest schema and the complete package ownership manifest                                                    |
+| `@discern-sh/design-system/runtime`                 | Deterministic selected-runtime emitter                                                                                           |
+| `@discern-sh/design-system/tokens`                  | Appearance evaluation, admission, scopes, and primitive/semantic pole metadata                                                   |
+| `@discern-sh/design-system/react`                   | Optional React components and their public prop types                                                                            |
 
 Only `./react` resolves React. The package keeps React and React DOM as catalogue development dependencies and peer dependencies, while its root, manifest, runtime, and token graphs do not import them.
 
