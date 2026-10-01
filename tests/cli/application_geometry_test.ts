@@ -8,11 +8,16 @@ import {
 } from "../../src/cli/interactive/mod.ts";
 import { FakeTerminalIO } from "../../src/cli/interactive/testing.ts";
 import {
+  fitListScroll,
   layoutListColumns,
   listGaps,
+  listWindow,
   renderListRow,
 } from "../../src/cli/interactive/application/list-render.ts";
+import { flattenList } from "../../src/cli/interactive/application/list-model.ts";
+import { renderDetailBlocks } from "../../src/cli/interactive/application/detail-render.ts";
 import { paintContext } from "../../src/cli/interactive/application/paint.ts";
+import type { DetailBlock } from "../../src/cli/interactive/mod.ts";
 import {
   applicationDemoView,
   DEMO_JOBS,
@@ -299,4 +304,114 @@ Deno.test("the header drops chips, then liveness, then counts as it narrows", ()
   assertEquals(header(32).includes("Live"), false);
   assertStringIncludes(header(32), "1 to review");
   assertStringIncludes(header(32), "Studio");
+});
+
+Deno.test("every detail block line fits the width it was given", () => {
+  // Every block kind, with text long enough to wrap and short enough to take
+  // the one-line path, so a prefix that a fast path forgets fails here.
+  const blocks: readonly DetailBlock[] = [
+    {
+      kind: "heading",
+      title: "A heading title",
+      aside: "an-aside",
+      subtitle: "A subtitle that is long enough to wrap",
+    },
+    {
+      kind: "state",
+      glyph: { unicode: "✓", ascii: "v" },
+      label: "Ready",
+      tone: "success",
+      qualifier: "four steps ahead",
+    },
+    {
+      kind: "text",
+      runs: [{ text: "Text that wraps across a narrow width more than once." }],
+    },
+    {
+      kind: "facts",
+      rows: [{
+        label: "Label",
+        value: [[{
+          text: "A value long enough to wrap twice in a narrow detail",
+        }]],
+      }],
+    },
+    { kind: "meter", value: 0.4, caption: "two of five" },
+    {
+      kind: "marks",
+      items: [
+        {
+          mark: { unicode: "→", ascii: ">" },
+          runs: [{ text: "x".repeat(35) }],
+        },
+        {
+          mark: { unicode: "=", ascii: "=" },
+          runs: [{ text: "A consequence that wraps onto a hanging line" }],
+        },
+      ],
+    },
+    {
+      kind: "hints",
+      items: [{
+        key: "enter",
+        label: "Open",
+        description: "Open the selected thing",
+      }],
+    },
+    { kind: "pending", label: "Loading the rest…" },
+    {
+      kind: "section",
+      title: "Section",
+      count: 2,
+      caption: "with a caption",
+      blocks: [{ kind: "text", runs: [{ text: "Nested text" }] }],
+    },
+  ];
+  for (const unicode of [true, false]) {
+    for (let width = 8; width <= 80; width += 1) {
+      const context = paintContext(
+        { colorDepth: "truecolor", unicode, columns: width },
+        {},
+        { phase: 0 },
+      );
+      for (const wide of [true, false]) {
+        for (
+          const line of renderDetailBlocks(context, blocks, {
+            width,
+            wide,
+            surface: "surface",
+          })
+        ) {
+          assert(
+            measureText(line) <= width,
+            `${JSON.stringify(stripAnsi(line))} is wider than ${width}`,
+          );
+        }
+      }
+    }
+  }
+});
+
+Deno.test("a list viewport of any height keeps the selection in view", () => {
+  const view = applicationDemoView();
+  const list = view.body.kind === "master-detail" ? view.body.list : undefined;
+  if (list === undefined) throw new Error("expected a list");
+  const rows = flattenList(list, {
+    folds: new Set(),
+    densityFolds: new Set(),
+    separators: true,
+  });
+  for (let height = 1; height <= rows.rows.length + 1; height += 1) {
+    for (const [selected, row] of rows.rows.entries()) {
+      if (row.kind !== "item") continue;
+      for (const previous of [0, rows.rows.length]) {
+        const scroll = fitListScroll(rows, height, selected, previous);
+        const window = listWindow(rows, height, scroll);
+        assert(
+          selected >= scroll && selected < scroll + window.count,
+          `row ${selected} hides in a ${height}-row viewport scrolled to ${scroll}`,
+        );
+      }
+    }
+  }
 });

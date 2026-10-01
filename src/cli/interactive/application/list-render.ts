@@ -159,7 +159,9 @@ export function listWindow<A>(
  * viewport only when the selection reaches its edge. An anchor keeps the
  * selection on the viewport line it occupied before a view change; a
  * reveal row, such as the end of a group just unfolded, scrolls into view
- * as far as the selection allows.
+ * as far as the selection allows. A viewport too short to hold the margin
+ * as well as the selection, its sticky header, and its overflow markers
+ * gives up the margin, never the selection.
  */
 export function fitListScroll<A>(
   rows: ListRows<A>,
@@ -185,25 +187,30 @@ export function fitListScroll<A>(
       scroll = clamp(scroll + 1);
     }
   }
-  const before = Math.min(SCROLL_MARGIN, selected);
-  const after = Math.min(SCROLL_MARGIN, total - 1 - selected);
-  if (selected - before < scroll) scroll = clamp(selected - before);
-  const needed = selected + after;
-  for (let guard = 0; guard <= total; guard += 1) {
-    const window = listWindow(rows, height, scroll);
-    if (needed < scroll + window.count || scroll >= maxScroll) break;
-    scroll = clamp(
-      Math.max(scroll + 1, needed - window.count + 1),
-    );
-  }
-  if (reveal !== undefined && reveal > selected) {
-    const limit = clamp(selected - before);
-    while (
-      scroll < limit &&
-      reveal >= scroll + listWindow(rows, height, scroll).count
-    ) scroll += 1;
-  }
-  return scroll;
+  const shows = (at: number) =>
+    selected >= at && selected < at + listWindow(rows, height, at).count;
+  const fit = (margin: number, from: number): number => {
+    let next = from;
+    const before = Math.min(margin, selected);
+    const after = Math.min(margin, total - 1 - selected);
+    if (selected - before < next) next = clamp(selected - before);
+    const needed = selected + after;
+    for (let guard = 0; guard <= total; guard += 1) {
+      const window = listWindow(rows, height, next);
+      if (needed < next + window.count || next >= maxScroll) break;
+      next = clamp(Math.max(next + 1, needed - window.count + 1));
+    }
+    if (reveal !== undefined && reveal > selected) {
+      const limit = clamp(selected - before);
+      while (
+        next < limit &&
+        reveal >= next + listWindow(rows, height, next).count
+      ) next += 1;
+    }
+    return next;
+  };
+  const margined = fit(SCROLL_MARGIN, scroll);
+  return shows(margined) ? margined : fit(0, scroll);
 }
 
 interface RowPaint {

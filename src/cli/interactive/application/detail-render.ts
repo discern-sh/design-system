@@ -54,7 +54,8 @@ function wrapRuns(
   const styled = styleRuns(context, runs, layout.surface, fallback);
   if (styled === "") return [""];
   // A run that fits keeps its spacing; wrapping would fold repeated spaces.
-  if (measureText(styled) <= width) return [styled];
+  // The indent is the room a caller's prefix takes on every line.
+  if (measureText(styled) <= width - indent) return [styled];
   const lines = wrapStyledText(styled, Math.max(1, width - indent));
   return lines.map((line, index) =>
     index === 0 ? line : `${" ".repeat(indent)}${line}`
@@ -137,9 +138,16 @@ function facts(
     0,
     ...block.rows.map((row) => measureText(row.label)),
   );
+  // The label column never leaves less than eight cells for values.
   const labelWidth = Math.max(
-    layout.wide ? 10 : 9,
-    Math.min(longest + 2, Math.floor(layout.width / 3)),
+    1,
+    Math.min(
+      Math.max(
+        layout.wide ? 10 : 9,
+        Math.min(longest + 2, Math.floor(layout.width / 3)),
+      ),
+      layout.width - 8,
+    ),
   );
   const lines: string[] = [];
   for (const row of block.rows) {
@@ -176,8 +184,12 @@ function meter(
   layout: DetailLayout,
 ): readonly string[] {
   const ratio = Math.max(0, Math.min(1, block.value / (block.max ?? 1)));
-  const caption = measureText(block.caption);
-  const cells = Math.max(4, Math.min(15, layout.width - caption - 1));
+  // The caption drops before the track shrinks below four cells.
+  const shown = layout.width - measureText(block.caption) - 1 >= 4;
+  const caption = shown ? measureText(block.caption) : 0;
+  const cells = shown
+    ? Math.max(4, Math.min(15, layout.width - caption - 1))
+    : Math.max(1, Math.min(15, layout.width));
   const filled = Math.round(ratio * cells);
   const line = `${
     ink(
@@ -253,7 +265,12 @@ function hints(
         layout.surface,
       )
       : "";
-    return `${key}  ${label}${description}`;
+    // A hint names one key; at a width too narrow for it the label clips.
+    return truncateStyledText(
+      `${key}  ${label}${description}`,
+      layout.width,
+      terminalGlyph("ellipsis", context.capabilities),
+    );
   });
 }
 
