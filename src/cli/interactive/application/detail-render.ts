@@ -512,8 +512,10 @@ export function scrollDetail(
   height: number,
   requested: number,
   width: number,
-  topPadding: boolean,
+  padded: boolean,
 ): DetailViewport {
+  // A single row has no room for padding; it shows a line.
+  const topPadding = padded && height >= 2;
   const pad = topPadding ? 1 : 0;
   const visible = Math.max(1, height - pad);
   const blank = () => "";
@@ -529,12 +531,15 @@ export function scrollDetail(
   }
   // Without a padding row the upper marker takes the first row once
   // scrolled, and stands for the line beneath it too, so each step down
-  // reveals a new line. A viewport too short for a marker and a line shows
-  // the line.
-  const costs = !topPadding && visible >= 2;
+  // reveals a new line — while the first page shows at least two lines;
+  // otherwise that line would never be on screen. A viewport too short for
+  // a marker and a line shows the line.
+  const marks = !topPadding && visible >= 2;
+  const covers = marks && visible >= 3;
   const viewport = (scroll: number) => {
-    const first = scroll > 0 && costs ? scroll + 1 : scroll;
-    let rows = visible - (scroll > 0 && costs ? 1 : 0);
+    const up = scroll > 0 && marks ? 1 : 0;
+    const first = scroll + (covers ? up : 0);
+    let rows = visible - up;
     const below = first + rows < lines.length && rows >= 2;
     if (below) rows -= 1;
     return { first, rows, below };
@@ -548,7 +553,7 @@ export function scrollDetail(
   const marker = (text: string) =>
     spread(context, "", ink(context, text, { tone: "faint" }), width);
   const top: string[] = [];
-  if (scroll > 0 && (topPadding || costs)) {
+  if (scroll > 0 && (topPadding || marks)) {
     top.push(
       marker(
         overflowMarker(

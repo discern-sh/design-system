@@ -150,6 +150,8 @@ interface Panel {
   readonly footnote?: readonly PanelRow[];
   /** Keep the body row holding this control in view. */
   readonly follow?: LayerControl;
+  /** What overflow markers count: lines of text (the default), or choices. */
+  readonly counts?: "lines" | "choices";
 }
 
 /** Body rows a frame shows, from `start` up to but not including `end`. */
@@ -232,19 +234,28 @@ function titleLines(
   ];
 }
 
-/** The title row: the title, and an aside against the end when it fits. */
+/**
+ * The title row: the title, and an aside against the end when both fit on
+ * one row. The title never wraps to make room for the aside; when they do
+ * not fit together the aside takes its own row beneath the title.
+ */
 function headRows(
   context: PaintContext,
   title: string,
   aside: string,
   width: number,
 ): readonly PanelRow[] {
-  const asideWidth = measureText(aside);
-  const room = asideWidth === 0 ? width : Math.max(8, width - asideWidth - 2);
-  const lines = titleLines(context, title, room);
-  return lines.map((line, index) => ({
-    text: index === 0 ? spread(context, line, aside, width) : line,
-  }));
+  const lines = titleLines(context, title, width);
+  const [first] = lines;
+  if (aside === "") return lines.map((text) => ({ text }));
+  if (
+    lines.length === 1 && first !== undefined &&
+    measureText(first) + 2 + measureText(aside) <= width
+  ) return [{ text: spread(context, first, aside, width) }];
+  return [
+    ...lines.map((text) => ({ text })),
+    { text: truncateStyledText(aside, width, ellipsis(context)) },
+  ];
 }
 
 // ── Buttons ──────────────────────────────────────────────────────────────
@@ -580,14 +591,32 @@ function disclosureRows(
 
 // ── Panels ───────────────────────────────────────────────────────────────
 
-/** Cells between the frame and the content on each side. */
-function sidePadding(box: LayerBox): number {
+/**
+ * Cells between the frame and the content on the left: the selection bar's
+ * cell and one more, so a bar never touches its label.
+ */
+const LEFT_PADDING = 2;
+
+/** Cells between the content and the frame on the right; one when narrow. */
+function rightPadding(box: LayerBox): number {
   return box.narrow ? 1 : 2;
+}
+
+/** The selection bar's cell, on the selection fill like the row it marks. */
+function selectionBar(context: PaintContext): string {
+  return fitLine(
+    context,
+    ink(context, terminalGlyph("selection", context.capabilities), {
+      tone: "accent",
+    }, "selection"),
+    1,
+    "selection",
+  );
 }
 
 /** The content width a layer's rows may use. */
 export function layerContentWidth(box: LayerBox): number {
-  return Math.max(1, box.width - 2 - 2 * sidePadding(box));
+  return Math.max(1, box.width - 2 - LEFT_PADDING - rightPadding(box));
 }
 
 /** A panel fitted to its box. */
@@ -609,6 +638,15 @@ function visibleRows(rows: readonly PanelRow[]): number {
   ).length;
 }
 
+/** The choices among rows: what a menu's or palette's markers count. */
+function choiceRows(rows: readonly PanelRow[]): number {
+  return rows.reduce(
+    (total, row) =>
+      total + (row.controls?.length ?? (row.control === undefined ? 0 : 1)),
+    0,
+  );
+}
+
 /**
  * Fit a panel to its box: a frame, the pinned head and foot, and the body
  * scrolled to `requested`, to the control a focus change revealed (an
@@ -623,8 +661,10 @@ function composePanel(
   requested: number,
   reveal: LayerControl | undefined,
 ): Fitted {
-  const pad = sidePadding(box);
+  const pad = LEFT_PADDING;
   const width = layerContentWidth(box);
+  // A list of choices counts choices; anything else counts lines of text.
+  const count = panel.counts === "choices" ? choiceRows : visibleRows;
   /** The gaps, body, and viewport height left beside a foot of `footRows`. */
   const fit = (footRows: number) => {
     let gapAfterHead = panel.head.length > 0 ? 1 : 0;
@@ -666,9 +706,13 @@ function composePanel(
   const place = (footRows: number) => {
     const fitted = fit(footRows);
     const { body, visible, overflows } = fitted;
+    // The upper marker may stand for the line beneath it only while the
+    // first page shows at least two lines; otherwise that line would never
+    // be on screen at any scroll.
+    const covers = visible >= (panel.footOverflow ? 2 : 3);
     const viewport = (scroll: number) => {
       const up = scroll > 0 && visible >= 2 ? 1 : 0;
-      const first = scroll + up;
+      const first = scroll + (covers ? up : 0);
       let rows = visible - up;
       const down =
         !panel.footOverflow && first + rows < body.length && rows >= 2 ? 1 : 0;
@@ -686,7 +730,7 @@ function composePanel(
     let scroll = clamp(requested);
     /** The scroll that puts a body row first on screen. */
     const topAt = (index: number) =>
-      clamp(visible >= 2 ? Math.max(0, index - 1) : index);
+      clamp(covers ? Math.max(0, index - 1) : index);
     const keep = (index: number, top: boolean) => {
       if (index < 0 || !overflows) return;
       if (top || index < viewport(scroll).first) scroll = topAt(index);
@@ -723,7 +767,7 @@ function composePanel(
       gapBeforeFoot = 0;
     }
     const below = Math.max(0, body.length - at.first - at.rows);
-    const hidden = visibleRows(body.slice(at.first + at.rows));
+    const hidden = count(body.slice(at.first + at.rows));
     const shown = { start: at.first, end: at.first + at.rows };
     const foot = panel.foot(below > 0 ? hidden : 0, shown, fitted.moved);
     return {
@@ -756,7 +800,9 @@ function composePanel(
     count: number,
     key: "page-up" | "page-down",
   ) => ({
-    text: spread(
+    // A marker with nothing countable behind it, such as a section heading
+    // alone, holds its row blank rather than claim `0 more`.
+    text: count === 0 ? "" : spread(
       context,
       "",
       raised(context, overflowMarker(context, direction, count, key), "faint"),
@@ -765,7 +811,7 @@ function composePanel(
   });
   const bodyRows: PanelRow[] = [
     ...(at.up > 0
-      ? [marker("up", visibleRows(body.slice(0, at.first)), "page-up")]
+      ? [marker("up", count(body.slice(0, at.first)), "page-up")]
       : []),
     ...body.slice(at.first, at.first + at.rows),
     ...(at.down > 0 ? [marker("down", hidden, "page-down")] : []),
@@ -810,15 +856,15 @@ function composePanel(
     });
   }
   for (const row of content) {
-    const bar = row.bar === true
-      ? ink(context, terminalGlyph("selection", context.capabilities), {
-        tone: "accent",
-      }, "selection")
-      : " ";
-    // The bar takes the first cell inside the frame, as in a list row.
+    const bar = row.bar === true ? selectionBar(context) : " ";
+    // The bar takes the first cell inside the frame, as in a list row, and
+    // the selection fill runs from it through the gap to the label.
+    const gap = row.bar === true
+      ? fitLine(context, "", pad - 1, "selection")
+      : " ".repeat(pad - 1);
     const middle = fitLine(
       context,
-      `${bar}${" ".repeat(pad - 1)}${
+      `${bar}${gap}${
         truncateStyledText(
           typeof row.text === "function" ? row.text() : row.text,
           width,
@@ -1425,13 +1471,15 @@ function menuItemRow(
   const keyed = key === ""
     ? ""
     : ink(context, key, { tone: "ink", bold: true }, surface);
-  const room = Math.max(1, width - measureText(key) - (key === "" ? 0 : 2));
+  // The key keeps one cell of the row after it, so a highlight's fill
+  // closes past the key rather than against it.
+  const room = Math.max(1, width - 1 - measureText(key) - (key === "" ? 0 : 2));
   const left = truncateStyledText(
     `${ink(context, label, { tone, bold: highlighted }, surface)}${detail}`,
     room,
     ellipsis(context),
   );
-  const text = spread(context, left, keyed, width);
+  const text = spread(context, left, keyed, width - 1);
   return highlighted ? fitLine(context, text, width, "selection") : text;
 }
 
@@ -1469,6 +1517,7 @@ function menuPanel<A>(
   menu: ApplicationMenu<A>,
   model: TerminalApplicationLayerModel,
   width: number,
+  boxHeight: number,
 ): Panel {
   const columns: 1 | 2 = menu.columns === 2 && width >= 56 ? 2 : 1;
   const rows = menuRows(menu, model.query, columns, model.unavailableOpen);
@@ -1559,16 +1608,15 @@ function menuPanel<A>(
         target: controlHit(menu.id, right.control),
       });
     }
-    const rightBar =
-      right?.control !== undefined && model.focus === right.control
-        ? ink(context, terminalGlyph("selection", context.capabilities), {
-          tone: "accent",
-        }, "selection")
-        : " ";
+    const rightFocused = right?.control !== undefined &&
+      model.focus === right.control;
+    const rightBar = rightFocused
+      ? `${selectionBar(context)}${fitLine(context, "", 1, "selection")}`
+      : "  ";
     const text = columns === 2
       ? `${padText(left?.text ?? "", columnWidth)}${
         " ".repeat(gap - 2)
-      }${rightBar} ${right?.text ?? ""}`
+      }${rightBar}${right?.text ?? ""}`
       : left?.text ?? "";
     const control = left?.control !== undefined && model.focus === left.control
       ? left.control
@@ -1669,7 +1717,8 @@ function menuPanel<A>(
       width,
       "muted",
     ).slice(0, 2);
-  const reserved = Math.max(
+  // A short panel spends its rows on choices, not descriptions.
+  const reserved = boxHeight < MENU_DESCRIPTION_ROWS ? 0 : Math.max(
     0,
     ...descriptions.filter((entry) => entry.runs !== undefined).map((entry) =>
       describe(entry.label, entry.runs).length
@@ -1680,9 +1729,11 @@ function menuPanel<A>(
     body,
     read: 0,
     footOverflow: false,
+    counts: "choices",
     follow: model.focus,
     foot: () => {
-      const footnote = menu.footnote === undefined
+      const footnote = menu.footnote === undefined ||
+          boxHeight < MENU_DESCRIPTION_ROWS
         ? []
         : wrapRuns(context, menu.footnote, width, "faint").map((text) => ({
           text,
@@ -1791,7 +1842,7 @@ function palettePanel<A>(
           ]
           : []),
       ].join("  ");
-      const room = Math.max(4, width - measureText(trailing) - 2);
+      const room = Math.max(4, width - 1 - measureText(trailing) - 2);
       const label = truncateStyledText(
         `${
           ink(context, item.label, { tone: "ink", bold: highlighted }, surface)
@@ -1803,7 +1854,7 @@ function palettePanel<A>(
         room,
         ellipsis(context),
       );
-      const text = spread(context, label, trailing, width);
+      const text = spread(context, label, trailing, width - 1);
       return highlighted ? fitLine(context, text, width, "selection") : text;
     };
     body.push({
@@ -1821,6 +1872,7 @@ function palettePanel<A>(
     body,
     read: 0,
     footOverflow: false,
+    counts: "choices",
     ...(model.highlight === undefined
       ? {}
       : { follow: itemControl(model.highlight) }),
@@ -1829,6 +1881,9 @@ function palettePanel<A>(
 }
 
 // ── Readers ──────────────────────────────────────────────────────────────
+
+/** The fewest rows a menu needs before it shows descriptions and its footnote. */
+const MENU_DESCRIPTION_ROWS = 12;
 
 /** The narrowest reader that lays its blocks in two columns. */
 const READER_TWO_COLUMNS = 70;
@@ -1963,7 +2018,7 @@ export function renderLayer<A>(
       panel = formPanel(context, layer, model, width);
       break;
     case "menu":
-      panel = menuPanel(context, layer, model, width);
+      panel = menuPanel(context, layer, model, width, box.height);
       break;
     case "palette":
       panel = palettePanel(context, layer, model, width);
