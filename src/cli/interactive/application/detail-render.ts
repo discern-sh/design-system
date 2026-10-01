@@ -24,6 +24,7 @@ import {
   overflowMarker,
   type PaintContext,
   runsWidth,
+  runText,
   spread,
   styleGlyph,
   styleRuns,
@@ -612,29 +613,43 @@ export function renderStrip(
     { tone: "faint" },
     surface,
   );
+  // Whole facts in order, skipping any that would not fit so a later,
+  // shorter one still shows.
   const factsLine = (limit: number) => {
     const kept: string[] = [];
     let used = 0;
     for (const fact of strip?.facts ?? []) {
       const width = runsWidth(context, fact) + (kept.length === 0 ? 0 : 3);
-      if (used + width > limit) break;
+      if (used + width > limit) continue;
       kept.push(styleRuns(context, fact, surface, "muted"));
       used += width;
     }
     return kept.join(separator);
   };
-  const title = styleRuns(context, strip?.title ?? fallback, surface, "ink");
+  // A title too wide for its room drops whole trailing toned runs, such as
+  // a state word, before it truncates, so no word is cut mid-way.
+  const titleIn = (limit: number) => {
+    const runs = [...(strip?.title ?? fallback)];
+    while (
+      runs.length > 1 && runsWidth(context, runs) > limit &&
+      (runs.at(-1)?.tone !== undefined ||
+        runText(context, runs.at(-1) ?? { text: "" }).trim() === "")
+    ) runs.pop();
+    return truncateStyledText(
+      styleRuns(context, runs, surface, "ink"),
+      Math.max(1, limit),
+      terminalGlyph("ellipsis", context.capabilities),
+    );
+  };
   if (lines === 1) {
     const reserved = key === "" ? 0 : measureText(key) + 2;
     const facts = factsLine(room - reserved);
-    const shown = facts === ""
-      ? truncateStyledText(
-        title,
-        Math.max(1, room - reserved),
-        terminalGlyph("ellipsis", context.capabilities),
-      )
-      : facts;
+    const shown = facts === "" ? titleIn(room - reserved) : facts;
     return [`  ${spread(context, shown, key, room)}`];
   }
-  return [`  ${spread(context, title, key, room)}`, `  ${factsLine(room)}`];
+  const reserved = key === "" ? 0 : measureText(key) + 2;
+  return [
+    `  ${spread(context, titleIn(room - reserved), key, room)}`,
+    `  ${factsLine(room)}`,
+  ];
 }

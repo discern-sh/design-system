@@ -927,10 +927,19 @@ function panelFoot<A>(
         requiresFullRead(layer) && !fitted.fullyRead
       ? ` ${layer.readHint}`
       : "";
+    // The words that matter most survive: the key goes before the read
+    // hint is cut, and the hint goes before the count is.
+    const variants = [
+      `${overflowMarker(context, "down", hidden, "page-down")}${unread}`,
+      `${overflowMarker(context, "down", hidden)}${unread}`,
+      overflowMarker(context, "down", hidden, "page-down"),
+      overflowMarker(context, "down", hidden),
+    ];
     const left = hidden > 0
       ? raised(
         context,
-        `${overflowMarker(context, "down", hidden, "page-down")}${unread}`,
+        variants.find((variant) => measureText(variant) <= width) ??
+          variants.at(-1) ?? "",
         "faint",
       )
       : reason !== undefined

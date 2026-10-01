@@ -15,7 +15,10 @@ import {
 } from "../../src/cli/interactive/application/list-render.ts";
 import { flattenList } from "../../src/cli/interactive/application/list-model.ts";
 import { modelState } from "../../src/cli/interactive/application/model.ts";
-import { renderDetailBlocks } from "../../src/cli/interactive/application/detail-render.ts";
+import {
+  renderDetailBlocks,
+  renderStrip,
+} from "../../src/cli/interactive/application/detail-render.ts";
 import { paintContext } from "../../src/cli/interactive/application/paint.ts";
 import { ApplicationDriver } from "../fixtures/application-driver.ts";
 import type { DetailBlock } from "../../src/cli/interactive/mod.ts";
@@ -542,4 +545,35 @@ Deno.test("without fills a rule parts the list from its detail", () => {
       }
     }
   }
+});
+
+Deno.test("a one-line strip shows a fact that fits and never cuts a word of its title", () => {
+  const context = paintContext(
+    new FakeTerminalIO([], { columns: 40, colorDepth: "none" }).capabilities(),
+    {},
+    { phase: 0 },
+  );
+  const strip = {
+    title: [
+      { text: "x " },
+      { text: "Image resize", role: "title" as const },
+      { text: "  " },
+      { text: "Failed", tone: "danger" as const },
+    ],
+    facts: [[{ text: "Failed 2h ago at step 2" }], [{ text: "Hourly" }]],
+  };
+  const [facts] = renderStrip(context, strip, [], 26, 1, undefined, true);
+  assertStringIncludes(stripAnsi(facts ?? ""), "Hourly");
+  const [title] = renderStrip(
+    context,
+    { ...strip, facts: [] },
+    [],
+    26,
+    1,
+    undefined,
+    true,
+  );
+  const shown = stripAnsi(title ?? "");
+  assertStringIncludes(shown, "Image resize");
+  assert(!shown.includes("Fail"), shown);
 });
