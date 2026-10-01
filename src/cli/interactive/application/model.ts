@@ -26,6 +26,16 @@ import {
   type TerminalApplicationLayerModel,
 } from "./layer-model.ts";
 import { isTextControl } from "./layer-controls.ts";
+import {
+  clearReadingFocus,
+  followReadingLink,
+  markdownReadingId,
+  moveReadingFocus,
+  type ReadingFocus,
+  type ReadingFrame,
+  type ReadingPlace,
+  revealReading,
+} from "./reading-model.ts";
 import type { ApplicationLayer, ApplicationReader } from "./layer-view.ts";
 import type { ApplicationHit } from "./hits.ts";
 import { mouseTransition } from "./mouse.ts";
@@ -140,6 +150,16 @@ export interface ModelState<A> {
   readonly detailScroll: Readonly<Record<string, number>>;
   /** Reading scroll by body id. */
   readonly readingScroll: Readonly<Record<string, number>>;
+  /** The focused link of each Markdown reading body, by body id. */
+  readonly readingFocus: Readonly<Record<string, ReadingFocus>>;
+  /** A heading each reading body's next frame scrolls to. */
+  readonly readingTargets: Readonly<
+    Record<string, { readonly heading: string }>
+  >;
+  /** What each reading body last showed at its top, for rewrapping. */
+  readonly readingAt: Readonly<Record<string, ReadingPlace>>;
+  /** The links and headings the Markdown reading body showed in the last frame. */
+  readonly reading?: ReadingFrame;
   readonly lastKeyAt?: number;
   /** When the header's liveness became busy. */
   readonly busySince?: number;
@@ -198,7 +218,8 @@ export interface TerminalApplicationState {
   readonly topLayerId?: string;
   /**
    * What receives the next key: inside the top layer, `<layer>:<control>`;
-   * otherwise the list, `<list>:filter`, `primary`, or a reading id.
+   * otherwise the list, `<list>:filter`, `primary`, a reading id, or
+   * `<reading>:link:<link>` while a link in it has focus.
    */
   readonly focusedControlId?: string;
   readonly lists: Readonly<Record<string, TerminalApplicationListState>>;
@@ -206,6 +227,8 @@ export interface TerminalApplicationState {
   readonly detailScroll: Readonly<Record<string, number>>;
   /** Reading scroll by body id. */
   readonly readingScroll: Readonly<Record<string, number>>;
+  /** The focused link of each Markdown reading body, by body id. */
+  readonly readingFocus: Readonly<Record<string, string>>;
   /** Open layers by id. */
   readonly layers: Readonly<Record<string, TerminalApplicationLayerState>>;
   /** Field values by layer, then field. */
@@ -284,7 +307,30 @@ export type TerminalApplicationEffect<A> =
     readonly action: A;
     readonly source: TerminalApplicationActionSource;
   }
+  | {
+    readonly kind: "link";
+    readonly link: TerminalApplicationLink;
+    readonly source: TerminalApplicationLinkSource;
+  }
   | { readonly kind: "cancel" };
+
+/** A link a reader followed in a Markdown reading body. */
+export interface TerminalApplicationLink {
+  readonly readingId: string;
+  /** The link's identity in its document, stable across widths. */
+  readonly linkId: string;
+  /** The destination as the Markdown wrote it. */
+  readonly destination: string;
+}
+
+/** How a link was followed: Enter on the focused link, or a click on it. */
+export type TerminalApplicationLinkSource = "enter" | "click";
+
+/** What a reading body shows next: a line, a heading, or a link it focuses. */
+export type TerminalApplicationReadingTarget =
+  | { readonly line: number }
+  | { readonly heading: string }
+  | { readonly link: string };
 
 /** One step's new model state and the callbacks it owes, in order. */
 export interface ModelStep<A> {
@@ -414,6 +460,12 @@ export type TerminalApplicationInput =
     readonly layerId: string;
     readonly fieldId: string;
     readonly value: string;
+  }
+  /** The caller scrolls a reading body to a line or a heading, or focuses a link in it. */
+  | {
+    readonly kind: "reveal";
+    readonly readingId: string;
+    readonly target: TerminalApplicationReadingTarget;
   };
 
 /** Bindings the model carries. */
@@ -431,6 +483,7 @@ const EFFECT_ORDER: Readonly<
   "selection-change": 2,
   dismiss: 3,
   action: 4,
+  link: 4,
   cancel: 5,
 };
 
@@ -787,6 +840,10 @@ function adopt<A>(
       : false,
     detailScroll: previous?.detailScroll ?? {},
     readingScroll: previous?.readingScroll ?? {},
+    readingFocus: previous?.readingFocus ?? {},
+    readingTargets: previous?.readingTargets ?? {},
+    readingAt: previous?.readingAt ?? {},
+    ...(previous?.reading === undefined ? {} : { reading: previous.reading }),
     ...(previous?.lastKeyAt === undefined
       ? {}
       : { lastKeyAt: previous.lastKeyAt }),
@@ -1288,11 +1345,15 @@ export function enterRow<A>(
   });
 }
 
-/** Escape closes the nearest thing: a filter, zoom, then a message. */
+/** Escape closes the nearest thing: a link's focus, a filter, zoom, then a message. */
 function escape<A>(
   model: ModelState<A>,
   step: KeyStep<A>,
 ): ModelState<A> {
+  const reading = markdownReadingId(model);
+  if (reading !== undefined && model.readingFocus[reading] !== undefined) {
+    return clearReadingFocus(model, reading);
+  }
   const listView = bodyList(model.view);
   const list = listView === undefined ? undefined : model.lists[listView.id];
   if (listView !== undefined && list?.filter !== undefined) {
@@ -1325,7 +1386,17 @@ function readingKey<A>(
   model: ModelState<A>,
   id: string,
   chord: string,
+  step: KeyStep<A>,
 ): ModelState<A> {
+  if (chord === "tab" || chord === "shift-tab") {
+    return moveReadingFocus(model, id, chord === "tab" ? 1 : -1);
+  }
+  if (chord === "enter") {
+    const focused = model.readingFocus[id];
+    return focused === undefined
+      ? model
+      : followReadingLink(model, id, focused.link, "enter", step);
+  }
   const rows = Math.max(1, (model.geometry?.readingRows ?? 2) - 1);
   const current = model.readingScroll[id] ?? 0;
   const next = chord === "up"
@@ -1341,8 +1412,9 @@ function readingKey<A>(
     : chord === "end"
     ? Number.MAX_SAFE_INTEGER
     : current;
+  // Scrolling moves the reader away from the focused link.
   return next === current ? model : {
-    ...model,
+    ...clearReadingFocus(model, id),
     readingScroll: { ...model.readingScroll, [id]: Math.max(0, next) },
   };
 }
@@ -1378,7 +1450,7 @@ function baseKey<A>(
     return model;
   }
   if (model.view.body.kind === "reading") {
-    return readingKey(model, model.view.body.id, navigation);
+    return readingKey(model, model.view.body.id, navigation, step);
   }
   if (navigation === "enter") return enter(model, step);
   if (listView === undefined) return model;
@@ -1657,6 +1729,9 @@ export function transitionModelState<A>(
     case "field":
       next = writeField(model, input.layerId, input.fieldId, input.value);
       break;
+    case "reveal":
+      next = revealReading(model, input.readingId, input.target);
+      break;
     case "time":
       next = applyTime(model, now, effects);
       break;
@@ -1698,7 +1773,10 @@ function focusedControl<A>(
     return `${top.id}:${layerFocus(layer)}`;
   }
   const body = model.view.body;
-  if (body.kind === "reading") return body.id;
+  if (body.kind === "reading") {
+    const link = model.readingFocus[body.id]?.link;
+    return link === undefined ? body.id : `${body.id}:link:${link}`;
+  }
   if (body.kind === "empty" && model.primaryFocused) return "primary";
   const list = bodyList(model.view);
   if (list === undefined) return undefined;
@@ -1756,6 +1834,14 @@ export function snapshotModelState<A>(
     lists: Object.freeze(lists),
     detailScroll: Object.freeze({ ...model.detailScroll }),
     readingScroll: Object.freeze({ ...model.readingScroll }),
+    readingFocus: Object.freeze(
+      Object.fromEntries(
+        Object.entries(model.readingFocus).map(([id, focus]) => [
+          id,
+          focus.link,
+        ]),
+      ),
+    ),
     layers: Object.freeze(layers),
     fields: Object.freeze(fields),
     fullyRead: Object.freeze(fullyRead),

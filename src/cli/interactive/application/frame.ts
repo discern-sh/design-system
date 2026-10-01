@@ -45,7 +45,20 @@ import {
   renderDetailBlocks,
   renderStrip,
   scrollDetail,
+  scrollToShow,
 } from "./detail-render.ts";
+import {
+  isApplicationMarkdown,
+  projectMarkdownReading,
+  readingAnchor,
+  type ReadingProjection,
+  rowForReadingAnchor,
+} from "./markdown-reading.ts";
+import {
+  markdownReadingId,
+  type ReadingFrame,
+  type ReadingLinkPosition,
+} from "./reading-model.ts";
 import { decodableChord } from "./keymap.ts";
 import {
   decideListDensity,
@@ -167,7 +180,11 @@ interface FrameContext extends PaintContext {
 
 const readingCache = new WeakMap<
   object,
-  { readonly key: string; readonly lines: readonly string[] }
+  {
+    readonly key: string;
+    readonly lines: readonly string[];
+    readonly projection?: ReadingProjection;
+  }
 >();
 
 /** The header line, with a hit for every chip that carries an action. */
@@ -369,6 +386,35 @@ function footerHints<A>(
         ...(view.footer.right ?? []).filter(free),
       ],
     };
+  }
+  const reading = markdownReadingId(model);
+  if (reading !== undefined) {
+    if (model.readingFocus[reading] !== undefined) {
+      // A focused link owns Enter, Tab, and Escape, so caller hints for
+      // those keys would promise what they no longer do.
+      const linkKeys = new Set(["enter", "tab", "shift-tab", "escape"]);
+      const free = (hint: KeyHint) =>
+        (typeof hint.key === "string" ? [hint.key] : hint.key).every((key) => {
+          const chord = decodableChord(key);
+          return chord === undefined || !linkKeys.has(chord);
+        });
+      return {
+        left: [
+          { key: "enter", label: copy.open },
+          { key: ["tab", "shift-tab"], label: copy.next },
+        ],
+        right: [
+          { key: "escape", label: copy.done },
+          ...(view.footer.right ?? []).filter(free),
+        ],
+      };
+    }
+    if (model.reading?.id === reading && model.reading.order.length > 0) {
+      return {
+        ...view.footer,
+        left: [...view.footer.left, { key: "tab", label: copy.links }],
+      };
+    }
   }
   return view.footer;
 }
@@ -1008,6 +1054,64 @@ function listOnly<A>(
   };
 }
 
+/** The lines of a reading body at a width, and its Markdown projection. */
+function readingLines<A>(
+  context: FrameContext,
+  model: ModelState<A>,
+  body: Extract<ModelState<A>["view"]["body"], { kind: "reading" }>,
+  width: number,
+): {
+  readonly lines: readonly string[];
+  readonly projection?: ReadingProjection;
+} {
+  const capabilities = { ...context.capabilities, columns: width };
+  const receded = context.recede === true;
+  const focus = model.readingFocus[body.id];
+  const key = JSON.stringify([
+    capabilities,
+    cliPresentationPassthrough(context.presentation),
+    receded,
+    focus ?? null,
+  ]);
+  const cached = readingCache.get(body.content);
+  if (cached?.key === key) return cached;
+  const markdown = isApplicationMarkdown(body.content)
+    ? projectMarkdownReading(
+      body.content,
+      width,
+      capabilities,
+      context.presentation,
+      focus,
+    )
+    : undefined;
+  const lines = markdown?.lines ?? renderCliBlock(
+    body.content as Exclude<typeof body.content, { kind: "markdown" }>,
+    capabilities,
+    context.presentation,
+  ).split("\n");
+  // Beneath a layer the document recedes like every other base region.
+  const result = {
+    key,
+    lines: receded
+      ? lines.map((line) => ink(context, stripAnsi(line), { tone: "faint" }))
+      : lines,
+    ...(markdown === undefined ? {} : { projection: markdown }),
+  };
+  readingCache.set(body.content, result);
+  context.renderCalls += 1;
+  return result;
+}
+
+function linkPosition(
+  start: number,
+  end: number,
+  first: number,
+  shown: number,
+): ReadingLinkPosition {
+  if (end < first) return "above";
+  return start >= first + shown ? "below" : "visible";
+}
+
 function reading<A>(
   context: FrameContext,
   model: ModelState<A>,
@@ -1018,52 +1122,130 @@ function reading<A>(
   size: TerminalSize,
   region: Region,
 ): BodyResult<A> {
+  const id = body.id;
   const width = Math.max(1, size.columns - 4);
-  const capabilities = { ...context.capabilities, columns: width };
-  const receded = context.recede === true;
-  const key = JSON.stringify([
-    capabilities,
-    cliPresentationPassthrough(context.presentation),
-    receded,
-  ]);
-  let cached = readingCache.get(body.content);
-  if (cached?.key !== key) {
-    const lines = renderCliBlock(
-      body.content,
-      capabilities,
-      context.presentation,
-    ).split("\n");
-    // Beneath a layer the document recedes like every other base region.
-    cached = {
-      key,
-      lines: receded
-        ? lines.map((line) => ink(context, stripAnsi(line), { tone: "faint" }))
-        : lines,
-    };
-    readingCache.set(body.content, cached);
-    context.renderCalls += 1;
+  const { lines, projection } = readingLines(context, model, body, width);
+  let requested = model.readingScroll[id] ?? 0;
+  // A new width rewraps the document, so the line that was on top is found
+  // again by its text.
+  const place = model.readingAt[id];
+  if (place !== undefined && place.width !== width) {
+    const fallback = place.lines <= 1
+      ? 0
+      : Math.round(requested * lines.length / place.lines);
+    requested = rowForReadingAnchor(lines, place.anchor, fallback);
+  }
+  const heading = model.readingTargets[id]?.heading;
+  const headingRow = heading === undefined
+    ? undefined
+    : projection?.headings.get(heading);
+  if (headingRow !== undefined) {
+    requested = scrollToShow(
+      lines.length,
+      region.height,
+      headingRow,
+      false,
+      headingRow,
+    );
+  }
+  // A focused link is always on screen.
+  const focus = model.readingFocus[id];
+  const focused = focus === undefined
+    ? undefined
+    : projection?.links.find((link) => link.id === focus.link);
+  if (focused !== undefined) {
+    requested = scrollToShow(
+      lines.length,
+      region.height,
+      requested,
+      false,
+      focused.startRow,
+      focused.endRow,
+    );
   }
   const viewport = scrollDetail(
     context,
-    cached.lines,
+    lines,
     region.height,
-    model.readingScroll[body.id] ?? 0,
+    requested,
     width,
     false,
   );
+  const hits: ApplicationHit[] = [
+    ...areaHits(region.height, 0, 0, size.columns, { kind: "reading" }),
+  ];
+  const positions: Record<string, ReadingLinkPosition> = {};
+  for (const link of projection?.links ?? []) {
+    positions[link.id] = linkPosition(
+      link.startRow,
+      link.endRow,
+      viewport.first,
+      viewport.shown,
+    );
+    for (const cells of link.regions) {
+      if (
+        cells.row < viewport.first ||
+        cells.row >= viewport.first + viewport.shown
+      ) continue;
+      hits.push({
+        row: viewport.offset + cells.row - viewport.first,
+        start: 2 + cells.start,
+        end: 2 + cells.end,
+        target: { kind: "link", readingId: id, linkId: link.id },
+      });
+    }
+  }
+  const frame: ReadingFrame | undefined = projection === undefined
+    ? undefined
+    : {
+      id,
+      order: projection.links.map((link) => link.id),
+      destinations: Object.fromEntries(
+        projection.links.map((link) => [link.id, link.destination]),
+      ),
+      positions,
+      headings: [...projection.headings.keys()],
+    };
+  const anchor = readingAnchor(lines, viewport.first);
+  const at = model.readingAt[id];
+  const { [id]: _done, ...targets } = model.readingTargets;
+  const { [id]: _stale, ...focusRest } = model.readingFocus;
+  const fitted: ModelState<A> = {
+    ...model,
+    readingScroll: (model.readingScroll[id] ?? 0) === viewport.scroll
+      ? model.readingScroll
+      : { ...model.readingScroll, [id]: viewport.scroll },
+    readingAt: at?.width === width && at.lines === lines.length &&
+        at.anchor === anchor
+      ? model.readingAt
+      : {
+        ...model.readingAt,
+        [id]: {
+          width,
+          lines: lines.length,
+          ...(anchor === undefined ? {} : { anchor }),
+        },
+      },
+    readingTargets: model.readingTargets[id] === undefined
+      ? model.readingTargets
+      : targets,
+    // A focused link the document no longer holds loses focus.
+    readingFocus: focus !== undefined && focused === undefined &&
+        projection !== undefined
+      ? focusRest
+      : model.readingFocus,
+  };
+  const { reading: _previous, ...withoutFrame } = fitted;
   return {
     lines: viewport.lines.map((line) =>
       fitLine(context, `  ${line}`, size.columns)
     ),
-    model: (model.readingScroll[body.id] ?? 0) === viewport.scroll ? model : {
-      ...model,
-      readingScroll: { ...model.readingScroll, [body.id]: viewport.scroll },
-    },
+    model: frame === undefined ? withoutFrame : { ...fitted, reading: frame },
     layout: "reading",
     listRows: 0,
     detailRows: 0,
     readingRows: region.height,
-    hits: areaHits(region.height, 0, 0, size.columns, { kind: "reading" }),
+    hits,
   };
 }
 

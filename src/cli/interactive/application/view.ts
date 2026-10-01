@@ -8,6 +8,8 @@
  */
 
 import type { CliBlock } from "../../block-composition.ts";
+import type { MarkdownChartResource } from "../../../chart/markdown.ts";
+import type { MarkdownDiagramResource } from "../../../diagram/markdown.ts";
 import type { KeyChord, KeyHint, KeyHints } from "../../key-hints.ts";
 import type { TerminalTextTone } from "../../theme.ts";
 import type { TerminalApplicationCopy } from "./copy.ts";
@@ -381,11 +383,33 @@ export interface ApplicationListBody<A> {
   readonly list: ApplicationList<A>;
 }
 
-/** One scrolling document, remembered by id. */
+/**
+ * A Markdown document the package renders, centred at its readable
+ * measure. Its links are controls: Tab and Shift+Tab reach them, Enter
+ * follows the focused one, and a click follows the one under it. A link
+ * to a heading in the same document scrolls there; every other link
+ * reaches `onLink`.
+ */
+export interface ApplicationMarkdown {
+  readonly kind: "markdown";
+  /** Untrusted CommonMark/GFM source, rendered by the package's Markdown authority. */
+  readonly source: string;
+  /** Explicit image resources eligible for Diagram promotion. */
+  readonly diagrams?: readonly MarkdownDiagramResource[];
+  /** Explicit image resources eligible for Chart promotion. */
+  readonly charts?: readonly MarkdownChartResource[];
+  /** The readable measure in cells, at least 16; defaults to 72. */
+  readonly measure?: number;
+}
+
+/**
+ * One scrolling document, remembered by id: a Component block, or Markdown
+ * whose links a reader can follow.
+ */
 export interface ApplicationReadingBody {
   readonly kind: "reading";
   readonly id: string;
-  readonly content: CliBlock;
+  readonly content: CliBlock | ApplicationMarkdown;
 }
 
 /**

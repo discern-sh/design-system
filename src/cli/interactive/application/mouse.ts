@@ -23,6 +23,7 @@ import {
 import { menuItem, paletteRows } from "./layer-search.ts";
 import type { ApplicationLayer } from "./layer-view.ts";
 import { rowIndexForKey } from "./list-model.ts";
+import { clearReadingFocus, followReadingLink } from "./reading-model.ts";
 import {
   applyKey,
   applyLayerEffects,
@@ -261,11 +262,13 @@ export function mouseTransition<A>(
           },
         };
       }
-      case "reading": {
+      case "reading":
+      case "link": {
         const body = model.view.body;
         if (body.kind !== "reading") return model;
+        // Scrolling moves the reader away from the focused link.
         return {
-          ...model,
+          ...clearReadingFocus(model, body.id),
           readingScroll: {
             ...model.readingScroll,
             [body.id]: Math.max(
@@ -286,6 +289,14 @@ export function mouseTransition<A>(
       const key = keyFor(target.chord);
       return key === undefined ? model : applyKey(model, key, step);
     }
+    case "link":
+      return followReadingLink(
+        model,
+        target.readingId,
+        target.linkId,
+        "click",
+        step,
+      );
     case "chip": {
       const action = model.view.header.chips?.[target.index]?.action;
       if (action !== undefined) {

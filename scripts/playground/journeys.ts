@@ -1170,6 +1170,10 @@ export const interactiveExportCoverage: Readonly<
   DEFAULT_APPLICATION_LIST_MIN_TITLE: {
     excluded: "The column-dropping threshold the journey narrows past.",
   },
+  DEFAULT_APPLICATION_READING_MEASURE: {
+    excluded:
+      "The readable measure a Markdown reading body centres at; a default with no interaction of its own.",
+  },
   DEFAULT_APPLICATION_SETTLE_MS: {
     excluded: "The settle window the journey's live update waits behind.",
   },

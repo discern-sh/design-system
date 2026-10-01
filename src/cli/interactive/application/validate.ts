@@ -20,6 +20,10 @@ import {
   type TerminalApplicationCopy,
 } from "./copy.ts";
 import { layerRules } from "./layer-validate.ts";
+import {
+  applicationMarkdownIssues,
+  isApplicationMarkdown,
+} from "./markdown-reading.ts";
 import type { TerminalApplicationState } from "./model.ts";
 import {
   blocks,
@@ -287,6 +291,14 @@ export function viewIssues<A>(
       break;
     case "reading":
       text(issues, "body.id", body.id);
+      if (isApplicationMarkdown(body.content)) {
+        for (const issue of applicationMarkdownIssues(body.content)) {
+          issues.push({
+            path: `body.content.${issue.path}`,
+            message: issue.message,
+          });
+        }
+      }
       break;
     case "empty":
       text(issues, "body.title", body.title);

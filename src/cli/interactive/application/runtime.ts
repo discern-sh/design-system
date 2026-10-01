@@ -34,6 +34,9 @@ import type {
   TerminalApplicationDismissal,
   TerminalApplicationDismissTarget,
   TerminalApplicationLayout,
+  TerminalApplicationLink,
+  TerminalApplicationLinkSource,
+  TerminalApplicationReadingTarget,
   TerminalApplicationSelectionMove,
   TerminalApplicationState,
 } from "./model.ts";
@@ -132,6 +135,12 @@ export interface TerminalApplicationContext<A> {
    */
   setField(layerId: string, fieldId: string, value: string): void;
   /**
+   * Scroll a reading body to a line or to a heading of its Markdown, or
+   * focus one of its links and bring it on screen. Applies like `select`;
+   * a heading the document lacks leaves the position as it was.
+   */
+  reveal(readingId: string, target: TerminalApplicationReadingTarget): void;
+  /**
    * Abort a running background command's signal. Unknown or finished ids
    * are ignored; the command reports its end through `onCommandSettled`.
    */
@@ -162,6 +171,16 @@ export interface TerminalApplicationOptions<A> {
     action: A,
     context: TerminalApplicationContext<A>,
     source: TerminalApplicationActionSource,
+  ) => TerminalApplicationCommand | void;
+  /**
+   * A reader followed a link in a Markdown reading body with Enter or a
+   * click, other than a link to a heading of the same document, which the
+   * package scrolls to itself. Return a command as `onAction` does.
+   */
+  readonly onLink?: (
+    link: TerminalApplicationLink,
+    context: TerminalApplicationContext<A>,
+    source: TerminalApplicationLinkSource,
   ) => TerminalApplicationCommand | void;
   /** The selected item changed, for any reason. */
   readonly onSelectionChange?: (

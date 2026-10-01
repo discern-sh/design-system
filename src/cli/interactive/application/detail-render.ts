@@ -497,10 +497,85 @@ export function renderDetailBlocks(
 export interface DetailViewport {
   readonly lines: readonly string[];
   readonly scroll: number;
+  /** The first content line shown. */
+  readonly first: number;
+  /** How many content lines show. */
+  readonly shown: number;
+  /** Rows above the first content line: padding or the upper marker. */
+  readonly offset: number;
 }
 
 function hiddenCount(lines: readonly string[]): number {
   return lines.filter((line) => line.trim() !== "").length;
+}
+
+/** The lines a scrolled viewport shows, without rendering them. */
+interface DetailWindow {
+  /** The scroll, clamped so the end is reachable. */
+  readonly scroll: number;
+  /** The first content line shown. */
+  readonly first: number;
+  /** How many content lines show. */
+  readonly rows: number;
+  /** Whether the first row is padding. */
+  readonly padded: boolean;
+  /** Whether the upper marker shows. */
+  readonly above: boolean;
+  /** Whether the lower marker shows. */
+  readonly below: boolean;
+}
+
+/**
+ * Which of `count` lines a `height`-row viewport shows from `requested`.
+ * Without a padding row the upper marker takes the first row once
+ * scrolled, and stands for the line beneath it too, so each step down
+ * reveals a new line — while the first page shows at least two lines;
+ * otherwise that line would never be on screen. A viewport too short for
+ * a marker and a line shows the line.
+ */
+function detailWindow(
+  count: number,
+  height: number,
+  requested: number,
+  padded: boolean,
+): DetailWindow {
+  // A single row has no room for padding; it shows a line.
+  const topPadding = padded && height >= 2;
+  const visible = Math.max(1, height - (topPadding ? 1 : 0));
+  if (count <= visible) {
+    return {
+      scroll: 0,
+      first: 0,
+      rows: count,
+      padded: topPadding,
+      above: false,
+      below: false,
+    };
+  }
+  const marks = !topPadding && visible >= 2;
+  const covers = marks && visible >= 3;
+  const viewport = (scroll: number) => {
+    const up = scroll > 0 && marks ? 1 : 0;
+    const first = scroll + (covers ? up : 0);
+    let rows = visible - up;
+    const below = first + rows < count && rows >= 2;
+    if (below) rows -= 1;
+    return { first, rows, below };
+  };
+  let maxScroll = Math.max(0, count - visible - 1);
+  while (
+    viewport(maxScroll).first + viewport(maxScroll).rows < count
+  ) maxScroll += 1;
+  const scroll = Math.max(0, Math.min(requested, maxScroll));
+  const at = viewport(scroll);
+  return {
+    scroll,
+    first: at.first,
+    rows: at.rows,
+    padded: topPadding,
+    above: scroll > 0 && (topPadding || marks),
+    below: at.below,
+  };
 }
 
 /**
@@ -516,46 +591,11 @@ export function scrollDetail(
   width: number,
   padded: boolean,
 ): DetailViewport {
-  // A single row has no room for padding; it shows a line.
-  const topPadding = padded && height >= 2;
-  const pad = topPadding ? 1 : 0;
-  const visible = Math.max(1, height - pad);
-  const blank = () => "";
-  if (lines.length <= visible) {
-    return {
-      lines: [
-        ...Array.from({ length: pad }, blank),
-        ...lines,
-        ...Array.from({ length: visible - lines.length }, blank),
-      ],
-      scroll: 0,
-    };
-  }
-  // Without a padding row the upper marker takes the first row once
-  // scrolled, and stands for the line beneath it too, so each step down
-  // reveals a new line — while the first page shows at least two lines;
-  // otherwise that line would never be on screen. A viewport too short for
-  // a marker and a line shows the line.
-  const marks = !topPadding && visible >= 2;
-  const covers = marks && visible >= 3;
-  const viewport = (scroll: number) => {
-    const up = scroll > 0 && marks ? 1 : 0;
-    const first = scroll + (covers ? up : 0);
-    let rows = visible - up;
-    const below = first + rows < lines.length && rows >= 2;
-    if (below) rows -= 1;
-    return { first, rows, below };
-  };
-  let maxScroll = Math.max(0, lines.length - visible - 1);
-  while (
-    viewport(maxScroll).first + viewport(maxScroll).rows < lines.length
-  ) maxScroll += 1;
-  const scroll = Math.max(0, Math.min(requested, maxScroll));
-  const at = viewport(scroll);
+  const at = detailWindow(lines.length, height, requested, padded);
   const marker = (text: string) =>
     spread(context, "", ink(context, text, { tone: "faint" }), width);
   const top: string[] = [];
-  if (scroll > 0 && (topPadding || marks)) {
+  if (at.above) {
     top.push(
       marker(
         overflowMarker(
@@ -566,7 +606,7 @@ export function scrollDetail(
         ),
       ),
     );
-  } else if (topPadding) top.push("");
+  } else if (at.padded) top.push("");
   const shown = lines.slice(at.first, at.first + at.rows);
   const bottom = at.below
     ? [
@@ -582,7 +622,50 @@ export function scrollDetail(
     : [];
   const result = [...top, ...shown, ...bottom];
   while (result.length < height) result.push("");
-  return { lines: result.slice(0, height), scroll };
+  return {
+    lines: result.slice(0, height),
+    scroll: at.scroll,
+    first: at.first,
+    shown: shown.length,
+    offset: top.length,
+  };
+}
+
+/**
+ * The scroll that shows rows `start` through `end` of `count` lines,
+ * moving as little as possible from `scroll`: a range above the window
+ * comes to its top, one below rises until its end shows, and a range
+ * taller than the window shows its start.
+ */
+export function scrollToShow(
+  count: number,
+  height: number,
+  scroll: number,
+  padded: boolean,
+  start: number,
+  end = start,
+): number {
+  let at = detailWindow(count, height, scroll, padded);
+  if (start < at.first) {
+    // The smallest scroll whose window begins at or before the start, then
+    // the largest of those, so the start sits at the top.
+    let candidate = Math.min(at.scroll, start);
+    while (
+      candidate > 0 &&
+      detailWindow(count, height, candidate, padded).first > start
+    ) candidate -= 1;
+    while (
+      detailWindow(count, height, candidate + 1, padded).first <= start &&
+      candidate + 1 <= start
+    ) candidate += 1;
+    return detailWindow(count, height, candidate, padded).scroll;
+  }
+  while (end >= at.first + at.rows && at.first < start) {
+    const next = detailWindow(count, height, at.scroll + 1, padded);
+    if (next.scroll === at.scroll) break;
+    at = next;
+  }
+  return at.scroll;
 }
 
 /**

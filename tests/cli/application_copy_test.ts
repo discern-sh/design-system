@@ -58,6 +58,7 @@ const PACKAGE_WORDS = [
   "Loading…",
   "more above",
   "more below",
+  "Links",
 ];
 
 interface Scene {
@@ -80,7 +81,27 @@ const with_ = (
   copy,
 });
 
+/** A Markdown reading body with links, whose footer the package extends. */
+const reading = (
+  copy: Partial<TerminalApplicationCopy>,
+): TerminalApplicationView<string> => ({
+  header: { leading: [{ text: "Notes", role: "title" }] },
+  body: {
+    kind: "reading",
+    id: "notes",
+    content: {
+      kind: "markdown",
+      source:
+        "# Notes\n\nSee the [guide](guide.md) and the [site](https://example.com/).",
+    },
+  },
+  footer: { left: [], right: [{ key: "q", label: "Quit" }] },
+  copy,
+});
+
 const SCENES: readonly Scene[] = [
+  { name: "document", view: reading, keys: [] },
+  { name: "link", view: reading, keys: ["tab"] },
   { name: "list", view: (copy) => with_(copy), keys: ["down"] },
   { name: "filter", view: (copy) => with_(copy), keys: ["/", "z", "z"] },
   {

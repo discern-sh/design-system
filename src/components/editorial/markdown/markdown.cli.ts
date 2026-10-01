@@ -103,7 +103,7 @@ export interface MarkdownCliProjection {
   readonly headings: readonly MarkdownCliProjectedHeading[];
 }
 
-/** Focus decoration selected by the interactive Markdown browser. */
+/** Focus decoration for the link an interactive reading surface focused. */
 export interface MarkdownCliProjectionOptions {
   readonly focusedLinkId?: string;
   readonly focusOrigin?: "keyboard" | "pointer";

@@ -9,6 +9,7 @@
 import { type KeyChord, normalizeKeyChord } from "../../key-hints.ts";
 import { isTerminalKeyName, type TerminalKey } from "../keys.ts";
 import type { ApplicationLayer, ApplicationLayerKind } from "./layer-view.ts";
+import { isApplicationMarkdown } from "./markdown-reading.ts";
 import type { TerminalApplicationViewIssue } from "./validate-rules.ts";
 import type {
   ApplicationBody,
@@ -59,7 +60,8 @@ export interface TerminalApplicationReservedKeyOptions {
  * filters when the list declares a filter. A master-detail body adds
  * Shift+Up and Shift+Down to scroll its detail, Space to zoom, and Left to
  * leave zoom. A reading body scrolls with the arrows, page keys, Home, and
- * End. An empty body runs its primary with Enter, and with a list below
+ * End; a Markdown one also moves between its links with Tab and Shift+Tab
+ * and follows the focused link with Enter. An empty body runs its primary with Enter, and with a list below
  * keeps the list's keys, Up and Down moving between the primary and the
  * list. With `viKeys`, j and k move wherever a list or document does.
  * Escape is handled first by the package and reaches a binding only when
@@ -86,7 +88,18 @@ export function terminalApplicationReservedKeys<A>(
     case "list":
       return [...LIST_KEYS, ...filter(body.list), ...vi];
     case "reading":
-      return ["up", "down", "home", "end", "page-up", "page-down", ...vi];
+      return [
+        "up",
+        "down",
+        "home",
+        "end",
+        "page-up",
+        "page-down",
+        ...(isApplicationMarkdown(body.content)
+          ? ["tab", "shift-tab", "enter"]
+          : []),
+        ...vi,
+      ];
     case "empty":
       return body.list === undefined
         ? ["enter"]

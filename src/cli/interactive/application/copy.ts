@@ -35,13 +35,15 @@ export interface TerminalApplicationCopy {
   readonly why: string;
   /** Up and Down between rows. */
   readonly move: string;
-  /** Up and Down between items while the detail is zoomed. */
+  /** Up and Down between items while the detail is zoomed, and Tab between a document's links. */
   readonly next: string;
   /** Up and Down through a document without rows. */
   readonly scroll: string;
-  /** Enter on a reader's row. */
+  /** Enter on a reader's row, and on a document's focused link. */
   readonly open: string;
-  /** Enter while a list filter is being edited. */
+  /** Tab into a document's links. */
+  readonly links: string;
+  /** Enter while a list filter is being edited, and Escape out of a document's links. */
   readonly done: string;
   /** Escape while a query or filter holds text. */
   readonly clear: string;
@@ -108,6 +110,7 @@ export const DEFAULT_TERMINAL_APPLICATION_COPY: TerminalApplicationCopy = Object
     next: "Next",
     scroll: "Scroll",
     open: "Open",
+    links: "Links",
     done: "Done",
     clear: "Clear",
     close: "Close",

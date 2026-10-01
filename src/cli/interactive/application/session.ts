@@ -286,6 +286,8 @@ export class ApplicationSession<A> implements RunningSession {
         }),
       setField: (layerId, fieldId, value) =>
         input({ kind: "field", layerId, fieldId, value }),
+      reveal: (readingId, target) =>
+        input({ kind: "reveal", readingId, target }),
       abort: (commandId) => {
         this.#running.get(commandId)?.controller.abort();
       },
@@ -410,6 +412,14 @@ export class ApplicationSession<A> implements RunningSession {
             command = this.#take(
               assertCommand(
                 options.onAction?.(effect.action, context, effect.source),
+              ),
+              command,
+            );
+            break;
+          case "link":
+            command = this.#take(
+              assertCommand(
+                options.onLink?.(effect.link, context, effect.source),
               ),
               command,
             );

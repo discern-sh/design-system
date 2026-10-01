@@ -19,6 +19,12 @@ export type ApplicationHitTarget =
   | { readonly kind: "detail" }
   /** A reading body; the wheel scrolls it. */
   | { readonly kind: "reading" }
+  /** A link in a Markdown reading body; a click follows it. */
+  | {
+    readonly kind: "link";
+    readonly readingId: string;
+    readonly linkId: string;
+  }
   /** A key hint; a click presses its key. */
   | { readonly kind: "hint"; readonly chord: KeyChord }
   /** A header chip with an action; a click runs it. */

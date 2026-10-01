@@ -12,6 +12,7 @@ export {
   type TerminalApplicationCopy,
 } from "./copy.ts";
 export * from "./layer-view.ts";
+export { DEFAULT_APPLICATION_READING_MEASURE } from "./markdown-reading.ts";
 export {
   APPLICATION_EDITOR_KEYS,
   terminalApplicationLayerKeys,
@@ -35,8 +36,11 @@ export {
   type TerminalApplicationInput,
   type TerminalApplicationLayerState,
   type TerminalApplicationLayout,
+  type TerminalApplicationLink,
+  type TerminalApplicationLinkSource,
   type TerminalApplicationListState,
   TerminalApplicationModel,
+  type TerminalApplicationReadingTarget,
   type TerminalApplicationSelectionMove,
   type TerminalApplicationState,
   terminalApplicationState,
