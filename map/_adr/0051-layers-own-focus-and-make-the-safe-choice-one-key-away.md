@@ -1,6 +1,6 @@
 # ADR 0051: Layers own focus and make the safe choice one key away
 
-**Status**: accepted; amends [ADR-0050](0050-applications-compose-a-grouped-list-a-following-detail-and-modal-layers.md) by settling how layers behave, [ADR-0053](0053-applications-paint-incrementally-and-animate.md) by adding layer ids to the composition and mouse modes to the paint grammar, and [ADR-0035](0035-present-single-choice-menus-as-focus-driven-inspectors.md) by adding application menus beside one-shot ones
+**Status**: accepted; amends [ADR-0050](0050-applications-compose-a-grouped-list-a-following-detail-and-modal-layers.md) by settling how layers behave, [ADR-0053](0053-applications-paint-incrementally-and-animate.md) by adding layer ids to the composition and mouse modes to the paint grammar, and [ADR-0035](0035-present-single-choice-menus-as-focus-driven-inspectors.md) by adding application menus beside one-shot ones; amended by [ADR-0055](0055-applications-run-background-commands-beside-the-screen.md), which gives progress sheets background commands to show
 
 ## Context
 

@@ -1,6 +1,6 @@
 # ADR 0050: Applications compose a grouped list, a following detail and modal layers
 
-**Status**: accepted; supersedes [ADR-0046](0046-own-terminal-applications-through-bounded-regions.md); amends [ADR-0053](0053-applications-paint-incrementally-and-animate.md) by adding window titles to the paint grammar; layer behaviour settled by [ADR-0051](0051-layers-own-focus-and-make-the-safe-choice-one-key-away.md)
+**Status**: accepted; supersedes [ADR-0046](0046-own-terminal-applications-through-bounded-regions.md); amends [ADR-0053](0053-applications-paint-incrementally-and-animate.md) by adding window titles to the paint grammar; layer behaviour settled by [ADR-0051](0051-layers-own-focus-and-make-the-safe-choice-one-key-away.md); amended by [ADR-0055](0055-applications-run-background-commands-beside-the-screen.md), which adds background commands
 
 ## Context
 
