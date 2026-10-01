@@ -241,3 +241,58 @@ Deno.test("onLink commands and context.reveal drive a live reading body", async 
   assertEquals(followed.map((link) => link.linkId), ["link-3"]);
   assertEquals(state.readingFocus, { guide: "link-3" });
 });
+
+/** Run keys against a live reading body, together or one read at a time. */
+async function finalState(
+  chunks: readonly string[],
+): Promise<
+  {
+    readonly focus?: string;
+    readonly links: readonly string[];
+    readonly scroll: number;
+  }
+> {
+  const io = new FakeTerminalIO([], { holdOpen: true });
+  const followed: string[] = [];
+  const running = runTerminalApplication<string>({
+    view: readingView(),
+    keymap: [{ key: "q", action: "quit" }],
+    onAction: () => ({ kind: "exit" }),
+    onLink: (link) => {
+      followed.push(link.linkId);
+    },
+  }, { io, clock: new ManualTerminalClock() });
+  await settle();
+  for (const chunk of chunks) {
+    io.enqueue(chunk);
+    await settle();
+  }
+  io.enqueue("q");
+  const state = await running;
+  io.close();
+  const focus = state.readingFocus.guide;
+  return {
+    ...(focus === undefined ? {} : { focus }),
+    links: followed,
+    scroll: state.readingScroll.guide ?? 0,
+  };
+}
+
+Deno.test("keys read together meet the model their predecessors left, as keys read apart do", async () => {
+  for (
+    const sequence of [
+      ["tab", "tab", "enter"],
+      ["page-down", "page-down", "tab", "enter"],
+      ["end", "shift-tab", "shift-tab", "enter"],
+    ]
+  ) {
+    const bytes = sequence.map((name) => encodeTerminalKeys(name as never));
+    const apart = await finalState(bytes);
+    const together = await finalState([bytes.join("")]);
+    assertEquals(together, apart, sequence.join(" "));
+    assert(
+      apart.links.length > 0 || apart.scroll > 0,
+      `${sequence.join(" ")} reaches a link`,
+    );
+  }
+});

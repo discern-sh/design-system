@@ -326,9 +326,12 @@ export interface TerminalApplicationLink {
 /** How a link was followed: Enter on the focused link, or a click on it. */
 export type TerminalApplicationLinkSource = "enter" | "click";
 
-/** What a reading body shows next: a line, a heading, or a link it focuses. */
+/**
+ * What a reading body shows next: a scroll position its state reported, a
+ * heading at the top, or a link it focuses and brings on screen.
+ */
 export type TerminalApplicationReadingTarget =
-  | { readonly line: number }
+  | { readonly scroll: number }
   | { readonly heading: string }
   | { readonly link: string };
 
@@ -461,7 +464,7 @@ export type TerminalApplicationInput =
     readonly fieldId: string;
     readonly value: string;
   }
-  /** The caller scrolls a reading body to a line or a heading, or focuses a link in it. */
+  /** The caller scrolls a reading body to a position or a heading, or focuses a link in it. */
   | {
     readonly kind: "reveal";
     readonly readingId: string;

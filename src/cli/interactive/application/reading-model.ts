@@ -146,19 +146,19 @@ export function followReadingLink<A>(
   });
 }
 
-/** The caller asks a reading body to show a line, a heading, or a link. */
+/** The caller asks a reading body to show a position, a heading, or a link. */
 export function revealReading<A>(
   model: ModelState<A>,
   id: string,
   target: TerminalApplicationReadingTarget,
 ): ModelState<A> {
-  if ("line" in target) {
-    if (!Number.isSafeInteger(target.line) || target.line < 0) {
-      throw new TypeError("a reading line is a whole number from 0");
+  if ("scroll" in target) {
+    if (!Number.isSafeInteger(target.scroll) || target.scroll < 0) {
+      throw new TypeError("a reading scroll is a whole number from 0");
     }
     return {
       ...clearReadingFocus(model, id),
-      readingScroll: { ...model.readingScroll, [id]: target.line },
+      readingScroll: { ...model.readingScroll, [id]: target.scroll },
     };
   }
   if ("heading" in target) {

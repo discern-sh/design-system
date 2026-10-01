@@ -135,9 +135,10 @@ export interface TerminalApplicationContext<A> {
    */
   setField(layerId: string, fieldId: string, value: string): void;
   /**
-   * Scroll a reading body to a line or to a heading of its Markdown, or
-   * focus one of its links and bring it on screen. Applies like `select`;
-   * a heading the document lacks leaves the position as it was.
+   * Scroll a reading body to a position its `readingScroll` reported or to
+   * a heading of its Markdown, or focus one of its links and bring it on
+   * screen. Applies like `select`; a heading the document lacks leaves the
+   * position as it was.
    */
   reveal(readingId: string, target: TerminalApplicationReadingTarget): void;
   /**
@@ -402,6 +403,13 @@ export async function runTerminalApplication<A>(
           painter = screen;
           let paintedSize: TerminalSize | undefined;
           let rendered: SessionFrame | undefined;
+          /** The model the last render fitted, so input never meets an unfitted one. */
+          let fitted: object | undefined;
+          const motion = () => ({
+            phase: ticker.phase,
+            now: clock.now(),
+            ...(runtime.reducedMotion === true ? { reducedMotion: true } : {}),
+          });
           const paint = (): void => {
             if (signalRestored) throw new InteractionCancelled("Cancelled.");
             if (fault !== undefined) throw fault.error;
@@ -413,14 +421,9 @@ export async function runTerminalApplication<A>(
                 facts.size,
                 facts.capabilities,
                 runtime,
-                {
-                  phase: ticker.phase,
-                  now: clock.now(),
-                  ...(runtime.reducedMotion === true
-                    ? { reducedMotion: true }
-                    : {}),
-                },
+                motion(),
               );
+              fitted = session.revision;
               const painted = screen.paint({
                 frame: frame.frame,
                 size: facts.size,
@@ -460,6 +463,20 @@ export async function runTerminalApplication<A>(
             throw new TypeError(
               "application viewport did not stabilise while painting",
             );
+          };
+          /**
+           * Lay the front model out for the screen without painting, when
+           * it changed since the last frame. Keys read together paint once,
+           * but each still meets the model its predecessor left fitted —
+           * scroll, density, and where links sit — as it would had it
+           * arrived alone.
+           */
+          const fit = (): void => {
+            const session = front();
+            if (session.revision === fitted) return;
+            const facts = terminalFacts(io);
+            session.render(facts.size, facts.capabilities, runtime, motion());
+            fitted = session.revision;
           };
           /** Start a session: its first frame, then `start` and what it owes. */
           const begin = (session: RunningSession): LoopCommand | void => {
@@ -583,6 +600,7 @@ export async function runTerminalApplication<A>(
               const waiting = follow(front().drain());
               if (waiting !== undefined) return waiting;
               if (event.kind === "mouse") mouseObserved = true;
+              fit();
               const session = front();
               const command = follow(
                 rendered?.layout === "too-small"

@@ -775,6 +775,22 @@ Deno.test("every body reserves exactly the keys the package acts on in it", asyn
       }),
     },
   };
+  // Markdown makes a reading body's links controls, which reserve more keys.
+  const markdownReading: TerminalApplicationView<string> = {
+    ...reading,
+    body: {
+      kind: "reading",
+      id: "notes",
+      content: {
+        kind: "markdown",
+        source: `See [one](one.md) and [two](two.md).\n\n${
+          Array.from({ length: 80 }, (_, index) => `- line ${index}`).join(
+            "\n",
+          )
+        }`,
+      },
+    },
+  };
   const empty = (list: boolean, filter: boolean) => {
     const base = listed(filter);
     return {
@@ -808,6 +824,11 @@ Deno.test("every body reserves exactly the keys the package acts on in it", asyn
       prepared: [["down", "down"], ["end"]],
     })),
     { name: "reading", view: reading, prepared: [[], ["page-down"]] },
+    {
+      name: "Markdown reading",
+      view: markdownReading,
+      prepared: [[], ["tab"], ["page-down"]],
+    },
     ...[true, false].map((filter) => ({
       name: `empty with a list, filter ${filter}`,
       view: empty(true, filter),
@@ -815,6 +836,27 @@ Deno.test("every body reserves exactly the keys the package acts on in it", asyn
     })),
     { name: "empty", view: empty(false, false), prepared: [[]] },
   ];
+  // Every kind of body, and both kinds of reading content, are enrolled.
+  const kinds = {
+    "master-detail": true,
+    list: true,
+    reading: true,
+    empty: true,
+  } satisfies Record<TerminalApplicationView<string>["body"]["kind"], true>;
+  assertEquals(
+    new Set(bodies.map(({ view }) => view.body.kind)),
+    new Set(Object.keys(kinds)),
+  );
+  assertEquals(
+    new Set(
+      bodies.flatMap(({ view }) =>
+        view.body.kind === "reading"
+          ? ["kind" in view.body.content ? "markdown" : "block"]
+          : []
+      ),
+    ),
+    new Set(["markdown", "block"]),
+  );
   for (const body of bodies) {
     for (const viKeys of [false, true]) {
       await t.step(`${body.name}, vi ${viKeys}`, () => {

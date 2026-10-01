@@ -1133,7 +1133,8 @@ function reading<A>(
     const fallback = place.lines <= 1
       ? 0
       : Math.round(requested * lines.length / place.lines);
-    requested = rowForReadingAnchor(lines, place.anchor, fallback);
+    const row = rowForReadingAnchor(lines, place.anchor, fallback);
+    requested = scrollToShow(lines.length, region.height, row, false, row);
   }
   const heading = model.readingTargets[id]?.heading;
   const headingRow = heading === undefined
