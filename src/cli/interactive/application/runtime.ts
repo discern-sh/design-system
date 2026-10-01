@@ -13,7 +13,7 @@ import {
   type TerminalClock,
 } from "../clock.ts";
 import { InteractionCancelled } from "../errors.ts";
-import { DenoTerminalIO, type TerminalSize } from "../io.ts";
+import { DenoTerminalIO, type TerminalIO, type TerminalSize } from "../io.ts";
 import { type TerminalInputEvent, TerminalInputReader } from "../keys.ts";
 import { assertInteractiveTerminal, withRawTerminal } from "../lifecycle.ts";
 import { drainTerminalMouseInput } from "../mouse-input.ts";
@@ -41,6 +41,10 @@ import type {
   TerminalApplicationState,
 } from "./model.ts";
 import type { ApplicationActivity } from "./layer-view.ts";
+import {
+  type ApplicationEpilogueLine,
+  releasedLines,
+} from "./released-lines.ts";
 import {
   ApplicationSession,
   type LoopCommand,
@@ -73,7 +77,10 @@ export {
 export type TerminalApplicationCommand =
   | {
     readonly kind: "foreground";
-    /** A line printed after the screen is released, before the operation runs. */
+    /**
+     * A line printed after the screen is released, before the operation
+     * runs; it wraps to the terminal as an epilogue line does.
+     */
     readonly handoff?: readonly ApplicationRun[];
     /** Runs after every terminal mode restores and before ownership resumes. */
     readonly run: () => void | Promise<void>;
@@ -96,10 +103,12 @@ export type TerminalApplicationCommand =
   | {
     readonly kind: "exit";
     /**
-     * Lines printed after the screen is released. A nested application
-     * returns to the one that opened it and prints none.
+     * Lines printed after the screen is released. A line wider than the
+     * terminal wraps at word boundaries, its continuations hanging two
+     * cells under its own indentation; a `code` run never breaks. A nested
+     * application returns to the one that opened it and prints none.
      */
-    readonly epilogue?: readonly string[];
+    readonly epilogue?: readonly ApplicationEpilogueLine[];
   }
   | TerminalApplicationNested;
 
@@ -280,12 +289,18 @@ const textEncoder = new TextEncoder();
 /** A command that ends the screen's bracket: a handoff or the last exit. */
 type ReleaseCommand = Extract<LoopCommand, { kind: "foreground" | "exit" }>;
 
-/** The plain line a foreground handoff prints on the released screen. */
-function handoffLine(
-  runs: readonly ApplicationRun[],
-  unicode: boolean,
-): string {
-  return runs.map((run) => unicode ? run.text : run.ascii ?? run.text).join("");
+/** Print lines on the released screen, wrapped to the terminal. */
+function printReleased(
+  io: TerminalIO,
+  lines: readonly ApplicationEpilogueLine[],
+): void {
+  const { unicode } = io.capabilities();
+  const { columns } = io.size();
+  for (const line of lines) {
+    for (const row of releasedLines(line, columns, unicode)) {
+      io.write(`${row}\n`);
+    }
+  }
 }
 
 /**
@@ -653,14 +668,10 @@ export async function runTerminalApplication<A>(
       );
       if (command.kind === "exit") {
         ended = true;
-        for (const line of command.epilogue ?? []) io.write(`${line}\n`);
+        printReleased(io, command.epilogue ?? []);
         break;
       }
-      if (command.handoff !== undefined) {
-        io.write(
-          `${handoffLine(command.handoff, io.capabilities().unicode)}\n`,
-        );
-      }
+      if (command.handoff !== undefined) printReleased(io, [command.handoff]);
       await command.run();
     }
   } catch (error) {

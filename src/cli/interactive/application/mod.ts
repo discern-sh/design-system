@@ -54,4 +54,5 @@ export {
   type TerminalApplicationFrame,
 } from "./frame.ts";
 export type { TerminalApplicationMotion } from "./paint.ts";
+export type { ApplicationEpilogueLine } from "./released-lines.ts";
 export * from "./runtime.ts";

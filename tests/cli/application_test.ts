@@ -315,6 +315,58 @@ Deno.test("an exit command prints its epilogue after the screen is released", as
   assert(output.indexOf("Ran 2 jobs") > output.lastIndexOf("\x1b[?1049l"));
 });
 
+Deno.test("released lines wrap to the terminal and keep code runs whole", async () => {
+  const io = new FakeTerminalIO(["\r", "q"], { columns: 32 });
+  await runTerminalApplication({
+    view: testView(),
+    ...quit,
+    onAction: (action) =>
+      action === "quit"
+        ? {
+          kind: "exit",
+          epilogue: [
+            "Ran 2 jobs",
+            [
+              { text: "Ran: " },
+              { text: "deploy --target production --wait", role: "code" },
+              { text: " · done" },
+            ],
+            "  A note long enough to wrap beneath its own indentation.",
+          ],
+        }
+        : {
+          kind: "foreground",
+          handoff: [{
+            text: "Opening the item in another program · come back after",
+          }],
+          run: () => {},
+        },
+  }, { io });
+  const output = io.output();
+  const handoff = output.slice(
+    output.indexOf("\x1b[?1049l"),
+    output.indexOf("\x1b[?1049h", output.indexOf("\x1b[?1049l")),
+  );
+  assertStringIncludes(
+    handoff,
+    "Opening the item in another\n  program · come back after\n",
+  );
+  assert(
+    output.endsWith(
+      [
+        "Ran 2 jobs",
+        "Ran:",
+        "  deploy --target production --wait",
+        "  · done",
+        "  A note long enough to wrap",
+        "    beneath its own indentation.",
+        "",
+      ].join("\n"),
+    ),
+    JSON.stringify(output.slice(-160)),
+  );
+});
+
 Deno.test("an action returning anything but a command fails after restoration", async () => {
   const io = new FakeTerminalIO(["\r"]);
   const error = await assertRejects(
