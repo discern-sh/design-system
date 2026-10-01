@@ -20,10 +20,10 @@ The application probe drives a one-group list through 200 navigation steps throu
 
 | Application measurement                    | 20 items | 10,000 items |
 | ------------------------------------------ | -------: | -----------: |
-| Navigation p95                             |  1.44 ms |      1.29 ms |
-| Resize p95                                 |  1.50 ms |      1.98 ms |
-| Live frame p95                             |  1.51 ms |      1.34 ms |
-| 100 updates plus ordered input             |  4.06 ms |      8.22 ms |
+| Navigation p95                             |  1.40 ms |      1.67 ms |
+| Resize p95                                 |  1.53 ms |      2.13 ms |
+| Live frame p95                             |  1.41 ms |      1.48 ms |
+| 100 updates plus ordered input             |  3.94 ms |      8.74 ms |
 | Component block renders per frame, at most |        0 |            0 |
 
 ## Painting
@@ -37,7 +37,7 @@ The painting probe runs the real application with a 40-item list, three items ca
 | 120 × 30, no colour |  3,767 B |                  422 B |           292 B, 2 rows |            292 B, 2 rows |          3,715 B |
 | 120 × 30, truecolor |  5,765 B |                  782 B |           583 B, 2 rows |            583 B, 2 rows |          5,713 B |
 
-Each visible spinner therefore costs one row per frame, 100 to 260 bytes, and three spinners write between a fifth and a seventh of a keyframe. Validation and diffing dominate the painter's own cost. Over 200 consecutive navigation frames at 80 × 24 in truecolor, a row-diff paint takes 0.21 ms at the median and 0.25 ms at p95; a keyframe-only painter takes 0.21 ms and 0.24 ms.
+Each visible spinner therefore costs one row per frame, 100 to 260 bytes, and three spinners write between a fifth and a seventh of a keyframe. Validation and diffing dominate the painter's own cost. Over 200 consecutive navigation frames at 80 × 24 in truecolor, a row-diff paint takes 0.21 ms at the median and 0.24 ms at p95; a keyframe-only painter takes 0.21 ms and 0.24 ms.
 
 ## Layers
 
@@ -45,10 +45,10 @@ The layer probe opens one layer over the list at 80 × 24 in truecolor and appli
 
 | Layer, list size             | Opening keyframe | Bytes per key, median | Bytes per key, largest | p50 per key | p95 per key |
 | ---------------------------- | ---------------: | --------------------: | ---------------------: | ----------: | ----------: |
-| Sheet over 20 items          |          4,388 B |                 642 B |                3,603 B |     1.21 ms |     2.21 ms |
-| Sheet over 10,000 items      |          4,388 B |                 642 B |                3,603 B |     1.90 ms |     2.62 ms |
-| Palette of 1,000 over 20     |          4,735 B |                 321 B |                4,458 B |     1.51 ms |     3.61 ms |
-| Palette of 1,000 over 10,000 |          4,735 B |                 321 B |                4,458 B |     2.26 ms |     4.74 ms |
+| Sheet over 20 items          |          4,388 B |                 642 B |                3,714 B |     1.23 ms |     2.29 ms |
+| Sheet over 10,000 items      |          4,388 B |                 642 B |                3,714 B |     2.21 ms |     2.69 ms |
+| Palette of 1,000 over 20     |          4,849 B |                 321 B |                4,682 B |     1.53 ms |     4.46 ms |
+| Palette of 1,000 over 10,000 |          4,849 B |                 321 B |                4,682 B |     2.56 ms |     4.88 ms |
 
 Opening a layer is a keyframe, because the composition changes; moving focus inside it rewrites the rows that changed, and opening a disclosure that grows the sheet rewrites most of the screen. The palette ranks once per query and styles only the rows that reach the screen, so its cost grows with the matches, not with the rendered rows.
 
