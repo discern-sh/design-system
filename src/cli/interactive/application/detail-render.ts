@@ -6,6 +6,7 @@
  * @module
  */
 
+import { stripAnsi } from "../../ansi.ts";
 import { renderCliBlock } from "../../block-composition.ts";
 import { cliPresentationPassthrough } from "../../contracts.ts";
 import { formatKeyChord } from "../../key-hints.ts";
@@ -274,24 +275,37 @@ function hints(
   });
 }
 
+/**
+ * A Component block at the layout's width. Under a layer it recedes like
+ * every other block: its own styling gives way to faint text without
+ * weight, so it never reads as part of the layer above it.
+ */
 function cliBlock(
   context: PaintContext,
   block: Extract<DetailBlock, { kind: "block" }>,
   layout: DetailLayout,
 ): readonly string[] {
   const capabilities = { ...context.capabilities, columns: layout.width };
+  const receded = context.recede === true;
   const key = JSON.stringify([
     capabilities,
     cliPresentationPassthrough(context.presentation),
+    receded,
+    layout.surface ?? "",
   ]);
   const cached = blockCache.get(block.content);
   if (cached?.key === key) return cached.lines;
-  const lines = renderCliBlock(
+  const rendered = renderCliBlock(
     block.content,
     capabilities,
     context.presentation,
   )
     .split("\n");
+  const lines = receded
+    ? rendered.map((line) =>
+      ink(context, stripAnsi(line), { tone: "faint" }, layout.surface)
+    )
+    : rendered;
   blockCache.set(block.content, { key, lines });
   return lines;
 }

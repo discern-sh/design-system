@@ -9,6 +9,7 @@
 
 import type { TerminalCapabilities } from "../../capabilities.ts";
 import type { CliPresentationOptions } from "../../contracts.ts";
+import { stripAnsi } from "../../ansi.ts";
 import { renderCliBlock } from "../../block-composition.ts";
 import { cliPresentationPassthrough } from "../../contracts.ts";
 import {
@@ -820,16 +821,25 @@ function reading<A>(
 ): BodyResult<A> {
   const width = Math.max(1, size.columns - 4);
   const capabilities = { ...context.capabilities, columns: width };
+  const receded = context.recede === true;
   const key = JSON.stringify([
     capabilities,
     cliPresentationPassthrough(context.presentation),
+    receded,
   ]);
   let cached = readingCache.get(body.content);
   if (cached?.key !== key) {
+    const lines = renderCliBlock(
+      body.content,
+      capabilities,
+      context.presentation,
+    ).split("\n");
+    // Beneath a layer the document recedes like every other base region.
     cached = {
       key,
-      lines: renderCliBlock(body.content, capabilities, context.presentation)
-        .split("\n"),
+      lines: receded
+        ? lines.map((line) => ink(context, stripAnsi(line), { tone: "faint" }))
+        : lines,
     };
     readingCache.set(body.content, cached);
     context.renderCalls += 1;
@@ -885,7 +895,12 @@ function empty<A>(
       "…",
       terminalGlyph("ellipsis", context.capabilities),
     );
-  const focus = model.primaryFocused ? "selection" : undefined;
+  // A receded selection keeps its muted fill, as a list row's does.
+  const focus = !model.primaryFocused
+    ? undefined
+    : context.recede === true
+    ? "selectionMuted"
+    : "selection";
   const keys = [body.primary, ...(body.secondary ?? [])].map((hint) =>
     formatKeyChord(hint.key, context.capabilities)
   );
