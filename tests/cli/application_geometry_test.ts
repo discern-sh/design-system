@@ -230,3 +230,73 @@ Deno.test("a selection under a layer recedes to the muted fill and keeps its bar
   assertEquals(stripAnsi(receded), stripAnsi(active));
   assert(stripAnsi(receded).startsWith("▌ ✓ Quarterly report"));
 });
+
+Deno.test("below the split the detail is a strip of whole facts with the Space key", () => {
+  const strip = (rows: number, colorDepth: "truecolor" | "none") => {
+    const io = new FakeTerminalIO([], { columns: 60, rows, colorDepth });
+    return stripAnsi(
+      renderTerminalApplication(
+        createTerminalApplicationModel(applicationDemoView()).model,
+        io.size(),
+        io.capabilities(),
+      ).frame,
+    ).split("\n");
+  };
+  const tall = strip(20, "truecolor");
+  assertStringIncludes(tall[17] ?? "", "✓ Quarterly report  Ready");
+  assert(tall[17]?.trimEnd().endsWith("Space"));
+  assertEquals(
+    tall[18]?.trim(),
+    "Passed 20m ago · 14 files  +212 −18",
+    "whole facts joined by a separator",
+  );
+  assert(!tall[16]?.includes("─"), "a painted strip needs no rule");
+  const short = strip(12, "truecolor");
+  assert(
+    short[10]?.trim().startsWith("Passed 20m ago · 14 files"),
+    "one line of whole facts below 14 rows",
+  );
+  assert(short[10]?.trimEnd().endsWith("Space"));
+  const plain = strip(20, "none");
+  assert(
+    plain[16]?.trim().startsWith("─"),
+    "without fills a rule introduces it",
+  );
+});
+
+Deno.test("the header drops chips, then liveness, then counts as it narrows", () => {
+  const view = applicationDemoView();
+  const header = (columns: number) => {
+    const io = new FakeTerminalIO([], {
+      columns,
+      rows: 20,
+      colorDepth: "none",
+    });
+    const chipped = {
+      ...view,
+      header: {
+        ...view.header,
+        chips: [{ runs: [{ text: "! 2 stale" }] }, {
+          runs: [{ text: "Update ready" }],
+        }],
+      },
+    };
+    return stripAnsi(
+      renderTerminalApplication(
+        createTerminalApplicationModel(chipped).model,
+        io.size(),
+        io.capabilities(),
+      ).frame,
+    ).split("\n")[0] ?? "";
+  };
+  assertStringIncludes(
+    header(100),
+    "! 2 stale   Update ready   1 to review    Live",
+  );
+  assertEquals(header(60).includes("Update ready"), false);
+  assertStringIncludes(header(60), "! 2 stale  1 to review   Live");
+  assertStringIncludes(header(40), "1 to review   Live");
+  assertEquals(header(32).includes("Live"), false);
+  assertStringIncludes(header(32), "1 to review");
+  assertStringIncludes(header(32), "Studio");
+});
