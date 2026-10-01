@@ -446,7 +446,7 @@ export function renderListViewport<A>(
   if (rows.rows.length === 0) {
     const empty = ink(
       context,
-      viewport.filtering ? "No matches" : "No items",
+      viewport.filtering ? context.copy.noMatches : context.copy.noItems,
       { tone: "faint" },
     );
     return {

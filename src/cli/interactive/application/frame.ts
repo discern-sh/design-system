@@ -26,6 +26,7 @@ import {
   truncateStyledText,
   wrapStyledText,
 } from "../../text.ts";
+import { applicationCopy, type TerminalApplicationCopy } from "./copy.ts";
 import type { ApplicationHit } from "./hits.ts";
 import { layerHints } from "./layer-hints.ts";
 import { requiresFullRead } from "./layer-model.ts";
@@ -105,6 +106,10 @@ export const TERMINAL_APPLICATION_MINIMUM: TerminalSize = Object.freeze({
   rows: 10,
 });
 
+/** Enter's key cap in each repertoire. */
+const ENTER_UNICODE = formatKeyChord("enter", { unicode: true });
+const ENTER_ASCII = formatKeyChord("enter", { unicode: false });
+
 /** From this many rows a blank line separates the header from the body. */
 const SPACIOUS_ROWS = 20;
 
@@ -152,12 +157,6 @@ interface FrameContext extends PaintContext {
   renderCalls: number;
 }
 
-/** The selection hint shown once when mouse input turns on. */
-const SELECTION_HINT: readonly InlineRun[] = [
-  { text: "Shift-drag", role: "key" },
-  { text: " to select text" },
-];
-
 const readingCache = new WeakMap<
   object,
   { readonly key: string; readonly lines: readonly string[] }
@@ -184,7 +183,9 @@ function header<A>(
     leading = `${
       ink(context, listView.filter.placeholder, { tone: "faint" })
     }  ${ink(context, list.filter.query, { tone: "ink" })}${cursor}  ${
-      ink(context, `${rows.matched} of ${rows.total}`, { tone: "faint" })
+      ink(context, context.copy.count(rows.matched, rows.total), {
+        tone: "faint",
+      })
     }`;
   }
   const liveness = bar.liveness;
@@ -282,6 +283,7 @@ function header<A>(
 
 function footerHints<A>(
   model: ModelState<A>,
+  copy: TerminalApplicationCopy,
 ): KeyHints {
   const view = model.view;
   const listView = bodyList(view);
@@ -295,9 +297,9 @@ function footerHints<A>(
       });
     return {
       left: [
-        { key: "enter", label: "Done" },
-        { key: ["up", "down"], label: "Move" },
-        { key: "escape", label: "Clear" },
+        { key: "enter", label: copy.done },
+        { key: ["up", "down"], label: copy.move },
+        { key: "escape", label: copy.clear },
       ],
       right: (view.footer.right ?? []).filter(keep),
     };
@@ -306,14 +308,17 @@ function footerHints<A>(
   const groupLabel = rows === undefined || list === undefined ||
       (view.body.kind === "empty" && model.primaryFocused)
     ? undefined
-    : groupRowLabel(rows.rows[rowIndexForKey(rows.rows, list.selection)]);
+    : groupRowLabel(
+      rows.rows[rowIndexForKey(rows.rows, list.selection)],
+      copy,
+    );
   if (groupLabel !== undefined && list?.zoomed !== true) {
     // A group row is no item: Enter folds or unfolds it, and item hints
     // would promise actions it does not take.
     return {
       left: [
         { key: "enter", label: groupLabel },
-        { key: ["up", "down"], label: "Move" },
+        { key: ["up", "down"], label: copy.move },
       ],
       ...(view.footer.right === undefined ? {} : { right: view.footer.right }),
     };
@@ -324,10 +329,13 @@ function footerHints<A>(
     return {
       left: [
         ...(primary === undefined ? [] : [primary]),
-        { key: ["up", "down"], label: "Next" },
+        { key: ["up", "down"], label: copy.next },
         ...rest,
       ],
-      right: [{ key: "left", label: "Back" }, ...(view.footer.right ?? [])],
+      right: [
+        { key: "left", label: copy.back },
+        ...(view.footer.right ?? []),
+      ],
     };
   }
   return view.footer;
@@ -371,7 +379,7 @@ function messageLine<A>(
     if (model.mouseHintSince === undefined) return undefined;
     const hint = styleRuns(
       context,
-      model.view.input?.selectionHint ?? SELECTION_HINT,
+      model.view.input?.selectionHint ?? context.copy.selectionHint,
       undefined,
       "muted",
     );
@@ -541,17 +549,25 @@ function paintList<A>(
 }
 
 /** What Enter does on a selected group row: show folded groups or hide an open one. */
-function groupRowLabel<A>(row: ListRow<A> | undefined): string | undefined {
-  if (row?.kind === "fold") return "Show";
-  return row?.kind === "header" && row.key !== undefined ? "Hide" : undefined;
+function groupRowLabel<A>(
+  row: ListRow<A> | undefined,
+  copy: TerminalApplicationCopy,
+): string | undefined {
+  if (row?.kind === "fold") return copy.show;
+  return row?.kind === "header" && row.key !== undefined
+    ? copy.hide
+    : undefined;
 }
 
 /**
  * The detail a selected group row shows: each group it stands for with its
  * count and aside, and what Enter does.
  */
-function groupBlocks<A>(row: ListRow<A>): readonly DetailBlock[] {
-  const label = groupRowLabel(row);
+function groupBlocks<A>(
+  row: ListRow<A>,
+  copy: TerminalApplicationCopy,
+): readonly DetailBlock[] {
+  const label = groupRowLabel(row, copy);
   if (label === undefined) return [];
   const groups = row.kind === "fold"
     ? row.groups.map((folded) => ({ group: folded.group, count: folded.count }))
@@ -581,7 +597,7 @@ function groupBlocks<A>(row: ListRow<A>): readonly DetailBlock[] {
     {
       kind: "text",
       runs: [
-        { text: "↵", ascii: "Enter", role: "key" },
+        { text: ENTER_UNICODE, ascii: ENTER_ASCII, role: "key" },
         { text: ` ${label}`, tone: "muted" },
       ],
     },
@@ -592,10 +608,13 @@ function detailBlocks<A>(
   body: MasterDetailBody<A>,
   itemId: string | undefined,
   row: ListRow<A> | undefined,
+  copy: TerminalApplicationCopy,
 ): readonly DetailBlock[] {
-  if (itemId === undefined) return row === undefined ? [] : groupBlocks(row);
+  if (itemId === undefined) {
+    return row === undefined ? [] : groupBlocks(row, copy);
+  }
   return body.detail.content[itemId] ??
-    [{ kind: "pending", label: body.detail.pending ?? "Loading…" }];
+    [{ kind: "pending", label: body.detail.pending ?? copy.loading }];
 }
 
 function crumb<A>(
@@ -621,9 +640,10 @@ function crumb<A>(
   const position = row?.kind === "item"
     ? ink(
       context,
-      `${(rows.itemPrefix[selected] ?? 0) + 1} of ${
-        rows.itemPrefix.at(-1) ?? 0
-      }`,
+      context.copy.count(
+        (rows.itemPrefix[selected] ?? 0) + 1,
+        rows.itemPrefix.at(-1) ?? 0,
+      ),
       { tone: "faint" },
       "surface",
     )
@@ -653,7 +673,7 @@ function groupStripTitle<A>(
       { text: ` ${count}`, tone: "faint" as const },
     ]),
     { text: "   " },
-    { text: "↵", ascii: "Enter", role: "key" as const },
+    { text: ENTER_UNICODE, ascii: ENTER_ASCII, role: "key" as const },
     { text: ` ${label}`, tone: "muted" as const },
   ];
 }
@@ -727,7 +747,12 @@ function masterDetail<A>(
   const rows = listModelRows(fitted);
   const selected = rowIndexForKey(rows.rows, fitted.selection);
   const itemId = keyItemId(fitted.selection);
-  const blocks = detailBlocks(body, itemId, rows.rows[selected]);
+  const blocks = detailBlocks(
+    body,
+    itemId,
+    rows.rows[selected],
+    context.copy,
+  );
   if (fitted.zoomed && itemId !== undefined) {
     const [left] = split.detailPadding.standard;
     const width = Math.max(1, columns - 2 * left);
@@ -776,7 +801,7 @@ function masterDetail<A>(
       fullWidthRoomy(body.list, columns),
     );
     const row = rows.rows[selected];
-    const group = groupRowLabel(row);
+    const group = groupRowLabel(row, context.copy);
     const fallback: readonly InlineRun[] = row?.kind === "item"
       ? [
         {
@@ -1101,15 +1126,18 @@ function tooSmall<A>(
 ): RenderedFrame<A> {
   const times = terminalGlyph("times", context.capabilities);
   const inset = size.columns >= 24 ? "  " : "";
-  const needs =
-    `Needs ${TERMINAL_APPLICATION_MINIMUM.columns} ${times} ${TERMINAL_APPLICATION_MINIMUM.rows}`;
-  const now = `now ${size.columns} ${times} ${size.rows}`;
+  const needs = context.copy.needs(
+    TERMINAL_APPLICATION_MINIMUM.columns,
+    TERMINAL_APPLICATION_MINIMUM.rows,
+    times,
+  );
+  const now = context.copy.now(size.columns, size.rows, times);
   // One line when it fits; otherwise the need and the current size apart.
   const sizes = measureText(`${needs}; ${now}`) <= size.columns - inset.length
     ? [`${needs}; ${now}`]
     : [needs, now];
   const notice = [
-    ink(context, "Too small", { tone: "ink", bold: true }),
+    ink(context, context.copy.tooSmall, { tone: "ink", bold: true }),
     ...sizes.map((line) => ink(context, line, { tone: "muted" })),
   ];
   const top = Math.max(0, Math.floor((size.rows - notice.length) / 2));
@@ -1192,7 +1220,12 @@ export function renderModelState<A>(
     throw new TypeError("application width must match terminal capabilities");
   }
   const context: FrameContext = {
-    ...paintContext(capabilities, presentation, motion),
+    ...paintContext(
+      capabilities,
+      presentation,
+      motion,
+      applicationCopy(model.view.copy),
+    ),
     renderCalls: 0,
   };
   if (
@@ -1234,7 +1267,7 @@ export function renderModelState<A>(
     bodyLines = result.lines;
     layout = result.layout;
     hits = result.hits.map((hit) => ({ ...hit, row: hit.row + region.top }));
-    hints = footerHints(fitted);
+    hints = footerHints(fitted, context.copy);
   } else {
     const result = renderLayers(context, model, layers, size, region, short);
     fitted = result.model;
@@ -1534,10 +1567,10 @@ function renderLayers<A>(
   const last = painted.at(-1);
   const state = last === undefined ? undefined : next.layers[last.layer.id];
   const hints = last === undefined || state === undefined
-    ? footerHints(next)
+    ? footerHints(next, context.copy)
     : layerHints(last.layer, state, {
       unread: last.layer.kind === "sheet" && requiresFullRead(last.layer) &&
         !state.fullyRead && last.paint.hiddenBelow > 0,
-    });
+    }, context.copy);
   return { lines, model: next, layout: base.layout, hits, hints };
 }

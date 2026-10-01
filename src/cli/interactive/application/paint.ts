@@ -22,6 +22,11 @@ import {
   terminalTextToneColor,
   type TerminalTheme,
 } from "../../theme.ts";
+import { formatKeyChord } from "../../key-hints.ts";
+import {
+  DEFAULT_TERMINAL_APPLICATION_COPY,
+  type TerminalApplicationCopy,
+} from "./copy.ts";
 import type { ApplicationGlyph, InlineRun } from "./view.ts";
 
 /** Where the application's animation and clock stand when a frame renders. */
@@ -53,6 +58,8 @@ export interface PaintContext {
   animated: boolean;
   /** Set when a visible clock, such as an elapsed time, should tick. */
   clock: boolean;
+  /** The words the package writes, from the view's copy. */
+  readonly copy: TerminalApplicationCopy;
 }
 
 /** Build the styling context for one frame. */
@@ -60,6 +67,7 @@ export function paintContext(
   capabilities: TerminalCapabilities,
   presentation: CliPresentationOptions,
   motion: TerminalApplicationMotion,
+  copy: TerminalApplicationCopy = DEFAULT_TERMINAL_APPLICATION_COPY,
 ): PaintContext {
   return {
     capabilities,
@@ -69,6 +77,7 @@ export function paintContext(
     motion,
     animated: false,
     clock: false,
+    copy,
   };
 }
 
@@ -237,18 +246,26 @@ export function spread(
   return `${left}${" ".repeat(width - used - extra)}${right}`;
 }
 
-/** An overflow marker such as `↓ 6 more · PgDn`, or its ASCII words. */
+/**
+ * An overflow marker such as `↓ 6 more · PgDn`, or its ASCII words, with
+ * the key that pages toward what is hidden when one does.
+ */
 export function overflowMarker(
   context: PaintContext,
   direction: "up" | "down",
   count: number,
-  key?: string,
+  key?: "page-up" | "page-down",
 ): string {
   const unicode = context.capabilities.unicode;
+  const copy = context.copy;
   const base = unicode
-    ? `${terminalGlyph(direction, context.capabilities)} ${count} more`
-    : `${count} more ${direction === "up" ? "above" : "below"}`;
+    ? `${terminalGlyph(direction, context.capabilities)} ${copy.more(count)}`
+    : direction === "up"
+    ? copy.moreAbove(count)
+    : copy.moreBelow(count);
   return key === undefined
     ? base
-    : `${base} ${terminalGlyph("separator", context.capabilities)} ${key}`;
+    : `${base} ${terminalGlyph("separator", context.capabilities)} ${
+      formatKeyChord(key, context.capabilities)
+    }`;
 }

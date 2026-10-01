@@ -1148,6 +1148,10 @@ export const interactiveExportCoverage: Readonly<
   validateTerminalApplicationView: {
     excluded: "View rules as data; every journey view passes through them.",
   },
+  DEFAULT_TERMINAL_APPLICATION_COPY: {
+    excluded:
+      "The English words every application journey screen shows; a table of defaults with no interaction of its own.",
+  },
   DEFAULT_SPLIT_RULES: {
     excluded:
       "The master-detail split the application journey resizes through.",

@@ -8,6 +8,7 @@
  */
 
 import type { KeyHint, KeyHints } from "../../key-hints.ts";
+import type { TerminalApplicationCopy } from "./copy.ts";
 import {
   isTextControl,
   type LayerControl,
@@ -44,6 +45,7 @@ function focusedLabel<A>(
   layer: ApplicationSheet<A> | ApplicationForm<A>,
   model: TerminalApplicationLayerModel,
   control: LayerControl,
+  copy: TerminalApplicationCopy,
 ): string | undefined {
   const { kind, id } = parseControl(control);
   switch (kind) {
@@ -54,10 +56,10 @@ function focusedLabel<A>(
         : button.label;
     }
     case "field":
-      return "Buttons";
+      return copy.buttons;
     case "disclosure":
     case "group":
-      return model.open[id] === true ? "Hide" : "Show";
+      return model.open[id] === true ? copy.hide : copy.show;
     default:
       return undefined;
   }
@@ -67,6 +69,7 @@ function panelHints<A>(
   layer: ApplicationSheet<A> | ApplicationForm<A>,
   model: TerminalApplicationLayerModel,
   facts: LayerHintFacts,
+  copy: TerminalApplicationCopy,
 ): KeyHints {
   const inField = isTextControl(layer, model.focus);
   const onButton = parseControl(model.focus).kind === "button";
@@ -76,14 +79,14 @@ function panelHints<A>(
   const fields = layer.kind === "form" ? layer.fields.length : 0;
   const safe = safeButton(layer);
   const hints: KeyHint[] = [
-    ...enterHint(focusedLabel(layer, model, model.focus)),
+    ...enterHint(focusedLabel(layer, model, model.focus, copy)),
     ...(onButton && layer.buttons.length > 1
-      ? [{ key: ["left", "right"], label: "Choose" }]
+      ? [{ key: ["left", "right"], label: copy.choose }]
       : []),
-    ...(inField && fields > 1 ? [{ key: "tab", label: "Next field" }] : []),
-    ...(facts.unread ? [{ key: "page-down", label: "Read more" }] : []),
+    ...(inField && fields > 1 ? [{ key: "tab", label: copy.nextField }] : []),
+    ...(facts.unread ? [{ key: "page-down", label: copy.readMore }] : []),
     ...(field?.kind === "text" && field.editor !== undefined
-      ? [{ key: field.editor.key, label: field.editor.label ?? "Editor" }]
+      ? [{ key: field.editor.key, label: field.editor.label ?? copy.editor }]
       : []),
     ...(layer.disclosures ?? []).flatMap((disclosure) => {
       const key = inField ? disclosure.fieldKey : disclosure.key;
@@ -118,12 +121,13 @@ function escapeHint<A>(
 function menuHints<A>(
   layer: ApplicationMenu<A>,
   model: TerminalApplicationLayerModel,
+  copy: TerminalApplicationCopy,
 ): KeyHints {
   const control = parseControl(model.focus);
   const enter = model.focus === UNAVAILABLE_SECTION
-    ? model.unavailableOpen ? "Hide" : "Show"
+    ? model.unavailableOpen ? copy.hide : copy.show
     : control.kind === "unavailable"
-    ? "Why"
+    ? copy.why
     : control.kind === "item"
     ? layer.enterLabel ?? menuItem(layer, control.id)?.label
     : undefined;
@@ -131,23 +135,23 @@ function menuHints<A>(
     return {
       left: [
         ...enterHint(enter),
-        { key: ["up", "down"], label: "Move" },
-        { key: "escape", label: "Clear" },
+        { key: ["up", "down"], label: copy.move },
+        { key: "escape", label: copy.clear },
       ],
     };
   }
   return {
     left: [
       ...enterHint(enter),
-      { key: ["up", "down"], label: "Move" },
+      { key: ["up", "down"], label: copy.move },
       ...(layer.lettersActivate === true
-        ? [{ key: "Letters", label: "Run" }]
+        ? [{ key: copy.letters, label: copy.run }]
         : []),
-      ...(layer.filter === false ? [] : [{ key: "/", label: "Filter" }]),
+      ...(layer.filter === false ? [] : [{ key: "/", label: copy.filter }]),
       ...(layer.hints ?? []),
       ...(model.query === ""
-        ? escapeHint(layer, "Close")
-        : [{ key: "escape", label: "Clear" }]),
+        ? escapeHint(layer, copy.close)
+        : [{ key: "escape", label: copy.clear }]),
     ],
   };
 }
@@ -155,6 +159,7 @@ function menuHints<A>(
 function paletteHints<A>(
   layer: ApplicationPalette<A>,
   model: TerminalApplicationLayerModel,
+  copy: TerminalApplicationCopy,
 ): KeyHints {
   const item = paletteRows(layer, model.query).items.find((candidate) =>
     candidate.id === model.highlight
@@ -162,27 +167,30 @@ function paletteHints<A>(
   return {
     left: [
       ...enterHint(item?.label),
-      { key: ["up", "down"], label: "Move" },
-      { key: "Type", label: "to search" },
+      { key: ["up", "down"], label: copy.move },
+      { key: copy.type, label: copy.toSearch },
       ...(layer.hints ?? []),
       ...(model.query === ""
-        ? escapeHint(layer, "Close")
-        : [{ key: "escape", label: "Clear" }]),
+        ? escapeHint(layer, copy.close)
+        : [{ key: "escape", label: copy.clear }]),
     ],
   };
 }
 
-function readerHints<A>(layer: ApplicationReader<A>): KeyHints {
+function readerHints<A>(
+  layer: ApplicationReader<A>,
+  copy: TerminalApplicationCopy,
+): KeyHints {
   return {
     left: [
-      ...(layer.rows === undefined ? [] : [{ key: "enter", label: "Open" }]),
+      ...(layer.rows === undefined ? [] : [{ key: "enter", label: copy.open }]),
       {
         key: ["up", "down"],
-        label: layer.rows === undefined ? "Scroll" : "Move",
+        label: layer.rows === undefined ? copy.scroll : copy.move,
       },
       ...(layer.keys ?? []),
       ...(layer.hints ?? []),
-      ...escapeHint(layer, "Back"),
+      ...escapeHint(layer, copy.back),
     ],
   };
 }
@@ -192,16 +200,17 @@ export function layerHints<A>(
   layer: ApplicationLayer<A>,
   model: TerminalApplicationLayerModel,
   facts: LayerHintFacts,
+  copy: TerminalApplicationCopy,
 ): KeyHints {
   switch (layer.kind) {
     case "sheet":
     case "form":
-      return panelHints(layer, model, facts);
+      return panelHints(layer, model, facts, copy);
     case "menu":
-      return menuHints(layer, model);
+      return menuHints(layer, model, copy);
     case "palette":
-      return paletteHints(layer, model);
+      return paletteHints(layer, model, copy);
     case "reader":
-      return readerHints(layer);
+      return readerHints(layer, copy);
   }
 }

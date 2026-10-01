@@ -455,7 +455,7 @@ export function scrollDetail(
           context,
           "up",
           hiddenCount(lines.slice(0, at.first)),
-          "PgUp",
+          "page-up",
         ),
       ),
     );
@@ -468,7 +468,7 @@ export function scrollDetail(
           context,
           "down",
           hiddenCount(lines.slice(at.first + at.rows)),
-          "PgDn",
+          "page-down",
         ),
       ),
     ]
@@ -494,7 +494,12 @@ export function renderStrip(
 ): readonly string[] {
   const room = Math.max(1, width - 4);
   const key = zoomable
-    ? ink(context, "Space", { tone: "ink", bold: true }, surface)
+    ? ink(
+      context,
+      formatKeyChord("space", context.capabilities),
+      { tone: "ink", bold: true },
+      surface,
+    )
     : "";
   const separator = ink(
     context,

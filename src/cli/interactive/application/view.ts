@@ -10,6 +10,7 @@
 import type { CliBlock } from "../../block-composition.ts";
 import type { KeyChord, KeyHint, KeyHints } from "../../key-hints.ts";
 import type { TerminalTextTone } from "../../theme.ts";
+import type { TerminalApplicationCopy } from "./copy.ts";
 import type { ApplicationLayer } from "./layer-view.ts";
 
 /**
@@ -401,6 +402,12 @@ export interface TerminalApplicationView<A> {
   readonly windowTitle?: string;
   /** Runtime preferences; mouse input stays off unless requested. */
   readonly input?: TerminalApplicationInputPreferences;
+  /**
+   * Replacements for the words the package writes — generated hint
+   * labels, empty states, counts, the challenge hint, the too-small notice
+   * — over its English defaults.
+   */
+  readonly copy?: Partial<TerminalApplicationCopy>;
 }
 
 /**

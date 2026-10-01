@@ -7,6 +7,10 @@
  */
 
 export * from "./view.ts";
+export {
+  DEFAULT_TERMINAL_APPLICATION_COPY,
+  type TerminalApplicationCopy,
+} from "./copy.ts";
 export * from "./layer-view.ts";
 export {
   EDITOR_RESERVED_CHORDS,

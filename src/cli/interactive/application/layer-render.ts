@@ -747,7 +747,11 @@ function composePanel(
   }
   const { fitted, scroll, at, hidden, shown } = placed;
   const { body, visible, gapAfterHead, gapBeforeFoot } = fitted;
-  const marker = (direction: "up" | "down", count: number, key: string) => ({
+  const marker = (
+    direction: "up" | "down",
+    count: number,
+    key: "page-up" | "page-down",
+  ) => ({
     text: spread(
       "",
       raised(context, overflowMarker(context, direction, count, key), "faint"),
@@ -756,10 +760,10 @@ function composePanel(
   });
   const bodyRows: PanelRow[] = [
     ...(at.up > 0
-      ? [marker("up", visibleRows(body.slice(0, at.first)), "PgUp")]
+      ? [marker("up", visibleRows(body.slice(0, at.first)), "page-up")]
       : []),
     ...body.slice(at.first, at.first + at.rows),
-    ...(at.down > 0 ? [marker("down", hidden, "PgDn")] : []),
+    ...(at.down > 0 ? [marker("down", hidden, "page-down")] : []),
   ];
   while (bodyRows.length < visible) bodyRows.push(BLANK);
   const foot = [...placed.foot];
@@ -861,7 +865,7 @@ function panelFoot<A>(
     const left = hidden > 0
       ? raised(
         context,
-        `${overflowMarker(context, "down", hidden, "PgDn")}${unread}`,
+        `${overflowMarker(context, "down", hidden, "page-down")}${unread}`,
         "faint",
       )
       : reason !== undefined
@@ -937,18 +941,14 @@ function challengeHint(
   mustEqual: string,
 ): string {
   if (value === mustEqual) {
-    return raised(context, "Matches", "success");
+    return raised(context, context.copy.matches, "success");
   }
   if (!mustEqual.startsWith(value)) {
-    return raised(context, "Does not match", "warning");
+    return raised(context, context.copy.doesNotMatch, "warning");
   }
   const left = [...graphemes.segment(mustEqual)].length -
     [...graphemes.segment(value)].length;
-  return raised(
-    context,
-    `${left} more character${left === 1 ? "" : "s"}`,
-    "faint",
-  );
+  return raised(context, context.copy.charactersLeft(left), "faint");
 }
 
 function challengeRows<A>(
@@ -1070,15 +1070,16 @@ function activityRows(
   const then = activity.then ?? [];
   if (then.length > 0) {
     rows.push(BLANK);
-    const label = "Then";
+    const label = context.copy.then;
     for (const [index, line] of then.entries()) {
-      const lines = wrapRuns(context, line, width - label.length - 2, "ink");
+      const labelWidth = measureText(label);
+      const lines = wrapRuns(context, line, width - labelWidth - 2, "ink");
       for (const [part, text] of lines.entries()) {
         rows.push({
           text: `${
             index === 0 && part === 0
               ? raised(context, label, "faint")
-              : " ".repeat(label.length)
+              : " ".repeat(labelWidth)
           }  ${text}`,
         });
       }
@@ -1598,7 +1599,7 @@ function menuPanel<A>(
     }
   }
   if (body.length === 0) {
-    body.push({ text: raised(context, "No matches", "faint") });
+    body.push({ text: raised(context, context.copy.noMatches, "faint") });
   }
   const descriptions = [
     ...menu.sections.flatMap((section) =>
@@ -1764,7 +1765,7 @@ function palettePanel<A>(
     });
   }
   if (result.items.length === 0) {
-    body.push({ text: raised(context, "No matches", "faint") });
+    body.push({ text: raised(context, context.copy.noMatches, "faint") });
   }
   return {
     head,

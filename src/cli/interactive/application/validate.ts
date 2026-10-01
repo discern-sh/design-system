@@ -15,6 +15,10 @@ import {
   terminalApplicationReservedKeys,
   throwIssues,
 } from "./keymap.ts";
+import {
+  DEFAULT_TERMINAL_APPLICATION_COPY,
+  type TerminalApplicationCopy,
+} from "./copy.ts";
 import { layerRules } from "./layer-validate.ts";
 import type { TerminalApplicationState } from "./model.ts";
 import {
@@ -90,6 +94,45 @@ function split(issues: Issues, path: string, value: SplitRules): void {
     }
   }
   count(issues, `${path}.strip.shortBelowRows`, value.strip.shortBelowRows, 1);
+}
+
+/**
+ * A view's copy: only known entries, each the kind its default is — plain
+ * control-free text, runs, or a function whose words for sample counts
+ * are plain text too.
+ */
+function copyRules(
+  issues: Issues,
+  copy: Partial<TerminalApplicationCopy> | undefined,
+): void {
+  if (copy === undefined) return;
+  for (const [name, value] of Object.entries(copy)) {
+    const path = `copy.${name}`;
+    if (!(name in DEFAULT_TERMINAL_APPLICATION_COPY)) {
+      issues.push({ path, message: "is not a word the package writes" });
+      continue;
+    }
+    const fallback: unknown = Reflect.get(
+      DEFAULT_TERMINAL_APPLICATION_COPY,
+      name,
+    );
+    if (typeof fallback === "string") text(issues, path, value);
+    else if (Array.isArray(fallback)) {
+      if (Array.isArray(value)) runs(issues, path, value);
+      else issues.push({ path, message: "must be an array of runs" });
+    } else if (typeof value !== "function") {
+      issues.push({ path, message: "must be a function, like its default" });
+    } else {
+      for (const sample of [0, 1, 12]) {
+        const words: unknown = Reflect.apply(value, undefined, [
+          sample,
+          sample + 1,
+          "x",
+        ]);
+        text(issues, path, words);
+      }
+    }
+  }
 }
 
 /** Hints a view shows in the base scope, by where they sit. */
@@ -264,6 +307,7 @@ export function viewIssues<A>(
   }
   hints(issues, "footer", view.footer);
   advertisedKeys(issues, view, context.keymap);
+  copyRules(issues, view.copy);
   if (view.windowTitle !== undefined) {
     text(issues, "windowTitle", view.windowTitle, true);
   }
