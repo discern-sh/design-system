@@ -188,6 +188,9 @@ export function createLayerModel<A>(
     id: layer.id,
     kind: layer.kind,
     focus,
+    // The first frame brings the initial control into view, so a challenge
+    // below a long body takes keys only where the person can see it.
+    reveal: focus,
     values,
     cursors,
     open,
@@ -291,6 +294,7 @@ export function adoptLayerModel<A>(
       seen: [],
       fullyRead: false,
       focus: fresh.focus,
+      reveal: fresh.focus,
       scroll: 0,
       ...(challenge === undefined ? {} : {
         values: { ...next.values, [challenge]: "" },
@@ -299,7 +303,7 @@ export function adoptLayerModel<A>(
     };
   }
   if (!focusable(layer, next).includes(next.focus)) {
-    next = { ...next, focus: fresh.focus };
+    next = { ...next, focus: fresh.focus, reveal: fresh.focus };
   }
   if (layer.kind === "palette") {
     const items = paletteRows(layer, next.query).items;

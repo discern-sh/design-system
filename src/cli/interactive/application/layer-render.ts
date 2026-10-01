@@ -152,6 +152,12 @@ interface Panel {
   readonly footnote?: readonly PanelRow[];
   /** Keep the body row holding this control in view. */
   readonly follow?: LayerControl;
+  /**
+   * The panel to compose instead while this one's body overflows its box,
+   * such as a sheet whose challenge pins above its buttons; used only
+   * while that panel's body keeps {@linkcode PINNED_BODY_ROWS} rows.
+   */
+  readonly whenOverflowing?: Panel;
   /** What overflow markers count: lines of text (the default), or choices. */
   readonly counts?: "lines" | "choices";
 }
@@ -663,11 +669,16 @@ function choiceRows(rows: readonly PanelRow[]): number {
   );
 }
 
+/** Body rows a panel keeps in view before it moves rows into its foot. */
+const PINNED_BODY_ROWS = 3;
+
 /**
  * Fit a panel to its box: a frame, the pinned head and foot, and the body
  * scrolled to `requested`, to the control a focus change revealed (an
  * opening disclosure comes to the top), or to the row the panel follows.
  * Blank rows go first when height is short; the body keeps at least one row.
+ * While the body overflows, a panel with a `whenOverflowing` alternative
+ * composes that instead when its body keeps {@linkcode PINNED_BODY_ROWS}.
  */
 function composePanel(
   context: PaintContext,
@@ -677,7 +688,25 @@ function composePanel(
   requested: number,
   reveal: LayerControl | undefined,
 ): Fitted {
-  const pad = LEFT_PADDING;
+  const settled = settlePanel(panel, box, requested, reveal);
+  const alternative = panel.whenOverflowing;
+  if (settled.placed.fitted.overflows && alternative !== undefined) {
+    const pinned = settlePanel(alternative, box, requested, reveal);
+    const { available, body } = pinned.placed.fitted;
+    if (available >= Math.min(PINNED_BODY_ROWS, body.length)) {
+      return drawPanel(context, layerId, alternative, box, pinned);
+    }
+  }
+  return drawPanel(context, layerId, panel, box, settled);
+}
+
+/** Lay a panel's body out beside its settled foot, before drawing it. */
+function settlePanel(
+  panel: Panel,
+  box: LayerBox,
+  requested: number,
+  reveal: LayerControl | undefined,
+) {
   const width = layerContentWidth(box);
   // A list of choices counts choices; anything else counts lines of text.
   const count = panel.counts === "choices" ? choiceRows : visibleRows;
@@ -703,6 +732,7 @@ function composePanel(
       : Math.min(available, Math.max(1, body.length));
     return {
       footRows,
+      available: room(),
       gapAfterHead,
       gapBeforeFoot,
       moved,
@@ -809,6 +839,18 @@ function composePanel(
     tallest = Math.max(tallest, placed.foot.length);
     placed = place(pass < 3 ? placed.foot.length : tallest);
   }
+  return { placed, width, count };
+}
+
+/** Draw a settled panel: its frame, head, body viewport, markers, and foot. */
+function drawPanel(
+  context: PaintContext,
+  layerId: string,
+  panel: Panel,
+  box: LayerBox,
+  { placed, width, count }: ReturnType<typeof settlePanel>,
+): Fitted {
+  const pad = LEFT_PADDING;
   const { fitted, scroll, at, hidden, shown } = placed;
   const { body, visible, gapAfterHead, gapBeforeFoot } = fitted;
   const marker = (
@@ -915,12 +957,17 @@ function composePanel(
   };
 }
 
-/** The foot of a sheet or form: unread overflow, a disabled reason, or the footnote, then buttons. */
+/**
+ * The foot of a sheet or form: unread overflow, a disabled reason, or the
+ * footnote, then buttons. `pinned` rows, such as a challenge the body would
+ * hide, sit between what the body hides and the buttons.
+ */
 function panelFoot<A>(
   context: PaintContext,
   layer: ApplicationSheet<A> | ApplicationForm<A>,
   model: (shown: BodySpan) => TerminalApplicationLayerModel,
   width: number,
+  pinned?: readonly PanelRow[],
 ): Panel["foot"] {
   return (hidden, shown, moved) => {
     const fitted = model(shown);
@@ -952,7 +999,17 @@ function panelFoot<A>(
     if (!buttonRowShown(layer)) {
       return left === "" ? [] : [{ text: fitProse(context, left, width) }];
     }
-    return buttonRows(context, layer, fitted, left, width);
+    if (pinned === undefined) {
+      return buttonRows(context, layer, fitted, left, width);
+    }
+    // What the body hides is named right beneath it; a reason or footnote
+    // stays with the buttons.
+    return [
+      ...(hidden > 0 ? [{ text: fitProse(context, left, width) }, BLANK] : []),
+      ...pinned,
+      BLANK,
+      ...buttonRows(context, layer, fitted, hidden > 0 ? "" : left, width),
+    ];
   };
 }
 
@@ -1253,38 +1310,47 @@ function sheetPanel<A>(
     body.push(...lines.map((text) => ({ text })));
     read = lines.length;
   }
-  if (sheetChallengeShown(sheet)) {
-    body.push(BLANK, ...challengeRows(context, sheet, model, width));
-  }
+  const challenge = sheetChallengeShown(sheet)
+    ? challengeRows(context, sheet, model, width)
+    : [];
   const disclosures = sheet.disclosures ?? [];
-  if (disclosures.length > 0) {
-    body.push(
-      BLANK,
-      ...disclosureRows(
-        context,
-        sheet.id,
-        disclosures,
-        model,
-        isTextControl(sheet, model.focus),
-        width,
-      ),
-    );
-  }
+  const after: PanelRow[] = disclosures.length === 0 ? [] : [
+    BLANK,
+    ...disclosureRows(
+      context,
+      sheet.id,
+      disclosures,
+      model,
+      isTextControl(sheet, model.focus),
+      width,
+    ),
+  ];
   const footnote = footnoteRows(context, sheet, width);
+  const progress = (shown: BodySpan) =>
+    top ? readProgress(sheet, model, read, shown) : model;
+  const panel: Panel = {
+    head,
+    body: [
+      ...body,
+      ...(challenge.length === 0 ? [] : [BLANK, ...challenge]),
+      ...after,
+    ],
+    read,
+    footOverflow: true,
+    ...(footnote === undefined ? {} : { footnote }),
+    foot: panelFoot(context, sheet, progress, width),
+  };
   return {
     read,
-    panel: {
-      head,
-      body,
-      read,
-      footOverflow: true,
-      ...(footnote === undefined ? {} : { footnote }),
-      foot: panelFoot(
-        context,
-        sheet,
-        (shown) => top ? readProgress(sheet, model, read, shown) : model,
-        width,
-      ),
+    panel: challenge.length === 0 ? panel : {
+      ...panel,
+      // While the consequences overflow, the challenge pins above the
+      // buttons: they still read first, and typed text lands in sight.
+      whenOverflowing: {
+        ...panel,
+        body: [...body, ...after],
+        foot: panelFoot(context, sheet, progress, width, challenge),
+      },
     },
   };
 }

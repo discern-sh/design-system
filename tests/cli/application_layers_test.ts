@@ -1215,10 +1215,30 @@ function controlShown(driver: ApplicationDriver, layer: string): boolean {
   );
 }
 
+/** A challenge sheet whose consequences outrun a narrow panel. */
+function longDeleteSheet(): ApplicationSheet<string> {
+  const sheet = demoDeleteSheet(ARCHIVE);
+  return {
+    ...sheet,
+    id: "long-delete",
+    body: [
+      ...sheet.body,
+      {
+        kind: "text",
+        runs: [{
+          text:
+            "Anything it published stays where it was published; the steps below say what moves and what is deleted for good.",
+        }],
+      },
+    ],
+  };
+}
+
 Deno.test("the focused control of every layer stays on screen as focus moves and fields take keys", async (t) => {
   const layers: readonly (() => ApplicationLayer<string>)[] = [
     () => demoRunSheet(IMAGE),
     () => demoDeleteSheet(ARCHIVE),
+    longDeleteSheet,
     () => demoNewJobForm(),
     () => demoActionsMenu(IMAGE),
     () => demoPalette(DEMO_JOBS, false),
@@ -1241,6 +1261,29 @@ Deno.test("the focused control of every layer stays on screen as focus moves and
               driver.state.layers[layer.id]?.focusedControlId
             } is off screen after ${after}\n${driver.text}`,
           );
+        // A layer opens on its control where the person can see it, and a
+        // sheet with its consequences first wherever they fit beside it.
+        check("opening");
+        if (layer.kind === "sheet" && rows >= 20) {
+          assertEquals(
+            driver.state.layers[layer.id]?.scroll,
+            0,
+            `${layer.id} opened past its first consequence\n${driver.text}`,
+          );
+        }
+        if (layer.kind === "sheet") {
+          const arriving = new ApplicationDriver(
+            withLayers({ ...layer, state: "loading", body: [] }),
+            { columns, rows, colorDepth: "none" },
+          );
+          arriving.update(withLayers(layer));
+          assert(
+            controlShown(arriving, layer.id),
+            `${
+              arriving.state.layers[layer.id]?.focusedControlId
+            } is off screen once the plan arrives\n${arriving.text}`,
+          );
+        }
         const focus = () => driver.state.layers[layer.id]?.focusedControlId;
         if (focus()?.startsWith("field:") === true) {
           driver.type("x");
