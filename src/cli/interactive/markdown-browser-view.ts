@@ -291,6 +291,8 @@ export class MarkdownBrowserController<Action> {
             { text: document.label, role: "title" },
           ],
           trailing: [{ text: document.path, tone: "faint" }],
+          // The document's title outranks its path.
+          yields: "trailing",
         },
       body: document === undefined ? this.#contents() : {
         kind: "reading",

@@ -95,6 +95,7 @@ import {
 } from "./model.ts";
 import {
   fitLine,
+  fitName,
   fitProse,
   ink,
   type PaintContext,
@@ -129,8 +130,14 @@ const ENTER_ASCII = formatKeyChord("enter", { unicode: false });
  * never read as one phrase; the right side narrows before this gap does.
  */
 const HEADER_CLUSTER_GAP = 4;
-/** The gap the counts alone may close to at the smallest widths. */
+/** The gap the right side may close to at the smallest widths, before it narrows. */
 const HEADER_TIGHT_GAP = 2;
+/**
+ * Cells the header's identity keeps while it shortens to leave the counts
+ * and the liveness word on screen; only once those are gone does it shorten
+ * further.
+ */
+const HEADER_IDENTITY_FLOOR = 8;
 
 /** From this many rows a blank line separates the header from the body. */
 const SPACIOUS_ROWS = 20;
@@ -199,6 +206,18 @@ function header<A>(
   const listView = bodyList(model.view);
   const list = listView === undefined ? undefined : model.lists[listView.id];
   let leading = styleRuns(context, bar.leading, undefined);
+  // The identity with its own wide gaps closed, as it reads when space runs short.
+  let tightened = styleRuns(
+    context,
+    bar.leading.map((run) => ({
+      ...run,
+      text: run.text.replaceAll(/ {2,}/gu, " "),
+      ...(run.ascii === undefined
+        ? {}
+        : { ascii: run.ascii.replaceAll(/ {2,}/gu, " ") }),
+    })),
+    undefined,
+  );
   if (listView?.filter !== undefined && list?.filter !== undefined) {
     const rows = listModelRows(list);
     const cursor = list.filter.editing
@@ -213,6 +232,7 @@ function header<A>(
         tone: "faint",
       })
     }`;
+    tightened = leading;
   }
   const liveness = bar.liveness;
   const busyShown = liveness?.state === "busy" &&
@@ -247,11 +267,14 @@ function header<A>(
   );
   const trailing = styleRuns(context, bar.trailing, undefined);
   const room = columns - 4;
-  /** The right side for the first `shown` chips, and where each chip starts. */
-  const compose = (shown: number, withLive: boolean, gap: number) => {
+  /**
+   * The right side with the first `shown` chips, the trailing runs or not,
+   * and the liveness word, and where each chip starts.
+   */
+  const compose = (shown: number, withTrailing: boolean, gap: number) => {
     const parts = [
       ...chips.slice(0, shown).map((text, index) => ({ text, index })),
-      { text: trailing, index: -1 },
+      { text: withTrailing ? trailing : "", index: -1 },
     ].filter((part) => part.text !== "");
     const starts: { readonly index: number; readonly at: number }[] = [];
     let at = 0;
@@ -261,46 +284,75 @@ function header<A>(
     }
     const right = parts.map((part) => part.text).join(" ".repeat(gap));
     return {
-      text: withLive && live !== ""
-        ? right === "" ? live : `${right}${" ".repeat(gap + 1)}${live}`
-        : right,
+      text: live === ""
+        ? right
+        : right === ""
+        ? live
+        : `${right}${" ".repeat(gap + 1)}${live}`,
       starts,
     };
   };
-  const leadWidth = measureText(leading);
-  const ladder = [
-    () => compose(chips.length, true, 3),
-    () => compose(chips.length, true, 2),
-    ...chips.map((_, index) => () =>
-      compose(chips.length - index - 1, true, 2)
-    ),
-    () => compose(0, false, 2),
-    () => ({ text: "", starts: [] }),
-  ];
-  // Every step keeps the full gap from the identity; only the counts alone
-  // may close it to the tight gap, at the smallest widths, before they go.
-  const steps:
-    readonly (readonly [() => ReturnType<typeof compose>, number])[] = [
-      ...ladder.slice(0, -1).map((step) => [step, HEADER_CLUSTER_GAP] as const),
-      [() => compose(0, false, 2), HEADER_TIGHT_GAP],
-      [() => ({ text: "", starts: [] }), 0],
-    ];
-  let right: ReturnType<typeof compose> = { text: "", starts: [] };
-  let separation = 0;
-  for (const [step, gap] of steps) {
-    right = step();
-    separation = gap;
-    if (
-      right.text === "" || leadWidth + gap + measureText(right.text) <= room
-    ) {
-      break;
-    }
+  /**
+   * One rung of the fitting ladder: a right side, the gap kept before it,
+   * and the identity beside it — whole as written, whole with its own gaps
+   * closed, or shortened to no less than the floor.
+   */
+  interface Rung {
+    readonly right: ReturnType<typeof compose>;
+    readonly gap: number;
+    readonly identity: "whole" | "tightened" | "floor";
   }
+  const rung = (
+    right: ReturnType<typeof compose>,
+    gap: number,
+    identity: Rung["identity"],
+  ): Rung => ({ right, gap, identity });
+  const floor = Math.min(HEADER_IDENTITY_FLOOR, measureText(tightened));
+  /** The identity yielding beside one right side: its gaps, then its length. */
+  const shortening = (right: ReturnType<typeof compose>): readonly Rung[] => [
+    rung(right, HEADER_CLUSTER_GAP, "whole"),
+    rung(right, HEADER_CLUSTER_GAP, "tightened"),
+    rung(right, HEADER_CLUSTER_GAP, "floor"),
+    rung(right, HEADER_TIGHT_GAP, "floor"),
+  ];
+  const counted = compose(0, true, 2);
+  const uncounted = compose(0, false, 2);
+  // Chips go first, from the end, while the identity stays whole. Then the
+  // side that yields gives way — the identity closing its own gaps and
+  // shortening to its floor, or the trailing counts — and the liveness
+  // word, a state the person must see, goes last.
+  const ladder: readonly Rung[] = [
+    rung(compose(chips.length, true, 3), HEADER_CLUSTER_GAP, "whole"),
+    ...chips.map((_, index) =>
+      rung(
+        compose(chips.length - index, true, 2),
+        HEADER_CLUSTER_GAP,
+        "whole",
+      )
+    ),
+    ...(bar.yields === "trailing"
+      ? [rung(counted, HEADER_CLUSTER_GAP, "whole"), ...shortening(uncounted)]
+      : [...shortening(counted), ...shortening(uncounted).slice(2)]),
+  ];
+  const fits = ({ right, gap, identity }: Rung): boolean => {
+    const width = measureText(right.text);
+    const left = room - (width === 0 ? 0 : width + gap);
+    return identity === "whole"
+      ? measureText(leading) <= left
+      : identity === "tightened"
+      ? measureText(tightened) <= left
+      : floor <= left;
+  };
+  const chosen = ladder.find(fits) ??
+    rung({ text: "", starts: [] }, 0, "floor");
+  const right = chosen.right;
+  const separation = chosen.gap;
+  const identity = chosen.identity === "whole" ? leading : tightened;
   const rightWidth = measureText(right.text);
-  const left = truncateStyledText(
-    leading,
+  const left = fitName(
+    context,
+    identity,
     Math.max(0, room - (rightWidth === 0 ? 0 : rightWidth + separation)),
-    terminalGlyph("ellipsis", context.capabilities),
   );
   const origin = 2 + room - rightWidth;
   const hits: ApplicationHit[] = right.starts.flatMap(({ index, at }) => {

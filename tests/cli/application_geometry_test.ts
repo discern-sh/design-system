@@ -388,26 +388,25 @@ Deno.test("below the split the detail is a strip of whole facts with the Space k
   );
 });
 
-Deno.test("the header drops chips, then liveness, then counts as it narrows", () => {
+Deno.test("the header drops chips, then shortens its identity, then drops counts, and keeps liveness last", () => {
   const view = applicationDemoView();
-  const header = (columns: number) => {
+  const header = (
+    columns: number,
+    bar: Partial<TerminalApplicationView<string>["header"]> = {
+      chips: [{ runs: [{ text: "! 2 stale" }] }, {
+        runs: [{ text: "Update ready" }],
+      }],
+    },
+  ) => {
     const io = new FakeTerminalIO([], {
       columns,
       rows: 20,
       colorDepth: "none",
     });
-    const chipped = {
-      ...view,
-      header: {
-        ...view.header,
-        chips: [{ runs: [{ text: "! 2 stale" }] }, {
-          runs: [{ text: "Update ready" }],
-        }],
-      },
-    };
+    const shown = { ...view, header: { ...view.header, ...bar } };
     return stripAnsi(
       renderTerminalApplication(
-        createTerminalApplicationModel(chipped, { keymap: DEMO_KEYMAP }).model,
+        createTerminalApplicationModel(shown, { keymap: DEMO_KEYMAP }).model,
         io.size(),
         io.capabilities(),
       ).frame,
@@ -419,19 +418,75 @@ Deno.test("the header drops chips, then liveness, then counts as it narrows", ()
   );
   assertEquals(header(60).includes("Update ready"), false);
   assertStringIncludes(header(60), "! 2 stale  1 to review   Live");
-  // Four cells always part the identity from the right side, which narrows
-  // first: at 40 columns liveness goes rather than that gap.
-  assert(/jobs {4,}1 to review/u.test(header(40)), header(40));
-  assertEquals(header(40).includes("Live"), false);
+  // Once the chips are gone the identity closes its own gaps before the
+  // counts or liveness give way.
+  assert(
+    /Studio · jobs {4,}1 to review {3}Live/u.test(header(40)),
+    header(40),
+  );
   for (let columns = 36; columns <= 120; columns += 1) {
     assert(
       !/jobs {1,3}\S/u.test(header(columns)),
       `${columns}: the identity runs into the right side`,
     );
   }
-  assertEquals(header(32).includes("Live"), false);
-  assertStringIncludes(header(32), "1 to review");
-  assertStringIncludes(header(32), "Studio");
+  // At the minimum the identity shortens to its floor and everything else
+  // stays.
+  assert(/Studio… {2,}1 to review {3}Live/u.test(header(32)), header(32));
+  // Counts go before liveness: a state the person must see stays longest.
+  const offline = {
+    leading: [
+      { text: "a-project-with-a-long-name", role: "title" as const },
+      { text: "  ·  ", tone: "faint" as const },
+      { text: "main", tone: "muted" as const },
+    ],
+    trailing: [{ text: "3 need you" }],
+    liveness: {
+      state: "stale" as const,
+      labels: {
+        idle: "Live",
+        busy: "Refreshing",
+        retrying: "Retrying",
+        stale: "Offline",
+      },
+    },
+  };
+  for (let columns = 32; columns <= 120; columns += 1) {
+    const line = header(columns, offline);
+    assertStringIncludes(line, "! Offline", `${columns}: liveness went`);
+    const identity = line.trim().split(/ {2,}/u)[0] ?? "";
+    assert(
+      line.includes("3 need you") || measureText(identity) >= 8,
+      `${columns}: the counts went before the identity reached its floor\n${line}`,
+    );
+    assert(
+      !/ …|·…/u.test(line),
+      `${columns}: a cut before a separator\n${line}`,
+    );
+  }
+  assertEquals(header(32, offline).includes("need you"), false);
+  assertStringIncludes(header(40, offline), "3 need you");
+  // A title beside its path yields the path first and stays whole.
+  const titled = {
+    leading: [
+      { text: "Library", tone: "muted" as const },
+      { text: "  ›  ", tone: "faint" as const },
+      { text: "A document with a long title", role: "title" as const },
+    ],
+    trailing: [{ text: "guides/a-document-with-a-long-title.md" }],
+    yields: "trailing" as const,
+  };
+  for (let columns = 32; columns <= 120; columns += 1) {
+    const line = header(columns, titled);
+    if (line.includes("guides/")) {
+      assertStringIncludes(line, "Library  ›  A document with a long title");
+    }
+  }
+  assertStringIncludes(
+    header(60, titled),
+    "Library  ›  A document with a long title",
+  );
+  assertEquals(header(60, titled).includes("guides/"), false);
 });
 
 Deno.test("every detail block line fits the width it was given", () => {

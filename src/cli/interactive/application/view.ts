@@ -70,6 +70,15 @@ export interface ApplicationHeader<A> {
   readonly chips?: readonly ApplicationHeaderChip<A>[];
   readonly trailing?: readonly ApplicationRun[];
   readonly liveness?: ApplicationLiveness;
+  /**
+   * Which side gives way first once the chips are gone. `leading`, the
+   * default, closes the leading runs' wide gaps and shortens them to eight
+   * cells before the trailing runs drop, as an identity beside counts
+   * wants; `trailing` drops the trailing runs while the leading runs stay
+   * whole, as a title beside its path wants. The liveness word goes last
+   * either way.
+   */
+  readonly yields?: "leading" | "trailing";
 }
 
 /** Cell gaps around a list row's trailing columns. */

@@ -258,6 +258,27 @@ export function clip(
     : clipped;
 }
 
+/**
+ * Fit a styled name to `width` cells, cut where the room runs out but never
+ * just after a space or a separator, which would read `Studio ·…`.
+ */
+export function fitName(
+  context: PaintContext,
+  styled: string,
+  width: number,
+): string {
+  if (measureText(styled) <= width) return styled;
+  const ellipsis = terminalGlyph("ellipsis", context.capabilities);
+  const marker = measureText(ellipsis);
+  const kept = truncateText(styled, Math.max(0, width - marker), "")
+    .replace(/[\s·•—–-]+$/u, "");
+  return truncateStyledText(
+    styled,
+    kept === "" ? Math.max(0, width) : measureText(kept) + marker,
+    ellipsis,
+  );
+}
+
 /** Fit styled prose to `width` cells, cut after its last whole word that fits. */
 export function fitProse(
   context: PaintContext,
