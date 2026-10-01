@@ -1,5 +1,6 @@
 /**
- * Injectable time for owned screens.
+ * Injectable time for owned screens and the animation tick that repaints
+ * moving glyphs.
  *
  * @module
  */
@@ -24,3 +25,53 @@ export const systemTerminalClock: TerminalClock = Object.freeze({
     return () => clearTimeout(timer);
   },
 });
+
+/** Interval between animation frames: four frames a second. */
+export const TERMINAL_ANIMATION_INTERVAL_MS = 250;
+
+/**
+ * Advances one shared animation phase while, and only while, the latest
+ * painted frame shows a moving glyph. Each tick schedules at most one
+ * successor, after the repaint it caused, so a slow paint delays the next
+ * frame instead of queueing ticks behind it.
+ */
+export class TerminalAnimationTicker {
+  #phase = 0;
+  #cancel: (() => void) | undefined;
+
+  constructor(
+    readonly clock: TerminalClock,
+    readonly onTick: () => void,
+  ) {}
+
+  /** The phase every animated glyph renders at; it advances once per tick. */
+  get phase(): number {
+    return this.#phase;
+  }
+
+  /** Whether a tick is scheduled. */
+  get running(): boolean {
+    return this.#cancel !== undefined;
+  }
+
+  /** Follow the latest frame: schedule the next tick while it animates, stop otherwise. */
+  sync(animating: boolean): void {
+    if (!animating) {
+      this.stop();
+      return;
+    }
+    if (this.#cancel !== undefined) return;
+    this.#cancel = this.clock.delay(() => {
+      this.#cancel = undefined;
+      this.#phase += 1;
+      this.onTick();
+    }, TERMINAL_ANIMATION_INTERVAL_MS);
+  }
+
+  /** Cancel a scheduled tick; the phase is kept for the next start. */
+  stop(): void {
+    const cancel = this.#cancel;
+    this.#cancel = undefined;
+    cancel?.();
+  }
+}

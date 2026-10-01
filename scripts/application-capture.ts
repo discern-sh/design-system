@@ -40,6 +40,12 @@ try {
         capture.text.includes("Field notes") &&
         !capture.text.includes("Working"),
     );
+    // A later spinner phase than the first frame shows the tick repainting.
+    const spinning = ptySettledFrame(
+      size,
+      "overview at a later spinner phase",
+      (capture) => capture.text.includes("◑") && capture.state !== undefined,
+    );
     const first = columns < 32 ? "Resize" : "Working";
     const phases: readonly PtyInputPhase[] = columns < 32
       ? [{
@@ -53,6 +59,13 @@ try {
           capture: { name: "overview", when: when(first) },
           steps: [],
         },
+        ...(unicode
+          ? [{
+            waitFor: spinning,
+            capture: { name: "spinning", when: spinning },
+            steps: [],
+          }]
+          : []),
         {
           waitFor: settled,
           capture: { name: "updated", when: settled },

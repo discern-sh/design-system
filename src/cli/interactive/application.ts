@@ -10,7 +10,11 @@ import {
   transitionTerminalApplication,
   updateTerminalApplication,
 } from "./application-model.ts";
-import { systemTerminalClock, type TerminalClock } from "./clock.ts";
+import {
+  systemTerminalClock,
+  TerminalAnimationTicker,
+  type TerminalClock,
+} from "./clock.ts";
 import { DenoTerminalIO, type TerminalSize } from "./io.ts";
 import { isNamedKey, TerminalInputReader, type TerminalKey } from "./keys.ts";
 import { assertInteractiveTerminal, withRawTerminal } from "./lifecycle.ts";
@@ -83,17 +87,21 @@ export interface TerminalApplicationObservation {
   readonly bytesWritten: number;
   /** UTF-8 size of the rendered frame's rows: what rewriting all of them costs. */
   readonly frameBytes: number;
+  /** Whether a visible glyph moves, which keeps the animation tick running. */
+  readonly animated: boolean;
 }
 
-/** Optional cooperative cancellation, timing, painting, and diagnostics for the owned session. */
+/** Optional cooperative cancellation, timing, motion, painting, and diagnostics for the owned session. */
 export interface TerminalApplicationRuntime extends InteractionRuntime {
   readonly abortSignal?: AbortSignal;
   readonly observe?: (observation: TerminalApplicationObservation) => void;
   /**
-   * Time for keyframe intervals. Defaults to the process clock; tests pass a
-   * manual clock and advance it.
+   * Time for keyframe intervals and the animation tick. Defaults to the
+   * process clock; tests pass a manual clock and advance it.
    */
   readonly clock?: TerminalClock;
+  /** Hold animated glyphs on their resting form and never run the animation tick. */
+  readonly reducedMotion?: boolean;
   /**
    * How frames are written. The defaults bracket each paint in synchronized
    * output, rewrite only changed rows, and paint a keyframe at least every 30
@@ -118,7 +126,8 @@ function applicationComposition<Action>(
  * No provider runs on navigation. Handlers run synchronously after a consumed read, so a
  * foreground child receives exclusive terminal ownership. Escape exits by default;
  * Ctrl+C, EOF and abort throw InteractionCancelled after terminal restoration. Each paint
- * is one synchronized update that rewrites only changed rows between keyframes.
+ * is one synchronized update that rewrites only changed rows between keyframes, and a
+ * visible animated glyph repaints at four frames a second until it stops moving.
  */
 export async function runTerminalApplication<Action>(
   options: TerminalApplicationOptions<Action>,
@@ -134,6 +143,7 @@ export async function runTerminalApplication<Action>(
   const clock = runtime.clock ?? systemTerminalClock;
   let state = updateTerminalApplication(options.view);
   const updates = new ResizeMailbox();
+  const ticker = new TerminalAnimationTicker(clock, updates.notify);
   const abort = new AbortMailbox(runtime.abortSignal);
   const reader = new TerminalInputReader(io);
   let ended = false;
@@ -201,6 +211,12 @@ export async function runTerminalApplication<Action>(
                 facts.size,
                 facts.capabilities,
                 runtime,
+                {
+                  phase: ticker.phase,
+                  ...(runtime.reducedMotion === true
+                    ? { reducedMotion: true }
+                    : {}),
+                },
               );
               state = rendered.state;
               const painted = painter.paint({
@@ -213,6 +229,7 @@ export async function runTerminalApplication<Action>(
               });
               if (painted.status === "resized") continue;
               paintedSize = facts.size;
+              ticker.sync(rendered.animated);
               runtime.observe?.({
                 size: facts.size,
                 layout: rendered.layout,
@@ -225,6 +242,7 @@ export async function runTerminalApplication<Action>(
                 rowsWritten: painted.status === "painted" ? painted.rows : 0,
                 bytesWritten: painted.status === "painted" ? painted.bytes : 0,
                 frameBytes: textEncoder.encode(rendered.frame).length,
+                animated: rendered.animated,
               });
               return;
             }
@@ -343,6 +361,7 @@ export async function runTerminalApplication<Action>(
               if (pendingKeys.length === 0) paint();
             }
           } finally {
+            ticker.stop();
             stopResize();
           }
         },
@@ -352,6 +371,7 @@ export async function runTerminalApplication<Action>(
           onSignalRestore: () => {
             signalRestored = true;
             ended = true;
+            ticker.stop();
             updates.notify();
             try {
               stopResize();
@@ -368,6 +388,7 @@ export async function runTerminalApplication<Action>(
     failure = { error };
   } finally {
     ended = true;
+    ticker.stop();
     abort.stop();
     try {
       disposeSubscription();

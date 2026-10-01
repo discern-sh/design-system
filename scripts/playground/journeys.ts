@@ -1134,6 +1134,9 @@ export const interactiveExportCoverage: Readonly<
     excluded:
       "Painting defaults every application journey paints with; synchronized row writes have no interaction of their own.",
   },
+  TERMINAL_ANIMATION_INTERVAL_MS: {
+    excluded: "Tick cadence of the application journey's animated working row.",
+  },
   TERMINAL_STATE_REPORT_OSC: {
     excluded:
       "Protocol constant for opt-in test reports; terminals ignore the sequence, so a journey has nothing to show.",

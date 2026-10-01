@@ -2,6 +2,7 @@
 import {
   createCliBlock,
   renderMarkdownCli,
+  TERMINAL_GLYPHS,
 } from "@discern-sh/design-system/cli";
 import {
   type TerminalApplicationOptions,
@@ -70,11 +71,18 @@ export function applicationDemoOptions(
             id: String(index),
             label,
             value: label,
-            indicator: {
-              content: index === 0 && !ready ? "◌" : "✓",
-              ascii: index === 0 && !ready ? "~" : "+",
-              tone: index === 0 && !ready ? "neutral" : "success",
-            },
+            indicator: index === 0 && !ready
+              ? {
+                content: TERMINAL_GLYPHS.running.unicode,
+                ascii: TERMINAL_GLYPHS.running.ascii,
+                tone: "accent",
+                animation: "spinner",
+              }
+              : {
+                content: TERMINAL_GLYPHS.done.unicode,
+                ascii: TERMINAL_GLYPHS.done.ascii,
+                tone: "success",
+              },
             status: {
               content: index === 0 && !ready ? "Working" : "Ready",
               tone: index === 0 && !ready ? "neutral" : "success",

@@ -23,6 +23,9 @@ import {
   fitTerminalLine,
   terminalScrollOffset,
 } from "../viewport.ts";
+import type { TerminalRowAnnotation } from "../interactive-states.ts";
+import { measureText } from "../text.ts";
+import { terminalGlyphAnimates, terminalGlyphFrame } from "../glyph-motion.ts";
 import { renderSelectCli } from "../../generated/cli-renderers.ts";
 import {
   assertChoices,
@@ -153,6 +156,99 @@ function plain(value: string, name: string): void {
   }
 }
 
+function oneCell(value: unknown): value is string {
+  return typeof value === "string" && measureText(value) === 1;
+}
+
+function assertAnimatedAnnotation(annotation: TerminalRowAnnotation): void {
+  if (annotation.animation === undefined) return;
+  if (annotation.animation !== "spinner") {
+    throw new TypeError('row annotation animation must be "spinner"');
+  }
+  if (
+    !oneCell(annotation.content) ||
+    (annotation.ascii !== undefined && !oneCell(annotation.ascii))
+  ) {
+    throw new TypeError(
+      "an animated row annotation is one plain cell in Unicode and ASCII",
+    );
+  }
+}
+
+/** Where the application's animation stands when a frame renders. */
+export interface TerminalApplicationMotion {
+  /** The shared phase every moving glyph renders at; the tick advances it. */
+  readonly phase: number;
+  /** Hold every animated glyph on its resting form. */
+  readonly reducedMotion?: boolean;
+}
+
+function annotationMoves(
+  annotation: TerminalRowAnnotation | undefined,
+  capabilities: TerminalCapabilities,
+  motion: TerminalApplicationMotion,
+): annotation is TerminalRowAnnotation & { readonly content: string } {
+  return annotation !== undefined && typeof annotation.content === "string" &&
+    terminalGlyphAnimates(annotation, capabilities, motion);
+}
+
+function annotationAtPhase(
+  annotation: TerminalRowAnnotation | undefined,
+  capabilities: TerminalCapabilities,
+  motion: TerminalApplicationMotion,
+  presentation: CliPresentationOptions,
+): TerminalRowAnnotation | undefined {
+  if (!annotationMoves(annotation, capabilities, motion)) return annotation;
+  return {
+    ...annotation,
+    content: terminalGlyphFrame(
+      {
+        unicode: annotation.content,
+        ascii: annotation.content,
+        animation: "spinner",
+      },
+      motion.phase,
+      capabilities,
+      {
+        ...(presentation.motif === undefined
+          ? {}
+          : { motif: presentation.motif }),
+        ...motion,
+      },
+    ),
+  };
+}
+
+function entryAtPhase<Action>(
+  entry: InteractionEntry<Action>,
+  capabilities: TerminalCapabilities,
+  motion: TerminalApplicationMotion,
+  presentation: CliPresentationOptions,
+): InteractionEntry<Action> {
+  if (
+    !isInteractionChoice(entry) ||
+    (!annotationMoves(entry.indicator, capabilities, motion) &&
+      !annotationMoves(entry.status, capabilities, motion))
+  ) return entry;
+  const indicator = annotationAtPhase(
+    entry.indicator,
+    capabilities,
+    motion,
+    presentation,
+  );
+  const status = annotationAtPhase(
+    entry.status,
+    capabilities,
+    motion,
+    presentation,
+  );
+  return {
+    ...entry,
+    ...(indicator === undefined ? {} : { indicator }),
+    ...(status === undefined ? {} : { status }),
+  };
+}
+
 /** Adopt a view, preserving item identity on reorder and the nearest successor on removal. */
 export function updateTerminalApplication<Action>(
   view: TerminalApplicationView<Action>,
@@ -189,6 +285,7 @@ export function updateTerminalApplication<Action>(
           if (annotation.ascii !== undefined) {
             validateSemanticInlineContent(annotation.ascii);
           }
+          assertAnimatedAnnotation(annotation);
         }
         return Object.freeze({
           ...entry,
@@ -289,6 +386,8 @@ export interface TerminalApplicationFrame<Action> {
   readonly layout: "single" | "columns" | "rows" | "too-small";
   readonly regionRows: Readonly<Record<string, number>>;
   readonly renderCalls: number;
+  /** Whether a visible glyph moves, so the animation tick should keep running. */
+  readonly animated: boolean;
 }
 
 /** Apply a key using only in-memory state. Background discovery is never invoked here. */
@@ -406,6 +505,7 @@ export function renderTerminalApplication<Action>(
   size: TerminalSize,
   capabilities: TerminalCapabilities,
   presentation: CliPresentationOptions = {},
+  motion: TerminalApplicationMotion = { phase: 0 },
 ): TerminalApplicationFrame<Action> {
   for (const dimension of [size.columns, size.rows]) {
     if (!Number.isSafeInteger(dimension) || dimension < 1) {
@@ -436,6 +536,7 @@ export function renderTerminalApplication<Action>(
       layout: "too-small",
       regionRows: {},
       renderCalls: 0,
+      animated: false,
     };
   }
   const theme = resolveTerminalTheme(presentation);
@@ -469,6 +570,7 @@ export function renderTerminalApplication<Action>(
   const positions = { ...source.positions };
   const regionRows: Record<string, number> = {};
   let renderCalls = 0;
+  let animated = false;
   const panes = visible.map((region, i) => {
     const width = layout === "columns" ? sizes[i]! : columns;
     const height = layout === "rows" ? sizes[i]! : paneRows;
@@ -531,7 +633,9 @@ export function renderTerminalApplication<Action>(
             window.unshift(entries[heading]!);
           }
           return {
-            options: window,
+            options: window.map((entry) =>
+              entryAtPhase(entry, capabilities, motion, presentation)
+            ),
             highlightedIndex: window.findIndex((entry) =>
               entry.id === position.selectedId
             ),
@@ -555,6 +659,11 @@ export function renderTerminalApplication<Action>(
         },
       });
       lines = fitted.rendered.split("\n");
+      animated ||= fitted.state.options.some((entry) =>
+        isInteractionChoice(entry) &&
+        (annotationMoves(entry.indicator, capabilities, motion) ||
+          annotationMoves(entry.status, capabilities, motion))
+      );
       regionRows[region.id] = Math.max(
         1,
         fitted.state.options.filter(isInteractionChoice).length,
@@ -641,6 +750,7 @@ export function renderTerminalApplication<Action>(
     layout,
     regionRows,
     renderCalls,
+    animated,
   };
 }
 

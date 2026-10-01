@@ -8,6 +8,7 @@
 export * from "./activity.ts";
 export * from "./background.ts";
 export * from "./basic-requests.ts";
+export { TERMINAL_ANIMATION_INTERVAL_MS } from "./clock.ts";
 export type { TerminalClock } from "./clock.ts";
 export * from "./choice-requests.ts";
 export { filterInteractionEntries } from "./choice-navigation.ts";
@@ -63,6 +64,7 @@ export {
 export type {
   TerminalApplicationAction,
   TerminalApplicationFrame,
+  TerminalApplicationMotion,
   TerminalApplicationPosition,
   TerminalApplicationRegion,
   TerminalApplicationState,
