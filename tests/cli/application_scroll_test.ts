@@ -99,6 +99,7 @@ Deno.test("every scroll step reveals a new line until the end", async (t) => {
     await t.step(`reading at ${columns}x${rows}`, () => {
       const driver = new ApplicationDriver({
         ...testView(["a"]),
+        footer: { left: [{ key: ["up", "down"], label: "Scroll" }] },
         body: {
           kind: "reading",
           id: "guide",

@@ -12,6 +12,7 @@ import { runTerminalApplication } from "../../src/cli/interactive/mod.ts";
 import {
   applicationDemoView,
   DEMO_JOBS,
+  DEMO_KEYMAP,
 } from "../../scripts/playground/application.ts";
 import {
   demoDeleteSheet,
@@ -134,6 +135,7 @@ Deno.test("an editor's tabs and line endings never end the session", async () =>
   let context: TerminalApplicationContext<string> | undefined;
   const running = runTerminalApplication<string>({
     view: formView(),
+    keymap: DEMO_KEYMAP,
     start(live) {
       context = live;
     },

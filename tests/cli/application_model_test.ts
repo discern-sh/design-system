@@ -44,7 +44,11 @@ class Driver {
     readonly io = new FakeTerminalIO([], { columns: 80, rows: 24 }),
   ) {
     const created = createTerminalApplicationModel(view, {
-      keymap: [{ key: "x", action: "bound" }],
+      keymap: [
+        { key: "x", action: "bound" },
+        { key: "q", action: "quit" },
+        { key: "ctrl-k", action: "commands" },
+      ],
     });
     this.model = created.model;
     this.effects.push(...created.effects);
@@ -703,7 +707,18 @@ Deno.test("the view rules report every broken rule as data", () => {
       issue.path === "body.detail.follows"
     ),
   );
-  assertEquals(validateTerminalApplicationView(testView(["a", "b"])), []);
+  assertEquals(
+    validateTerminalApplicationView(testView(["a", "b"]), {
+      keymap: [{ key: "q", action: "quit" }],
+    }),
+    [],
+  );
+  assert(
+    validateTerminalApplicationView(testView(["a", "b"])).some((issue) =>
+      issue.path === "footer.right[0].key"
+    ),
+    "a footer that advertises an unbound key is refused",
+  );
   assertThrows(() => createTerminalApplicationModel(view), TypeError);
 });
 
@@ -750,6 +765,7 @@ Deno.test("every body reserves exactly the keys the package acts on in it", asyn
   const listed = (filter: boolean) => grouped(items, { filter, body: "list" });
   const reading: TerminalApplicationView<string> = {
     ...testView(["a"]),
+    footer: { left: [{ key: ["up", "down"], label: "Scroll" }] },
     body: {
       kind: "reading",
       id: "guide",
@@ -803,12 +819,14 @@ Deno.test("every body reserves exactly the keys the package acts on in it", asyn
     for (const viKeys of [false, true]) {
       await t.step(`${body.name}, vi ${viKeys}`, () => {
         const handled = new Set<string>();
-        for (const key of keys) {
+        // q is the views' own binding, not a key the package handles.
+        for (const key of keys.filter((candidate) => candidate !== "q")) {
           for (const prepare of body.prepared) {
             const driver = new ApplicationDriver(body.view, {
               columns: 80,
               rows: 24,
               viKeys,
+              keymap: [{ key: "q", action: "quit" }],
             });
             driver.key(...prepare);
             const before = JSON.stringify(driver.state);
@@ -850,6 +868,7 @@ Deno.test("a base binding may take any key the body leaves free", () => {
   const list = testView(["a", "b"], { body: "list" });
   const bound = new ApplicationDriver(list, {
     keymap: [
+      { key: "q", action: "quit" },
       { key: "space", action: "toggle" },
       { key: "left", action: "collapse" },
       { key: "/", action: "search" },

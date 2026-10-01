@@ -166,7 +166,7 @@ const navigation = [];
 for (const count of [20, 10_000]) {
   const view = collection(count);
   let model: TerminalApplicationModel<number> =
-    createTerminalApplicationModel(view).model;
+    createTerminalApplicationModel(view, { keymap: quit.keymap }).model;
   const io = new FakeTerminalIO();
   const times: number[] = [];
   const resizeTimes: number[] = [];
@@ -317,7 +317,8 @@ for (const rowDiff of [true, false]) {
   const io = new FakeTerminalIO([], { columns: 80, rows: 24 });
   const painter = new TerminalScreenPainter(io, () => 0, { rowDiff });
   let model: TerminalApplicationModel<number> =
-    createTerminalApplicationModel(collection(200)).model;
+    createTerminalApplicationModel(collection(200), { keymap: quit.keymap })
+      .model;
   const frames: string[] = [];
   for (let i = 0; i < 200; i++) {
     model = transitionTerminalApplication(model, down, i).model;
@@ -401,6 +402,7 @@ for (const count of [20, 10_000]) {
     let model: TerminalApplicationModel<number> =
       createTerminalApplicationModel(
         { ...collection(count), layers: [layer] },
+        { keymap: quit.keymap },
       ).model;
     const render = () => {
       const frame = renderTerminalApplication(

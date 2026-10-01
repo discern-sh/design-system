@@ -14,7 +14,9 @@ import { testView } from "../fixtures/application-views.ts";
 Deno.test("settled capture rejects partial and foreign controls and projects real frames", () => {
   const io = new FakeTerminalIO([], { columns: 40, rows: 13 });
   const rendered = renderTerminalApplication(
-    createTerminalApplicationModel(testView(["Alpha"], { body: "list" }))
+    createTerminalApplicationModel(testView(["Alpha"], { body: "list" }), {
+      keymap: [{ key: "q", action: "quit" }],
+    })
       .model,
     io.size(),
     io.capabilities(),

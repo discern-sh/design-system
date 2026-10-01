@@ -36,7 +36,7 @@ export interface LayerHintFacts {
   readonly unread: boolean;
 }
 
-function enterHint(label: string | undefined): readonly KeyHint<never>[] {
+function enterHint(label: string | undefined): readonly KeyHint[] {
   return label === undefined ? [] : [{ key: "enter", label }];
 }
 
@@ -67,7 +67,7 @@ function panelHints<A>(
   layer: ApplicationSheet<A> | ApplicationForm<A>,
   model: TerminalApplicationLayerModel,
   facts: LayerHintFacts,
-): KeyHints<A> {
+): KeyHints {
   const inField = isTextControl(layer, model.focus);
   const onButton = parseControl(model.focus).kind === "button";
   const field = layer.kind === "form"
@@ -75,7 +75,7 @@ function panelHints<A>(
     : undefined;
   const fields = layer.kind === "form" ? layer.fields.length : 0;
   const safe = safeButton(layer);
-  const hints: KeyHint<A>[] = [
+  const hints: KeyHint[] = [
     ...enterHint(focusedLabel(layer, model, model.focus)),
     ...(onButton && layer.buttons.length > 1
       ? [{ key: ["left", "right"], label: "Choose" }]
@@ -106,7 +106,7 @@ function panelHints<A>(
 function menuHints<A>(
   layer: ApplicationMenu<A>,
   model: TerminalApplicationLayerModel,
-): KeyHints<A> {
+): KeyHints {
   const control = parseControl(model.focus);
   const enter = model.focus === UNAVAILABLE_SECTION
     ? model.unavailableOpen ? "Hide" : "Show"
@@ -140,7 +140,7 @@ function menuHints<A>(
 function paletteHints<A>(
   layer: ApplicationPalette<A>,
   model: TerminalApplicationLayerModel,
-): KeyHints<A> {
+): KeyHints {
   const item = paletteRows(layer, model.query).items.find((candidate) =>
     candidate.id === model.highlight
   );
@@ -154,7 +154,7 @@ function paletteHints<A>(
   };
 }
 
-function readerHints<A>(layer: ApplicationReader<A>): KeyHints<A> {
+function readerHints<A>(layer: ApplicationReader<A>): KeyHints {
   return {
     left: [
       ...(layer.rows === undefined ? [] : [{ key: "enter", label: "Open" }]),
@@ -173,7 +173,7 @@ export function layerHints<A>(
   layer: ApplicationLayer<A>,
   model: TerminalApplicationLayerModel,
   facts: LayerHintFacts,
-): KeyHints<A> {
+): KeyHints {
   switch (layer.kind) {
     case "sheet":
     case "form":

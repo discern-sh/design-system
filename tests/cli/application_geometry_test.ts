@@ -21,6 +21,7 @@ import type { DetailBlock } from "../../src/cli/interactive/mod.ts";
 import {
   applicationDemoView,
   DEMO_JOBS,
+  DEMO_KEYMAP,
   DEMO_TIP,
 } from "../../scripts/playground/application.ts";
 
@@ -70,7 +71,12 @@ Deno.test("application frames fill every pinned geometry and posture exactly", (
         unicode: posture.unicode,
       });
       const frame = renderTerminalApplication(
-        createTerminalApplicationModel(applicationDemoView(undefined, DEMO_TIP))
+        createTerminalApplicationModel(
+          applicationDemoView(undefined, DEMO_TIP),
+          {
+            keymap: DEMO_KEYMAP,
+          },
+        )
           .model,
         io.size(),
         io.capabilities(),
@@ -113,7 +119,9 @@ Deno.test("every visible row's label and age end on one column per frame", () =>
       colorDepth: "none",
     });
     const frame = renderTerminalApplication(
-      createTerminalApplicationModel(applicationDemoView()).model,
+      createTerminalApplicationModel(applicationDemoView(), {
+        keymap: DEMO_KEYMAP,
+      }).model,
       io.size(),
       io.capabilities(),
     );
@@ -136,7 +144,9 @@ Deno.test("a master-detail list is sized to its content and never squeezes the d
   for (const [columns, expected] of [[120, 52], [100, 52], [80, 41]] as const) {
     const io = new FakeTerminalIO([], { columns, rows: 24 });
     const frame = renderTerminalApplication(
-      createTerminalApplicationModel(applicationDemoView()).model,
+      createTerminalApplicationModel(applicationDemoView(), {
+        keymap: DEMO_KEYMAP,
+      }).model,
       io.size(),
       io.capabilities(),
     );
@@ -157,7 +167,12 @@ Deno.test("the header, message line, and footer keep their places by height tier
     });
     return stripAnsi(
       renderTerminalApplication(
-        createTerminalApplicationModel(applicationDemoView(undefined, DEMO_TIP))
+        createTerminalApplicationModel(
+          applicationDemoView(undefined, DEMO_TIP),
+          {
+            keymap: DEMO_KEYMAP,
+          },
+        )
           .model,
         io.size(),
         io.capabilities(),
@@ -193,7 +208,9 @@ Deno.test("below the minimum the notice names the size it needs", () => {
   ) {
     const io = new FakeTerminalIO([], { columns, rows });
     const frame = renderTerminalApplication(
-      createTerminalApplicationModel(applicationDemoView()).model,
+      createTerminalApplicationModel(applicationDemoView(), {
+        keymap: DEMO_KEYMAP,
+      }).model,
       io.size(),
       io.capabilities(),
     );
@@ -243,7 +260,9 @@ Deno.test("below the split the detail is a strip of whole facts with the Space k
     const io = new FakeTerminalIO([], { columns: 60, rows, colorDepth });
     return stripAnsi(
       renderTerminalApplication(
-        createTerminalApplicationModel(applicationDemoView()).model,
+        createTerminalApplicationModel(applicationDemoView(), {
+          keymap: DEMO_KEYMAP,
+        }).model,
         io.size(),
         io.capabilities(),
       ).frame,
@@ -290,7 +309,7 @@ Deno.test("the header drops chips, then liveness, then counts as it narrows", ()
     };
     return stripAnsi(
       renderTerminalApplication(
-        createTerminalApplicationModel(chipped).model,
+        createTerminalApplicationModel(chipped, { keymap: DEMO_KEYMAP }).model,
         io.size(),
         io.capabilities(),
       ).frame,

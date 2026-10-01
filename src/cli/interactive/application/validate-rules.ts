@@ -168,10 +168,10 @@ function gaps(issues: Issues, path: string, value: ListGaps): void {
 }
 
 /** Key hints whose keys and labels are non-empty text. */
-export function hints<A>(
+export function hints(
   issues: Issues,
   path: string,
-  value: KeyHints<A> | undefined,
+  value: KeyHints | undefined,
 ): void {
   if (value === undefined) return;
   for (const cluster of ["left", "right", "extra"] as const) {

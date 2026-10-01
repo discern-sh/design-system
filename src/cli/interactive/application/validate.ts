@@ -5,12 +5,14 @@
  * @module
  */
 
+import type { KeyHint, KeyHints } from "../../key-hints.ts";
 import {
   type CompiledKeymap,
   compileKeymap,
   decodableChord,
   keymapIssues,
   keymapViewIssues,
+  terminalApplicationReservedKeys,
   throwIssues,
 } from "./keymap.ts";
 import { layerRules } from "./layer-validate.ts";
@@ -88,6 +90,66 @@ function split(issues: Issues, path: string, value: SplitRules): void {
     }
   }
   count(issues, `${path}.strip.shortBelowRows`, value.strip.shortBelowRows, 1);
+}
+
+/** Hints a view shows in the base scope, by where they sit. */
+function baseHintSlots<A>(
+  view: TerminalApplicationView<A>,
+): readonly { readonly path: string; readonly hints: readonly KeyHint[] }[] {
+  const clusters = (path: string, value: KeyHints | undefined) =>
+    value === undefined ? [] : (["left", "right", "extra"] as const).map((
+      cluster,
+    ) => ({ path: `${path}.${cluster}`, hints: value[cluster] ?? [] }));
+  const body = view.body;
+  return [
+    ...clusters("footer", view.footer),
+    ...(body.kind === "master-detail"
+      ? clusters("body.zoomFooter", body.zoomFooter)
+      : []),
+    ...(body.kind === "empty"
+      ? [
+        { path: "body.primary", hints: [body.primary] },
+        { path: "body.secondary", hints: body.secondary ?? [] },
+      ]
+      : []),
+  ];
+}
+
+/**
+ * Every key a view advertises in the base scope must do something there:
+ * the body reserves it, the package handles it (Escape, Ctrl+C), or a base
+ * binding runs it. Without a keymap the view is checked as if none bound.
+ */
+function advertisedKeys<A>(
+  issues: Issues,
+  view: TerminalApplicationView<A>,
+  keymap: CompiledKeymap<A> | undefined,
+): void {
+  const handled = new Set<string>([
+    ...terminalApplicationReservedKeys(view.body, {
+      viKeys: keymap?.viKeys === true,
+    }),
+    "escape",
+    "ctrl-c",
+    ...(keymap?.base.keys() ?? []),
+  ]);
+  for (const slot of baseHintSlots(view)) {
+    for (const [index, hint] of slot.hints.entries()) {
+      const keys = typeof hint.key === "string" ? [hint.key] : hint.key;
+      for (const key of keys) {
+        if (typeof key !== "string") continue;
+        const chord = decodableChord(key);
+        if (chord === undefined || !handled.has(chord)) {
+          issues.push({
+            path: `${slot.path}[${index}].key`,
+            message: `advertises ${
+              JSON.stringify(key)
+            }, which nothing handles here; bind it or drop the hint`,
+          });
+        }
+      }
+    }
+  }
 }
 
 /**
@@ -201,23 +263,7 @@ export function viewIssues<A>(
     }
   }
   hints(issues, "footer", view.footer);
-  for (const [cluster, value] of Object.entries(view.footer)) {
-    if (!Array.isArray(value)) continue;
-    for (const [index, hint] of value.entries()) {
-      const keys = typeof hint.key === "string" ? [hint.key] : hint.key;
-      for (const key of keys) {
-        // A hint may name a word such as "Letters" instead of one key.
-        if (
-          decodableChord(key) === undefined && !/^[\p{L}\p{N} ]+$/u.test(key)
-        ) {
-          issues.push({
-            path: `footer.${cluster}[${index}].key`,
-            message: "is neither a key nor a word",
-          });
-        }
-      }
-    }
-  }
+  advertisedKeys(issues, view, context.keymap);
   if (view.windowTitle !== undefined) {
     text(issues, "windowTitle", view.windowTitle, true);
   }

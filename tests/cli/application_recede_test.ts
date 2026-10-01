@@ -172,6 +172,7 @@ Deno.test("the base beneath a layer recedes in every body", async (t) => {
     },
     reading: {
       ...detail,
+      footer: { left: [{ key: ["up", "down"], label: "Scroll" }] },
       body: {
         kind: "reading",
         id: "guide",

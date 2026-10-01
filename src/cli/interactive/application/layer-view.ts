@@ -7,9 +7,14 @@
  * @module
  */
 
-import type { KeyChord, KeyHint } from "../../key-hints.ts";
+import type { KeyChord } from "../../key-hints.ts";
 import type { TerminalTextTone } from "../../theme.ts";
-import type { DetailBlock, GroupedList, InlineRun } from "./view.ts";
+import type {
+  ActionHint,
+  DetailBlock,
+  GroupedList,
+  InlineRun,
+} from "./view.ts";
 
 /**
  * What a layer concerns: the selected item, or the whole screen. An item
@@ -352,7 +357,7 @@ export interface ApplicationReader<A> extends ApplicationLayerBase {
   readonly blocks: readonly DetailBlock[];
   readonly rows?: GroupedList<A>;
   /** Keys that run their action while the reader is on top. */
-  readonly keys?: readonly KeyHint<A>[];
+  readonly keys?: readonly ActionHint<A>[];
 }
 
 /** Any layer, bottom to top in the view's `layers`. */

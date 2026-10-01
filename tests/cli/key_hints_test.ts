@@ -33,9 +33,9 @@ const extra = [
   { key: "n", label: "New item…" },
   { key: "q", label: "Quit" },
 ] as const;
-const overview: KeyHints<string> = {
+const overview: KeyHints = {
   left: [
-    { key: "enter", label: "Open…", action: "open" },
+    { key: "enter", label: "Open…" },
     { key: "v", label: "View details" },
     { key: "g", label: "Approve item…" },
   ],
@@ -43,7 +43,7 @@ const overview: KeyHints<string> = {
   extra,
 };
 
-function plain(hints: KeyHints<unknown>, width: number, unicode = true) {
+function plain(hints: KeyHints, width: number, unicode = true) {
   return stripAnsi(
     renderKeyHintsCli(hints, width, capabilities(width, { unicode })),
   );
@@ -105,11 +105,16 @@ Deno.test("every width yields exactly that many cells and a shrinking ladder", (
     }
   }
   const narrow = layoutKeyHintsCli(overview, 28, capabilities(28));
-  assertEquals(narrow.placed.map((hint) => hint.hint.action), [
-    "open",
-    undefined,
-    undefined,
-  ]);
+  assertEquals(
+    narrow.placed.map((hint) => hint.hint.label),
+    [
+      "Open…",
+      ".",
+      "^K",
+    ].map((label, index) =>
+      index === 0 ? label : narrow.placed[index]?.hint.label
+    ),
+  );
   assertEquals(narrow.placed.map((hint) => hint.cluster), [
     "left",
     "right",

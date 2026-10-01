@@ -17,6 +17,7 @@ import { decodableChord } from "../../src/cli/interactive/application/keymap.ts"
 import {
   applicationDemoView,
   DEMO_JOBS,
+  DEMO_KEYMAP,
   type DemoJob,
 } from "../../scripts/playground/application.ts";
 import {
@@ -701,7 +702,12 @@ Deno.test("the layer rules report every broken rule as data", () => {
     );
   }
   for (const build of [...PANELS, () => demoActionsMenu(IMAGE)]) {
-    assertEquals(validateTerminalApplicationView(withLayers(build())), []);
+    assertEquals(
+      validateTerminalApplicationView(withLayers(build()), {
+        keymap: DEMO_KEYMAP,
+      }),
+      [],
+    );
   }
   const keymap = [
     { key: "up", action: "up", scope: { layer: "run" } },

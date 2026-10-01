@@ -25,6 +25,7 @@ import {
 } from "../../src/cli/interactive/testing.ts";
 import type { ApplicationHit } from "../../src/cli/interactive/application/hits.ts";
 import { modelState } from "../../src/cli/interactive/application/model.ts";
+import { DEMO_KEYMAP } from "../../scripts/playground/application.ts";
 
 /** The decoded key for a decoder name or one character. */
 export function keyOf(name: TerminalKeyName | string): TerminalKey {
@@ -53,8 +54,10 @@ export class ApplicationDriver {
     options: ApplicationDriverOptions = {},
   ) {
     this.io = new FakeTerminalIO([], { columns: 80, rows: 24, ...options });
+    // The sample's bindings by default, so every key the sample and the
+    // test views advertise is bound, as the view rules require.
     const created = createTerminalApplicationModel(view, {
-      ...(options.keymap === undefined ? {} : { keymap: options.keymap }),
+      keymap: options.keymap ?? DEMO_KEYMAP,
       ...(options.viKeys === undefined ? {} : { viKeys: options.viKeys }),
     });
     this.model = created.model;

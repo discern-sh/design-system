@@ -303,7 +303,7 @@ export interface MasterDetailBody<A> {
    * The footer while the detail is zoomed. By default the package adds
    * Up/Down after the primary hint and a Back hint on the right.
    */
-  readonly zoomFooter?: KeyHints<A>;
+  readonly zoomFooter?: KeyHints;
 }
 
 /** A grouped list on its own. */
@@ -320,6 +320,16 @@ export interface ReadingBody {
 }
 
 /**
+ * A key hint that runs an action itself: an empty body's primary, which
+ * Enter runs, or a reader's own key.
+ */
+export interface ActionHint<A> {
+  readonly key: KeyChord;
+  readonly label: string;
+  readonly action: A;
+}
+
+/**
  * Nothing to list yet: a title, a short explanation, the one thing to do
  * next, and optionally a list below (such as folded groups).
  */
@@ -328,8 +338,9 @@ export interface EmptyBody<A> {
   readonly title: string;
   readonly body: readonly InlineRun[];
   /** Selected first; Enter runs its action. */
-  readonly primary: KeyHint<A>;
-  readonly secondary?: readonly KeyHint<A>[];
+  readonly primary: ActionHint<A>;
+  /** Further keys to show; each must be bound, like every advertised key. */
+  readonly secondary?: readonly KeyHint[];
   readonly list?: GroupedList<A>;
 }
 
@@ -373,8 +384,13 @@ export interface TerminalApplicationView<A> {
   readonly header: HeaderBar<A>;
   readonly body: ApplicationBody<A>;
   readonly message?: MessageLine;
-  /** Key hints while no layer is open; layers show their own. */
-  readonly footer: KeyHints<A>;
+  /**
+   * Key hints while no layer is open; layers show their own. Hints only
+   * name keys: each must be one the body reserves, Escape, Ctrl+C, or a
+   * base keymap binding, so the footer never advertises a key that does
+   * nothing.
+   */
+  readonly footer: KeyHints;
   /**
    * Modal layers, bottom to top, at most two. Only the view opens or removes
    * one: the package reports a dismissal through `onDismiss` and hides the

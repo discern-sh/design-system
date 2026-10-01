@@ -26,23 +26,24 @@ import {
  */
 export type KeyChord = string;
 
-/** One hint: the key, and what pressing it does now. */
-export interface KeyHint<A = unknown> {
+/**
+ * One hint: the key, and what pressing it does now. A hint only names a
+ * key; whatever runs when it is pressed is bound elsewhere.
+ */
+export interface KeyHint {
   /** One key, or several shown together such as `["up", "down"]`. */
   readonly key: KeyChord | readonly KeyChord[];
   readonly label?: string;
-  /** Caller-owned action; the renderer ignores it and reports its place. */
-  readonly action?: A;
 }
 
 /** The complete footer: what the renderer is allowed to show and drop. */
-export interface KeyHints<A = unknown> {
+export interface KeyHints {
   /** Primary first; hints drop from the end to fit, the primary never. */
-  readonly left: readonly KeyHint<A>[];
+  readonly left: readonly KeyHint[];
   /** Pinned to the right edge; below `compactBelowColumns` labels drop from the end. */
-  readonly right?: readonly KeyHint<A>[];
+  readonly right?: readonly KeyHint[];
   /** Appended to the right cluster, in order, only while the left fits whole. */
-  readonly extra?: readonly KeyHint<A>[];
+  readonly extra?: readonly KeyHint[];
   /** Width below which gaps tighten and right labels may drop; defaults to 56. */
   readonly compactBelowColumns?: number;
 }
@@ -54,8 +55,8 @@ export interface KeyHintsOptions {
 }
 
 /** One hint as placed on the line, with its cell range for hit-testing. */
-export interface PlacedKeyHint<A = unknown> {
-  readonly hint: KeyHint<A>;
+export interface PlacedKeyHint {
+  readonly hint: KeyHint;
   readonly cluster: "left" | "right";
   /** First cell, zero-based, of the hint's key. */
   readonly start: number;
@@ -65,10 +66,10 @@ export interface PlacedKeyHint<A = unknown> {
 }
 
 /** A laid-out footer line and where each surviving hint sits. */
-export interface KeyHintsLayout<A = unknown> {
+export interface KeyHintsLayout {
   /** Exactly `width` cells. */
   readonly line: string;
-  readonly placed: readonly PlacedKeyHint<A>[];
+  readonly placed: readonly PlacedKeyHint[];
 }
 
 /** Default width below which key hints tighten, as in a phone-width terminal. */
@@ -173,30 +174,30 @@ export function formatKeyChord(
     : parts.join("/");
 }
 
-interface Candidate<A> {
-  readonly hint: KeyHint<A>;
+interface Candidate {
+  readonly hint: KeyHint;
   readonly key: string;
   readonly label: string;
   readonly primary: boolean;
 }
 
-interface Shown<A> extends Candidate<A> {
+interface Shown extends Candidate {
   readonly withLabel: boolean;
 }
 
-function hintWidth<A>(hint: Shown<A>): number {
+function hintWidth(hint: Shown): number {
   return measureText(hint.key) +
     (hint.withLabel && hint.label !== "" ? 1 + measureText(hint.label) : 0);
 }
 
-function clusterWidth<A>(hints: readonly Shown<A>[], gap: number): number {
+function clusterWidth(hints: readonly Shown[], gap: number): number {
   return hints.reduce((total, hint) => total + hintWidth(hint), 0) +
     Math.max(0, hints.length - 1) * gap;
 }
 
-function lineWidth<A>(
-  left: readonly Shown<A>[],
-  right: readonly Shown<A>[],
+function lineWidth(
+  left: readonly Shown[],
+  right: readonly Shown[],
   gap: number,
 ): number {
   const between = left.length > 0 && right.length > 0 ? CLUSTER_GAP : 0;
@@ -223,12 +224,12 @@ function validColumns(label: string, value: number, minimum: number): void {
  * muted, so the key stays distinct from its words; without colour the
  * key keeps bold where the capabilities allow it.
  */
-export function layoutKeyHintsCli<A>(
-  hints: KeyHints<A>,
+export function layoutKeyHintsCli(
+  hints: KeyHints,
   width: number,
   capabilities: TerminalCapabilities,
   options: KeyHintsOptions = {},
-): KeyHintsLayout<A> {
+): KeyHintsLayout {
   validColumns("key hints width", width, 0);
   const compactBelow = hints.compactBelowColumns ??
     KEY_HINTS_COMPACT_BELOW_COLUMNS;
@@ -236,7 +237,7 @@ export function layoutKeyHintsCli<A>(
   const compact = width < compactBelow;
   const gap = compact ? COMPACT_HINT_GAP : HINT_GAP;
   const ellipsis = terminalGlyph("ellipsis", capabilities);
-  const candidate = (hint: KeyHint<A>, primary: boolean): Shown<A> => ({
+  const candidate = (hint: KeyHint, primary: boolean): Shown => ({
     hint,
     key: formatKeyChord(hint.key, capabilities),
     label: capabilities.unicode
@@ -283,25 +284,25 @@ export function layoutKeyHintsCli<A>(
   return paint(left, right, gap, width, capabilities, options);
 }
 
-function paint<A>(
-  left: readonly Shown<A>[],
-  right: readonly Shown<A>[],
+function paint(
+  left: readonly Shown[],
+  right: readonly Shown[],
   gap: number,
   width: number,
   capabilities: TerminalCapabilities,
   options: KeyHintsOptions,
-): KeyHintsLayout<A> {
+): KeyHintsLayout {
   const theme = resolveTerminalTheme(options);
-  const style = (hint: Shown<A>): TerminalTextStyle => ({
+  const style = (hint: Shown): TerminalTextStyle => ({
     bold: true,
     color: terminalTextToneColor(theme, hint.primary ? "accent" : "ink"),
   });
   const labelStyle: TerminalTextStyle = {
     color: terminalTextToneColor(theme, "muted"),
   };
-  const placed: PlacedKeyHint<A>[] = [];
+  const placed: PlacedKeyHint[] = [];
   const cluster = (
-    hints: readonly Shown<A>[],
+    hints: readonly Shown[],
     name: "left" | "right",
     origin: number,
   ): string => {
@@ -342,8 +343,8 @@ function paint<A>(
 }
 
 /** Render key hints on one line of exactly `width` cells. */
-export function renderKeyHintsCli<A>(
-  hints: KeyHints<A>,
+export function renderKeyHintsCli(
+  hints: KeyHints,
   width: number,
   capabilities: TerminalCapabilities,
   options: KeyHintsOptions = {},

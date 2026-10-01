@@ -282,12 +282,12 @@ function header<A>(
 
 function footerHints<A>(
   model: ModelState<A>,
-): KeyHints<A> {
+): KeyHints {
   const view = model.view;
   const listView = bodyList(view);
   const list = listView === undefined ? undefined : model.lists[listView.id];
   if (list?.filter?.editing === true) {
-    const keep = (hint: KeyHint<A>) =>
+    const keep = (hint: KeyHint) =>
       (typeof hint.key === "string" ? [hint.key] : hint.key).every((key) => {
         const chord = decodableChord(key);
         return chord !== undefined && chord !== "space" &&
@@ -334,9 +334,9 @@ function footerHints<A>(
 }
 
 /** A footer line and a hit for every single-key hint it shows. */
-function footer<A>(
+function footer(
   context: FrameContext,
-  hints: KeyHints<A>,
+  hints: KeyHints,
   columns: number,
   row: number,
 ): { readonly line: string; readonly hits: readonly ApplicationHit[] } {
@@ -1219,7 +1219,7 @@ export function renderModelState<A>(
   let bodyLines: readonly string[];
   let layout: TerminalApplicationLayout;
   let hits: readonly ApplicationHit[];
-  let hints: KeyHints<A>;
+  let hints: KeyHints;
   if (layers.length === 0) {
     const result = renderBody(context, model, size, region, short, false);
     fitted = {
@@ -1422,7 +1422,7 @@ interface LayeredBody<A> {
   readonly layout: TerminalApplicationLayout;
   /** Hits in screen rows: the top layer's controls only. */
   readonly hits: readonly ApplicationHit[];
-  readonly hints: KeyHints<A>;
+  readonly hints: KeyHints;
 }
 
 /**

@@ -317,6 +317,7 @@ async function messageAndSheet() {
   let outcome = "running";
   const running = runTerminalApplication<string>({
     view: view(),
+    keymap: [{ key: "q", action: "quit" }],
     onDismiss(target, via, context) {
       dismissals.push(
         `${"layer" in target ? target.layer : target.message}:${via}`,
@@ -399,6 +400,7 @@ Deno.test("the view a caller leaves after a dismissal must omit what was dismiss
   };
   const running = runTerminalApplication<string>({
     view: { ...testView(["a"]), layers: [sheet] },
+    keymap: [{ key: "q", action: "quit" }],
     // A caller that ignores the dismissal and supplies the same layers again.
     onDismiss(_target, _via, context) {
       context.update({ ...testView(["a"]), layers: [sheet] });
@@ -421,7 +423,7 @@ Deno.test("a handoff fences queued mouse reports and drops clicks read before it
       ...testView(["a", "b", "c"], { body: "list" }),
       input: { mouse: true },
     },
-    keymap: [{ key: "o", action: "open" }],
+    keymap: [{ key: "o", action: "open" }, { key: "q", action: "quit" }],
     start(context) {
       live = context;
     },
