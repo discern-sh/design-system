@@ -23,6 +23,7 @@ import {
   fitInteractionFrame,
   type InteractionFrameViewport,
 } from "../src/cli/interactive/viewport-budget.ts";
+import { APPLICATION_REVIEW_SIZES } from "./playground/application.ts";
 /** A one-group list of `count` items, the first `spinners` of them moving. */
 const collection = (
   count: number,
@@ -184,8 +185,9 @@ for (const count of [20, 10_000]) {
     times.push(performance.now() - start);
   }
   for (let i = 0; i < 60; i++) {
-    const sizes = [[80, 24], [120, 30], [40, 20], [80, 13], [60, 50]] as const;
-    const [columns, rows] = sizes[i % sizes.length] ?? [80, 24];
+    const { columns, rows } =
+      APPLICATION_REVIEW_SIZES[i % APPLICATION_REVIEW_SIZES.length] ??
+        { columns: 80, rows: 24 };
     io.resize(columns, rows);
     const start = performance.now();
     model =
