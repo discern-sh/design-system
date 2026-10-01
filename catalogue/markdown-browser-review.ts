@@ -1,10 +1,8 @@
 import type { TerminalCapabilities } from "../src/cli/capabilities.ts";
-import { transitionMarkdownBrowser } from "../src/cli/interactive/markdown-browser-machine.ts";
-import { renderMarkdownBrowser } from "../src/cli/interactive/markdown-browser-renderer.ts";
 import { projectTerminalInspectorHtml } from "../src/cli/projection.ts";
 import {
-  createMarkdownBrowserCatalogueState,
   type MarkdownBrowserCataloguePosture,
+  markdownBrowserCataloguePreview,
 } from "./markdown-browser-example.ts";
 import { defaultCatalogueTerminalPresentation } from "./terminal-theme.ts";
 
@@ -40,21 +38,13 @@ function capabilities(
   };
 }
 
-function reviewArtifact(
+function artifact(
   id: string,
   title: string,
-  columns: number,
   rows: number,
-  facts: TerminalCapabilities,
-  posture: MarkdownBrowserCataloguePosture,
+  frame: string,
+  columns: number,
 ): MarkdownBrowserReviewArtifact {
-  const state = createMarkdownBrowserCatalogueState(
-    facts,
-    rows,
-    defaultCatalogueTerminalPresentation,
-    posture,
-  );
-  const frame = renderMarkdownBrowser(state, facts);
   return Object.freeze({
     id,
     title,
@@ -70,106 +60,108 @@ function reviewArtifact(
   });
 }
 
-function resizedArtifact(): MarkdownBrowserReviewArtifact {
-  const narrow = capabilities(40);
-  let state = createMarkdownBrowserCatalogueState(
-    narrow,
-    24,
+function reviewArtifact(
+  id: string,
+  title: string,
+  rows: number,
+  facts: TerminalCapabilities,
+  posture: MarkdownBrowserCataloguePosture,
+): MarkdownBrowserReviewArtifact {
+  const frame = markdownBrowserCataloguePreview(
+    facts,
+    rows,
     defaultCatalogueTerminalPresentation,
-    "split-reader",
-  );
-  for (let page = 0; page < 3; page += 1) {
-    state = transitionMarkdownBrowser(state, {
-      kind: "key",
-      key: { kind: "named", name: "page-down" },
-    }, narrow).state;
-  }
-  const wide = capabilities(120);
-  state = transitionMarkdownBrowser(state, {
-    kind: "resize",
-    columns: 120,
-    rows: 30,
-  }, wide).state;
-  const frame = renderMarkdownBrowser(state, wide);
-  const title = "Resize result · 40×24 to 120×30";
-  return Object.freeze({
-    id: "resize-result",
-    title,
-    columns: 120,
-    rows: 30,
-    frame,
-    inspectorHtml: projectTerminalInspectorHtml(frame, {
-      columns: 120,
-      rows: 30,
-      title,
-      ...defaultCatalogueTerminalPresentation,
-    }),
-  });
+    posture,
+  ).frame;
+  return artifact(id, title, rows, frame, facts.columns);
 }
 
-/** Ten required visual-review postures rendered only from explicit facts. */
+function resizedArtifact(): MarkdownBrowserReviewArtifact {
+  const preview = markdownBrowserCataloguePreview(
+    capabilities(40),
+    24,
+    defaultCatalogueTerminalPresentation,
+    "document",
+  );
+  preview.key("page-down", "page-down", "page-down").resize(120, 30);
+  return artifact(
+    "resize-result",
+    "Resize result · 40×24 to 120×30",
+    30,
+    preview.frame,
+    120,
+  );
+}
+
+/** Every required visual-review posture, rendered only from explicit facts. */
 export function markdownBrowserReviewArtifacts(): readonly MarkdownBrowserReviewArtifact[] {
   return Object.freeze([
     reviewArtifact(
-      "initial-picker",
-      "Initial full-height picker",
-      80,
+      "contents",
+      "Contents with the selected document previewed",
       24,
       capabilities(80),
-      "initial-picker",
+      "contents",
     ),
     reviewArtifact(
-      "split-reader",
-      "Split picker and Markdown reader",
-      80,
-      24,
-      capabilities(80),
-      "split-reader",
+      "contents-wide",
+      "Wide contents beside a readable preview",
+      30,
+      capabilities(120),
+      "contents",
     ),
     reviewArtifact(
-      "keyboard-link",
-      "Keyboard-focused internal link",
-      80,
-      24,
-      capabilities(80),
-      "keyboard-link",
-    ),
-    reviewArtifact(
-      "pointer-link",
-      "Mouse-targeted document link",
-      80,
-      24,
-      capabilities(80, { mouseTracking: true }),
-      "pointer-link",
-    ),
-    reviewArtifact(
-      "pointer-picker",
-      "Mouse-focused picker pane",
-      80,
-      24,
-      capabilities(80, { mouseTracking: true }),
-      "pointer-picker",
-    ),
-    reviewArtifact(
-      "internal-destination",
-      "Resolved internal fragment destination",
-      80,
-      24,
-      capabilities(80),
-      "internal-destination",
-    ),
-    reviewArtifact(
-      "single-pane",
-      "Single-pane document fallback",
-      40,
+      "narrow-contents",
+      "Narrow contents with a summary strip",
       24,
       capabilities(40),
-      "single-document",
+      "contents",
+    ),
+    reviewArtifact(
+      "document",
+      "A document in the reader",
+      24,
+      capabilities(80),
+      "document",
+    ),
+    reviewArtifact(
+      "keyboard-link",
+      "Keyboard-focused link",
+      24,
+      capabilities(80),
+      "keyboard-link",
+    ),
+    reviewArtifact(
+      "pointer-link",
+      "Mouse-followed link",
+      24,
+      capabilities(80, { mouseTracking: true }),
+      "pointer-link",
+    ),
+    reviewArtifact(
+      "search",
+      "Search across every entry",
+      24,
+      capabilities(80),
+      "search",
+    ),
+    reviewArtifact(
+      "linked-document",
+      "A linked document opened at its heading",
+      24,
+      capabilities(80),
+      "linked-document",
+    ),
+    reviewArtifact(
+      "internal-destination",
+      "A fragment within the document",
+      24,
+      capabilities(80),
+      "internal-destination",
     ),
     reviewArtifact(
       "no-color",
       "No-colour ASCII reader",
-      80,
       24,
       capabilities(80, {
         colorDepth: "none",
@@ -181,7 +173,6 @@ export function markdownBrowserReviewArtifacts(): readonly MarkdownBrowserReview
     reviewArtifact(
       "diagram-document",
       "Resource-upgraded Diagram in the reader",
-      80,
       24,
       capabilities(80),
       "diagram-document",
@@ -189,7 +180,6 @@ export function markdownBrowserReviewArtifacts(): readonly MarkdownBrowserReview
     reviewArtifact(
       "chart-document",
       "Resource-upgraded Chart in the reader",
-      80,
       24,
       capabilities(80),
       "chart-document",
@@ -229,7 +219,7 @@ export function renderMarkdownBrowserReviewPage(): string {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Markdown browser links and mouse · CLI review</title>
+  <title>Markdown browser · CLI review</title>
   <style>
     :root { color-scheme: dark; font-family: ui-sans-serif, system-ui, sans-serif; background: #111318; color: #f2f4f8; }
     * { box-sizing: border-box; }
@@ -256,8 +246,8 @@ export function renderMarkdownBrowserReviewPage(): string {
   <main id="top">
     <header class="intro">
       <p class="eyebrow">discern Design System · CLI review</p>
-      <h1>Markdown browser links and mouse</h1>
-      <p>Ten deterministic terminal postures rendered from the package's real browser state and renderer, including keyboard and pointer link focus plus a resource-upgraded Diagram. Geometry metrics are conformance facts; repeated-line notices are advisory review cues for intentional Markdown spacing.</p>
+      <h1>Markdown browser</h1>
+      <p>Deterministic terminal postures of the browser running on the application runtime — contents, reading, search, followed links, and resource-upgraded Diagram and Chart — rendered from the package's real application model. Geometry metrics are conformance facts; repeated-line notices are advisory review cues for intentional Markdown spacing.</p>
       <p><a href="/catalogue/?surface=cli#terminal-layout-markdown-browser">Open the interactive Catalogue recipe</a></p>
     </header>
     ${sections}

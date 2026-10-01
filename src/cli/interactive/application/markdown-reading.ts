@@ -95,18 +95,7 @@ export function applicationMarkdownIssues(
     }];
   }
   try {
-    const diagrams = markdown.diagrams === undefined
-      ? undefined
-      : validateMarkdownDiagramResources(markdown.diagrams);
-    const charts = markdown.charts === undefined
-      ? undefined
-      : validateMarkdownChartResources(markdown.charts);
-    if ((diagrams?.length ?? 0) > 0 || (charts?.length ?? 0) > 0) {
-      parseMarkdown(markdown.source, {
-        ...(diagrams === undefined ? {} : { diagrams }),
-        ...(charts === undefined ? {} : { charts }),
-      });
-    }
+    assertMarkdownResources(markdown);
   } catch (error) {
     // A resource the source cannot honour is a caller error, reported as one.
     return [{
@@ -116,6 +105,26 @@ export function applicationMarkdownIssues(
   }
   sound.add(markdown);
   return [];
+}
+
+/**
+ * Check a document's diagram and chart resources against its source,
+ * throwing the Markdown authority's own errors: a malformed resource, a
+ * duplicate source, or an image whose text does not match its resource.
+ */
+export function assertMarkdownResources(markdown: ApplicationMarkdown): void {
+  const diagrams = markdown.diagrams === undefined
+    ? undefined
+    : validateMarkdownDiagramResources(markdown.diagrams);
+  const charts = markdown.charts === undefined
+    ? undefined
+    : validateMarkdownChartResources(markdown.charts);
+  if ((diagrams?.length ?? 0) > 0 || (charts?.length ?? 0) > 0) {
+    parseMarkdown(markdown.source, {
+      ...(diagrams === undefined ? {} : { diagrams }),
+      ...(charts === undefined ? {} : { charts }),
+    });
+  }
 }
 
 /**

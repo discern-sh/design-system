@@ -2,12 +2,9 @@ import { assert, assertEquals, assertStringIncludes } from "@std/assert";
 import { renderToStaticMarkup } from "react-dom/server";
 import { stripAnsi } from "../../src/cli/ansi.ts";
 import { renderDiagramCli, renderMarkdownCli } from "../../src/cli/mod.ts";
-import {
-  createMarkdownBrowserState,
-  type MarkdownBrowserDocument,
-} from "../../src/cli/interactive/markdown-browser-model.ts";
-import { transitionMarkdownBrowser } from "../../src/cli/interactive/markdown-browser-machine.ts";
-import { markdownBrowserDocumentLines } from "../../src/cli/interactive/markdown-browser-renderer.ts";
+import type { MarkdownBrowserDocument } from "../../src/cli/interactive/markdown-browser-model.ts";
+import { projectMarkdownReading } from "../../src/cli/interactive/application/markdown-reading.ts";
+import { documentReader } from "../fixtures/markdown-reader.ts";
 import { testTerminalCapabilities } from "../../src/cli/interactive/testing.ts";
 import {
   describeDiagram,
@@ -162,26 +159,22 @@ Deno.test("every release case traverses every public projection", () => {
         source: markdown.source,
         diagrams: [markdown.resource],
       };
-      let state = createMarkdownBrowserState({
-        label: "Diagram references",
-        entries: [document],
-      }, { columns: 120, rows: 28 });
-      const browserCapabilities = testTerminalCapabilities({
-        columns: 120,
-        colorDepth: "none",
-        unicode: true,
-      });
-      state = transitionMarkdownBrowser(
-        state,
-        { kind: "key", key: { kind: "named", name: "enter" } },
-        browserCapabilities,
-      ).state;
-      const browserDocument = markdownBrowserDocumentLines(
-        state,
-        browserCapabilities,
-      ).join("\n");
+      const browserDocument = projectMarkdownReading(
+        {
+          kind: "markdown",
+          source: document.source,
+          diagrams: [markdown.resource],
+        },
+        116,
+        testTerminalCapabilities({ columns: 116, colorDepth: "none" }),
+        {},
+      ).lines.join("\n");
       assertStringIncludes(browserDocument, spec.title);
-      assertEquals(state.openedDocumentId, document.id);
+      const { preview } = documentReader(document, 120, 28);
+      assertEquals(
+        preview.state.focusedControlId,
+        `document:${document.id}`,
+      );
     }
   }
 });

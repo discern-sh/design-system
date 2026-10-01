@@ -1,6 +1,6 @@
 # ADR 0022: Browse Markdown in a package-owned terminal viewport
 
-**Status**: accepted
+**Status**: superseded by [ADR-0054](0054-the-markdown-browser-runs-on-the-application-runtime.md), which runs the browser on the application runtime
 
 ## Context
 

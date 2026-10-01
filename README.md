@@ -659,9 +659,13 @@ const review = {
 
 A layer opens on its safe button, or its first text field, where Enter moves to the safe button; Escape and a click outside choose the safe button; letters never reach a confirm or destructive button; a sheet that is `loading`, `changed`, or `gone`, has an unread body, or an unmatched `challenge` keeps those buttons disabled. Keys typed after the key that opened a layer land on it. `onField` reports each field change before any other callback of the same input, and `context.setField` writes one back. Set `input: { mouse: true }` to accept clicks and the wheel: a click selects, a click on the selection is Enter, a confirm or destructive button needs a focusing click and an activating click, and a click outside a layer is the safe choice.
 
+A reading body's content may be Markdown (`{ kind: "markdown", source }`) instead of a Component block: the package renders it at a readable measure, Tab and Shift+Tab move between its links, and Enter or a click follows one — a link to a heading of the same document scrolls there, and any other reaches `onLink`, which returns a command as `onAction` does. `context.reveal(readingId, target)` restores a scroll position, brings a heading to the top, or focuses a link.
+
+An action may also return `nestTerminalApplication(options, onExit)`: another application runs on the same screen, without releasing the terminal, and the first resumes exactly where it was when the second exits; `onExit` receives the nested application's final state as one of the first application's callbacks. The Markdown browser below opens this way through `markdownBrowserCommand()`.
+
 The minimum is **32 × 10**; below it the screen names the size it needs while your bindings still work. Ctrl+C, EOF and cooperative abort clean up and throw `InteractionCancelled` unless a binding claims Ctrl+C. Unsupported TTY/control capabilities refuse before entering raw mode. Default appearance remains monochrome; use explicit appearance inputs when reviewing semantic color.
 
-Run `deno task playground:application` for the live sample with a harmless foreground child, or choose `application` in `deno task playground:cli`. `deno run --config deno.json -A scripts/application-capture.ts` captures named real-PTY states as HTML and PNGs. Optional `./cli/interactive/testing` exports `runPtyProcess` with controlled geometry, observable readiness and named keyframes; `captureTerminalFrame` replays the application's paints to one settled frame, returns its HTML projection, its window title and, when `TERMINAL_APPLICATION_STATE_REPORTS=1`, its state report; `ptySettledFrame` builds readiness from that replay; and `ManualTerminalClock` drives animation, settle windows, and keyframe timing without real delays. The pure `createTerminalApplicationModel`, `updateTerminalApplication`, `transitionTerminalApplication`, and `renderTerminalApplication` test views without a terminal; the model they pass along is opaque, and `terminalApplicationState` reads it. `observeTerminalIO` and runtime `observe` expose writes, geometry and rendering work. PTY transport supports macOS/BSD and Linux/util-linux with `script`, `stty` and `ps`; Windows and arbitrary cursor-driven transcripts are unsupported. Broad behavioral tests should continue to use FakeTerminalIO.
+Run `deno task playground:application` for the live sample with a harmless foreground child and a guide that `g` opens in the Markdown browser on the same screen, or choose `application` in `deno task playground:cli`. `deno run --config deno.json -A scripts/application-capture.ts` captures named real-PTY states as HTML and PNGs. Optional `./cli/interactive/testing` exports `runPtyProcess` with controlled geometry, observable readiness and named keyframes; `captureTerminalFrame` replays the application's paints to one settled frame, returns its HTML projection, its window title and, when `TERMINAL_APPLICATION_STATE_REPORTS=1`, its state report; `ptySettledFrame` builds readiness from that replay; and `ManualTerminalClock` drives animation, settle windows, and keyframe timing without real delays. The pure `createTerminalApplicationModel`, `updateTerminalApplication`, `transitionTerminalApplication`, and `renderTerminalApplication` test views without a terminal; the model they pass along is opaque, and `terminalApplicationState` reads it. `observeTerminalIO` and runtime `observe` expose writes, geometry and rendering work. PTY transport supports macOS/BSD and Linux/util-linux with `script`, `stty` and `ps`; Windows and arbitrary cursor-driven transcripts are unsupported. Broad behavioral tests should continue to use FakeTerminalIO.
 
 See the [application and migration guide](map/70-cli/applications.md) for exact focus, layer, mouse, geometry and callback rules, ownership, capture examples and migration from the region model. Existing request defaults are unchanged. For standalone actions, discover Select's canonical **Action menu** example and pass `presentation: "menu"`; consumers wrapping the older `InteractionChoicePresentation` must use `InteractionSelectionPresentation` for a single selection.
 
@@ -686,7 +690,9 @@ const environment = await requestSelection({
 
 The `group-heading` entry is semantic interaction structure: it has a stable ID and non-empty label, needs no sentinel value of the caller's generic type, and can never be highlighted, toggled, or returned. Every rendered heading has one empty framed row above it. Disabled choices remain selectable entries with their own visible disabled state. Scrolling Select, Radio, Checkbox, and search frames use all available terminal columns unless an explicit `width` narrows them; wrapped labels keep their marker-aligned hanging indent and styling as the highlight moves. Select and search `visibleCount` plus Textarea `rows` are requested upper bounds: the adapter reduces only the current visible window when terminal height is tight and expands it again after a resize. A quiet lower-border label such as `↑ 2 more · ↓ 7 more` states how many choices remain outside the window, with `^`, `v`, and `|` fallbacks in ASCII. Search accepts `initialId` to restore an enabled provider result by stable ID without inventing a query or keypress.
 
-`requestMarkdownBrowser()` owns a complete keyboard viewport for caller-supplied Markdown, with optional SGR mouse input. The picker uses the full height until a document opens, then the picker and document receive adaptive, independently scrollable panes; constrained terminals show one focused pane at a time. Documents always pass through the package Markdown renderer, while actions and safe external links return as typed data after mouse tracking, raw mode, cursor visibility, resize observation, and the normal screen have been restored:
+The Markdown browser is an application on the terminal application runtime, so it has the same header, key hints, painting, copy table, surfaces, and mouse policy as any application. Its contents list every caller-supplied document, action, and exit by group, with the selected document previewed beside the list on wide screens and summarised in a strip on narrow ones. Enter opens a document as a Markdown reading body, where Tab and Shift+Tab move between links and Enter follows one; `/` or Ctrl+K searches every entry; `c` shows the contents; Escape or Backspace goes back through the reader's history; and `q` closes. Documents always pass through the package Markdown renderer, and the package never loads a file or opens a URL.
+
+`requestMarkdownBrowser()` runs it on its own screen and resolves, after the terminal is restored, with the action, exit, or external link the reader chose and where the reader was:
 
 ```ts
 import {
@@ -696,7 +702,7 @@ import {
 import { reviewFlowMarkdown, reviewFlowResource } from "./review-flow.ts";
 
 let resume: MarkdownBrowserResumableState | undefined;
-const result = await requestMarkdownBrowser({
+const options = {
   label: "Documentation",
   entries: [
     { kind: "group-heading", id: "guides", label: "Guides" },
@@ -730,9 +736,12 @@ const result = await requestMarkdownBrowser({
       ? { kind: "document", documentId: "testing", fragment: "fake-terminal" }
       : { kind: "unresolved", message: "Document is outside this corpus." };
   },
+} as const;
+
+const result = await requestMarkdownBrowser({
+  ...options,
   ...(resume === undefined ? {} : { initialState: resume }),
 }, { theme: "dark", motif: productMotif });
-
 resume = result.state;
 if (result.kind === "action") {
   // The terminal is restored here; the consumer may now perform its effect.
@@ -744,9 +753,32 @@ if (result.kind === "external-link") {
 }
 ```
 
-Picker focus owns grapheme-aware typing, Up/Down, Ctrl+P/Ctrl+N, Page Up/Page Down, Home/End, and Enter. Document focus assigns the scrolling keys to Markdown; ordinary movement advances rendered rows monotonically, while semantic anchors are consumed only after resume or reflow and repeated anchors choose the occurrence nearest their proportional fallback. `]` and `[` traverse logical link occurrences, Enter follows the focused link, and Escape first returns to ordinary scrolling. Same-document fragments stay inside the reader. Relative and root-relative paths reach `resolveLink`, whose closed result admits a document/fragment, external destination, or bounded unresolved feedback; the package never loads a file or opens a URL. Tab and Shift+Tab change panes, while Escape or `q` closes an unfocused document. Escape in the full picker, Ctrl+C, EOF, and an optional `MarkdownBrowserRuntime.abortSignal` use `InteractionCancelled`. `MarkdownBrowserRefusalError` reports unsupported ANSI control or geometry too small for one coherent pane before the initial terminal mutation. Pure `createMarkdownBrowserState()`, `transitionMarkdownBrowser()`, and `renderMarkdownBrowser()` exports support deterministic state and frame tests without terminal effects.
+`markdownBrowserCommand()` runs the same browser inside a running application, on that application's screen: an action returns it, the browser replaces the application until the reader closes it, and the application resumes exactly where it was. `respond` answers a chosen action or link while the browser stays open — a background command it returns that fails shows its error's message — and `onClose` runs as one of the application's own callbacks with where the reader was, so the next opening resumes there:
 
-Mouse tracking is additive and explicit: `mouse: true` requests DECSET 1000 button reports with DECSET 1006 extended coordinates only when the terminal is interactive, ANSI control is available, and `TerminalCapabilities.mouseTracking` has not refused it. Omission leaves the complete keyboard contract and writes no mouse controls. `TerminalInputReader.readEvent()` retains one-event compatibility, while `readEvents()` returns the semantic events decoded from one raw chunk so complete-frame consumers can preserve order and repaint once per burst; the browser gives Ctrl+C priority over queued wheel work. After observed mouse input, browser cleanup disables both tracking modes, drains reports queued before a bounded cursor-position fence while preserving surrounding input, then restores the cursor, normal screen, and raw mode. OSC 8 output and mouse input are independent — one never proves support for the other. While tracking is active, unmodified clicks and wheel events go to the application instead of ordinary terminal selection or native link gestures; many terminals use Shift as a temporary bypass, but that modifier is terminal-configurable, so callers needing native selection should leave mouse tracking off.
+```ts
+let manual: MarkdownBrowserResumableState | undefined;
+// Inside the application's onAction:
+return markdownBrowserCommand(
+  { ...options, ...(manual === undefined ? {} : { initialState: manual }) },
+  {
+    respond: (chosen) =>
+      chosen.kind === "external-link"
+        ? {
+          kind: "background",
+          id: "open",
+          run: () => openUrl(chosen.destination),
+        }
+        : undefined,
+    onClose: (state) => {
+      manual = state;
+    },
+  },
+);
+```
+
+A link to a heading of the same document scrolls there; any other link reaches `resolveLink`, which answers at once with an admitted document and optional fragment, a safe external destination, or an unresolved outcome whose message the browser shows. Unsafe Markdown destinations stay inert text. Closing from where the reader started, Ctrl+C, EOF, and `abortSignal` raise `InteractionCancelled` from `requestMarkdownBrowser()`; inside an application Ctrl+C closes the browser and reaches the application as Ctrl+C. `MarkdownBrowserRefusalError` reports missing ANSI control or a terminal below the application minimum before `requestMarkdownBrowser()` changes anything, and a live resize below it shows the application's too-small notice. Every word the browser writes comes from `DEFAULT_MARKDOWN_BROWSER_COPY`, which `copy` replaces.
+
+Mouse input is opt-in: `mouse: true` asks the runtime for button and wheel reports, which follow the application mouse policy — a click selects a row, a second runs it, a click on a link follows it, and the wheel scrolls. OSC 8 output and mouse input are independent — one never proves support for the other. While reports are on, unmodified clicks and wheel events go to the application instead of ordinary terminal selection or native link gestures; many terminals use Shift as a temporary bypass, but that modifier is terminal-configurable, so callers needing native selection should leave mouse input off. `TerminalInputReader.readEvent()` reads one semantic event and `readEvents()` every event decoded from one raw chunk.
 
 Full-width section headings use one restrained motif marker rather than a repeated field. The presenter's `motifSectionRule()` binds its theme, motif, and capabilities, defaults to the one-row strong embedded treatment, and also exposes explicit underline and sandwich variants:
 

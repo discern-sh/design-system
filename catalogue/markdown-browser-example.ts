@@ -1,19 +1,12 @@
 import type { TerminalCapabilities } from "../src/cli/capabilities.ts";
-import { transitionMarkdownBrowser } from "../src/cli/interactive/markdown-browser-machine.ts";
-import {
-  createMarkdownBrowserState,
-  type MarkdownBrowserEntry,
-  type MarkdownBrowserOptions,
-  type MarkdownBrowserState,
-  updateMarkdownBrowserState,
+import type {
+  MarkdownBrowserEntry,
+  MarkdownBrowserLinkResolution,
+  MarkdownBrowserLinkResolverInput,
+  MarkdownBrowserOptions,
 } from "../src/cli/interactive/markdown-browser-model.ts";
-import {
-  markdownBrowserDocumentLines,
-  markdownBrowserDocumentMaximumOffset,
-  markdownBrowserLinkOccurrences,
-  renderMarkdownBrowser,
-} from "../src/cli/interactive/markdown-browser-renderer.ts";
-import { stripAnsi } from "../src/cli/ansi.ts";
+import { markdownBrowserApplication } from "../src/cli/interactive/markdown-browser-request.ts";
+import type { MarkdownBrowserStep } from "../src/cli/interactive/markdown-browser-view.ts";
 import {
   markdownChartExampleMarkdown,
   markdownChartExampleResource,
@@ -22,6 +15,7 @@ import {
   markdownDiagramExampleMarkdown,
   markdownDiagramExampleResource,
 } from "../src/diagram/markdown.example.ts";
+import { ApplicationPreview } from "./application-preview.ts";
 import type { CatalogueTerminalPresentation } from "./terminal-theme.ts";
 
 /** Markdown corpus exercising the browser's document-reading treatment. */
@@ -134,137 +128,133 @@ export const markdownBrowserEntries = [
   },
 ] as const satisfies readonly MarkdownBrowserEntry<string>[];
 
+/**
+ * Resolve a relative link among the admitted documents by path, keeping
+ * its fragment, as a caller's resolver would.
+ */
+export function resolveMarkdownBrowserExampleLink(
+  input: MarkdownBrowserLinkResolverInput,
+): MarkdownBrowserLinkResolution {
+  const [path = "", fragment] = input.destination.split("#");
+  const parts = input.sourcePath.split("/").slice(0, -1);
+  for (const part of path.split("/")) {
+    if (part === "..") parts.pop();
+    else if (part !== "." && part !== "") parts.push(part);
+  }
+  const target = parts.join("/");
+  const document = input.availableDocuments.find((candidate) =>
+    candidate.path === target
+  );
+  return document === undefined ? { kind: "unresolved" } : {
+    kind: "document",
+    documentId: document.id,
+    ...(fragment === undefined || fragment === "" ? {} : { fragment }),
+  };
+}
+
 /** Browser options shared by Catalogue frames and deterministic tests. */
 export const markdownBrowserOptions = {
   label: "Documentation library",
   placeholder: "Search titles, descriptions, and paths",
   entries: markdownBrowserEntries,
+  resolveLink: resolveMarkdownBrowserExampleLink,
 } as const satisfies MarkdownBrowserOptions<string>;
 
-/** Pure Catalogue browser posture. */
+/** One reviewable browser state. */
 export type MarkdownBrowserCataloguePosture =
-  | "initial-picker"
-  | "split-reader"
-  | "single-document"
-  | "single-picker"
+  | "contents"
+  | "document"
   | "keyboard-link"
   | "pointer-link"
-  | "pointer-picker"
+  | "search"
+  | "linked-document"
   | "internal-destination"
   | "diagram-document"
   | "chart-document";
 
-/** Construct one deterministic state without reading a process or terminal. */
-export function createMarkdownBrowserCatalogueState(
+/** Scroll a preview until a text sits near the top, or fail the posture. */
+function scrollTo(
+  preview: ApplicationPreview<MarkdownBrowserStep>,
+  text: string,
+): void {
+  const near = () =>
+    preview.text.split("\n").slice(0, 5).some((row) => row.includes(text));
+  for (let line = 0; line < 400 && !near(); line += 1) {
+    const before = preview.text;
+    preview.key("down");
+    if (preview.text === before) break;
+  }
+  if (!preview.text.includes(text)) {
+    throw new TypeError(`the Catalogue posture never shows ${text}`);
+  }
+}
+
+/** Drive a browser to one posture without a terminal, as the runtime would. */
+export function markdownBrowserCataloguePreview(
   capabilities: TerminalCapabilities,
   rows: number,
   presentation: CatalogueTerminalPresentation,
   posture: MarkdownBrowserCataloguePosture,
-): MarkdownBrowserState<string> {
-  const single = posture === "single-document" || posture === "single-picker";
-  let state = createMarkdownBrowserState(
+  options: MarkdownBrowserOptions<string> = markdownBrowserOptions,
+): ApplicationPreview<MarkdownBrowserStep> {
+  const { application } = markdownBrowserApplication(
     {
-      ...markdownBrowserOptions,
-      ...(single ? { pickerMinimumRows: 11, documentMinimumRows: 12 } : {}),
+      ...options,
+      ...(posture === "pointer-link" ? { mouse: true } : {}),
     },
-    { columns: capabilities.columns, rows },
+    { respond: () => undefined, closing: () => {} },
+  );
+  const preview = new ApplicationPreview(
+    application,
+    capabilities,
+    rows,
     presentation,
   );
-  if (posture === "initial-picker") return state;
-  state = transitionMarkdownBrowser(state, {
-    kind: "key",
-    key: { kind: "named", name: "enter" },
-  }, capabilities).state;
-  if (posture === "diagram-document" || posture === "chart-document") {
-    const needle = posture === "diagram-document"
-      ? "┌ Review a change"
-      : "┌ Reviews completed by weekday";
-    const row = markdownBrowserDocumentLines(state, capabilities)
-      .findIndex((line) => stripAnsi(line).includes(needle));
-    const maximum = markdownBrowserDocumentMaximumOffset(state, capabilities);
-    return updateMarkdownBrowserState(state, {
-      focusedPane: "document",
-      documentScrollOffset: Math.min(row < 0 ? maximum : row, maximum),
-    });
+  switch (posture) {
+    case "contents":
+      return preview;
+    case "search":
+      return preview.key("/").type("note 1");
+    default:
+      preview.key("enter");
   }
-  if (posture === "single-picker") {
-    state = transitionMarkdownBrowser(state, {
-      kind: "key",
-      key: { kind: "named", name: "tab" },
-    }, capabilities).state;
+  switch (posture) {
+    case "keyboard-link":
+      preview.key("tab");
+      break;
+    case "pointer-link":
+      scrollTo(preview, "external reference");
+      preview.click("external reference");
+      break;
+    case "linked-document":
+      preview.key("tab", "tab", "enter");
+      break;
+    case "internal-destination":
+      preview.key("tab", "enter");
+      break;
+    case "diagram-document":
+      scrollTo(preview, "Review a change");
+      break;
+    case "chart-document":
+      scrollTo(preview, "Reviews completed by weekday");
+      break;
+    default:
+      break;
   }
-  if (posture === "pointer-picker") {
-    state = transitionMarkdownBrowser(state, {
-      kind: "mouse",
-      action: "press",
-      button: "left",
-      column: 4,
-      row: 3,
-      modifiers: { shift: false, alt: false, control: false },
-    }, capabilities).state;
-  }
-  if (
-    posture === "keyboard-link" || posture === "pointer-link" ||
-    posture === "internal-destination"
-  ) {
-    state = transitionMarkdownBrowser(state, {
-      kind: "key",
-      key: { kind: "text", text: "]" },
-    }, capabilities).state;
-  }
-  if (posture === "pointer-link") {
-    state = transitionMarkdownBrowser(state, {
-      kind: "key",
-      key: { kind: "named", name: "escape" },
-    }, capabilities).state;
-    const link = markdownBrowserLinkOccurrences(state, capabilities)[0];
-    const region = link?.regions[0];
-    if (region === undefined) {
-      throw new TypeError("Catalogue pointer posture has no visible link");
-    }
-    const documentTop = state.layout.mode === "split"
-      ? 2 + state.layout.pickerRows
-      : 2;
-    state = transitionMarkdownBrowser(state, {
-      kind: "mouse",
-      action: "press",
-      button: "left",
-      column: region.startColumn + 1,
-      row: documentTop + region.row,
-      modifiers: { shift: false, alt: false, control: false },
-    }, capabilities).state;
-  }
-  if (posture === "internal-destination") {
-    const activated = transitionMarkdownBrowser(state, {
-      kind: "key",
-      key: { kind: "named", name: "enter" },
-    }, capabilities);
-    if (activated.linkRequest === undefined) {
-      throw new TypeError("Catalogue fragment posture has no link request");
-    }
-    state = transitionMarkdownBrowser(activated.state, {
-      kind: "link-resolution",
-      request: activated.linkRequest,
-      resolution: { kind: "fragment", fragment: "navigation-details" },
-    }, capabilities).state;
-  }
-  return state;
+  return preview;
 }
 
-/** Render one deterministic complete-frame browser review posture. */
+/** Render one deterministic browser posture. */
 export function renderMarkdownBrowserCatalogueFrame(
   capabilities: TerminalCapabilities,
   rows: number,
   presentation: CatalogueTerminalPresentation,
-  posture: MarkdownBrowserCataloguePosture = "split-reader",
+  posture: MarkdownBrowserCataloguePosture = "document",
 ): string {
-  return renderMarkdownBrowser(
-    createMarkdownBrowserCatalogueState(
-      capabilities,
-      rows,
-      presentation,
-      posture,
-    ),
+  return markdownBrowserCataloguePreview(
     capabilities,
-  );
+    rows,
+    presentation,
+    posture,
+  ).frame;
 }

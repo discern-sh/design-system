@@ -5,13 +5,15 @@ import { inspectTerminalLayout } from "../../src/cli/projection.ts";
 Deno.test("Markdown browser visual review enrolls every required posture", () => {
   const artifacts = markdownBrowserReviewArtifacts();
   assertEquals(artifacts.map(({ id }) => id), [
-    "initial-picker",
-    "split-reader",
+    "contents",
+    "contents-wide",
+    "narrow-contents",
+    "document",
     "keyboard-link",
     "pointer-link",
-    "pointer-picker",
+    "search",
+    "linked-document",
     "internal-destination",
-    "single-pane",
     "no-color",
     "diagram-document",
     "chart-document",
@@ -46,7 +48,15 @@ Deno.test("Markdown browser visual review enrolls every required posture", () =>
   );
   assertStringIncludes(
     artifacts.find(({ id }) => id === "pointer-link")?.frame ?? "",
-    "◆Read the reference",
+    "◆external reference",
+  );
+  assertStringIncludes(
+    artifacts.find(({ id }) => id === "search")?.frame ?? "",
+    "Reference note 1",
+  );
+  assertStringIncludes(
+    artifacts.find(({ id }) => id === "linked-document")?.frame ?? "",
+    "Supporting material 1",
   );
   assertStringIncludes(
     artifacts.find(({ id }) => id === "internal-destination")?.frame ?? "",

@@ -529,7 +529,7 @@ const markdownBrowserRecipe: CliCompositionRecipe = {
   id: "markdown-browser",
   title: "Markdown browser",
   description:
-    "A keyboard-complete grouped reader with addressable links, caller-owned resolution, and optional terminal-cell pointer input.",
+    "A grouped Markdown reader on the application runtime: contents with a preview, documents with followable links, search, and history — standalone or inside a running application.",
   components: ["markdown"],
   capabilityControls: ["unicode", "colorDepth", "hyperlinks"],
   render: (
@@ -541,42 +541,34 @@ const markdownBrowserRecipe: CliCompositionRecipe = {
       capabilities,
       rows,
       presentation,
-      "split-reader",
+      "keyboard-link",
     ),
   source: `import {
-  createMarkdownBrowserState,
-  renderMarkdownBrowser,
-  transitionMarkdownBrowser,
+  markdownBrowserCommand,
+  requestMarkdownBrowser,
 } from "@discern-sh/design-system/cli/interactive";
 
-const entries = [
-  { kind: "group-heading", id: "guides", label: "Guides" },
-  {
-    kind: "document",
-    id: "start",
-    label: "Getting started",
-    path: "guides/getting-started.md",
-    source: "# Getting started\\n\\n[Details](#details)\\n\\n## Details\\n\\nPackage-supplied Markdown.",
-  },
-  { kind: "exit", id: "quit", label: "Quit" },
-] as const;
+const options = {
+  label: "Documentation",
+  entries: [
+    { kind: "group-heading", id: "guides", label: "Guides" },
+    {
+      kind: "document",
+      id: "start",
+      label: "Getting started",
+      path: "guides/getting-started.md",
+      source: "# Getting started\\n\\n[Details](#details)\\n\\n## Details\\n\\nPackage-supplied Markdown.",
+    },
+    { kind: "action", id: "online", label: "Read online", value: "online" },
+  ],
+} as const;
 
-let state = createMarkdownBrowserState(
-  { label: "Documentation", entries },
-  { columns: capabilities.columns, rows: 24 },
-);
-state = transitionMarkdownBrowser(
-  state,
-  { kind: "key", key: { kind: "named", name: "enter" } },
-  capabilities,
-).state;
-state = transitionMarkdownBrowser(
-  state,
-  { kind: "key", key: { kind: "text", text: "]" } },
-  capabilities,
-).state;
+// On its own screen, until the reader chooses something:
+const output = await requestMarkdownBrowser(options);
 
-const output = renderMarkdownBrowser(state, capabilities);`,
+// Or from a running application's action, on that application's screen:
+onAction: (action) =>
+  action === "manual" ? markdownBrowserCommand(options) : undefined;`,
 };
 
 /** Complete terminal pages shown through the Catalogue layout inspector. */

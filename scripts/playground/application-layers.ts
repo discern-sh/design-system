@@ -625,6 +625,7 @@ export function demoKeysReader(): ApplicationReader<string> {
           ["ctrl-k", "Commands"],
           ["n", "New job…"],
           ["/", "Filter"],
+          ["g", "Guide"],
           ["q", "Quit"],
         ])],
       },

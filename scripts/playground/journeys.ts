@@ -332,10 +332,10 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
   },
   {
     id: "markdown-browser",
-    title: "Markdown browser links and mouse",
+    title: "Markdown browser",
     section: "Interactive APIs",
     description:
-      "A keyboard-complete adaptive reader follows fragments and admitted documents, optionally tracks pointer input, and returns external actions only after restoration.",
+      "A grouped Markdown reader on the application runtime: contents with a preview, search, followable links and history, optional mouse input, and actions returned only after restoration.",
     run: async (runtime) => {
       const theme = await markdownBrowserTheme(runtime);
       let result: MarkdownBrowserResult<string>;
@@ -1116,10 +1116,7 @@ export const interactiveExportCoverage: Readonly<
   >
 > = {
   runTerminalApplication: { journey: "application" },
-  nestTerminalApplication: {
-    excluded:
-      "Runtime composition rather than a screen of its own; the nested application tests drive it end to end.",
-  },
+  nestTerminalApplication: { journey: "application" },
   TerminalNestedApplication: {
     excluded:
       "The opaque payload of a nested command; nothing to show on its own.",
@@ -1237,25 +1234,10 @@ export const interactiveExportCoverage: Readonly<
   withDeterminateProgress: { journey: "progress" },
   withActivityLog: { journey: "activity-log" },
   senseTerminalBackground: { journey: "background" },
-  createMarkdownBrowserState: {
+  markdownBrowserCommand: { journey: "application" },
+  DEFAULT_MARKDOWN_BROWSER_COPY: {
     excluded:
-      "Pure state construction exercised by the Markdown browser journey and Catalogue inspector.",
-  },
-  filterMarkdownBrowserEntries: {
-    excluded:
-      "Pure grouped matcher exercised inside the Markdown browser journey.",
-  },
-  markdownBrowserResumableState: {
-    excluded:
-      "Pure stable-state projection returned by the Markdown browser journey.",
-  },
-  transitionMarkdownBrowser: {
-    excluded:
-      "Pure semantic transition authority driven through requestMarkdownBrowser.",
-  },
-  renderMarkdownBrowser: {
-    excluded:
-      "Pure complete-frame renderer shown by the Catalogue inspector and driven by requestMarkdownBrowser.",
+      "The English words the Markdown browser journey shows; a table of defaults with no interaction of its own.",
   },
   MarkdownBrowserRefusalError: {
     excluded:

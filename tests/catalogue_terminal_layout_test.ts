@@ -66,7 +66,8 @@ Deno.test("Catalogue terminal compositions form one source-backed inventory", ()
       assertStringIncludes(recipe.source, "sequentialTextStep");
       assertStringIncludes(recipe.source, "/cli/interactive");
     } else if (recipe.id === "markdown-browser") {
-      assertStringIncludes(recipe.source, "renderMarkdownBrowser");
+      assertStringIncludes(recipe.source, "requestMarkdownBrowser");
+      assertStringIncludes(recipe.source, "markdownBrowserCommand");
       assertStringIncludes(recipe.source, "/cli/interactive");
     } else {
       assertStringIncludes(recipe.source, "composeCliBlocks");

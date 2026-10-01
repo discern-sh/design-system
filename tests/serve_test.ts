@@ -10,6 +10,7 @@ import {
   catalogueNavigation,
 } from "../catalogue/routes.ts";
 import { glyphAtlasData } from "../src/glyphs/atlas.ts";
+import { markdownBrowserReviewArtifacts } from "../catalogue/markdown-browser-review.ts";
 import { componentExampleImageManifest } from "../catalogue/generated/example-images-manifest.ts";
 import { componentExampleImageThemes } from "../catalogue/example-images/contract.ts";
 
@@ -365,20 +366,9 @@ Deno.test("Catalogue review routes stay outside replaceable build output", async
   );
   assertEquals(review.status, 200);
   const html = await review.text();
-  for (
-    const title of [
-      "Initial full-height picker",
-      "Split picker and Markdown reader",
-      "Keyboard-focused internal link",
-      "Mouse-targeted document link",
-      "Mouse-focused picker pane",
-      "Resolved internal fragment destination",
-      "Single-pane document fallback",
-      "No-colour ASCII reader",
-      "Resize result · 40×24 to 120×30",
-    ] as const
-  ) {
-    assertStringIncludes(html, title);
+  // The served page shows every posture the review defines.
+  for (const artifact of markdownBrowserReviewArtifacts()) {
+    assertStringIncludes(html, artifact.title);
   }
 
   const imageReview = await server.fetch(

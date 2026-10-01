@@ -1,6 +1,6 @@
 # ADR 0024: Address Markdown links through semantic events and opt-in SGR mouse tracking
 
-**Status**: accepted
+**Status**: accepted; amended by [ADR-0054](0054-the-markdown-browser-runs-on-the-application-runtime.md), under which link focus and mouse input follow the application runtime
 
 ## Context
 

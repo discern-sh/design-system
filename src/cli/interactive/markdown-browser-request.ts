@@ -1,386 +1,186 @@
-/** Effect adapter for the link-aware Markdown browser. */
+/**
+ * The Markdown browser on the application runtime: standalone, as one
+ * request that returns what the reader chose, or inside a running
+ * application as a nested application that returns to it.
+ *
+ * @module
+ */
 
-import type { TerminalCapabilities } from "../capabilities.ts";
-import { validateSemanticInlineDestination } from "../semantic-inline.ts";
 import { InteractionCancelled } from "./errors.ts";
-import { DenoTerminalIO, type TerminalIO } from "./io.ts";
+import { DenoTerminalIO } from "./io.ts";
+import { assertInteractiveTerminal } from "./lifecycle.ts";
+import { TERMINAL_APPLICATION_MINIMUM } from "./application/frame.ts";
+import type { TerminalApplicationState } from "./application/model.ts";
 import {
-  type TerminalInputEvent,
-  TerminalInputReader,
-  type TerminalKey,
-} from "./keys.ts";
+  runTerminalApplication,
+  type TerminalApplicationCommand,
+  type TerminalApplicationContext,
+  type TerminalApplicationOptions,
+  type TerminalApplicationRuntime,
+} from "./application/runtime.ts";
 import {
-  assertInteractiveTerminal,
-  withRawTerminalInputCleanup,
-} from "./lifecycle.ts";
+  nestTerminalApplication,
+  type TerminalApplicationNested,
+} from "./application/session.ts";
 import {
-  type MarkdownBrowserInputEvent,
-  transitionMarkdownBrowser,
-} from "./markdown-browser-machine.ts";
-import {
-  createMarkdownBrowserState,
-  type MarkdownBrowserLinkRequest,
-  type MarkdownBrowserLinkResolution,
+  type MarkdownBrowserActionResult,
+  type MarkdownBrowserExitResult,
+  type MarkdownBrowserExternalLinkResult,
+  type MarkdownBrowserHandlers,
   type MarkdownBrowserOptions,
   MarkdownBrowserRefusalError,
   type MarkdownBrowserResult,
-  type MarkdownBrowserState,
 } from "./markdown-browser-model.ts";
-import { drainTerminalMouseInput } from "./mouse-input.ts";
 import {
-  fitMarkdownBrowserState,
-  renderMarkdownBrowser,
-} from "./markdown-browser-renderer.ts";
-import { systemTerminalClock } from "./clock.ts";
-import { TerminalScreenPainter } from "./painter.ts";
-import { signalPassthrough } from "./signals.ts";
-import {
-  AbortMailbox,
-  ResizeMailbox,
-  type TerminalFacts,
-  terminalFacts,
-} from "./owned-viewport.ts";
-import type { InteractionRuntime } from "./types.ts";
+  MARKDOWN_BROWSER_CONTENTS,
+  MARKDOWN_BROWSER_KEYMAP,
+  MarkdownBrowserController,
+  type MarkdownBrowserOutcome,
+  type MarkdownBrowserStep,
+} from "./markdown-browser-view.ts";
 
-type Settled<T> =
-  | { readonly ok: true; readonly value: T }
-  | { readonly ok: false; readonly error: unknown };
+/** Runtime effects for one standalone browser: the application runtime's own. */
+export type MarkdownBrowserRuntime = TerminalApplicationRuntime;
 
-type BrowserRenderer = <Action>(
-  state: MarkdownBrowserState<Action>,
-  capabilities: TerminalCapabilities,
-) => string;
-
-type BrowserInputReader =
-  | { readEvents(): Promise<readonly TerminalInputEvent[] | null> }
-  | { readEvent(): Promise<TerminalInputEvent | null> };
-
-/** Runtime effects and optional cooperative cancellation for one browser. */
-export interface MarkdownBrowserRuntime extends InteractionRuntime {
-  /** Cancel an active read or resolver wait; terminal restoration runs first. */
-  readonly abortSignal?: AbortSignal;
-}
-
-/** Internal renderer seam used to prove effect restoration after render faults. */
-export interface MarkdownBrowserRequestServices {
-  readonly render?: BrowserRenderer;
-  /** Internal decoder seam used to prove restoration after reader faults. */
-  readonly createInputReader?: (io: TerminalIO) => BrowserInputReader;
-}
-
-function browserTerminalFacts(io: TerminalIO): TerminalFacts {
-  if (io.capabilities().ansiControl === false) {
-    throw new MarkdownBrowserRefusalError(
-      "ansi-control-unavailable",
-      io.size(),
-    );
-  }
-  return terminalFacts(io);
-}
-
-function sameGeometry(
-  state: MarkdownBrowserState<unknown>,
-  facts: TerminalFacts,
-): boolean {
-  return state.columns === facts.size.columns && state.rows === facts.size.rows;
-}
-
-function defaultLinkResolution(
-  request: MarkdownBrowserLinkRequest,
-): MarkdownBrowserLinkResolution {
-  const destination = validateSemanticInlineDestination(request.destination);
-  if (destination.startsWith("#")) {
-    return { kind: "fragment", fragment: destination };
-  }
-  if (/^(?:(?:https?|mailto|file):|\/\/)/iu.test(destination)) {
-    return { kind: "external", destination };
-  }
-  return {
-    kind: "unresolved",
-    message: "This document destination needs a caller resolver.",
-  };
-}
-
-async function resolveLink(
-  options: MarkdownBrowserOptions<unknown>,
-  request: MarkdownBrowserLinkRequest,
-  abort: AbortMailbox,
-): Promise<MarkdownBrowserLinkResolution> {
-  const packageResolution = defaultLinkResolution(request);
-  const pending = packageResolution.kind !== "unresolved" ||
-      options.resolveLink === undefined
-    ? Promise.resolve(packageResolution)
-    : Promise.resolve(options.resolveLink({
-      sourceDocumentId: request.sourceDocumentId,
-      sourcePath: request.sourcePath,
-      destination: request.destination,
-      availableDocuments: request.availableDocuments,
-    }));
-  const settled = await Promise.race([
-    pending.then((resolution) => ({ kind: "resolution" as const, resolution })),
-    abort.event,
-  ]);
-  if (settled.kind === "abort") {
-    throw new InteractionCancelled("Cancelled.");
-  }
-  return settled.resolution;
-}
-
-function resizeEvent(facts: TerminalFacts): MarkdownBrowserInputEvent {
-  return {
-    kind: "resize",
-    columns: facts.size.columns,
-    rows: facts.size.rows,
-  };
-}
-
-async function readInputEvents(
-  reader: BrowserInputReader,
-): Promise<readonly TerminalInputEvent[] | null> {
-  if ("readEvents" in reader) return await reader.readEvents();
-  const event = await reader.readEvent();
-  return event === null ? null : [event];
-}
-
-function isControlCancellation(
-  event: TerminalInputEvent,
-): event is { readonly kind: "key"; readonly key: TerminalKey } {
-  return event.kind === "key" && event.key.kind === "named" &&
-    event.key.name === "ctrl-c";
+/** How the application around a browser answers it. */
+interface BrowserAnswer<Action> {
+  readonly respond: (
+    result:
+      | MarkdownBrowserActionResult<Action>
+      | MarkdownBrowserExternalLinkResult,
+  ) => TerminalApplicationCommand | void;
+  /** The browser is closing; with the exit entry chosen, if any. */
+  readonly closing: (exit: MarkdownBrowserExitResult | undefined) => void;
 }
 
 /**
- * Drive the package's real Markdown browser with injectable terminal effects.
- * The internal services parameter exists only for package fault testing;
- * consumers use {@linkcode requestMarkdownBrowser}.
+ * The browser's application options and the controller behind them.
+ * Package-internal: callers run it through `requestMarkdownBrowser` or
+ * `markdownBrowserCommand`.
  */
-export async function runMarkdownBrowserRequest<Action>(
+export function markdownBrowserApplication<Action>(
+  options: MarkdownBrowserOptions<Action>,
+  answer: BrowserAnswer<Action>,
+): {
+  readonly application: TerminalApplicationOptions<MarkdownBrowserStep>;
+  readonly controller: MarkdownBrowserController<Action>;
+} {
+  const controller = new MarkdownBrowserController(options);
+  const apply = (
+    outcome: MarkdownBrowserOutcome<Action>,
+    context: TerminalApplicationContext<MarkdownBrowserStep>,
+  ): TerminalApplicationCommand | void => {
+    if (outcome.close !== undefined) {
+      answer.closing(outcome.close.exit);
+      return { kind: "exit" };
+    }
+    context.update(controller.view());
+    for (const move of outcome.moves ?? []) {
+      if (move.kind === "select") {
+        context.select(MARKDOWN_BROWSER_CONTENTS, move.itemId);
+      } else context.reveal(move.readingId, move.target);
+    }
+    return outcome.result === undefined
+      ? undefined
+      : answer.respond(outcome.result);
+  };
+  return {
+    controller,
+    application: {
+      view: controller.view(),
+      keymap: MARKDOWN_BROWSER_KEYMAP,
+      start: (context) => {
+        apply({ moves: controller.startMoves() }, context);
+      },
+      onSelectionChange: (listId, itemId) => {
+        controller.selected(listId, itemId);
+      },
+      onAction: (step, context) =>
+        apply(controller.step(step, context.state), context),
+      onLink: (link, context) =>
+        apply(controller.link(link, context.state), context),
+      onDismiss: (target, _via, context) => {
+        controller.dismiss(target);
+        context.update(controller.view());
+      },
+      onCommandSettled: (_id, outcome, context) => {
+        if (outcome.status !== "failed") return;
+        controller.failed(outcome.error);
+        context.update(controller.view());
+      },
+    },
+  };
+}
+
+/**
+ * Present a grouped Markdown corpus on its own screen until the reader
+ * chooses an action, an exit, or a link that leaves the documents, then
+ * resolve with it, and with where the reader was, after the terminal is
+ * restored. The contents list every entry with a preview beside it; Enter
+ * opens one, `/` or Ctrl+K searches, `c` returns to the contents, Escape
+ * or Backspace goes back, and `q` closes. Closing from the start, Ctrl+C,
+ * EOF, and an abort raise `InteractionCancelled`. A terminal without ANSI
+ * cursor control, or smaller than the application minimum, is refused with
+ * `MarkdownBrowserRefusalError` before anything changes.
+ */
+export async function requestMarkdownBrowser<Action>(
   options: MarkdownBrowserOptions<Action>,
   runtime: MarkdownBrowserRuntime = {},
-  services: MarkdownBrowserRequestServices = {},
 ): Promise<MarkdownBrowserResult<Action>> {
   if (runtime.abortSignal?.aborted === true) {
     throw new InteractionCancelled("Cancelled.");
   }
   const io = runtime.io ?? new DenoTerminalIO();
   assertInteractiveTerminal(io);
-  const render = services.render ?? renderMarkdownBrowser;
-
-  // Refuse unsupported control and incoherent initial geometry before raw
-  // mode, cursor visibility, or alternate-screen state changes.
-  let facts = browserTerminalFacts(io);
-  let state = fitMarkdownBrowserState(
-    createMarkdownBrowserState(options, facts.size, runtime),
-    facts.capabilities,
-  );
-  let frame = render(state, facts.capabilities);
-
-  // Every changed frame repaints whole and unsynchronized, keeping the
-  // browser's established output until it moves onto the application runtime.
-  const painter = new TerminalScreenPainter(io, systemTerminalClock.now, {
-    synchronized: false,
-    rowDiff: false,
-  });
-  const reader = services.createInputReader?.(io) ??
-    new TerminalInputReader(io);
-  const resize = new ResizeMailbox();
-  const abort = new AbortMailbox(runtime.abortSignal);
-  let stopResizeListener: () => void = () => {};
-  let resizeListening = false;
-  let mouseInputObserved = false;
-  const stopResize = (): void => {
-    if (!resizeListening) return;
-    resizeListening = false;
-    stopResizeListener();
-  };
-  const paintLatestFrame = (): void => {
-    while (
-      painter.paint({ frame, size: facts.size }).status === "resized"
-    ) {
-      const currentFacts = browserTerminalFacts(io);
-      if (!sameGeometry(state, currentFacts)) {
-        state = transitionMarkdownBrowser(
-          state,
-          resizeEvent(currentFacts),
-          currentFacts.capabilities,
-        ).state;
-        frame = render(state, currentFacts.capabilities);
-      }
-      facts = currentFacts;
-    }
-  };
-
-  try {
-    return await withRawTerminalInputCleanup(io, async () => {
-      let outcome: Settled<MarkdownBrowserResult<Action>> | undefined;
-      try {
-        // A resize may have damaged the screen even when the size it ends
-        // at is the one painted, so the next paint is a keyframe.
-        stopResizeListener = io.listenResize?.(() => {
-          painter.invalidate();
-          resize.notify();
-        }) ?? (() => {});
-        resizeListening = true;
-        paintLatestFrame();
-        let paintedState = state;
-
-        let inputRead = readInputEvents(reader).then((events) => ({
-          kind: "input" as const,
-          events,
-        }));
-        let resizeRead = resize.next().then(() => ({
-          kind: "resize" as const,
-        }));
-
-        while (true) {
-          const received = await Promise.race([
-            inputRead,
-            resizeRead,
-            abort.event,
-          ]);
-          if (received.kind === "abort") {
-            throw new InteractionCancelled("Cancelled.");
-          }
-          if (received.kind === "resize") {
-            resizeRead = resize.next().then(() => ({
-              kind: "resize" as const,
-            }));
-          }
-
-          const currentFacts = browserTerminalFacts(io);
-          if (!sameGeometry(state, currentFacts)) {
-            const resized = transitionMarkdownBrowser(
-              state,
-              resizeEvent(currentFacts),
-              currentFacts.capabilities,
-            );
-            state = resized.state;
-            facts = currentFacts;
-            frame = render(state, facts.capabilities);
-            paintLatestFrame();
-            paintedState = state;
-          } else {
-            facts = currentFacts;
-          }
-
-          if (received.kind === "resize") {
-            paintLatestFrame();
-            continue;
-          }
-          const receivedEvents = received.events ?? [];
-          if (
-            options.mouse === true &&
-            facts.capabilities.mouseTracking !== false &&
-            receivedEvents.some((event) => event.kind === "mouse")
-          ) {
-            mouseInputObserved = true;
-          }
-          const cancellation = receivedEvents.find(isControlCancellation);
-          const semanticEvents: readonly MarkdownBrowserInputEvent[] =
-            received.events === null
-              ? [{ kind: "end-of-input" }]
-              : cancellation === undefined
-              ? receivedEvents.flatMap((event): MarkdownBrowserInputEvent[] =>
-                event.kind === "key"
-                  ? [{ kind: "key", key: event.key }]
-                  : event.kind === "mouse" && options.mouse === true &&
-                      facts.capabilities.mouseTracking !== false
-                  ? [event]
-                  : []
-              )
-              : [{ kind: "key", key: cancellation.key }];
-
-          for (const event of semanticEvents) {
-            const next = transitionMarkdownBrowser(
-              state,
-              event,
-              facts.capabilities,
-            );
-            state = next.state;
-            let settled = next;
-            if (next.linkRequest !== undefined) {
-              const resolution = await resolveLink(
-                options,
-                next.linkRequest,
-                abort,
-              );
-              const resolvedFacts = browserTerminalFacts(io);
-              if (!sameGeometry(state, resolvedFacts)) {
-                state = transitionMarkdownBrowser(
-                  state,
-                  resizeEvent(resolvedFacts),
-                  resolvedFacts.capabilities,
-                ).state;
-              }
-              facts = resolvedFacts;
-              settled = transitionMarkdownBrowser(state, {
-                kind: "link-resolution",
-                request: next.linkRequest,
-                resolution,
-              }, facts.capabilities);
-              state = settled.state;
-            }
-            if (settled.result?.kind === "cancelled") {
-              throw new InteractionCancelled(settled.result.reason);
-            }
-            if (settled.result !== undefined) {
-              outcome = { ok: true, value: settled.result };
-              break;
-            }
-          }
-          if (outcome !== undefined) break;
-
-          if (state !== paintedState) {
-            frame = render(state, facts.capabilities);
-            paintLatestFrame();
-            paintedState = state;
-          }
-          inputRead = readInputEvents(reader).then((events) => ({
-            kind: "input" as const,
-            events,
-          }));
-        }
-      } catch (error) {
-        outcome = { ok: false, error };
-      }
-
-      if (outcome === undefined) {
-        throw new TypeError("Markdown browser ended without a result.");
-      }
-
-      try {
-        stopResize();
-      } catch (cleanupError) {
-        if (outcome.ok) throw cleanupError;
-      }
-      if (!outcome.ok) throw outcome.error;
-      return outcome.value;
-    }, {
-      ...signalPassthrough(runtime),
-      alternateScreen: true,
-      mouseTracking: options.mouse === true,
-      afterMouseDisable: () => {
-        if (!mouseInputObserved) return;
-        return drainTerminalMouseInput(io);
-      },
-      onSignalRestore: stopResize,
-    });
-  } finally {
-    abort.stop();
+  const size = io.size();
+  if (io.capabilities().ansiControl === false) {
+    throw new MarkdownBrowserRefusalError("ansi-control-unavailable", size);
   }
+  if (
+    size.columns < TERMINAL_APPLICATION_MINIMUM.columns ||
+    size.rows < TERMINAL_APPLICATION_MINIMUM.rows
+  ) {
+    throw new MarkdownBrowserRefusalError("terminal-too-small", size);
+  }
+  let result: MarkdownBrowserResult<Action> | undefined;
+  const { application } = markdownBrowserApplication(options, {
+    respond: (chosen) => {
+      result = chosen;
+      return { kind: "exit" };
+    },
+    closing: (exit) => {
+      result = exit;
+    },
+  });
+  await runTerminalApplication(application, { ...runtime, io });
+  if (result === undefined) throw new InteractionCancelled("Dismissed.");
+  return result;
 }
 
 /**
- * Present a searchable grouped Markdown corpus in an owned terminal viewport.
- * Actions, exits, and external links return only after mouse tracking, raw
- * mode, cursor visibility, resize observation, and the normal screen have
- * been restored. Ctrl+C, Escape from the picker, end-of-input, and cooperative
- * abort raise the established
- * {@linkcode InteractionCancelled} error.
+ * A command that opens the Markdown browser on a running application's
+ * screen, in place of it, and returns there when the reader closes it —
+ * with `q`, Escape from where it started, an exit entry, or Ctrl+C, which
+ * then reaches the application as Ctrl+C. `respond` answers a chosen
+ * action or a link that leaves the documents while the browser stays open;
+ * `onClose` runs as one of the application's own callbacks with where the
+ * reader was, so opening the browser again with that `initialState`
+ * resumes there.
  */
-export async function requestMarkdownBrowser<Action>(
+export function markdownBrowserCommand<Action>(
   options: MarkdownBrowserOptions<Action>,
-  runtime: MarkdownBrowserRuntime = {},
-): Promise<MarkdownBrowserResult<Action>> {
-  return await runMarkdownBrowserRequest(options, runtime);
+  handlers: MarkdownBrowserHandlers<Action> = {},
+): TerminalApplicationNested {
+  let exit: MarkdownBrowserExitResult | undefined;
+  const { application, controller } = markdownBrowserApplication(options, {
+    respond: (chosen) => handlers.respond?.(chosen),
+    closing: (chosen) => {
+      exit = chosen;
+    },
+  });
+  return nestTerminalApplication(
+    application,
+    (state: TerminalApplicationState) =>
+      handlers.onClose?.(controller.resumable(state), exit),
+  );
 }

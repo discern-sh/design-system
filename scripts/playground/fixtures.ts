@@ -117,28 +117,27 @@ export const markdownBrowserEntries = [
     path: "guides/getting-started.md",
     source: `# Getting started
 
-Search the grouped picker, then press Enter to open a document.
+Choose a document in the contents, then press Enter to read it.
 
-> The picker and document keep independent scroll positions.
+> Every document keeps its own place, so Back returns to where you were.
 
 ## Keyboard
 
-- Type to search while the picker has focus.
-- Use **Tab** and **Shift+Tab** to move between panes.
-- Use Page Up, Page Down, Home, and End in the focused pane.
-- Use **]** and **[** to traverse links; Enter follows the focused link.
-- Press Escape or \`q\` in the document to return to the full-height picker.
+- Press **/** or **Ctrl+K** to search every document and action.
+- Use the arrows, Page Up, Page Down, Home, and End to read.
+- Use **Tab** and **Shift+Tab** to move between links; Enter follows one.
+- Press Escape or Backspace to go back, \`c\` for the contents, and \`q\` to close.
 
 [Jump to links and mouse](#links-and-mouse), [open the testing guide](testing.md#fake-terminal), or return an [external destination](https://example.test/design-system/reader).
 
-| Terminal | Layout |
+| Terminal | Contents |
 | --- | --- |
-| Ordinary height | Split picker and reader |
-| Constrained height | One focused pane |
+| Wide | Beside a preview of the document |
+| Narrow | Above a one-line summary |
 
 ## Links and mouse
 
-Keyboard access is complete. Optional mouse tracking adds picker clicks, link activation, and pane-local wheel scrolling.
+Keyboard access is complete. Optional mouse input adds clicks on rows and links and wheel scrolling.
 
 ${
       Array.from(

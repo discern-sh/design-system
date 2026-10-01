@@ -467,9 +467,26 @@ Deno.test("the publish-shaped artifact serves the neutral consumer alone", async
         2,
       ),
     );
-    // The sample spans files that import each other by their own names.
+    // The sample spans files that import each other by their own names;
+    // follow those imports, so a module the sample gains is copied too.
     await Deno.mkdir(join(consumer, "sample"));
-    for (const file of ["application.ts", "application-layers.ts"]) {
+    const sample = new Set<string>();
+    const pending = ["application.ts"];
+    for (
+      let file = pending.shift();
+      file !== undefined;
+      file = pending.shift()
+    ) {
+      if (sample.has(file)) continue;
+      sample.add(file);
+      const source = await Deno.readTextFile(
+        join(PACKAGE_ROOT, "scripts/playground", file),
+      );
+      for (const match of source.matchAll(/from "\.\/([^"]+\.ts)"/gu)) {
+        if (match[1] !== undefined) pending.push(match[1]);
+      }
+    }
+    for (const file of sample) {
       await Deno.copyFile(
         join(PACKAGE_ROOT, "scripts/playground", file),
         join(consumer, "sample", file),
@@ -708,7 +725,7 @@ const decodedMouse = await new TerminalInputReader(mouseIo).readEvent();
 const mouseBatchIo = new FakeTerminalIO([encodeTerminalMouseEvent(mouseEvent)]);
 const decodedMouseBatch = await new TerminalInputReader(mouseBatchIo).readEvents();
 const browserIo = new FakeTerminalIO(
-  ["online", encodeTerminalKeys("enter")],
+  ["/online", encodeTerminalKeys("enter")],
   { colorDepth: "truecolor", columns: 40, rows: 24 },
 );
 const browserResult = await requestMarkdownBrowser({

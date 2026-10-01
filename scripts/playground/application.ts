@@ -6,22 +6,25 @@ import {
   type TerminalGlyph,
   type TerminalTextTone,
 } from "@discern-sh/design-system/cli";
-import type {
-  ApplicationDetailBlock,
-  ApplicationDetailMark,
-  ApplicationDetailRow,
-  ApplicationDetailStrip,
-  ApplicationGlyph,
-  ApplicationKeyBinding,
-  ApplicationLayer,
-  ApplicationListGroup,
-  ApplicationListItem,
-  ApplicationMessage,
-  ApplicationRun,
-  TerminalApplicationContext,
-  TerminalApplicationOptions,
-  TerminalApplicationView,
+import {
+  type ApplicationDetailBlock,
+  type ApplicationDetailMark,
+  type ApplicationDetailRow,
+  type ApplicationDetailStrip,
+  type ApplicationGlyph,
+  type ApplicationKeyBinding,
+  type ApplicationLayer,
+  type ApplicationListGroup,
+  type ApplicationListItem,
+  type ApplicationMessage,
+  type ApplicationRun,
+  markdownBrowserCommand,
+  type MarkdownBrowserResumableState,
+  type TerminalApplicationContext,
+  type TerminalApplicationOptions,
+  type TerminalApplicationView,
 } from "@discern-sh/design-system/cli/interactive";
+import { demoGuideOptions } from "./application-guide.ts";
 import {
   demoActionsMenu,
   demoDeleteSheet,
@@ -423,7 +426,11 @@ export function applicationDemoView(
         key: "ctrl-k",
         label: "Commands",
       }],
-      extra: [{ key: "/", label: "Filter" }, { key: "q", label: "Quit" }],
+      extra: [
+        { key: "/", label: "Filter" },
+        { key: "g", label: "Guide" },
+        { key: "q", label: "Quit" },
+      ],
     },
     ...(options.layers === undefined || options.layers.length === 0
       ? {}
@@ -443,6 +450,7 @@ export const DEMO_KEYMAP: readonly ApplicationKeyBinding<string>[] = [
   { key: "?", action: "keys" },
   { key: "r", action: "rerun" },
   { key: "D", action: "delete" },
+  { key: "g", action: "guide" },
   {
     key: "ctrl-k",
     action: "palette-close",
@@ -503,6 +511,8 @@ export function applicationDemoOptions(
     : DEMO_TIP;
   let layers: readonly ApplicationLayer<string>[] = [];
   let mouse = false;
+  /** Where the reader left the guide, so opening it again resumes there. */
+  let guide: MarkdownBrowserResumableState | undefined;
   let selected: string | undefined = DEMO_JOBS[0]?.id;
   let form: DemoFormValues = { title: "", schedule: "daily", notes: "" };
   let live: TerminalApplicationContext<string> | undefined;
@@ -587,6 +597,13 @@ export function applicationDemoOptions(
         case "keys":
           open(demoKeysReader());
           break;
+        case "guide":
+          // The guide runs on this screen and returns here when it closes.
+          return markdownBrowserCommand(demoGuideOptions(mouse, guide), {
+            onClose(state) {
+              guide = state;
+            },
+          });
         case "new":
           form = { title: "", schedule: "daily", notes: "" };
           open(demoNewJobForm(form));

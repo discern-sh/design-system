@@ -12,8 +12,10 @@ import {
   SHOW_TERMINAL_CURSOR,
   type SpinnerScheduler,
 } from "../../src/cli/interactive/mod.ts";
-import { createMarkdownBrowserState } from "../../src/cli/interactive/markdown-browser-model.ts";
-import { renderMarkdownBrowser } from "../../src/cli/interactive/markdown-browser-renderer.ts";
+import { applicationTerminalCapabilities } from "../../src/cli/capabilities.ts";
+import { markdownBrowserApplication } from "../../src/cli/interactive/markdown-browser-request.ts";
+import { END_SYNCHRONIZED_UPDATE } from "../../src/cli/interactive/painter.ts";
+import { ApplicationPreview } from "../../catalogue/application-preview.ts";
 import { cliComponentRegistry } from "../../src/generated/cli-registry.ts";
 import { componentGroups } from "../../src/types/component-meta.ts";
 import { terminalFoundationSheets } from "../../catalogue/terminal-foundations.ts";
@@ -48,7 +50,10 @@ import {
   resolvePlaygroundSelection,
   runPlayground,
 } from "../../scripts/playground-cli.ts";
-import { FakeTerminalIO } from "../../src/cli/interactive/testing.ts";
+import {
+  FakeTerminalIO,
+  settledTerminalFrame,
+} from "../../src/cli/interactive/testing.ts";
 
 const ENTER = "\r";
 const DOWN = "\x1b[B";
@@ -266,7 +271,7 @@ Deno.test("reading-foundation journeys expose path search and compact cleanup", 
   assert(!browsing.output().includes("[active]"));
   assert(!browsing.output().includes("Submitted"));
 
-  const reader = new FakeTerminalIO(["docs online\r"], {
+  const reader = new FakeTerminalIO(["/docs online\r"], {
     columns: 80,
     rows: 24,
   });
@@ -306,7 +311,6 @@ Deno.test("Markdown playground senses light and dark ground before choosing the 
     entries: markdownBrowserEntries,
     mouse: true,
   } as const;
-  const framePrefix = "\x1b[2J\x1b[H";
   for (
     const [report, theme] of [
       ["ffff/ffff/ffff", "light"],
@@ -315,7 +319,7 @@ Deno.test("Markdown playground senses light and dark ground before choosing the 
   ) {
     const io = new FakeTerminalIO([
       `\x1b]11;rgb:${report}\x1b\\`,
-      `docs online${ENTER}`,
+      `/docs online${ENTER}`,
     ], {
       columns: 80,
       rows: 24,
@@ -325,14 +329,23 @@ Deno.test("Markdown playground senses light and dark ground before choosing the 
       await runJourney(journey("markdown-browser"), testRuntime(io)),
       "completed",
     );
-    const frame = io.writes.find((write) => write.startsWith(framePrefix))
-      ?.slice(framePrefix.length).replaceAll("\r\n", "\n");
-    const expected = renderMarkdownBrowser(
-      createMarkdownBrowserState(options, { columns: 80, rows: 24 }, {
-        theme,
-      }),
-      io.capabilities(),
+    // The first paint, before any key, is the reader's opening frame.
+    const output = io.output();
+    const first = output.slice(
+      0,
+      output.indexOf(END_SYNCHRONIZED_UPDATE) + END_SYNCHRONIZED_UPDATE.length,
     );
+    const frame = settledTerminalFrame(first, { columns: 80, rows: 24 });
+    const { application } = markdownBrowserApplication(options, {
+      respond: () => undefined,
+      closing: () => {},
+    });
+    const expected = new ApplicationPreview(
+      application,
+      applicationTerminalCapabilities(io.capabilities()),
+      24,
+      { theme },
+    ).frame;
     assertEquals(frame, expected, `${theme} ground must select ${theme} ink`);
   }
 });

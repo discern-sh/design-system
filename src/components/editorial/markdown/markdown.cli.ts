@@ -96,7 +96,7 @@ export interface MarkdownCliProjectedHeading {
   readonly projectionTarget: string;
 }
 
-/** Browser-specific semantic facts paired with package-rendered Markdown. */
+/** Link and heading facts paired with package-rendered Markdown for interactive reading. */
 export interface MarkdownCliProjection {
   readonly output: string;
   readonly links: readonly MarkdownCliProjectedLink[];
@@ -461,10 +461,11 @@ function renderMarkdownDocument(
 }
 
 /**
- * Render Markdown with browser-only synthetic link and heading identities.
- * The identities travel through the normal Component wrapping path as OSC 8
- * targets, then the browser's projection authority remaps or removes them
- * before terminal output. They never reach a caller's terminal unchanged.
+ * Render Markdown with synthetic link and heading identities for an
+ * interactive reading body. The identities travel through the normal
+ * Component wrapping path as OSC 8 targets, then the reading projection
+ * remaps or removes them before terminal output. They never reach a
+ * caller's terminal unchanged.
  */
 export function renderMarkdownCliProjection(
   props: MarkdownCliProps,
