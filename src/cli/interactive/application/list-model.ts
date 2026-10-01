@@ -64,6 +64,11 @@ export interface ListRows<A> {
   readonly rows: readonly ListRow<A>[];
   /** Item rows before each index; one longer than `rows`. */
   readonly itemPrefix: readonly number[];
+  /**
+   * Items the rows before each index stand for, counting the items a fold
+   * row holds; one longer than `rows`. Overflow markers count with it.
+   */
+  readonly heldPrefix: readonly number[];
   /** For each row, the index of its group's header, or -1. */
   readonly headerOf: readonly number[];
   /** Items the filter matched, or every item without a filter. */
@@ -251,10 +256,20 @@ export function flattenList<A>(
     }
   }
   const itemPrefix = [0];
+  const heldPrefix = [0];
   for (const row of rows) {
     itemPrefix.push((itemPrefix.at(-1) ?? 0) + (row.kind === "item" ? 1 : 0));
+    heldPrefix.push(
+      (heldPrefix.at(-1) ?? 0) +
+        (row.kind === "item" ? 1 : row.kind === "fold"
+          ? row.groups.reduce(
+            (sum, folded) => sum + folded.group.items.length,
+            0,
+          )
+          : 0),
+    );
   }
-  return { rows, itemPrefix, headerOf, matched, total };
+  return { rows, itemPrefix, heldPrefix, headerOf, matched, total };
 }
 
 /** The key a selectable row carries, or undefined for blanks and fixed headers. */

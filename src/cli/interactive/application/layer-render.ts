@@ -19,16 +19,18 @@ import {
   wrapStyledText,
 } from "../../text.ts";
 import type { TerminalSurfaceRole, TerminalTextTone } from "../../theme.ts";
-import { renderDetailBlocks } from "./detail-render.ts";
+import { hintsKeyWidth, renderDetailBlocks } from "./detail-render.ts";
 import type { ApplicationHit, ApplicationHitTarget } from "./hits.ts";
 import {
   buttonControl,
+  buttonRowShown,
   disclosureControl,
   fieldControl,
   groupControl,
   isTextControl,
   itemControl,
   type LayerControl,
+  parseControl,
   sheetChallengeShown,
   UNAVAILABLE_SECTION,
   unavailableControl,
@@ -39,7 +41,7 @@ import {
   requiresFullRead,
   type TerminalApplicationLayerModel,
 } from "./layer-model.ts";
-import { menuRows, paletteRows } from "./layer-search.ts";
+import { menuRows, paletteRows, unavailableMenuItem } from "./layer-search.ts";
 import type {
   ActivityStep,
   ActivitySteps,
@@ -52,7 +54,9 @@ import type {
   FormChoiceField,
   FormTextField,
   LayerDisclosure,
+  UnavailableMenuItem,
 } from "./layer-view.ts";
+import type { DetailBlock } from "./view.ts";
 import {
   clip,
   fitLine,
@@ -873,6 +877,11 @@ function panelFoot<A>(
       : moved
       ? ""
       : styleRuns(context, layer.footnote, RAISED, "faint");
+    if (!buttonRowShown(layer)) {
+      return left === ""
+        ? []
+        : [{ text: truncateStyledText(left, width, ellipsis(context)) }];
+    }
     return buttonRows(context, layer, fitted, left, width);
   };
 }
@@ -1424,6 +1433,35 @@ function menuItemRow(
   return highlighted ? fitLine(context, text, width, "selection") : text;
 }
 
+/**
+ * An unavailable menu row: its mark and muted label, and inline beside a
+ * section's own items, its sentence in faint text.
+ */
+function unavailableRow(
+  context: PaintContext,
+  item: UnavailableMenuItem,
+  width: number,
+  highlighted: boolean,
+  inline: boolean,
+): string {
+  const surface: TerminalSurfaceRole = highlighted ? "selection" : RAISED;
+  const reason = inline
+    ? `  ${ink(context, item.sentence, { tone: "faint" }, surface)}`
+    : "";
+  const text = truncateStyledText(
+    `${
+      ink(context, terminalGlyph("unavailable", context.capabilities), {
+        tone: "faint",
+      }, surface)
+    } ${
+      ink(context, item.label, { tone: "muted", bold: highlighted }, surface)
+    }${reason}`,
+    width,
+    ellipsis(context),
+  );
+  return highlighted ? fitLine(context, text, width, "selection") : text;
+}
+
 function menuPanel<A>(
   context: PaintContext,
   menu: ApplicationMenu<A>,
@@ -1479,6 +1517,19 @@ function menuPanel<A>(
             columnWidth,
             highlighted,
             item.tone === "danger" ? "danger" : "ink",
+          ),
+          control,
+        });
+      }
+      for (const item of entry.unavailable) {
+        const control = unavailableControl(item.id);
+        lines.push({
+          text: unavailableRow(
+            context,
+            item,
+            columnWidth,
+            model.focus === control,
+            true,
           ),
           control,
         });
@@ -1572,21 +1623,8 @@ function menuPanel<A>(
       for (const item of rows.unavailable) {
         const control = unavailableControl(item.id);
         const highlighted = model.focus === control;
-        const surface: TerminalSurfaceRole = highlighted ? "selection" : RAISED;
-        const text = `${
-          ink(context, terminalGlyph("unavailable", context.capabilities), {
-            tone: "faint",
-          }, surface)
-        } ${
-          ink(
-            context,
-            item.label,
-            { tone: "muted", bold: highlighted },
-            surface,
-          )
-        }`;
         body.push({
-          text: highlighted ? fitLine(context, text, width, "selection") : text,
+          text: unavailableRow(context, item, width, highlighted, false),
           hits: [{
             start: 0,
             end: width,
@@ -1608,7 +1646,10 @@ function menuPanel<A>(
         runs: item.description,
       }))
     ),
-    ...(menu.unavailable?.items ?? []).map((item) => ({
+    ...[
+      ...menu.sections.flatMap((section) => section.unavailable ?? []),
+      ...(menu.unavailable?.items ?? []),
+    ].map((item) => ({
       label: "",
       runs: [{ text: item.sentence }] as readonly InlineRun[],
     })),
@@ -1639,14 +1680,20 @@ function menuPanel<A>(
     footOverflow: false,
     follow: model.focus,
     foot: () => {
-      if (reserved === 0) return [];
+      const footnote = menu.footnote === undefined
+        ? []
+        : wrapRuns(context, menu.footnote, width, "faint").map((text) => ({
+          text,
+        }));
+      if (reserved === 0) return footnote;
       const control = model.focus;
       const item = menu.sections.flatMap((section) => section.items).find((
         candidate,
       ) => itemControl(candidate.id) === control);
-      const unavailable = menu.unavailable?.items.find((candidate) =>
-        unavailableControl(candidate.id) === control
-      );
+      const { kind, id } = parseControl(control);
+      const unavailable = kind === "unavailable"
+        ? unavailableMenuItem(menu, id)
+        : undefined;
       // Whatever is highlighted names itself at least, so the space held
       // for descriptions never stands empty.
       const lines = item !== undefined
@@ -1660,7 +1707,7 @@ function menuPanel<A>(
         : [];
       const padded: PanelRow[] = lines.map((text) => ({ text }));
       while (padded.length < reserved) padded.push(BLANK);
-      return padded;
+      return [...padded, ...(footnote.length > 0 ? [BLANK, ...footnote] : [])];
     },
   };
 }
@@ -1781,6 +1828,9 @@ function palettePanel<A>(
 
 // ── Readers ──────────────────────────────────────────────────────────────
 
+/** The narrowest reader that lays its blocks in two columns. */
+const READER_TWO_COLUMNS = 70;
+
 /** The control a reader's selected row carries, so the panel follows it. */
 const READER_SELECTION: LayerControl = "rows:selected";
 
@@ -1792,11 +1842,14 @@ function readerPanel<A>(
 ): Panel {
   const aside = styleRuns(context, reader.aside, RAISED, "faint");
   const head = headRows(context, reader.title, aside, width);
-  const body: PanelRow[] = renderDetailBlocks(context, reader.blocks, {
-    width,
-    wide: true,
-    surface: RAISED,
-  }).map((text) => ({ text }));
+  const body: PanelRow[] =
+    (reader.columns === 2 && width >= READER_TWO_COLUMNS
+      ? twoColumns(context, reader.blocks, width)
+      : renderDetailBlocks(context, reader.blocks, {
+        width,
+        wide: true,
+        surface: RAISED,
+      })).map((text) => ({ text }));
   if (rows !== undefined) {
     if (body.length > 0) body.push(BLANK);
     for (const [index, line] of rows.lines.entries()) {
@@ -1814,6 +1867,14 @@ function readerPanel<A>(
       });
     }
   }
+  if (reader.footnote !== undefined && reader.footnote.length > 0) {
+    if (body.length > 0) body.push(BLANK);
+    body.push(
+      ...wrapRuns(context, reader.footnote, width, "faint").map((text) => ({
+        text,
+      })),
+    );
+  }
   return {
     head,
     body,
@@ -1822,6 +1883,54 @@ function readerPanel<A>(
     ...(rows?.selected === undefined ? {} : { follow: READER_SELECTION }),
     foot: () => [],
   };
+}
+
+/**
+ * Blocks in two columns read top to bottom, left then right: the first
+ * column takes blocks until it holds at least half the lines, and no block
+ * splits.
+ */
+function twoColumns(
+  context: PaintContext,
+  blocks: readonly DetailBlock[],
+  width: number,
+): readonly string[] {
+  const gap = 3;
+  const columnWidth = Math.floor((width - gap) / 2);
+  const render = (part: readonly DetailBlock[]) =>
+    part.flatMap((block, index) => [
+      ...(index === 0 ? [] : [""]),
+      ...renderDetailBlocks(context, [block], {
+        width: columnWidth,
+        wide: true,
+        surface: RAISED,
+        keyWidth: hintsKeyWidth(context, part),
+      }),
+    ]);
+  const shown = blocks.filter((block) => render([block]).length > 0);
+  // The first column takes the blocks that keep the taller column lowest.
+  let best: readonly [readonly string[], readonly string[]] = [
+    render(shown),
+    [],
+  ];
+  for (let at = 1; at < shown.length; at += 1) {
+    const left = render(shown.slice(0, at));
+    const right = render(shown.slice(at));
+    if (
+      Math.max(left.length, right.length) <
+        Math.max(...best.map((part) => part.length))
+    ) {
+      best = [left, right];
+    }
+  }
+  const [left, right] = best;
+  return Array.from(
+    { length: Math.max(left.length, right.length) },
+    (_, index) =>
+      `${padText(left[index] ?? "", columnWidth)}${" ".repeat(gap)}${
+        right[index] ?? ""
+      }`,
+  );
 }
 
 /**

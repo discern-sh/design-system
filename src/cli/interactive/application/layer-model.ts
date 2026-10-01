@@ -12,6 +12,7 @@ import type { TerminalKey } from "../keys.ts";
 import { decodableChord, keyChordOf } from "./keymap.ts";
 import {
   buttonControl,
+  buttonRowShown,
   disclosureControl,
   formTextFields,
   initialControl,
@@ -698,6 +699,8 @@ function activate<A>(
   const control = parseControl(model.focus);
   switch (control.kind) {
     case "button": {
+      // A hidden button row offers nothing to Enter; Escape stays safe.
+      if (!buttonRowShown(layer)) return model;
       const button = layer.buttons.find((candidate) =>
         candidate.id === control.id
       );
@@ -826,13 +829,15 @@ function menuKey<A>(
       });
       return highlight(itemControl(item.id));
     }
-    const unavailable = layer.unavailable?.items.find((candidate) =>
-      sameChord(candidate.key, chord)
-    );
+    const unavailable = [
+      ...layer.sections.flatMap((section) => section.unavailable ?? []),
+      ...(layer.unavailable?.items ?? []),
+    ].find((candidate) => sameChord(candidate.key, chord));
     if (unavailable !== undefined) {
+      const folded = layer.unavailable?.items.includes(unavailable) === true;
       return {
         ...model,
-        unavailableOpen: true,
+        unavailableOpen: folded || model.unavailableOpen,
         focus: unavailableControl(unavailable.id),
         reveal: unavailableControl(unavailable.id),
         why: unavailable.id,

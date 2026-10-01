@@ -210,10 +210,7 @@ export type DetailBlock =
   }
   | {
     readonly kind: "marks";
-    readonly items: readonly {
-      readonly mark: ApplicationGlyph;
-      readonly runs: readonly InlineRun[];
-    }[];
+    readonly items: readonly DetailMark[];
   }
   | {
     readonly kind: "hints";
@@ -224,6 +221,14 @@ export type DetailBlock =
       readonly primary?: boolean;
     }[];
   }
+  | {
+    readonly kind: "rows";
+    /** A fixed column before the text, such as a short id. */
+    readonly lead?: ListColumn;
+    /** Trailing aligned columns, dropping by priority like a list's. */
+    readonly columns?: readonly ListColumn[];
+    readonly items: readonly DetailRow[];
+  }
   | { readonly kind: "block"; readonly content: CliBlock }
   | { readonly kind: "pending"; readonly label: string }
   | {
@@ -233,6 +238,27 @@ export type DetailBlock =
     readonly caption?: string;
     readonly blocks: readonly DetailBlock[];
   };
+
+/**
+ * One consequence line: a one-cell mark, its text, and indented lines that
+ * belong to it, such as the files a step touched.
+ */
+export interface DetailMark {
+  readonly mark: ApplicationGlyph;
+  readonly runs: readonly InlineRun[];
+  /** Lines hanging under the text, each wrapped on its own. */
+  readonly lines?: readonly (readonly InlineRun[])[];
+}
+
+/**
+ * One aligned row: an optional lead cell, text that takes the remaining
+ * width, and cells for the block's trailing columns.
+ */
+export interface DetailRow {
+  readonly lead?: readonly InlineRun[];
+  readonly text: readonly InlineRun[];
+  readonly cells?: Readonly<Record<string, readonly InlineRun[]>>;
+}
 
 /** The compact summary a narrow screen shows above the footer. */
 export interface DetailStrip {
@@ -402,6 +428,11 @@ export interface TerminalApplicationView<A> {
   readonly windowTitle?: string;
   /** Runtime preferences; mouse input stays off unless requested. */
   readonly input?: TerminalApplicationInputPreferences;
+  /**
+   * Hints the too-small notice shows beneath the size it needs, such as a
+   * way to quit. Each must name a base binding, which still runs there.
+   */
+  readonly tooSmallHints?: readonly KeyHint[];
   /**
    * Replacements for the words the package writes — generated hint
    * labels, empty states, counts, the challenge hint, the too-small notice

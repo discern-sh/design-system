@@ -10,6 +10,7 @@
 import type { KeyHint, KeyHints } from "../../key-hints.ts";
 import type { TerminalApplicationCopy } from "./copy.ts";
 import {
+  buttonRowShown,
   isTextControl,
   type LayerControl,
   parseControl,
@@ -72,14 +73,19 @@ function panelHints<A>(
   copy: TerminalApplicationCopy,
 ): KeyHints {
   const inField = isTextControl(layer, model.focus);
-  const onButton = parseControl(model.focus).kind === "button";
+  const shown = buttonRowShown(layer);
+  const onButton = shown && parseControl(model.focus).kind === "button";
   const field = layer.kind === "form"
     ? formField(layer, parseControl(model.focus).id)
     : undefined;
   const fields = layer.kind === "form" ? layer.fields.length : 0;
   const safe = safeButton(layer);
   const hints: KeyHint[] = [
-    ...enterHint(focusedLabel(layer, model, model.focus, copy)),
+    ...enterHint(
+      shown || parseControl(model.focus).kind !== "button"
+        ? focusedLabel(layer, model, model.focus, copy)
+        : undefined,
+    ),
     ...(onButton && layer.buttons.length > 1
       ? [{ key: ["left", "right"], label: copy.choose }]
       : []),

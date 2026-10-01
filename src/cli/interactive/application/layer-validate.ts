@@ -311,6 +311,15 @@ function sheet<A>(
     challenge !== undefined,
   );
   const activity = layer.activity;
+  if (layer.buttonRow !== undefined && typeof layer.buttonRow !== "boolean") {
+    issues.push({ path: `${path}.buttonRow`, message: "must be a boolean" });
+  }
+  if (layer.buttonRow === false && activity === undefined) {
+    issues.push({
+      path: `${path}.buttonRow`,
+      message: "may hide buttons only in progress mode",
+    });
+  }
   if (activity === undefined) return;
   const roles = layer.buttons.map((button) => button.role);
   if (
@@ -408,7 +417,17 @@ function menu<A>(
       runs(issues, `${where}.detail`, item.detail);
       runs(issues, `${where}.description`, item.description);
     }
+    for (const [position, item] of (section.unavailable ?? []).entries()) {
+      const where = `${at}.unavailable[${position}]`;
+      unique(where, item.id);
+      text(issues, `${where}.label`, item.label);
+      text(issues, `${where}.sentence`, item.sentence);
+      if (item.key !== undefined) {
+        keys.claim(`${where}.key`, item.key, `item ${item.id}`);
+      }
+    }
   }
+  runs(issues, `${path}.footnote`, layer.footnote);
   if (layer.unavailable !== undefined) {
     text(issues, `${path}.unavailable.title`, layer.unavailable.title);
     for (const [index, item] of layer.unavailable.items.entries()) {
@@ -608,6 +627,12 @@ function reader<A>(
   text(issues, `${path}.title`, layer.title);
   runs(issues, `${path}.aside`, layer.aside);
   blocks(issues, `${path}.blocks`, layer.blocks);
+  runs(issues, `${path}.footnote`, layer.footnote);
+  if (
+    layer.columns !== undefined && layer.columns !== 1 && layer.columns !== 2
+  ) {
+    issues.push({ path: `${path}.columns`, message: "must be 1 or 2" });
+  }
   if (layer.rows !== undefined) {
     list(issues, `${path}.rows`, layer.rows);
     // Selection is remembered by list id, so two lists may not share one.

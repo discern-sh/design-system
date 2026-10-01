@@ -623,6 +623,7 @@ function crumb<A>(
   rows: ListRows<A>,
   selected: number,
   width: number,
+  filtered: boolean,
 ): string {
   const row = rows.rows[selected];
   const itemId = row?.kind === "item" ? row.item.id : undefined;
@@ -637,13 +638,20 @@ function crumb<A>(
       ink(context, separator, { tone: "faint" }, "surface")
     }${ink(context, row.item.title, { tone: "muted" }, "surface")}`
     : "";
+  // The position counts the list's membership, so it reads the same at
+  // every size whatever folds; a filter counts what it matched.
+  const members = filtered
+    ? undefined
+    : body.list.groups.flatMap((group) => group.items.map((item) => item.id));
   const position = row?.kind === "item"
     ? ink(
       context,
-      context.copy.count(
-        (rows.itemPrefix[selected] ?? 0) + 1,
-        rows.itemPrefix.at(-1) ?? 0,
-      ),
+      members === undefined
+        ? context.copy.count(
+          (rows.itemPrefix[selected] ?? 0) + 1,
+          rows.itemPrefix.at(-1) ?? 0,
+        )
+        : context.copy.count(members.indexOf(row.item.id) + 1, members.length),
       { tone: "faint" },
       "surface",
     )
@@ -731,7 +739,9 @@ function masterDetail<A>(
     : short || size.rows < split.strip.shortBelowRows
     ? 1
     : 2;
-  const rule = context.painted || covered ? 0 : 1;
+  // Without fills a rule introduces a two-line strip; a one-line strip on
+  // a short screen gives that row to the list instead.
+  const rule = context.painted || covered || stripLines === 1 ? 0 : 1;
   const listHeight = tier === "strip"
     ? Math.max(1, region.height - stripLines - rule)
     : region.height;
@@ -771,7 +781,16 @@ function masterDetail<A>(
       false,
     );
     const inset = " ".repeat(left);
-    const top = [crumb(context, body, rows, selected, width)];
+    const top = [
+      crumb(
+        context,
+        body,
+        rows,
+        selected,
+        width,
+        fitted.filter !== undefined,
+      ),
+    ];
     if (pad > 0) top.push("");
     const shown = [...top, ...viewport.lines].slice(0, region.height);
     return {
@@ -1136,9 +1155,19 @@ function tooSmall<A>(
   const sizes = measureText(`${needs}; ${now}`) <= size.columns - inset.length
     ? [`${needs}; ${now}`]
     : [needs, now];
+  const hints = model.view.tooSmallHints ?? [];
   const notice = [
     ink(context, context.copy.tooSmall, { tone: "ink", bold: true }),
     ...sizes.map((line) => ink(context, line, { tone: "muted" })),
+    ...(hints.length === 0 ? [] : [
+      "",
+      layoutKeyHintsCli(
+        { left: hints },
+        Math.max(1, size.columns - inset.length),
+        context.capabilities,
+        cliPresentationPassthrough(context.presentation),
+      ).line,
+    ]),
   ];
   const top = Math.max(0, Math.floor((size.rows - notice.length) / 2));
   return {

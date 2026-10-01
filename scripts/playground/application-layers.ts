@@ -292,6 +292,11 @@ export function demoActionsMenu(job: DemoJob): ApplicationMenu<string> {
       },
       {
         title: "Schedule",
+        unavailable: [{
+          id: "calendar",
+          label: "Add to calendar",
+          sentence: "no calendar is connected",
+        }],
         items: [
           {
             id: "schedule",
@@ -321,6 +326,7 @@ export function demoActionsMenu(job: DemoJob): ApplicationMenu<string> {
         }],
       },
     ],
+    footnote: [{ text: "Changes apply from the next run." }],
     unavailable: {
       title: "Unavailable",
       items: [
@@ -595,6 +601,8 @@ export function demoKeysReader(): ApplicationReader<string> {
     id: "keys",
     scope: "global",
     title: "Keyboard shortcuts",
+    columns: 2,
+    footnote: [{ text: "Every key is listed in the footer too." }],
     blocks: [
       {
         kind: "section",

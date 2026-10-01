@@ -198,6 +198,11 @@ export interface ApplicationSheet<A> extends ApplicationLayerBase {
    * one (such as Stop).
    */
   readonly activity?: ActivitySteps;
+  /**
+   * In progress mode, false hides the button row: Escape stays the safe
+   * choice and Enter does nothing. Defaults to true.
+   */
+  readonly buttonRow?: boolean;
 }
 
 /** One menu row that runs an action. */
@@ -219,6 +224,12 @@ export interface MenuSection<A> {
   readonly title: string;
   readonly tone?: TerminalTextTone;
   readonly items: readonly MenuItem<A>[];
+  /**
+   * Items of this section that cannot run now, shown after its items with
+   * their sentence beside them; Enter shows the sentence in full and never
+   * activates.
+   */
+  readonly unavailable?: readonly UnavailableMenuItem[];
 }
 
 /** A menu row that cannot run now, with the sentence that says why. */
@@ -258,6 +269,8 @@ export interface ApplicationMenu<A> extends ApplicationLayerBase {
   readonly enterLabel?: string;
   /** Offer `/` to filter the menu; defaults to true. */
   readonly filter?: boolean;
+  /** Runs beneath the menu, after the highlighted item's description. */
+  readonly footnote?: readonly InlineRun[];
 }
 
 /** One palette result. Its meta and key render in their own columns. */
@@ -378,6 +391,14 @@ export interface ApplicationReader<A> extends ApplicationLayerBase {
   readonly rows?: GroupedList<A>;
   /** Keys that run their action while the reader is on top. */
   readonly keys?: readonly ActionHint<A>[];
+  /**
+   * Two lays the blocks out in two columns read top to bottom, left then
+   * right, never splitting a block, when the reader is at least 56 cells
+   * wide.
+   */
+  readonly columns?: 1 | 2;
+  /** Runs after the blocks and rows. */
+  readonly footnote?: readonly InlineRun[];
 }
 
 /** Any layer, bottom to top in the view's `layers`. */

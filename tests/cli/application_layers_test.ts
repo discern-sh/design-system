@@ -346,7 +346,7 @@ Deno.test("menus read down the first column, then the second, and letters run it
   const menu = demoActionsMenu(IMAGE);
   const driver = new ApplicationDriver(withLayers(menu));
   const order = [driver.state.layers.actions?.focusedControlId];
-  for (let step = 0; step < 6; step += 1) {
+  for (let step = 0; step < 7; step += 1) {
     driver.key("down");
     order.push(driver.state.layers.actions?.focusedControlId);
   }
@@ -356,6 +356,7 @@ Deno.test("menus read down the first column, then the second, and letters run it
     "item:folder",
     "item:schedule",
     "item:pause",
+    "unavailable:calendar",
     "item:delete",
     "unavailable",
   ]);
@@ -366,6 +367,22 @@ Deno.test("menus read down the first column, then the second, and letters run it
   driver.take();
   driver.key("l");
   assertEquals(actions(driver.take()), ["log:image-resize"]);
+});
+
+Deno.test("a section's own unavailable item sits inline with its reason and never runs", () => {
+  const driver = new ApplicationDriver(withLayers(demoActionsMenu(IMAGE)), {
+    colorDepth: "none",
+  });
+  assert(driver.text.includes("× Add to calendar  no calendar"));
+  assert(driver.text.includes("Changes apply from the next run."));
+  driver.key("down", "down", "down", "down", "down");
+  assertEquals(
+    driver.state.layers.actions?.focusedControlId,
+    "unavailable:calendar",
+  );
+  driver.take();
+  driver.key("enter");
+  assertEquals(actions(driver.take()), [], "it explains itself, never runs");
 });
 
 Deno.test("an unavailable menu item explains itself on Enter and never runs", () => {

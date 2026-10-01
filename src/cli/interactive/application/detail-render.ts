@@ -28,6 +28,7 @@ import {
   styleGlyph,
   styleRuns,
 } from "./paint.ts";
+import { fitCell } from "./list-render.ts";
 import type { DetailBlock, DetailStrip, InlineRun } from "./view.ts";
 
 /** How blocks render at one place. */
@@ -36,6 +37,32 @@ export interface DetailLayout {
   /** Wide screens and zoom put a heading's aside on its title row. */
   readonly wide: boolean;
   readonly surface: TerminalSurfaceRole | undefined;
+  /**
+   * The key column every hints block shares, so sibling sections line their
+   * labels up; measured from the blocks when absent.
+   */
+  readonly keyWidth?: number;
+}
+
+/** The widest key any hints block among these blocks shows, sections included. */
+export function hintsKeyWidth(
+  context: PaintContext,
+  blocks: readonly DetailBlock[],
+): number {
+  let widest = 1;
+  for (const block of blocks) {
+    if (block.kind === "hints") {
+      for (const item of block.items) {
+        widest = Math.max(
+          widest,
+          measureText(formatKeyChord(item.key, context.capabilities)),
+        );
+      }
+    } else if (block.kind === "section") {
+      widest = Math.max(widest, hintsKeyWidth(context, block.blocks));
+    }
+  }
+  return widest;
 }
 
 const blockCache = new WeakMap<
@@ -214,17 +241,82 @@ function meter(
   return [line];
 }
 
+/** Cells a mark's text starts after: the mark and two spaces. */
+const MARK_INDENT = 3;
+/** Further cells a mark's own lines hang beneath its text. */
+const MARK_LINE_INDENT = 2;
+
 function marks(
   context: PaintContext,
   block: Extract<DetailBlock, { kind: "marks" }>,
   layout: DetailLayout,
 ): readonly string[] {
+  const hanging = MARK_INDENT + MARK_LINE_INDENT;
   return block.items.flatMap((item) => {
     const mark = styleGlyph(context, item.mark, layout.surface, "muted");
-    return wrapRuns(context, item.runs, layout.width, layout, "ink", 3).map((
-      line,
-      index,
-    ) => index === 0 ? `${mark}  ${line.trimStart()}` : line);
+    return [
+      ...wrapRuns(context, item.runs, layout.width, layout, "ink", MARK_INDENT)
+        .map((line, index) =>
+          index === 0 ? `${mark}  ${line.trimStart()}` : line
+        ),
+      ...(item.lines ?? []).flatMap((runs) =>
+        wrapRuns(context, runs, layout.width - hanging, layout, "muted", 0)
+          .map((line) => `${" ".repeat(hanging)}${line}`)
+      ),
+    ];
+  });
+}
+
+/** The least the text of an aligned row keeps before trailing columns drop. */
+const ROW_MIN_TEXT = 12;
+
+/**
+ * Aligned rows: a lead cell, text that takes the remaining width and
+ * truncates, and trailing columns that drop lowest priority first while the
+ * text would keep fewer than twelve cells.
+ */
+function rows(
+  context: PaintContext,
+  block: Extract<DetailBlock, { kind: "rows" }>,
+  layout: DetailLayout,
+): readonly string[] {
+  const gap = 2;
+  const lead = block.lead;
+  const leadCells = lead === undefined ? 0 : lead.width + 1;
+  let shown = [...(block.columns ?? [])];
+  const trailing = () =>
+    shown.reduce((total, column) => total + column.width + gap, 0);
+  while (layout.width - leadCells - trailing() < ROW_MIN_TEXT) {
+    let drop = -1;
+    for (const [index, column] of shown.entries()) {
+      if (column.priority === undefined) continue;
+      const current = shown[drop]?.priority;
+      if (drop < 0 || current === undefined || column.priority <= current) {
+        drop = index;
+      }
+    }
+    if (drop < 0) break;
+    shown = shown.filter((_, index) => index !== drop);
+  }
+  const textWidth = Math.max(1, layout.width - leadCells - trailing());
+  return block.items.map((item) => {
+    const leadText = lead === undefined
+      ? ""
+      : `${fitCell(context, item.lead ?? [], lead, layout.surface)} `;
+    const text = padText(
+      truncateStyledText(
+        styleRuns(context, item.text, layout.surface, "ink"),
+        textWidth,
+        terminalGlyph("ellipsis", context.capabilities),
+      ),
+      textWidth,
+    );
+    const cells = shown.map((column) =>
+      `${" ".repeat(gap)}${
+        fitCell(context, item.cells?.[column.id] ?? [], column, layout.surface)
+      }`
+    ).join("");
+    return `${leadText}${text}${cells}`;
   });
 }
 
@@ -236,7 +328,10 @@ function hints(
   const keys = block.items.map((item) =>
     formatKeyChord(item.key, context.capabilities)
   );
-  const keyWidth = Math.max(1, ...keys.map(measureText));
+  const keyWidth = Math.max(
+    layout.keyWidth ?? 1,
+    ...keys.map(measureText),
+  );
   const labelWidth =
     Math.max(...block.items.map((item) => measureText(item.label))) +
     3;
@@ -349,6 +444,8 @@ function renderBlock(
       return meter(context, block, layout);
     case "marks":
       return marks(context, block, layout);
+    case "rows":
+      return rows(context, block, layout);
     case "hints":
       // The footer already names the keys; the fuller list needs room.
       return layout.wide ? hints(context, block, layout) : [];
@@ -375,8 +472,11 @@ function renderBlock(
 export function renderDetailBlocks(
   context: PaintContext,
   blocks: readonly DetailBlock[],
-  layout: DetailLayout,
+  given: DetailLayout,
 ): readonly string[] {
+  const layout = given.keyWidth === undefined
+    ? { ...given, keyWidth: hintsKeyWidth(context, blocks) }
+    : given;
   const lines: string[] = [];
   let previous: DetailBlock["kind"] | undefined;
   for (const block of blocks) {

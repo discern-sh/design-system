@@ -106,11 +106,18 @@ export function formTextFields<A>(
   );
 }
 
-/** The buttons a sheet or form shows. */
+/** The buttons a sheet or form declares, shown or not. */
 export function layerButtons<A>(
   layer: ApplicationLayer<A>,
 ): readonly SheetButton<A>[] {
   return layer.kind === "sheet" || layer.kind === "form" ? layer.buttons : [];
+}
+
+/** Whether a layer draws its button row; a progress sheet may hide it. */
+export function buttonRowShown<A>(layer: ApplicationLayer<A>): boolean {
+  return layer.kind === "form" ||
+    (layer.kind === "sheet" &&
+      !(layer.activity !== undefined && layer.buttonRow === false));
 }
 
 /** The safe button of a sheet or form. */
@@ -148,7 +155,9 @@ export function tabOrder<A>(
     ...(layer.disclosures ?? []).map((disclosure) =>
       disclosureControl(disclosure.id)
     ),
-    ...layer.buttons.map((button) => buttonControl(button.id)),
+    ...(buttonRowShown(layer)
+      ? layer.buttons.map((button) => buttonControl(button.id))
+      : []),
   ];
 }
 

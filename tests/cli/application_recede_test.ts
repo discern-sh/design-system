@@ -28,7 +28,24 @@ const EVERY_KIND: { readonly [K in DetailBlock["kind"]]: DetailBlock } = {
     rows: [{ label: "Label", value: [[{ text: "Value", tone: "warning" }]] }],
   },
   meter: { kind: "meter", value: 0.5, caption: "half" },
-  marks: { kind: "marks", items: [{ mark: glyph, runs: [{ text: "Mark" }] }] },
+  marks: {
+    kind: "marks",
+    items: [{
+      mark: glyph,
+      runs: [{ text: "Mark" }],
+      lines: [[{ text: "path/to/file", role: "code" }]],
+    }],
+  },
+  rows: {
+    kind: "rows",
+    lead: { id: "id", width: 5 },
+    columns: [{ id: "age", width: 3, align: "end" }],
+    items: [{
+      lead: [{ text: "a1b2", tone: "accent" }],
+      text: [{ text: "Title", role: "title" }],
+      cells: { age: [{ text: "2h", tone: "warning" }] },
+    }],
+  },
   hints: {
     kind: "hints",
     items: [{ key: "enter", label: "Open", primary: true }],

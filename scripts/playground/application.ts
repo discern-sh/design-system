@@ -10,6 +10,8 @@ import type {
   ApplicationGlyph,
   ApplicationLayer,
   DetailBlock,
+  DetailMark,
+  DetailRow,
   DetailStrip,
   GroupedListItem,
   InlineRun,
@@ -45,6 +47,10 @@ export interface DemoJob {
   readonly explanation: string;
   readonly facts: readonly (readonly [string, readonly InlineRun[]])[];
   readonly meter?: number;
+  /** What went wrong in the last run, with the lines that belong to it. */
+  readonly failure?: DetailMark;
+  /** Recent runs, newest first. */
+  readonly runs?: readonly DetailRow[];
 }
 
 const notes = createCliBlock(renderMarkdownCli, {
@@ -52,6 +58,14 @@ const notes = createCliBlock(renderMarkdownCli, {
 
 Each run reads the previous quarter's ledger and writes one summary per team.`,
 });
+
+function run(id: string, summary: string, age: string): DetailRow {
+  return {
+    lead: [{ text: id, tone: "faint" }],
+    text: [{ text: summary }],
+    cells: { age: [{ text: age, tone: "faint" }] },
+  };
+}
 
 const paused = (title: string): DemoJob => ({
   id: title.toLowerCase().replaceAll(" ", "-"),
@@ -87,6 +101,11 @@ export const DEMO_JOBS: readonly DemoJob[] = [
       ["Schedule", [{ text: "Every Monday" }]],
       ["Owner", [{ text: "Reporting" }]],
     ],
+    runs: [
+      run("r-0412", "Weekly totals for every team", "20m"),
+      run("r-0405", "Weekly totals, with the late ledger entries", "1w"),
+      run("r-0329", "Weekly totals", "2w"),
+    ],
   },
   {
     id: "image-resize",
@@ -104,6 +123,14 @@ export const DEMO_JOBS: readonly DemoJob[] = [
       ["Schedule", [{ text: "Hourly" }]],
       ["Overlap", [{ text: "thumbnails/" }]],
     ],
+    failure: {
+      mark: { ...TERMINAL_GLYPHS.failed, tone: "danger" },
+      runs: [{ text: "Could not read 3 source images" }],
+      lines: [
+        [{ text: "originals/2024/06/beach.jpg", role: "code" }],
+        [{ text: "permission denied", tone: "faint" }],
+      ],
+    },
   },
   {
     id: "photo-archive",
@@ -269,6 +296,22 @@ function detail(job: DemoJob): readonly DetailBlock[] {
       kind: "facts",
       rows: job.facts.map(([label, value]) => ({ label, value: [value] })),
     },
+    ...(job.failure === undefined ? [] : [{
+      kind: "section" as const,
+      title: "Failure",
+      blocks: [{ kind: "marks" as const, items: [job.failure] }],
+    }]),
+    ...(job.runs === undefined ? [] : [{
+      kind: "section" as const,
+      title: "Recent runs",
+      count: job.runs.length,
+      blocks: [{
+        kind: "rows" as const,
+        lead: { id: "run", width: 6 },
+        columns: [{ id: "age", width: 3, align: "end" as const, priority: 1 }],
+        items: job.runs,
+      }],
+    }]),
     {
       kind: "hints",
       items: [
@@ -386,6 +429,7 @@ export function applicationDemoView(
       ? {}
       : { layers: options.layers }),
     windowTitle: `Studio · ${review} to review`,
+    tooSmallHints: [{ key: "q", label: "Quit" }],
     ...(options.mouse === true ? { input: { mouse: true } } : {}),
   };
 }

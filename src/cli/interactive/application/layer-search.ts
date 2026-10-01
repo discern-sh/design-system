@@ -25,6 +25,8 @@ import type {
 export interface MenuSectionRows<A> {
   readonly section: MenuSection<A>;
   readonly items: readonly MenuItem<A>[];
+  /** The section's own unavailable items the filter keeps. */
+  readonly unavailable: readonly UnavailableMenuItem[];
 }
 
 /** What a menu shows for its query and fold. */
@@ -56,7 +58,11 @@ function splitColumns<A>(
 ): readonly (readonly MenuSectionRows<A>[])[] {
   if (columns === 1 || sections.length < 2) return [sections];
   const height = (part: readonly MenuSectionRows<A>[]) =>
-    part.reduce((total, entry) => total + entry.items.length + 1, 0) +
+    part.reduce(
+      (total, entry) =>
+        total + entry.items.length + entry.unavailable.length + 1,
+      0,
+    ) +
     Math.max(0, part.length - 1);
   const total = height(sections);
   let split = 1;
@@ -86,7 +92,10 @@ export function menuRows<A>(
     items: filtering
       ? section.items.filter((item) => matches(item.label, query))
       : section.items,
-  })).filter((entry) => entry.items.length > 0);
+    unavailable: filtering
+      ? (section.unavailable ?? []).filter((item) => matches(item.label, query))
+      : section.unavailable ?? [],
+  })).filter((entry) => entry.items.length + entry.unavailable.length > 0);
   const split = splitColumns(sections, columns);
   const unavailable = menu.unavailable === undefined
     ? undefined
@@ -97,9 +106,12 @@ export function menuRows<A>(
   const order: LayerControl[] = [];
   const sectionStarts: LayerControl[] = [];
   for (const entry of split.flat()) {
-    const [first] = entry.items;
-    if (first !== undefined) sectionStarts.push(itemControl(first.id));
-    order.push(...entry.items.map((item) => itemControl(item.id)));
+    const controls = [
+      ...entry.items.map((item) => itemControl(item.id)),
+      ...entry.unavailable.map((item) => unavailableControl(item.id)),
+    ];
+    if (controls[0] !== undefined) sectionStarts.push(controls[0]);
+    order.push(...controls);
   }
   if (unavailable !== undefined && unavailable.length > 0) {
     if (!filtering) {
@@ -121,6 +133,18 @@ export function menuRows<A>(
     order,
     sectionStarts,
   };
+}
+
+/** Find an unavailable menu item by id, in its section or the folded section. */
+export function unavailableMenuItem<A>(
+  menu: ApplicationMenu<A>,
+  id: string,
+): UnavailableMenuItem | undefined {
+  for (const section of menu.sections) {
+    const found = section.unavailable?.find((item) => item.id === id);
+    if (found !== undefined) return found;
+  }
+  return menu.unavailable?.items.find((item) => item.id === id);
 }
 
 /** Find a menu item by id among the available items. */

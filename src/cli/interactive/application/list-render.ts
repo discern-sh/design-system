@@ -132,7 +132,7 @@ export interface ListWindow {
   readonly sticky?: number;
   /** Rows shown after any sticky header. */
   readonly count: number;
-  /** Items hidden above and below. */
+  /** Items hidden above and below, those inside fold rows included. */
   readonly above: number;
   readonly below: number;
 }
@@ -157,8 +157,8 @@ export function listWindow<A>(
     scroll,
     ...(sticky === undefined ? {} : { sticky }),
     count,
-    above: rows.itemPrefix[scroll] ?? 0,
-    below: (rows.itemPrefix[total] ?? 0) - (rows.itemPrefix[end] ?? 0),
+    above: rows.heldPrefix[scroll] ?? 0,
+    below: (rows.heldPrefix[total] ?? 0) - (rows.heldPrefix[end] ?? 0),
   };
 }
 
@@ -244,7 +244,7 @@ function bar(context: PaintContext, paint: RowPaint): string {
 }
 
 /** Fit a cell's runs, dropping whole trailing runs before truncating the first. */
-function cell(
+export function fitCell(
   context: PaintContext,
   runs: readonly InlineRun[],
   column: ListColumn,
@@ -296,7 +296,7 @@ function itemLine<A>(
   paint: RowPaint,
 ): string {
   const columns = layout.columns.map((column) =>
-    cell(context, item.cells?.[column.id] ?? [], column, paint.surface)
+    fitCell(context, item.cells?.[column.id] ?? [], column, paint.surface)
   );
   const trailing = columns.length === 0
     ? ""

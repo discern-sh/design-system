@@ -176,13 +176,19 @@ function advertisedKeys<A>(
     "ctrl-c",
     ...(keymap?.base.keys() ?? []),
   ]);
-  for (const slot of baseHintSlots(view)) {
+  // Below the minimum only bindings run, so the notice's hints need one.
+  const bound = new Set<string>(["ctrl-c", ...(keymap?.base.keys() ?? [])]);
+  const slots = [
+    ...baseHintSlots(view).map((slot) => ({ ...slot, handled })),
+    { path: "tooSmallHints", hints: view.tooSmallHints ?? [], handled: bound },
+  ];
+  for (const slot of slots) {
     for (const [index, hint] of slot.hints.entries()) {
       const keys = typeof hint.key === "string" ? [hint.key] : hint.key;
       for (const key of keys) {
         if (typeof key !== "string") continue;
         const chord = decodableChord(key);
-        if (chord === undefined || !handled.has(chord)) {
+        if (chord === undefined || !slot.handled.has(chord)) {
           issues.push({
             path: `${slot.path}[${index}].key`,
             message: `advertises ${
@@ -306,6 +312,7 @@ export function viewIssues<A>(
     }
   }
   hints(issues, "footer", view.footer);
+  hints(issues, "tooSmallHints", { left: view.tooSmallHints ?? [] });
   advertisedKeys(issues, view, context.keymap);
   copyRules(issues, view.copy);
   if (view.windowTitle !== undefined) {

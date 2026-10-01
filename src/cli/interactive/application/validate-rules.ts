@@ -14,6 +14,7 @@ import type {
   DetailBlock,
   GroupedList,
   InlineRun,
+  ListColumn,
   ListGaps,
 } from "./view.ts";
 
@@ -193,6 +194,28 @@ export function hints(
   }
 }
 
+/** Columns with unique ids, positive widths, and finite priorities; returns their ids. */
+function columns(
+  issues: Issues,
+  path: string,
+  value: readonly ListColumn[],
+): ReadonlySet<string> {
+  const ids = new Set<string>();
+  for (const [index, column] of value.entries()) {
+    const at = `${path}[${index}]`;
+    text(issues, `${at}.id`, column.id);
+    if (ids.has(column.id)) {
+      issues.push({ path: `${at}.id`, message: "repeats a column id" });
+    }
+    ids.add(column.id);
+    count(issues, `${at}.width`, column.width, 1);
+    if (column.priority !== undefined && !Number.isFinite(column.priority)) {
+      issues.push({ path: `${at}.priority`, message: "must be finite" });
+    }
+  }
+  return ids;
+}
+
 /** One list's structure, identities, and presentation numbers. */
 export function list<A>(
   issues: Issues,
@@ -200,19 +223,7 @@ export function list<A>(
   value: GroupedList<A>,
 ): void {
   text(issues, `${path}.id`, value.id);
-  const columns = new Set<string>();
-  for (const [index, column] of (value.columns ?? []).entries()) {
-    const at = `${path}.columns[${index}]`;
-    text(issues, `${at}.id`, column.id);
-    if (columns.has(column.id)) {
-      issues.push({ path: `${at}.id`, message: "repeats a column id" });
-    }
-    columns.add(column.id);
-    count(issues, `${at}.width`, column.width, 1);
-    if (column.priority !== undefined && !Number.isFinite(column.priority)) {
-      issues.push({ path: `${at}.priority`, message: "must be finite" });
-    }
-  }
+  const declared = columns(issues, `${path}.columns`, value.columns ?? []);
   if (value.minTitle !== undefined) {
     count(issues, `${path}.minTitle`, value.minTitle, 1);
   }
@@ -262,7 +273,7 @@ export function list<A>(
       items.add(item.id);
       glyph(issues, `${where}.marker`, item.marker);
       for (const [column, cell] of Object.entries(item.cells ?? {})) {
-        if (!columns.has(column)) {
+        if (!declared.has(column)) {
           issues.push({
             path: `${where}.cells.${column}`,
             message: "names no declared column",
@@ -326,8 +337,36 @@ export function blocks(
         for (const [item, mark] of block.items.entries()) {
           glyph(issues, `${at}.items[${item}].mark`, mark.mark);
           runs(issues, `${at}.items[${item}].runs`, mark.runs);
+          for (const [line, value] of (mark.lines ?? []).entries()) {
+            runs(issues, `${at}.items[${item}].lines[${line}]`, value);
+          }
         }
         break;
+      case "rows": {
+        const declared = columns(
+          issues,
+          `${at}.columns`,
+          [
+            ...(block.lead === undefined ? [] : [block.lead]),
+            ...(block.columns ?? []),
+          ],
+        );
+        for (const [index, row] of block.items.entries()) {
+          const where = `${at}.items[${index}]`;
+          runs(issues, `${where}.lead`, row.lead);
+          runs(issues, `${where}.text`, row.text);
+          for (const [column, cell] of Object.entries(row.cells ?? {})) {
+            if (!declared.has(column) || column === block.lead?.id) {
+              issues.push({
+                path: `${where}.cells.${column}`,
+                message: "names no declared column",
+              });
+            }
+            runs(issues, `${where}.cells.${column}`, cell);
+          }
+        }
+        break;
+      }
       case "hints":
         for (const [item, hint] of block.items.entries()) {
           text(issues, `${at}.items[${item}].label`, hint.label);
