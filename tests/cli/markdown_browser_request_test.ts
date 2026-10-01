@@ -16,10 +16,10 @@ import {
   markdownBrowserCommand,
   type MarkdownBrowserExitResult,
   MarkdownBrowserRefusalError,
+  type MarkdownBrowserRequestHandlers,
   type MarkdownBrowserResumableState,
   requestMarkdownBrowser,
   runTerminalApplication,
-  type TerminalApplicationCommand,
   type TerminalApplicationContext,
   type TerminalApplicationState,
 } from "../../src/cli/interactive/mod.ts";
@@ -186,20 +186,20 @@ interface Host {
     readonly state: MarkdownBrowserResumableState;
     readonly exit?: MarkdownBrowserExitResult;
   }[];
-  readonly answers: string[];
   readonly hostActions: string[];
 }
 
+/** How a caller answers the browser's choices, in either shape. */
+type Respond = NonNullable<MarkdownBrowserRequestHandlers<string>["respond"]>;
+
 /** An application whose `m` opens the browser on its own screen. */
 async function host(
-  respond: (kind: string) => TerminalApplicationCommand | void = () =>
-    undefined,
+  respond: Respond = () => undefined,
   initialState: () => MarkdownBrowserResumableState | undefined = () =>
     undefined,
 ): Promise<Host> {
   const io = new FakeTerminalIO([], { holdOpen: true, columns: 80, rows: 24 });
   const closes: Host["closes"] = [];
-  const answers: string[] = [];
   const hostActions: string[] = [];
   const running = runTerminalApplication<string>({
     view: testView(["a", "b"]),
@@ -217,10 +217,7 @@ async function host(
         ...markdownBrowserOptions,
         ...(state === undefined ? {} : { initialState: state }),
       }, {
-        respond: (result) => {
-          answers.push(result.kind);
-          return respond(result.kind);
-        },
+        respond,
         onClose: (closed, exit) => {
           closes.push(
             exit === undefined ? { state: closed } : { state: closed, exit },
@@ -235,7 +232,7 @@ async function host(
     },
   }, { io, clock: new ManualTerminalClock() });
   await settle();
-  return { io, running, closes, answers, hostActions };
+  return { io, running, closes, hostActions };
 }
 
 Deno.test("an application opens the browser on its own screen and returns to it", async () => {
@@ -268,26 +265,151 @@ Deno.test("an application opens the browser on its own screen and returns to it"
   live.io.close();
 });
 
-Deno.test("a nested browser answers actions in place and shows a failed command's error", async () => {
-  const live = await host((kind) =>
-    kind === "action"
-      ? {
+/** One way to run the browser, opened and ready for keys. */
+interface OpenBrowser {
+  readonly io: FakeTerminalIO;
+  /**
+   * What the caller hears once the browser closes: the request's result
+   * on its own screen, or the exit entry `onClose` receives when nested.
+   */
+  readonly closed: () => Promise<
+    { readonly kind?: string; readonly id?: string }
+  >;
+  /** End whatever still runs around the closed browser. */
+  readonly finish: () => Promise<void>;
+}
+
+/** The browser's two run shapes, which answer a choice the same way. */
+const SHAPES: readonly {
+  readonly name: string;
+  readonly open: (respond: Respond) => Promise<OpenBrowser>;
+  /** What the caller hears when `respond` closes the browser on the action. */
+  readonly answeredExit: { readonly kind?: string; readonly id?: string };
+}[] = [
+  {
+    name: "on its own screen",
+    open: async (respond) => {
+      const io = new FakeTerminalIO([], {
+        holdOpen: true,
+        columns: 80,
+        rows: 24,
+      });
+      const running = requestMarkdownBrowser(markdownBrowserOptions, {
+        io,
+        clock: new ManualTerminalClock(),
+      }, { respond });
+      await shows(io, "Documentation library");
+      return {
+        io,
+        closed: async () => {
+          const result = await running;
+          return { kind: result.kind, id: result.id };
+        },
+        finish: () => Promise.resolve(io.close()),
+      };
+    },
+    answeredExit: { kind: "action", id: "read-online" },
+  },
+  {
+    name: "nested in an application",
+    open: async (respond) => {
+      const live = await host(respond);
+      live.io.enqueue("m");
+      await shows(live.io, "Documentation library");
+      return {
+        io: live.io,
+        closed: async () => {
+          await shows(live.io, "Back in Studio");
+          const exit = live.closes[0]?.exit;
+          return exit === undefined ? {} : { kind: exit.kind, id: exit.id };
+        },
+        finish: async () => {
+          live.io.enqueue("q");
+          await live.running;
+          live.io.close();
+        },
+      };
+    },
+    answeredExit: {},
+  },
+];
+
+for (const shape of SHAPES) {
+  Deno.test(`a browser ${shape.name} answers choices in place and shows a failed command's error`, async () => {
+    const answered: string[] = [];
+    const browser = await shape.open((chosen) => {
+      answered.push(chosen.kind);
+      return {
         kind: "background",
-        id: "open",
+        id: `open-${answered.length}`,
         run: () => Promise.reject(new Error("No browser is available.")),
-      }
-      : undefined
+      };
+    });
+    browser.io.enqueue(keys("end", "up", "enter"));
+    const failed = await shows(browser.io, "No browser is available.");
+    assertStringIncludes(failed, "Documentation library");
+    browser.io.enqueue(keys("home", "enter", "tab", "tab", "tab", "enter"));
+    for (let turn = 0; turn < 50 && answered.length < 2; turn += 1) {
+      await settle();
+    }
+    assertEquals(answered, ["action", "external-link"]);
+    assertStringIncludes(
+      await shows(browser.io, "No browser is available."),
+      "external reference",
+      "the document stays open after its link is answered",
+    );
+    browser.io.enqueue(keys("c", "end", "enter"));
+    assertEquals(await browser.closed(), { kind: "exit", id: "quit" });
+    await browser.finish();
+  });
+
+  Deno.test(`respond's exit closes a browser ${shape.name}`, async () => {
+    const browser = await shape.open((chosen) =>
+      chosen.kind === "action" ? { kind: "exit" } : undefined
+    );
+    // The link is answered with nothing, so the browser stays; the action
+    // is answered with an exit, which closes it.
+    browser.io.enqueue(keys("enter", "tab", "tab", "tab", "enter"));
+    browser.io.enqueue(keys("c", "end", "up", "enter"));
+    assertEquals(await browser.closed(), shape.answeredExit);
+    await browser.finish();
+  });
+}
+
+Deno.test("a standalone browser that answers in place still closes, cancels, and prints an exit's epilogue", async () => {
+  const io = new FakeTerminalIO([keys("end", "up", "enter")], {
+    columns: 80,
+    rows: 24,
+  });
+  const result = await requestMarkdownBrowser(markdownBrowserOptions, { io }, {
+    respond: (chosen) => ({
+      kind: "exit",
+      epilogue: [[{ text: "Opened " }, {
+        text: chosen.id,
+        role: "code",
+      }]],
+    }),
+  });
+  assertEquals(result.kind, "action");
+  assertEquals(result.state.selectedId, "read-online");
+  const restored = io.output().lastIndexOf(LEAVE_TERMINAL_ALTERNATE_SCREEN);
+  assert(restored >= 0);
+  assertStringIncludes(
+    stripAnsi(io.output().slice(restored)),
+    "Opened read-online",
+    "the epilogue prints after the screen is released",
   );
-  live.io.enqueue(keys("m", "end", "up", "enter"));
-  const failed = await shows(live.io, "No browser is available.");
-  assertEquals(live.answers, ["action"]);
-  assertStringIncludes(failed, "Documentation library");
-  live.io.enqueue(keys("end", "enter"));
-  await settle();
-  assertEquals(live.closes[0]?.exit?.id, "quit");
-  live.io.enqueue("q");
-  await live.running;
-  live.io.close();
+  for (const input of [[keys("end", "up", "enter"), "q"], [keys("ctrl-c")]]) {
+    const answered = new FakeTerminalIO(input);
+    await assertRejects(
+      () =>
+        requestMarkdownBrowser(markdownBrowserOptions, { io: answered }, {
+          respond: () => undefined,
+        }),
+      InteractionCancelled,
+    );
+    assertRestored(answered);
+  }
 });
 
 Deno.test("Ctrl+C in a nested browser closes it and reaches the opener", async () => {

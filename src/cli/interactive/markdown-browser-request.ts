@@ -23,12 +23,11 @@ import {
   type TerminalApplicationNested,
 } from "./application/session.ts";
 import {
-  type MarkdownBrowserActionResult,
   type MarkdownBrowserExitResult,
-  type MarkdownBrowserExternalLinkResult,
   type MarkdownBrowserHandlers,
   type MarkdownBrowserOptions,
   MarkdownBrowserRefusalError,
+  type MarkdownBrowserRequestHandlers,
   type MarkdownBrowserResult,
 } from "./markdown-browser-model.ts";
 import {
@@ -44,11 +43,9 @@ export type MarkdownBrowserRuntime = TerminalApplicationRuntime;
 
 /** How the application around a browser answers it. */
 interface BrowserAnswer<Action> {
-  readonly respond: (
-    result:
-      | MarkdownBrowserActionResult<Action>
-      | MarkdownBrowserExternalLinkResult,
-  ) => TerminalApplicationCommand | void;
+  readonly respond: NonNullable<
+    MarkdownBrowserRequestHandlers<Action>["respond"]
+  >;
   /** The browser is closing; with the exit entry chosen, if any. */
   readonly closing: (exit: MarkdownBrowserExitResult | undefined) => void;
 }
@@ -114,18 +111,27 @@ export function markdownBrowserApplication<Action>(
 
 /**
  * Present a grouped Markdown corpus on its own screen until the reader
- * chooses an action, an exit, or a link that leaves the documents, then
- * resolve with it, and with where the reader was, after the terminal is
- * restored. The contents list every entry with a preview beside it; Enter
- * opens one, `/` or Ctrl+K searches, `c` returns to the contents, Escape
- * or Backspace goes back, and `q` closes. Closing from the start, Ctrl+C,
- * EOF, and an abort raise `InteractionCancelled`. A terminal without ANSI
- * cursor control, or smaller than the application minimum, is refused with
+ * closes it or chooses something the caller does not answer in place, then
+ * resolve with that choice, and with where the reader was, after the
+ * terminal is restored. The contents list every entry with a preview beside
+ * it; Enter opens one, `/` or Ctrl+K searches, `c` returns to the contents,
+ * Escape or Backspace goes back, and `q` closes.
+ *
+ * Without `handlers.respond`, a chosen action or a link that leaves the
+ * documents resolves the request. With it, `respond` answers each one while
+ * the browser stays on screen — a background command it returns that fails
+ * shows its error's message — and the request resolves only when `respond`
+ * returns `{ kind: "exit" }`, with the choice it answered, or when the
+ * reader chooses an exit entry. Closing it — `q`, or Escape or Backspace
+ * where the reader started — Ctrl+C, EOF, and an abort raise
+ * `InteractionCancelled`. A terminal without ANSI cursor control, or
+ * smaller than the application minimum, is refused with
  * `MarkdownBrowserRefusalError` before anything changes.
  */
 export async function requestMarkdownBrowser<Action>(
   options: MarkdownBrowserOptions<Action>,
   runtime: MarkdownBrowserRuntime = {},
+  handlers: MarkdownBrowserRequestHandlers<Action> = {},
 ): Promise<MarkdownBrowserResult<Action>> {
   if (runtime.abortSignal?.aborted === true) {
     throw new InteractionCancelled("Cancelled.");
@@ -142,11 +148,15 @@ export async function requestMarkdownBrowser<Action>(
   ) {
     throw new MarkdownBrowserRefusalError("terminal-too-small", size);
   }
+  const respond = handlers.respond ?? ((): TerminalApplicationCommand => ({
+    kind: "exit",
+  }));
   let result: MarkdownBrowserResult<Action> | undefined;
   const { application } = markdownBrowserApplication(options, {
     respond: (chosen) => {
-      result = chosen;
-      return { kind: "exit" };
+      const command = respond(chosen);
+      if (command !== undefined && command.kind === "exit") result = chosen;
+      return command;
     },
     closing: (exit) => {
       result = exit;
@@ -161,11 +171,12 @@ export async function requestMarkdownBrowser<Action>(
  * A command that opens the Markdown browser on a running application's
  * screen, in place of it, and returns there when the reader closes it —
  * with `q`, Escape from where it started, an exit entry, or Ctrl+C, which
- * then reaches the application as Ctrl+C. `respond` answers a chosen
- * action or a link that leaves the documents while the browser stays open;
- * `onClose` runs as one of the application's own callbacks with where the
- * reader was, so opening the browser again with that `initialState`
- * resumes there.
+ * then reaches the application as Ctrl+C — or when `respond` returns `{
+ * kind: "exit" }`. `respond` answers a chosen action or a link that leaves
+ * the documents while the browser stays open, as it does for a browser on
+ * its own screen; `onClose` runs as one of the application's own callbacks
+ * with where the reader was, so opening the browser again with that
+ * `initialState` resumes there.
  */
 export function markdownBrowserCommand<Action>(
   options: MarkdownBrowserOptions<Action>,

@@ -753,10 +753,27 @@ if (result.kind === "external-link") {
 }
 ```
 
-`markdownBrowserCommand()` runs the same browser inside a running application, on that application's screen: an action returns it, the browser replaces the application until the reader closes it, and the application resumes exactly where it was. `respond` answers a chosen action or link while the browser stays open — a background command it returns that fails shows its error's message — and `onClose` runs as one of the application's own callbacks with where the reader was, so the next opening resumes there:
+A caller that can act without leaving the screen passes a third argument, `MarkdownBrowserRequestHandlers`, whose `respond` answers each chosen action or followed external link while the browser stays on screen. A background command it returns runs beside the live browser, and one that fails shows its error's message there. Returning nothing leaves the browser as it is, and returning `{ kind: "exit" }` resolves the request with the choice it answered; otherwise the request resolves only when the reader chooses an exit entry:
+
+```ts
+let opened = 0;
+const answered = await requestMarkdownBrowser(options, {}, {
+  respond: (chosen) =>
+    chosen.kind === "external-link"
+      ? {
+        kind: "background",
+        id: `open-${++opened}`,
+        run: () => openUrl(chosen.destination),
+      }
+      : { kind: "exit" },
+});
+```
+
+`markdownBrowserCommand()` runs the same browser inside a running application, on that application's screen: an action returns it, the browser replaces the application until the reader closes it, and the application resumes exactly where it was. Its `respond` answers a choice exactly as a standalone browser's does, except that `{ kind: "exit" }` returns to the application, and `onClose` runs as one of the application's own callbacks with where the reader was, so the next opening resumes there:
 
 ```ts
 let manual: MarkdownBrowserResumableState | undefined;
+let opened = 0;
 // Inside the application's onAction:
 return markdownBrowserCommand(
   { ...options, ...(manual === undefined ? {} : { initialState: manual }) },
@@ -765,7 +782,7 @@ return markdownBrowserCommand(
       chosen.kind === "external-link"
         ? {
           kind: "background",
-          id: "open",
+          id: `open-${++opened}`,
           run: () => openUrl(chosen.destination),
         }
         : undefined,
@@ -776,7 +793,7 @@ return markdownBrowserCommand(
 );
 ```
 
-A link to a heading of the same document scrolls there; any other link reaches `resolveLink`, which answers at once with an admitted document and optional fragment, a safe external destination, or an unresolved outcome whose message the browser shows. Unsafe Markdown destinations stay inert text. Closing from where the reader started, Ctrl+C, EOF, and `abortSignal` raise `InteractionCancelled` from `requestMarkdownBrowser()`; inside an application Ctrl+C closes the browser and reaches the application as Ctrl+C. `MarkdownBrowserRefusalError` reports missing ANSI control or a terminal below the application minimum before `requestMarkdownBrowser()` changes anything, and a live resize below it shows the application's too-small notice. Every word the browser writes comes from `DEFAULT_MARKDOWN_BROWSER_COPY`, which `copy` replaces.
+A link to a heading of the same document scrolls there; any other link reaches `resolveLink`, which answers at once with an admitted document and optional fragment, a safe external destination, or an unresolved outcome whose message the browser shows. Unsafe Markdown destinations stay inert text. Closing the browser — `q`, or Escape or Backspace where the reader started — Ctrl+C, EOF, and `abortSignal` raise `InteractionCancelled` from `requestMarkdownBrowser()`; inside an application Ctrl+C closes the browser and reaches the application as Ctrl+C. `MarkdownBrowserRefusalError` reports missing ANSI control or a terminal below the application minimum before `requestMarkdownBrowser()` changes anything, and a live resize below it shows the application's too-small notice. Every word the browser writes comes from `DEFAULT_MARKDOWN_BROWSER_COPY`, which `copy` replaces.
 
 Mouse input is opt-in: `mouse: true` asks the runtime for button and wheel reports, which follow the application mouse policy — a click selects a row, a second runs it, a click on a link follows it, and the wheel scrolls. OSC 8 output and mouse input are independent — one never proves support for the other. While reports are on, unmodified clicks and wheel events go to the application instead of ordinary terminal selection or native link gestures; many terminals use Shift as a temporary bypass, but that modifier is terminal-configurable, so callers needing native selection should leave mouse input off. `TerminalInputReader.readEvent()` reads one semantic event and `readEvents()` every event decoded from one raw chunk.
 

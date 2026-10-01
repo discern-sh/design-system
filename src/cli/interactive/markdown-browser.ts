@@ -23,6 +23,7 @@ export type {
   MarkdownBrowserOptions,
   MarkdownBrowserPlace,
   MarkdownBrowserRefusalReason,
+  MarkdownBrowserRequestHandlers,
   MarkdownBrowserResult,
   MarkdownBrowserResumableState,
 } from "./markdown-browser-model.ts";

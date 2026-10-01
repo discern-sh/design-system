@@ -202,21 +202,31 @@ export type MarkdownBrowserResult<Action> =
   | MarkdownBrowserExitResult
   | MarkdownBrowserExternalLinkResult;
 
-/**
- * How a browser running inside another application answers what a reader
- * chose. `respond` receives a chosen action or a link that leaves the
- * documents and may return a command — such as a background operation that
- * opens the destination — while the browser stays open, or `{ kind: "exit"
- * }` to close it; a background command it returns that fails shows its
- * error's message. `onClose` hears where the reader was when the browser
- * closed, with the exit entry chosen, if any.
- */
-export interface MarkdownBrowserHandlers<Action> {
+/** How a caller answers what a reader chose, on its own screen or nested. */
+export interface MarkdownBrowserRequestHandlers<Action> {
+  /**
+   * Answer a chosen action or a link that leaves the documents while the
+   * browser stays on screen, with a command — such as a background
+   * operation that opens the destination — or nothing. A background command
+   * it returns that fails shows its error's message. `{ kind: "exit" }`
+   * closes the browser: alone, its request resolves with the choice this
+   * answered; nested, the application beneath resumes. Without `respond`,
+   * a browser on its own screen closes and resolves with every choice.
+   */
   readonly respond?: (
     result:
       | MarkdownBrowserActionResult<Action>
       | MarkdownBrowserExternalLinkResult,
   ) => TerminalApplicationCommand | void;
+}
+
+/**
+ * How a browser running inside another application answers what a reader
+ * chose, and hears it close: `onClose` receives where the reader was, with
+ * the exit entry chosen, if any.
+ */
+export interface MarkdownBrowserHandlers<Action>
+  extends MarkdownBrowserRequestHandlers<Action> {
   readonly onClose?: (
     state: MarkdownBrowserResumableState,
     exit?: MarkdownBrowserExitResult,
