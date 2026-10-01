@@ -304,6 +304,40 @@ Deno.test("foldable groups fold and unfold with Enter on their header or fold ro
   assert(driver.render().includes("▸ Kept 2"));
 });
 
+Deno.test("a selected group row shows its groups and what Enter does, not item hints", async (t) => {
+  const view = testView(
+    [{ id: "a", group: "first" }, { id: "b", group: "kept" }],
+    {
+      groups: [
+        { id: "first", title: "First" },
+        { id: "kept", title: "Kept", foldable: true, initiallyFolded: true },
+      ],
+    },
+  );
+  for (const [columns, rows] of [[80, 24], [60, 20], [32, 10]] as const) {
+    await t.step(`${columns}x${rows}`, () => {
+      const driver = new Driver(
+        view,
+        new FakeTerminalIO([], { columns, rows }),
+      );
+      driver.key("down");
+      let frame = driver.render().split("\n");
+      const footer = frame.at(-1) ?? "";
+      assert(footer.includes("↵ Show"), footer);
+      assert(!footer.includes("Open"), "an item hint on a group row");
+      assert(
+        frame.slice(1, -1).some((line) =>
+          line.includes("Kept") && !line.includes("▌")
+        ),
+        `the group summary is missing:\n${frame.join("\n")}`,
+      );
+      driver.key("enter");
+      frame = driver.render().split("\n");
+      assert((frame.at(-1) ?? "").includes("↵ Hide"));
+    });
+  }
+});
+
 Deno.test("short screens fold quiet groups into one summary row, never the selection's", () => {
   const io = new FakeTerminalIO([], { columns: 80, rows: 10 });
   const items: TestItem[] = [

@@ -19,7 +19,7 @@ import {
   layoutKeyHintsCli,
 } from "../../key-hints.ts";
 import { terminalFrameGlyphs } from "../../box.ts";
-import { terminalGlyph } from "../../terminal-glyphs.ts";
+import { TERMINAL_GLYPHS, terminalGlyph } from "../../terminal-glyphs.ts";
 import {
   measureText,
   padText,
@@ -50,6 +50,7 @@ import {
   decideListDensity,
   keyItemId,
   listLayoutKey,
+  type ListRow,
   type ListRowKey,
   type ListRows,
   rowGroupIds,
@@ -292,6 +293,22 @@ function footerHints<A>(
       right: (view.footer.right ?? []).filter(keep),
     };
   }
+  const rows = list === undefined ? undefined : listModelRows(list);
+  const groupLabel = rows === undefined || list === undefined ||
+      (view.body.kind === "empty" && model.primaryFocused)
+    ? undefined
+    : groupRowLabel(rows.rows[rowIndexForKey(rows.rows, list.selection)]);
+  if (groupLabel !== undefined && list?.zoomed !== true) {
+    // A group row is no item: Enter folds or unfolds it, and item hints
+    // would promise actions it does not take.
+    return {
+      left: [
+        { key: "enter", label: groupLabel },
+        { key: ["up", "down"], label: "Move" },
+      ],
+      ...(view.footer.right === undefined ? {} : { right: view.footer.right }),
+    };
+  }
   if (list?.zoomed === true && view.body.kind === "master-detail") {
     if (view.body.zoomFooter !== undefined) return view.body.zoomFooter;
     const [primary, ...rest] = view.footer.left;
@@ -514,11 +531,60 @@ function paintList<A>(
   };
 }
 
+/** What Enter does on a selected group row: show folded groups or hide an open one. */
+function groupRowLabel<A>(row: ListRow<A> | undefined): string | undefined {
+  if (row?.kind === "fold") return "Show";
+  return row?.kind === "header" && row.key !== undefined ? "Hide" : undefined;
+}
+
+/**
+ * The detail a selected group row shows: each group it stands for with its
+ * count and aside, and what Enter does.
+ */
+function groupBlocks<A>(row: ListRow<A>): readonly DetailBlock[] {
+  const label = groupRowLabel(row);
+  if (label === undefined) return [];
+  const groups = row.kind === "fold"
+    ? row.groups.map((folded) => ({ group: folded.group, count: folded.count }))
+    : row.kind === "header"
+    ? [{ group: row.group, count: row.count }]
+    : [];
+  const folded = row.kind === "fold";
+  const glyph = TERMINAL_GLYPHS[folded ? "folded" : "unfolded"];
+  return [
+    {
+      kind: "marks",
+      items: groups.map(({ group, count }) => ({
+        mark: { unicode: glyph.unicode, ascii: glyph.ascii, tone: "faint" },
+        runs: [
+          { text: group.title, role: "title" as const },
+          { text: `  ${count}`, tone: "faint" as const },
+          ...(group.aside === undefined ? [] : [
+            { text: "  " },
+            ...group.aside.map((run) => ({
+              ...run,
+              tone: run.tone ?? "faint" as const,
+            })),
+          ]),
+        ],
+      })),
+    },
+    {
+      kind: "text",
+      runs: [
+        { text: "↵", ascii: "Enter", role: "key" },
+        { text: ` ${label}`, tone: "muted" },
+      ],
+    },
+  ];
+}
+
 function detailBlocks<A>(
   body: MasterDetailBody<A>,
   itemId: string | undefined,
+  row: ListRow<A> | undefined,
 ): readonly DetailBlock[] {
-  if (itemId === undefined) return [];
+  if (itemId === undefined) return row === undefined ? [] : groupBlocks(row);
   return body.detail.content[itemId] ??
     [{ kind: "pending", label: body.detail.pending ?? "Loading…" }];
 }
@@ -554,6 +620,33 @@ function crumb<A>(
     )
     : "";
   return spread(left, position, width);
+}
+
+/** A selected group row's strip line: its groups, counts, and what Enter does. */
+function groupStripTitle<A>(
+  row: ListRow<A>,
+  label: string,
+): readonly InlineRun[] {
+  const groups = row.kind === "fold"
+    ? row.groups.map((folded) => ({
+      title: folded.group.shortTitle ?? folded.group.title,
+      count: folded.count,
+    }))
+    : row.kind === "header"
+    ? [{ title: row.group.title, count: row.count }]
+    : [];
+  return [
+    ...groups.flatMap(({ title, count }, index) => [
+      ...(index === 0
+        ? []
+        : [{ text: " · ", ascii: " - ", tone: "faint" as const }]),
+      { text: title, role: "title" as const },
+      { text: ` ${count}`, tone: "faint" as const },
+    ]),
+    { text: "   " },
+    { text: "↵", ascii: "Enter", role: "key" as const },
+    { text: ` ${label}`, tone: "muted" as const },
+  ];
 }
 
 interface BodyResult<A> {
@@ -625,7 +718,7 @@ function masterDetail<A>(
   const rows = listModelRows(fitted);
   const selected = rowIndexForKey(rows.rows, fitted.selection);
   const itemId = keyItemId(fitted.selection);
-  const blocks = detailBlocks(body, itemId);
+  const blocks = detailBlocks(body, itemId, rows.rows[selected]);
   if (fitted.zoomed && itemId !== undefined) {
     const [left] = split.detailPadding.standard;
     const width = Math.max(1, columns - 2 * left);
@@ -674,7 +767,8 @@ function masterDetail<A>(
       fullWidthRoomy(body.list, columns),
     );
     const row = rows.rows[selected];
-    const fallback = row?.kind === "item"
+    const group = groupRowLabel(row);
+    const fallback: readonly InlineRun[] = row?.kind === "item"
       ? [
         {
           text: row.item.marker.unicode,
@@ -684,7 +778,9 @@ function masterDetail<A>(
         { text: " " },
         { text: row.item.title, role: "title" as const },
       ]
-      : [];
+      : group === undefined || row === undefined
+      ? []
+      : groupStripTitle(row, group);
     const strip = stripLines === 0 ? [] : renderStrip(
       context,
       itemId === undefined ? undefined : body.detail.strip?.[itemId],
@@ -692,8 +788,14 @@ function masterDetail<A>(
       columns,
       stripLines === 1 ? 1 : 2,
       "surface",
+      itemId !== undefined,
     ).map((line) =>
-      fitLine(context, itemId === undefined ? "" : line, columns, "surface")
+      fitLine(
+        context,
+        itemId === undefined && group === undefined ? "" : line,
+        columns,
+        "surface",
+      )
     );
     const ruled = rule === 0 ? [] : [
       fitLine(

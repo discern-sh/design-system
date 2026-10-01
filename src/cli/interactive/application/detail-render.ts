@@ -480,9 +480,12 @@ export function renderStrip(
   width: number,
   lines: 1 | 2,
   surface: TerminalSurfaceRole | undefined,
+  zoomable: boolean,
 ): readonly string[] {
   const room = Math.max(1, width - 4);
-  const key = ink(context, "Space", { tone: "ink", bold: true }, surface);
+  const key = zoomable
+    ? ink(context, "Space", { tone: "ink", bold: true }, surface)
+    : "";
   const separator = ink(
     context,
     ` ${terminalGlyph("separator", context.capabilities)} `,
@@ -502,11 +505,12 @@ export function renderStrip(
   };
   const title = styleRuns(context, strip?.title ?? fallback, surface, "ink");
   if (lines === 1) {
-    const facts = factsLine(room - 7);
+    const reserved = key === "" ? 0 : measureText(key) + 2;
+    const facts = factsLine(room - reserved);
     const shown = facts === ""
       ? truncateStyledText(
         title,
-        Math.max(1, room - 7),
+        Math.max(1, room - reserved),
         terminalGlyph("ellipsis", context.capabilities),
       )
       : facts;
