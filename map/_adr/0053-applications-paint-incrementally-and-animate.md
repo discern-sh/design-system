@@ -1,6 +1,6 @@
 # ADR 0053: Applications paint incrementally and animate
 
-**Status**: accepted
+**Status**: accepted; window titles joined the paint grammar under [ADR-0050](0050-applications-compose-a-grouped-list-a-following-detail-and-modal-layers.md)
 
 ## Context
 

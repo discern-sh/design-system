@@ -1,0 +1,41 @@
+# ADR 0050: Applications compose a grouped list, a following detail and modal layers
+
+**Status**: accepted; supersedes [ADR-0046](0046-own-terminal-applications-through-bounded-regions.md); amends [ADR-0053](0053-applications-paint-incrementally-and-animate.md) by adding window titles to the paint grammar
+
+## Context
+
+[ADR-0046](0046-own-terminal-applications-through-bounded-regions.md) gave consumers one or two bounded regions: a Select menu or a reading block, side by side at 100 columns, stacked at 32 rows, and otherwise only the focused region with Tab to reach the other. Real screens built on it showed the model's limits. Each pane was padded to a fixed share of the screen, so a short list sat in a tall empty box. Below 100 columns half of the screen was behind Tab, and an unfocused region drew no selection at all. Nothing followed the selection, so seeing an item's detail took an Enter and a new screen. There was no header, message line, or structured key hints, only a title string and a help string. Escape exited by default, so every consumer reimplemented back navigation. A list whose rows were refreshed in the background could reorder under a moving selection.
+
+The screens consumers need are lists of items in groups, each item with a detail that explains it, refreshed live, readable at 32 × 10 and at 120 columns, and later carrying review sheets, menus, and a command palette. That shape needs one owner of focus and the package owning every movement within it, or consumers end up tracking selection and focus a second time.
+
+## Decision
+
+**One focus owner.** The view has a header bar, one body, an optional message line, and key hints. The body is a master-detail (a grouped list with a detail that follows its selection), a list, a reading document, or an empty state. The detail never takes focus: page keys and Shift+arrows scroll it, and Space zooms it to the whole body while Up and Down keep walking items. There are never two peer regions, so Tab moves between groups instead of between regions. Modal layers — sheets, menus, a palette, forms, and readers — join the same model as layers the caller declares in the view; while a layer is open it owns focus and the list's selection stays visible but receded.
+
+**The caller declares; the package owns.** The caller supplies content and meaning: groups, items, cells, detail blocks, messages, key hints, and the words of every announcement. The package owns selection anchored to item identity, filtering, folds, zoom, scroll, column dropping, list width, density, the settle window, message timing, painting, and the window title. `context.state` is a read-only snapshot for building views and saving preferences; the caller never computes selection, focus, scroll, or folds.
+
+**One input at a time, then callbacks in a fixed order.** The runtime decodes one input event, applies its own transition, then calls `onSelectionMoved`, `onSelectionChange`, `onDismiss`, and `onAction`, in that order. An update made inside a callback applies before the next input; updates from elsewhere wait in a coalescing mailbox and apply only between inputs. A dismissed message must leave the next view: the package hides it at once and refuses a view that keeps it. Layers follow the same rule.
+
+**Keys have one meaning per scope.** Navigation keys are reserved; a caller keymap binds the rest, and a binding that collides with a reserved key or another binding throws before the terminal changes. Escape belongs to the package first — it clears a filter, leaves zoom, or dismisses a message — and reaches a binding only when nothing is left to close. Escape never exits. A binding marked for fields must be a non-printing chord outside the editor's chords, so typing never runs an action. Ctrl+C cancels unless a binding claims it.
+
+**Split rules replace breakpoints.** A master-detail list is sized to its content: the width at which no column drops and the longest title, capped, fits whole, clamped between a minimum and the screen minus the detail's minimum. Wide and standard tiers give the detail different minimums and padding. Below `collapseBelowColumns` the list fills the width and the detail becomes a strip above the footer, with zoom as the full view. Trailing columns drop by priority while the title would be narrower than `minTitle`. Below 20 rows the header loses its gap; below 14 a message replaces the footer and the strip is one line. The minimum stays 32 × 10, and the notice below it names the size it needs.
+
+**Density and membership never move under the person.** Density — blank separators, then folding quiet groups into one summary row — is decided on resize and membership change only, as if no message were shown, so a toast or a keypress never refolds the list; the list scrolls instead, with one row of margin, a sticky group header, and overflow counts. Membership and order changes wait until keys have been idle for the settle window while content updates at once. When the selected item regroups, the selection follows it on the same screen line; when it disappears, or joins a folded group, the selection moves to the next item in its group, else the first row of the next group, else the previous row, and the move is reported.
+
+**Commands stay few.** An action returns `foreground`, which prints an optional handoff line on the released screen before the operation runs and keeps type-ahead for the return, or `exit`, which prints an optional epilogue after restoration. Anything else throws. Commands that run beside the screen are a later decision; the closed command set is the extension point.
+
+**Window titles join the paint grammar.** The painter saves the terminal's title before setting the view's first one, restates it with every keyframe so a replay from the last keyframe knows it, and restores the saved title when the view drops it or the screen is released. The replay enrols the save, set, and restore sequences.
+
+**What stays.** The pure split stays: `createTerminalApplicationModel`, `updateTerminalApplication`, `transitionTerminalApplication`, and `renderTerminalApplication` are directly testable, and the runtime only adds effects. Input ownership, restoration, foreground handoff, painting, liveness, and capture keep their contracts. The Markdown browser keeps its own runtime and pane allocation until it is rebuilt on this one. A general layout language and arbitrary numbers of regions remain rejected.
+
+## Consequences
+
+Consumers rewrite their views, bindings, and state reads; there is no adapter for the region tuple. A key that used to return `handled` becomes a binding with an action. Tests that pressed Escape to leave an application bind a key instead. A view change that moves items right after a keypress shows up only after the settle window, so tests advance the clock to see it; content changes are immediate.
+
+The package now owns presentation that consumers used to compose: the row anatomy, column dropping, density, strip, breadcrumb, and empty state. That is what lets every consumer render alike across widths and colour depths, but a consumer that wants a different row shape has to add it to the package. A cell fits its column by dropping whole trailing runs, so a consumer cannot hide one run at one width except by dropping it. Hints blocks in a detail show only on wide screens and in zoom, because the footer already names the keys.
+
+Deciding density without the message line means a message can push the last list row behind an overflow count instead of refolding the list. Hiding a dismissed message before the caller's next view, and refusing a view that keeps it, turns a stale caller view into a failure rather than a flicker.
+
+## Alternatives considered
+
+Keeping the region tuple and adding optional fields would have left two owners of focus and two meanings for Tab. An adapter from the old view to the new one would have kept the old geometry's defects alive for another release, and every consumer moves in the same programme. Letting the caller own selection and scroll, with the package only rendering, would make every consumer reimplement identity anchoring, settle windows, and edge scrolling — the most error-prone parts. A general layout tree would widen the public contract well beyond the screens the package has to serve.

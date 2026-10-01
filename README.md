@@ -566,57 +566,67 @@ The inspection reports visible-cell widths, overflow, content height, and the fo
 
 ### Terminal applications
 
-Use `runTerminalApplication` for a persistent screen whose data changes while it stays open. The package owns one viewport, responsive selectable and reading regions, focus, scrolling, resizing and terminal cleanup. Your code supplies product facts, navigation decisions and effects:
+Use `runTerminalApplication` for a persistent screen whose data changes while it stays open. The view is a header bar, one body — a grouped list with a detail that follows its selection, a list, a reading document, or an empty state — an optional message line, and key hints. Your code supplies content, words, and actions; the package owns selection, filtering, folds, zoom, scrolling, layout, painting, and terminal cleanup:
 
 ```ts
-import {
-  createCliBlock,
-  renderMarkdownCli,
-} from "@discern-sh/design-system/cli";
+import { TERMINAL_GLYPHS } from "@discern-sh/design-system/cli";
 import { runTerminalApplication } from "@discern-sh/design-system/cli/interactive";
+
+const done = { ...TERMINAL_GLYPHS.done, tone: "success" as const };
 
 await runTerminalApplication({
   view: {
-    title: "Studio",
-    tip: "Tab switches regions.",
-    regions: [
-      {
-        kind: "choices",
-        id: "items",
-        title: "Items",
-        entries: [
-          {
-            id: "notes",
-            label: "Field notes",
-            value: "notes",
-            indicator: { content: "✓", ascii: "+", tone: "success" },
-            status: { content: "Ready", tone: "success" },
-          },
-        ],
+    header: {
+      leading: [{ text: "Studio", role: "title" }],
+      trailing: [{ text: "1 to review", tone: "muted" }],
+    },
+    body: {
+      kind: "master-detail",
+      list: {
+        id: "jobs",
+        columns: [{ id: "status", width: 9, align: "end" }],
+        groups: [{
+          id: "review",
+          title: "Needs review",
+          items: [{
+            id: "report",
+            title: "Quarterly report",
+            marker: done,
+            cells: { status: [{ text: "Ready", tone: "success" }] },
+            primary: "open",
+          }],
+        }],
       },
-      {
-        kind: "reading",
-        id: "guide",
-        title: "Guide",
-        content: createCliBlock(renderMarkdownCli, {
-          source: "# Guide\n\nA little room to work.",
-        }),
+      detail: {
+        follows: "jobs",
+        content: {
+          report: [
+            { kind: "heading", title: "Quarterly report" },
+            { kind: "state", glyph: done, label: "Ready", tone: "success" },
+            { kind: "text", runs: [{ text: "Finished 20m ago." }] },
+          ],
+        },
       },
-    ],
+    },
+    footer: {
+      left: [{ key: "enter", label: "Open" }],
+      right: [{ key: "q", label: "Quit" }],
+    },
   },
-  onAction: () => ({ kind: "exit" }),
+  keymap: [{ key: "q", action: "quit" }],
+  onAction: (action) => action === "quit" ? { kind: "exit" } : undefined,
 }, { theme: "dark", appearance: { accent: 220 } });
 ```
 
-`start(context)` starts a subscription once and returns its cleanup. Providers publish immutable replacements with `context.update(view)` and report errors with `context.fail(error)`; they are never awaited on arrow keys. Choice focus follows stable IDs through reorder and status changes. Unavailable rows remain inspectable, and only Enter on an available choice activates it. `onAction` may return `{ kind: "foreground", run: async () => { /* caller-owned operation */ } }`: terminal modes restore before the operation, and the same selection and reading offset resume afterwards. Keyboard shortcut handlers return `handled` or `exit`; caller-owned effects stay in activation handlers.
+`start(context)` starts a subscription once and returns its cleanup. Providers publish immutable replacements with `context.update(view)` and report errors with `context.fail(error)`; they are never awaited on arrow keys. Selection follows item ids through reorder and regrouping; membership and order changes wait until keys have been idle for the list's `settleMs`, while content updates at once. `onSelectionChange` names the selected item so you can load its detail, and `onSelectionMoved` reports when an update regrouped or removed it. Callbacks run in a fixed order after the package's own transition, and an update made inside one applies before the next key. Keys reach your code only through `keymap` bindings; a binding on a reserved navigation key throws before the terminal changes. Escape clears a filter, leaves zoom, or dismisses a message, and never exits. `onAction` may return `{ kind: "foreground", handoff, run }` — terminal modes restore before the operation, the handoff line prints, and the same selection, filter, and scroll resume afterwards — or `{ kind: "exit", epilogue }`.
 
-Each paint is one synchronized update that rewrites only the rows that changed, with a complete keyframe after a resize or composition change and at least every 30 seconds while the screen changes. Mark a one-cell indicator with `animation: "spinner"` to have it move at four frames a second while visible; ASCII output and `reducedMotion: true` keep it still, and omitting `animation` freezes it. Pass `clock` to control time and `paint` to change painting.
+Below 80 columns the detail becomes a strip above the footer and Space shows it at full width; on wider screens the list is sized to its content beside the detail. Columns drop by priority, quiet groups fold into one summary row on short screens, and the list scrolls at its edge with a sticky group header. Each paint is one synchronized update that rewrites only the rows that changed, with a complete keyframe after a resize or layout change and at least every 30 seconds while the screen changes. Mark a one-cell glyph with `animation: "spinner"` to have it move at four frames a second while visible; ASCII output and `reducedMotion: true` keep it still. `windowTitle` sets the terminal's title and restores the previous one on exit. Pass `clock` to control time and `paint` to change painting.
 
-The minimum is **32 × 10**. Below it the session shows a resize notice with an exit; wide terminals split columns, tall terminals stack regions, and smaller terminals show the focused region. Tab reaches the other region in all layouts. Ctrl+C, EOF and cooperative abort clean up and throw `InteractionCancelled`; Escape returns normally unless the caller handles it as back navigation. Unsupported TTY/control capabilities refuse before entering raw mode. Default appearance remains monochrome; use explicit appearance inputs when reviewing semantic color.
+The minimum is **32 × 10**; below it the screen names the size it needs while your bindings still work. Ctrl+C, EOF and cooperative abort clean up and throw `InteractionCancelled` unless a binding claims Ctrl+C. Unsupported TTY/control capabilities refuse before entering raw mode. Default appearance remains monochrome; use explicit appearance inputs when reviewing semantic color.
 
-Run `deno task playground:application` for the live Studio demo with a harmless foreground child, or choose `application` in `deno task playground:cli`. `deno run --config deno.json -A scripts/application-capture.ts` captures named real-PTY states as HTML and PNGs. Optional `./cli/interactive/testing` exports `runPtyProcess` with controlled geometry, observable readiness and named keyframes; `captureTerminalFrame` replays the application's paints to one settled frame, returns its HTML projection and, when `TERMINAL_APPLICATION_STATE_REPORTS=1`, its state report; `ptySettledFrame` builds readiness from that replay; and `ManualTerminalClock` drives animation and keyframe timing without real delays. `observeTerminalIO` and runtime `observe` expose writes, geometry and rendering work. PTY transport supports macOS/BSD and Linux/util-linux with `script`, `stty` and `ps`; Windows and arbitrary cursor-driven transcripts are unsupported. Broad behavioral tests should continue to use FakeTerminalIO.
+Run `deno task playground:application` for the live sample with a harmless foreground child, or choose `application` in `deno task playground:cli`. `deno run --config deno.json -A scripts/application-capture.ts` captures named real-PTY states as HTML and PNGs. Optional `./cli/interactive/testing` exports `runPtyProcess` with controlled geometry, observable readiness and named keyframes; `captureTerminalFrame` replays the application's paints to one settled frame, returns its HTML projection, its window title and, when `TERMINAL_APPLICATION_STATE_REPORTS=1`, its state report; `ptySettledFrame` builds readiness from that replay; and `ManualTerminalClock` drives animation, settle windows, and keyframe timing without real delays. The pure `createTerminalApplicationModel`, `updateTerminalApplication`, `transitionTerminalApplication`, and `renderTerminalApplication` test views without a terminal. `observeTerminalIO` and runtime `observe` expose writes, geometry and rendering work. PTY transport supports macOS/BSD and Linux/util-linux with `script`, `stty` and `ps`; Windows and arbitrary cursor-driven transcripts are unsupported. Broad behavioral tests should continue to use FakeTerminalIO.
 
-See the [application and migration guide](map/70-cli/applications.md) for exact focus/overflow rules, ownership, capture examples and the remaining discern helper migration. Existing request defaults are unchanged. For standalone actions, discover Select's canonical **Action menu** example and pass `presentation: "menu"`; consumers wrapping the older `InteractionChoicePresentation` must use `InteractionSelectionPresentation` for a single selection.
+See the [application and migration guide](map/70-cli/applications.md) for exact focus, geometry and callback rules, ownership, capture examples and migration from the region model. Existing request defaults are unchanged. For standalone actions, discover Select's canonical **Action menu** example and pass `presentation: "menu"`; consumers wrapping the older `InteractionChoicePresentation` must use `InteractionSelectionPresentation` for a single selection.
 
 The optional `./cli/interactive` adapter turns raw terminal input into typed interaction state and renders it through the package's Forms Component renderers. Running an interaction is the effects boundary; importing the module does not mutate the terminal:
 
