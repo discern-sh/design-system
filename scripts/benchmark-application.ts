@@ -6,12 +6,17 @@ import {
 import {
   renderTerminalApplication,
   runTerminalApplication,
+  TERMINAL_ANIMATION_INTERVAL_MS,
   type TerminalApplicationObservation,
   type TerminalApplicationView,
   transitionTerminalApplication,
   updateTerminalApplication,
 } from "@discern-sh/design-system/cli/interactive";
-import { FakeTerminalIO } from "@discern-sh/design-system/cli/interactive/testing";
+import {
+  FakeTerminalIO,
+  ManualTerminalClock,
+} from "@discern-sh/design-system/cli/interactive/testing";
+import { TerminalScreenPainter } from "../src/cli/interactive/painter.ts";
 import {
   fitInteractionFrame,
   type InteractionFrameViewport,
@@ -208,6 +213,126 @@ for (const count of [20, 10_000]) {
     backgroundBurstFrames: updateObservations.length,
   });
 }
+// Painting: what reaches the terminal per paint, through the real runtime.
+const settle = async () => {
+  for (let turn = 0; turn < 5; turn++) {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
+};
+const bytes = (values: number[]) => {
+  const sorted = [...values].sort((a, b) => a - b);
+  return {
+    p50: sorted[Math.floor(sorted.length * .5)],
+    maximum: sorted.at(-1),
+  };
+};
+const painting = [];
+for (const [columns, rows] of [[80, 24], [120, 30]] as const) {
+  for (const colorDepth of ["none", "truecolor"] as const) {
+    const animated: TerminalApplicationView<number> = {
+      title: "Collection",
+      regions: [{
+        kind: "choices",
+        id: "items",
+        title: "Items",
+        entries: Array.from({ length: 40 }, (_, i) => ({
+          id: String(i),
+          label: `Item ${i}`,
+          value: i,
+          indicator: i < 3
+            ? { content: "◐", ascii: "@", animation: "spinner" as const }
+            : { content: "✓", ascii: "v", tone: "success" as const },
+          status: { content: i < 3 ? "Working" : "Ready" },
+        })),
+      }],
+    };
+    const io = new FakeTerminalIO([], {
+      holdOpen: true,
+      columns,
+      rows,
+      colorDepth,
+    });
+    const clock = new ManualTerminalClock();
+    const seen: TerminalApplicationObservation[] = [];
+    const running = runTerminalApplication({
+      view: animated,
+      onKey: (key) =>
+        key.kind === "text" && key.text === "q" ? { kind: "exit" } : undefined,
+    }, {
+      io,
+      clock,
+      theme: "dark",
+      appearance: { accent: 220 },
+      observe: (event) => seen.push(event),
+    });
+    await settle();
+    const keyframe = seen[0]!;
+    for (let tick = 0; tick < 40; tick++) {
+      clock.advance(TERMINAL_ANIMATION_INTERVAL_MS);
+      await settle();
+    }
+    const ticks = seen.slice(1);
+    for (let key = 0; key < 20; key++) {
+      io.enqueueKeys("down");
+      await settle();
+    }
+    const navigation = seen.slice(1 + ticks.length);
+    io.enqueue("q");
+    await running;
+    io.close();
+    painting.push({
+      columns,
+      rows,
+      colorDepth,
+      visibleSpinners: 3,
+      keyframeBytes: keyframe.bytesWritten,
+      spinnerFrameBytes: bytes(ticks.map((event) => event.bytesWritten)),
+      spinnerFrameRows: bytes(ticks.map((event) => event.rowsWritten)),
+      navigationBytes: bytes(navigation.map((event) => event.bytesWritten)),
+      navigationRows: bytes(navigation.map((event) => event.rowsWritten)),
+      completeRepaintBytes: bytes(navigation.map((event) => event.frameBytes)),
+    });
+  }
+}
+// The painter alone: diff and validation cost per paint over real frames.
+const painterTiming = [];
+for (const rowDiff of [true, false]) {
+  const io = new FakeTerminalIO([], { columns: 80, rows: 24 });
+  const painter = new TerminalScreenPainter(io, () => 0, { rowDiff });
+  let state = updateTerminalApplication({
+    title: "Collection",
+    regions: [{
+      kind: "choices",
+      id: "items",
+      title: "Items",
+      entries: Array.from({ length: 200 }, (_, i) => ({
+        id: String(i),
+        label: `Item ${i}`,
+        value: i,
+        status: { content: "Ready", tone: "success" as const },
+      })),
+    }],
+  });
+  const frames: string[] = [];
+  for (let i = 0; i < 200; i++) {
+    state =
+      transitionTerminalApplication(state, { kind: "named", name: "down" })
+        .state;
+    const rendered = renderTerminalApplication(state, io.size(), {
+      ...io.capabilities(),
+      colorDepth: "truecolor",
+    });
+    state = rendered.state;
+    frames.push(rendered.frame);
+  }
+  const times: number[] = [];
+  for (const frame of frames) {
+    const start = performance.now();
+    painter.paint({ frame, size: io.size() });
+    times.push(performance.now() - start);
+  }
+  painterTiming.push({ rowDiff, paints: frames.length, ...summary(times) });
+}
 console.log(
   JSON.stringify(
     {
@@ -219,6 +344,8 @@ console.log(
       },
       fitting,
       navigation,
+      painting,
+      painterTiming,
     },
     null,
     2,

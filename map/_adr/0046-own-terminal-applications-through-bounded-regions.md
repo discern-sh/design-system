@@ -1,6 +1,6 @@
 # ADR 0046: Own terminal applications through bounded regions
 
-**Status**: accepted
+**Status**: accepted; painting and settled-frame capture amended by [ADR-0053](0053-applications-paint-incrementally-and-animate.md)
 
 ## Context
 
