@@ -1053,3 +1053,56 @@ Deno.test("the focused control of every layer stays on screen as focus moves and
     }
   }
 });
+
+Deno.test("a panel never holds blank rows while it hides body rows", async (t) => {
+  const layers: readonly (() => ApplicationLayer<string>)[] = [
+    () => demoRunSheet(IMAGE),
+    () => demoDeleteSheet(ARCHIVE),
+    () => demoNewJobForm(),
+    () => demoActionsMenu(IMAGE),
+    () => demoPalette(DEMO_JOBS, false),
+    () => demoKeysReader(),
+    () => demoLogReader(IMAGE),
+  ];
+  for (const make of layers) {
+    const layer = make();
+    for (const [columns, rows] of GEOMETRIES) {
+      for (const colorDepth of ["truecolor", "none"] as const) {
+        await t.step(`${layer.id} at ${columns}x${rows} ${colorDepth}`, () => {
+          const driver = new ApplicationDriver(withLayers(layer), {
+            columns,
+            rows,
+            colorDepth,
+          });
+          const panel = new Set(
+            (driver.model.hits ?? []).flatMap((hit) =>
+              hit.target.kind === "layer" ? [hit.row] : []
+            ),
+          );
+          const lines = driver.text.split("\n");
+          const inside = [...panel].sort((a, b) => a - b).slice(1, -1).map(
+            (row) => lines[row] ?? "",
+          );
+          const left = Math.min(
+            ...[...panel].map((row) =>
+              (driver.model.hits ?? []).find((hit) =>
+                hit.row === row && hit.target.kind === "layer"
+              )?.start ?? 0
+            ),
+          );
+          const blank = (line: string) =>
+            line.slice(left).replace(/[│|]/gu, "").trim() === "";
+          if (!inside.some((line) => /more · PgDn|more below/u.test(line))) {
+            return;
+          }
+          for (let index = 1; index < inside.length; index += 1) {
+            assert(
+              !(blank(inside[index - 1] ?? "") && blank(inside[index] ?? "")),
+              `two blank rows inside a panel that hides rows:\n${driver.text}`,
+            );
+          }
+        });
+      }
+    }
+  }
+});

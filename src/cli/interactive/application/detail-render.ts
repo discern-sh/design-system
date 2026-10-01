@@ -427,37 +427,47 @@ export function scrollDetail(
       scroll: 0,
     };
   }
-  const rowsAt = (scroll: number) =>
-    Math.max(1, visible - (scroll > 0 && !topPadding ? 1 : 0));
-  let maxScroll = lines.length - rowsAt(1);
-  maxScroll = Math.max(0, Math.min(maxScroll, lines.length - 1));
+  // Without a padding row the upper marker takes the first row once
+  // scrolled, and stands for the line beneath it too, so each step down
+  // reveals a new line. A viewport too short for a marker and a line shows
+  // the line.
+  const costs = !topPadding && visible >= 2;
+  const viewport = (scroll: number) => {
+    const first = scroll > 0 && costs ? scroll + 1 : scroll;
+    let rows = visible - (scroll > 0 && costs ? 1 : 0);
+    const below = first + rows < lines.length && rows >= 2;
+    if (below) rows -= 1;
+    return { first, rows, below };
+  };
+  let maxScroll = Math.max(0, lines.length - visible - 1);
+  while (
+    viewport(maxScroll).first + viewport(maxScroll).rows < lines.length
+  ) maxScroll += 1;
   const scroll = Math.max(0, Math.min(requested, maxScroll));
-  let rows = rowsAt(scroll);
-  const below = scroll + rows < lines.length;
-  if (below) rows = Math.max(1, rows - 1);
+  const at = viewport(scroll);
   const marker = (text: string) =>
     spread("", ink(context, text, { tone: "faint" }), width);
   const top: string[] = [];
-  if (scroll > 0) {
+  if (scroll > 0 && (topPadding || costs)) {
     top.push(
       marker(
         overflowMarker(
           context,
           "up",
-          hiddenCount(lines.slice(0, scroll)),
+          hiddenCount(lines.slice(0, at.first)),
           "PgUp",
         ),
       ),
     );
   } else if (topPadding) top.push("");
-  const shown = lines.slice(scroll, scroll + rows);
-  const bottom = below
+  const shown = lines.slice(at.first, at.first + at.rows);
+  const bottom = at.below
     ? [
       marker(
         overflowMarker(
           context,
           "down",
-          hiddenCount(lines.slice(scroll + rows)),
+          hiddenCount(lines.slice(at.first + at.rows)),
           "PgDn",
         ),
       ),

@@ -621,59 +621,132 @@ function composePanel(
 ): Fitted {
   const pad = sidePadding(box);
   const width = layerContentWidth(box);
-  const footRows = Math.max(
-    panel.foot(0, NOTHING_SHOWN, false).length,
-    panel.foot(999, NOTHING_SHOWN, true).length,
-  );
-  let gapAfterHead = panel.head.length > 0 ? 1 : 0;
-  let gapBeforeFoot = footRows > 0 ? 1 : 0;
-  const room = () =>
-    box.height - 2 - panel.head.length - gapAfterHead - gapBeforeFoot -
-    footRows;
-  if (room() < Math.min(3, panel.body.length)) gapAfterHead = 0;
-  if (room() < Math.min(3, panel.body.length)) gapBeforeFoot = 0;
-  const available = Math.max(1, room());
-  const moved = panel.body.length > available && panel.footnote !== undefined;
-  const body = moved
-    ? [...panel.body, BLANK, ...(panel.footnote ?? [])]
-    : panel.body;
-  const visible = box.stretch
-    ? available
-    : Math.min(available, Math.max(1, body.length));
-  const overflows = body.length > visible;
-  // Once scrolled, an upper marker takes the first row; a lower marker takes
-  // the last unless the foot names what is hidden.
-  const capacity = (scroll: number): number => {
-    let rows = visible - (scroll > 0 ? 1 : 0);
-    if (!panel.footOverflow && scroll + rows < body.length) rows -= 1;
-    return Math.max(1, rows);
+  /** The gaps, body, and viewport height left beside a foot of `footRows`. */
+  const fit = (footRows: number) => {
+    let gapAfterHead = panel.head.length > 0 ? 1 : 0;
+    let gapBeforeFoot = footRows > 0 ? 1 : 0;
+    const room = () =>
+      box.height - 2 - panel.head.length - gapAfterHead - gapBeforeFoot -
+      footRows;
+    // Blank rows give way before body rows: the title's gap goes once the
+    // body overflows, the foot's only when the body would keep under three.
+    if (room() < panel.body.length) gapAfterHead = 0;
+    if (room() < Math.min(3, panel.body.length)) gapBeforeFoot = 0;
+    const available = Math.max(1, room());
+    const moved = panel.body.length > available &&
+      panel.footnote !== undefined;
+    const body = moved
+      ? [...panel.body, BLANK, ...(panel.footnote ?? [])]
+      : panel.body;
+    const visible = box.stretch
+      ? available
+      : Math.min(available, Math.max(1, body.length));
+    return {
+      footRows,
+      gapAfterHead,
+      gapBeforeFoot,
+      moved,
+      body,
+      visible,
+      overflows: body.length > visible,
+    };
   };
-  const maxScroll = overflows
-    ? Math.max(0, body.length - Math.max(1, visible - 1))
-    : 0;
-  const clamp = (value: number) => Math.max(0, Math.min(maxScroll, value));
-  let scroll = clamp(requested);
-  const keep = (index: number, top: boolean) => {
-    if (index < 0 || !overflows) return;
-    if (top || index < scroll) scroll = clamp(index);
-    for (let guard = 0; guard <= body.length; guard += 1) {
-      if (index < scroll + capacity(scroll) || scroll >= maxScroll) break;
-      scroll += 1;
+  /**
+   * Lay the body out beside a foot of `footRows`: the viewport at a scroll
+   * position, where once scrolled the upper marker takes the first row and
+   * stands for the line beneath it too, so each step down reveals a new
+   * line; a lower marker takes the last row unless the foot names what is
+   * hidden. A viewport too short for a marker and a line shows the line.
+   * Returns the foot this layout actually draws.
+   */
+  const place = (footRows: number) => {
+    const fitted = fit(footRows);
+    const { body, visible, overflows } = fitted;
+    const viewport = (scroll: number) => {
+      const up = scroll > 0 && visible >= 2 ? 1 : 0;
+      const first = scroll + up;
+      let rows = visible - up;
+      const down =
+        !panel.footOverflow && first + rows < body.length && rows >= 2 ? 1 : 0;
+      rows -= down;
+      return { up, first, rows, down };
+    };
+    let maxScroll = 0;
+    if (overflows) {
+      maxScroll = Math.max(0, body.length - visible - 1);
+      while (
+        viewport(maxScroll).first + viewport(maxScroll).rows < body.length
+      ) maxScroll += 1;
     }
+    const clamp = (value: number) => Math.max(0, Math.min(maxScroll, value));
+    let scroll = clamp(requested);
+    /** The scroll that puts a body row first on screen. */
+    const topAt = (index: number) =>
+      clamp(visible >= 2 ? Math.max(0, index - 1) : index);
+    const keep = (index: number, top: boolean) => {
+      if (index < 0 || !overflows) return;
+      if (top || index < viewport(scroll).first) scroll = topAt(index);
+      for (let guard = 0; guard <= body.length; guard += 1) {
+        const at = viewport(scroll);
+        if (index < at.first + at.rows || scroll >= maxScroll) break;
+        scroll += 1;
+      }
+    };
+    if (reveal !== undefined) {
+      keep(
+        body.findIndex((row) => holds(row, reveal)),
+        reveal.startsWith("disclosure:") || reveal.startsWith("group:"),
+      );
+    }
+    if (panel.follow !== undefined) {
+      const follow = panel.follow;
+      keep(body.findIndex((row) => holds(row, follow)), false);
+    }
+    let at = overflows
+      ? viewport(scroll)
+      : { up: 0, first: 0, rows: body.length, down: 0 };
+    let gapBeforeFoot = fitted.gapBeforeFoot;
+    const last = body[at.first + at.rows - 1];
+    // A viewport that ends on a blank separator while rows stay hidden
+    // takes the foot's gap for one more row, so two blank rows never stand
+    // between hidden content and the foot.
+    if (
+      overflows && gapBeforeFoot > 0 && at.down === 0 &&
+      at.first + at.rows < body.length && last !== undefined &&
+      typeof last.text === "string" && last.text.trim() === ""
+    ) {
+      at = { ...at, rows: at.rows + 1 };
+      gapBeforeFoot = 0;
+    }
+    const below = Math.max(0, body.length - at.first - at.rows);
+    const hidden = visibleRows(body.slice(at.first + at.rows));
+    const shown = { start: at.first, end: at.first + at.rows };
+    const foot = panel.foot(below > 0 ? hidden : 0, shown, fitted.moved);
+    return {
+      fitted: {
+        ...fitted,
+        gapBeforeFoot,
+        visible: fitted.visible + fitted.gapBeforeFoot - gapBeforeFoot,
+      },
+      scroll,
+      at,
+      hidden,
+      shown,
+      foot,
+    };
   };
-  if (reveal !== undefined) {
-    keep(
-      body.findIndex((row) => holds(row, reveal)),
-      reveal.startsWith("disclosure:") || reveal.startsWith("group:"),
-    );
+  // Size the foot from the variant this frame draws, not the tallest one it
+  // might: read progress and the hidden count change the foot's words, and
+  // the foot's height changes the body's viewport, so settle the two.
+  let placed = place(panel.foot(0, NOTHING_SHOWN, false).length);
+  let tallest = placed.fitted.footRows;
+  for (let pass = 0; pass < 4; pass += 1) {
+    if (placed.foot.length === placed.fitted.footRows) break;
+    tallest = Math.max(tallest, placed.foot.length);
+    placed = place(pass < 3 ? placed.foot.length : tallest);
   }
-  if (panel.follow !== undefined) {
-    const follow = panel.follow;
-    keep(body.findIndex((row) => holds(row, follow)), false);
-  }
-  const rows = overflows ? capacity(scroll) : body.length;
-  const below = Math.max(0, body.length - scroll - rows);
-  const hidden = visibleRows(body.slice(scroll + rows));
+  const { fitted, scroll, at, hidden, shown } = placed;
+  const { body, visible, gapAfterHead, gapBeforeFoot } = fitted;
   const marker = (direction: "up" | "down", count: number, key: string) => ({
     text: spread(
       "",
@@ -682,18 +755,16 @@ function composePanel(
     ),
   });
   const bodyRows: PanelRow[] = [
-    ...(scroll > 0
-      ? [marker("up", visibleRows(body.slice(0, scroll)), "PgUp")]
+    ...(at.up > 0
+      ? [marker("up", visibleRows(body.slice(0, at.first)), "PgUp")]
       : []),
-    ...body.slice(scroll, scroll + rows),
-    ...(!panel.footOverflow && below > 0
-      ? [marker("down", hidden, "PgDn")]
-      : []),
+    ...body.slice(at.first, at.first + at.rows),
+    ...(at.down > 0 ? [marker("down", hidden, "PgDn")] : []),
   ];
   while (bodyRows.length < visible) bodyRows.push(BLANK);
-  const shown = { start: scroll, end: scroll + rows };
-  const foot = [...panel.foot(below > 0 ? hidden : 0, shown, moved)];
-  while (foot.length < footRows) foot.unshift(BLANK);
+  const foot = [...placed.foot];
+  // Only a layout that never settled holds more foot rows than it draws.
+  while (foot.length < fitted.footRows) foot.unshift(BLANK);
   const content: PanelRow[] = [
     ...panel.head,
     ...(gapAfterHead > 0 ? [BLANK] : []),
@@ -769,7 +840,7 @@ function composePanel(
     scroll,
     shown,
     page: visible,
-    hidden: below > 0 ? hidden : 0,
+    hidden: body.length > at.first + at.rows ? hidden : 0,
   };
 }
 
@@ -1575,12 +1646,16 @@ function menuPanel<A>(
       const unavailable = menu.unavailable?.items.find((candidate) =>
         unavailableControl(candidate.id) === control
       );
+      // Whatever is highlighted names itself at least, so the space held
+      // for descriptions never stands empty.
       const lines = item !== undefined
         ? describe(item.label, item.description)
         : unavailable !== undefined
         ? model.why === unavailable.id
           ? describe("", [{ text: unavailable.sentence }])
           : describe(unavailable.label, undefined)
+        : control === UNAVAILABLE_SECTION && menu.unavailable !== undefined
+        ? describe(menu.unavailable.title, undefined)
         : [];
       const padded: PanelRow[] = lines.map((text) => ({ text }));
       while (padded.length < reserved) padded.push(BLANK);
