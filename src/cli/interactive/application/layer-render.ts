@@ -326,38 +326,57 @@ function buttonRows<A>(
   width: number,
 ): readonly PanelRow[] {
   const gap = 2;
-  const parts = layer.buttons.map((button) => {
-    const enabled = buttonEnabled(layer, model, button);
-    const focused = model.focus === buttonControl(button.id);
-    const text = renderButton(
-      context,
-      button.label,
-      focused
-        ? enabled ? "focused" : "focused-disabled"
-        : enabled
-        ? "resting"
-        : "disabled",
-      button.role === "destructive",
-    );
-    return { button, text, width: measureText(text) };
-  });
-  const rows: (typeof parts)[] = [];
-  let current: typeof parts = [];
-  let used = 0;
-  for (const part of parts) {
-    const extra = current.length === 0 ? part.width : part.width + gap;
-    if (current.length > 0 && used + extra > width) {
-      rows.push(current);
-      current = [];
-      used = 0;
+  const render = () =>
+    layer.buttons.map((button) => {
+      const enabled = buttonEnabled(layer, model, button);
+      const focused = model.focus === buttonControl(button.id);
+      const text = renderButton(
+        context,
+        button.label,
+        focused
+          ? enabled ? "focused" : "focused-disabled"
+          : enabled
+          ? "resting"
+          : "disabled",
+        button.role === "destructive",
+      );
+      return { button, text, width: measureText(text) };
+    });
+  const pack = (parts: ReturnType<typeof render>) => {
+    const rows: (typeof parts)[] = [];
+    let current: typeof parts = [];
+    let used = 0;
+    for (const part of parts) {
+      const extra = current.length === 0 ? part.width : part.width + gap;
+      if (current.length > 0 && used + extra > width) {
+        rows.push(current);
+        current = [];
+        used = 0;
+      }
+      current.push(part);
+      used += current.length === 1 ? part.width : part.width + gap;
     }
-    current.push(part);
-    used += current.length === 1 ? part.width : part.width + gap;
-  }
-  if (current.length > 0) rows.push(current);
+    if (current.length > 0) rows.push(current);
+    return rows;
+  };
+  const rows = pack(render());
   const lines: PanelRow[] = [];
   const leftWidth = measureText(left);
+  const lastContent = rows.at(-1)?.map((part) => part.text).join(
+    " ".repeat(gap),
+  ) ?? "";
+  const lastStart = Math.max(0, width - measureText(lastContent));
+  // The left text sits beside a single button row when it fits; otherwise
+  // it takes its own row above the whole block, never between its rows.
+  const beside = rows.length === 1 && left !== "" &&
+    leftWidth + 2 <= lastStart;
+  if (left !== "" && !beside) {
+    lines.push({ text: truncateStyledText(left, width, ellipsis(context)) });
+  }
   for (const [index, row] of rows.entries()) {
+    // Filled buttons on touching rows would merge into one slab, so a
+    // blank row parts wrapped rows where fills paint.
+    if (index > 0 && context.painted) lines.push(BLANK);
     const content = row.map((part) => part.text).join(" ".repeat(gap));
     const start = Math.max(0, width - measureText(content));
     const hits: RowHit[] = [];
@@ -369,11 +388,6 @@ function buttonRows<A>(
         target: controlHit(layer.id, buttonControl(part.button.id)),
       });
       at += part.width + gap;
-    }
-    const last = index === rows.length - 1;
-    const beside = last && left !== "" && leftWidth + 2 <= start;
-    if (last && left !== "" && !beside) {
-      lines.push({ text: truncateStyledText(left, width, ellipsis(context)) });
     }
     lines.push({
       text: beside

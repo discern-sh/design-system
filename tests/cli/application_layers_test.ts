@@ -1300,3 +1300,41 @@ Deno.test("without Unicode every frame is pure ASCII", async (t) => {
     }
   }
 });
+
+Deno.test("wrapped button rows stay parted, with their overflow line above them", async (t) => {
+  for (const make of PANELS) {
+    const layer = make();
+    for (const [columns, rows] of GEOMETRIES) {
+      await t.step(`${layer.id} at ${columns}x${rows}`, () => {
+        const driver = new ApplicationDriver(withLayers(layer), {
+          columns,
+          rows,
+          colorDepth: "truecolor",
+        });
+        const buttonRows = [
+          ...new Set(
+            driver.hits.flatMap((hit) =>
+              hit.target.kind === "control" &&
+                hit.target.control.startsWith("button:")
+                ? [hit.row]
+                : []
+            ),
+          ),
+        ].sort((a, b) => a - b);
+        const lines = driver.text.split("\n");
+        for (let index = 1; index < buttonRows.length; index += 1) {
+          const [above, below] = [buttonRows[index - 1], buttonRows[index]];
+          if (above === undefined || below === undefined) continue;
+          assert(below - above >= 2, `touching button rows:\n${driver.text}`);
+          for (let row = above + 1; row < below; row += 1) {
+            assertEquals(
+              (lines[row] ?? "").trim(),
+              "",
+              `text between button rows:\n${driver.text}`,
+            );
+          }
+        }
+      });
+    }
+  }
+});
