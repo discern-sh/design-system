@@ -971,3 +971,85 @@ Deno.test("a new review clears the challenge and returns focus to where a sheet 
   running.key("enter");
   assertEquals(actions(running.take()), [], "Enter lands on the safe button");
 });
+
+const GEOMETRIES = [
+  [120, 30],
+  [80, 24],
+  [60, 20],
+  [40, 20],
+  [80, 13],
+  [32, 10],
+] as const;
+
+/** Whether the frame drew a clickable region for a layer's control. */
+function controlShown(driver: ApplicationDriver, layer: string): boolean {
+  const state = driver.state.layers[layer];
+  if (state === undefined) return false;
+  const focus = state.focusedControlId;
+  if (focus === "input" || focus === "body") return true;
+  if (focus === "rows") {
+    const list = Object.entries(driver.state.lists).find(([id]) =>
+      id !== "jobs"
+    );
+    const selected = list?.[1].selectedId;
+    return selected === undefined ||
+      (driver.model.hits ?? []).some((hit) =>
+        hit.target.kind === "row" && hit.target.key === `i:${selected}`
+      );
+  }
+  const control = state.highlightedId === undefined
+    ? focus
+    : `item:${state.highlightedId}`;
+  return (driver.model.hits ?? []).some((hit) =>
+    hit.target.kind === "control" && hit.target.layerId === layer &&
+    hit.target.control === control
+  );
+}
+
+Deno.test("the focused control of every layer stays on screen as focus moves and fields take keys", async (t) => {
+  const layers: readonly (() => ApplicationLayer<string>)[] = [
+    () => demoRunSheet(IMAGE),
+    () => demoDeleteSheet(ARCHIVE),
+    () => demoNewJobForm(),
+    () => demoActionsMenu(IMAGE),
+    () => demoPalette(DEMO_JOBS, false),
+    () => demoKeysReader(),
+    () => demoLogReader(IMAGE),
+  ];
+  for (const make of layers) {
+    const layer = make();
+    for (const [columns, rows] of GEOMETRIES) {
+      await t.step(`${layer.id} at ${columns}x${rows}`, () => {
+        const driver = new ApplicationDriver(withLayers(layer), {
+          columns,
+          rows,
+          colorDepth: "none",
+        });
+        const check = (after: string) =>
+          assert(
+            controlShown(driver, layer.id),
+            `${
+              driver.state.layers[layer.id]?.focusedControlId
+            } is off screen after ${after}\n${driver.text}`,
+          );
+        const focus = () => driver.state.layers[layer.id]?.focusedControlId;
+        if (focus()?.startsWith("field:") === true) {
+          driver.type("x");
+          check("typing into it");
+          for (const page of ["page-up", "page-down"]) {
+            driver.key(page, page, page);
+            driver.type("x");
+            check(`${page} and typing`);
+          }
+        }
+        for (let turn = 0; turn < 12; turn += 1) {
+          driver.key(
+            layer.kind === "sheet" || layer.kind === "form" ? "tab" : "down",
+          );
+          if (driver.state.topLayerId !== layer.id) return;
+          check(`move ${turn + 1}`);
+        }
+      });
+    }
+  }
+});

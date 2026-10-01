@@ -623,14 +623,19 @@ function panelKey<A>(
           : scrollBy(model, chord === "up" ? -1 : 1);
       }
     }
-    return editText(
-      model,
-      layer.id,
-      control.id,
-      key,
-      multiline,
-      step as LayerStepContext<unknown>,
-    );
+    // Whatever the field does with the key, the person is working in it,
+    // so the next frame brings it back into view if paging hid it.
+    return {
+      ...editText(
+        model,
+        layer.id,
+        control.id,
+        key,
+        multiline,
+        step as LayerStepContext<unknown>,
+      ),
+      reveal: model.focus,
+    };
   }
   switch (chord) {
     case "escape":
@@ -650,7 +655,10 @@ function panelKey<A>(
     case "right": {
       const direction = chord === "left" ? -1 : 1;
       if (control.kind === "field" && layer.kind === "form") {
-        return choiceStep(layer, model, control.id, direction, step);
+        return {
+          ...choiceStep(layer, model, control.id, direction, step),
+          reveal: model.focus,
+        };
       }
       return moveButton(layer, model, direction);
     }

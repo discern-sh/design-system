@@ -116,6 +116,13 @@ interface PanelRow {
   readonly bar?: boolean;
   /** The control this row shows, for scrolling it into view. */
   readonly control?: LayerControl;
+  /** Further controls sharing the row, such as closed disclosures in one flow. */
+  readonly controls?: readonly LayerControl[];
+}
+
+/** Whether a row shows a control. */
+function holds(row: PanelRow, control: LayerControl): boolean {
+  return row.control === control || row.controls?.includes(control) === true;
 }
 
 /** Everything a panel shows, before it is fitted to a height. */
@@ -483,9 +490,13 @@ function disclosureRows(
   width: number,
 ): readonly PanelRow[] {
   const rows: PanelRow[] = [];
-  let flow: { text: string; hits: RowHit[]; width: number } | undefined;
+  let flow:
+    | { text: string; hits: RowHit[]; width: number; controls: LayerControl[] }
+    | undefined;
   const flush = () => {
-    if (flow !== undefined) rows.push({ text: flow.text, hits: flow.hits });
+    if (flow !== undefined) {
+      rows.push({ text: flow.text, hits: flow.hits, controls: flow.controls });
+    }
     flow = undefined;
   };
   for (const [index, disclosure] of disclosures.entries()) {
@@ -546,8 +557,10 @@ function disclosureRows(
           target: controlHit(layerId, control),
         }],
         width: segmentWidth,
+        controls: [control],
       };
     } else {
+      flow.controls.push(control);
       flow.hits.push({
         start: flow.width + 3,
         end: flow.width + 3 + segmentWidth,
@@ -650,12 +663,13 @@ function composePanel(
   };
   if (reveal !== undefined) {
     keep(
-      body.findIndex((row) => row.control === reveal),
+      body.findIndex((row) => holds(row, reveal)),
       reveal.startsWith("disclosure:") || reveal.startsWith("group:"),
     );
   }
   if (panel.follow !== undefined) {
-    keep(body.findIndex((row) => row.control === panel.follow), false);
+    const follow = panel.follow;
+    keep(body.findIndex((row) => holds(row, follow)), false);
   }
   const rows = overflows ? capacity(scroll) : body.length;
   const below = Math.max(0, body.length - scroll - rows);
