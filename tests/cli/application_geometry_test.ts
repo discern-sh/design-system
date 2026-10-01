@@ -8,11 +8,10 @@ import {
 } from "../../src/cli/interactive/mod.ts";
 import { FakeTerminalIO } from "../../src/cli/interactive/testing.ts";
 import {
-  fitListScroll,
   layoutListColumns,
   listGaps,
-  listWindow,
   renderListRow,
+  renderListViewport,
 } from "../../src/cli/interactive/application/list-render.ts";
 import { flattenList } from "../../src/cli/interactive/application/list-model.ts";
 import { renderDetailBlocks } from "../../src/cli/interactive/application/detail-render.ts";
@@ -401,16 +400,31 @@ Deno.test("a list viewport of any height keeps the selection in view", () => {
     densityFolds: new Set(),
     separators: true,
   });
+  const context = paintContext(
+    { colorDepth: "none", unicode: true, columns: 60 },
+    {},
+    { phase: 0 },
+  );
+  const layout = layoutListColumns(list, 60, listGaps(list, true));
   for (let height = 1; height <= rows.rows.length + 1; height += 1) {
     for (const [selected, row] of rows.rows.entries()) {
       if (row.kind !== "item") continue;
-      for (const previous of [0, rows.rows.length]) {
-        const scroll = fitListScroll(rows, height, selected, previous);
-        const window = listWindow(rows, height, scroll);
+      for (const scroll of [0, rows.rows.length]) {
+        const rendered = renderListViewport(context, {
+          rows,
+          list,
+          layout,
+          width: 60,
+          height,
+          selected,
+          scroll,
+          filtering: false,
+        });
         assert(
-          selected >= scroll && selected < scroll + window.count,
-          `row ${selected} hides in a ${height}-row viewport scrolled to ${scroll}`,
+          rendered.line !== undefined && rendered.line < height,
+          `row ${selected} hides in a ${height}-row viewport`,
         );
+        assertEquals(rendered.lines.length, height);
       }
     }
   }

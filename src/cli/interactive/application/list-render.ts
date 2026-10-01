@@ -140,7 +140,10 @@ export function listWindow<A>(
 ): ListWindow {
   const total = rows.rows.length;
   const header = rows.headerOf[scroll] ?? -1;
-  const sticky = header >= 0 && header < scroll ? header : undefined;
+  // A viewport under three rows has no room for a sticky header and a row.
+  const sticky = header >= 0 && header < scroll && height >= 3
+    ? header
+    : undefined;
   const available = Math.max(1, height - (sticky === undefined ? 0 : 1));
   const remaining = total - scroll;
   const count = remaining > available ? Math.max(1, available - 1) : remaining;
