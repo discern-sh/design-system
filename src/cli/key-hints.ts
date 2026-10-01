@@ -165,11 +165,60 @@ function formatOne(
   return chord;
 }
 
+/** Keys whose one-cell glyphs read as one pair when they touch: `↑↓`, `←→`. */
+const ARROW_CHORDS: ReadonlySet<string> = new Set([
+  "up",
+  "down",
+  "left",
+  "right",
+]);
+
+/**
+ * One-cell alternatives as one hint: arrows that touch read as a pair
+ * (`↑↓`), three or more consecutive digits read as a range (`1–5`), and
+ * every other neighbour stands a space apart (`↑↓ k j`, `→ .`), so no two
+ * keys run together into what reads as one unknown key.
+ */
+function joinOneCell(
+  chords: readonly KeyChord[],
+  parts: readonly string[],
+  unicode: boolean,
+): string {
+  const digit = (index: number): number | undefined =>
+    /^\d$/u.test(parts[index] ?? "") ? Number(parts[index]) : undefined;
+  const pieces: { readonly text: string; readonly arrow: boolean }[] = [];
+  for (let index = 0; index < parts.length;) {
+    let end = index;
+    while (
+      digit(end) !== undefined && digit(end + 1) === (digit(end) ?? 0) + 1
+    ) end += 1;
+    if (end - index >= 2) {
+      pieces.push({
+        text: `${parts[index]}${unicode ? "–" : "-"}${parts[end]}`,
+        arrow: false,
+      });
+      index = end + 1;
+      continue;
+    }
+    pieces.push({
+      text: parts[index] ?? "",
+      arrow: ARROW_CHORDS.has(normalizeKeyChord(chords[index] ?? "")),
+    });
+    index += 1;
+  }
+  return pieces.map((piece, index) =>
+    index === 0 || (piece.arrow && pieces[index - 1]?.arrow === true)
+      ? piece.text
+      : ` ${piece.text}`
+  ).join("");
+}
+
 /**
  * Display one chord, or several shown as one hint. Arrows and Enter use
  * their terminal glyphs, falling back to names without Unicode; Ctrl
- * chords read `^K`; several one-cell keys join directly (`↑↓`), anything
- * wider joins with a slash (`Up/Down`).
+ * chords read `^K`; one-cell keys join as {@linkcode joinOneCell} reads
+ * them — `↑↓`, `↑↓ k j`, `1–5` — and anything wider joins with a slash
+ * (`Up/Down`).
  */
 export function formatKeyChord(
   chord: KeyChord | readonly KeyChord[],
@@ -178,7 +227,7 @@ export function formatKeyChord(
   const chords = typeof chord === "string" ? [chord] : chord;
   const parts = chords.map((part) => formatOne(part, capabilities));
   return parts.every((part) => measureText(part) === 1)
-    ? parts.join("")
+    ? joinOneCell(chords, parts, capabilities.unicode)
     : parts.join("/");
 }
 

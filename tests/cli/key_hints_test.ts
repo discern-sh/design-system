@@ -184,6 +184,59 @@ Deno.test("a cluster without a primary draws every key in ink", () => {
   );
 });
 
+Deno.test("one-cell alternatives stay readable as one hint", () => {
+  const unicode = { unicode: true };
+  const ascii = { unicode: false };
+  assertEquals(formatKeyChord(["up", "down"], unicode), "↑↓");
+  assertEquals(formatKeyChord(["left", "right"], unicode), "←→");
+  assertEquals(formatKeyChord(["up", "down", "k", "j"], unicode), "↑↓ k j");
+  assertEquals(formatKeyChord(["right", "."], unicode), "→ .");
+  assertEquals(formatKeyChord(["1", "2", "3", "4", "5"], unicode), "1–5");
+  assertEquals(formatKeyChord(["1", "2", "3", "4", "5"], ascii), "1-5");
+  assertEquals(formatKeyChord(["1", "2"], unicode), "1 2");
+  assertEquals(formatKeyChord(["3", "4", "5", "7"], unicode), "3–5 7");
+  // Wider names keep the slash.
+  assertEquals(formatKeyChord(["up", "down", "k"], ascii), "Up/Down/k");
+});
+
+Deno.test("no two one-cell keys but a pair of arrows ever touch", () => {
+  const pool = [
+    "up",
+    "down",
+    "left",
+    "right",
+    "enter",
+    "j",
+    "k",
+    ".",
+    "/",
+    "?",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+  ];
+  const arrows = new Set(["↑", "↓", "←", "→"]);
+  for (const first of pool) {
+    for (const second of pool) {
+      for (const third of pool) {
+        const shown = formatKeyChord([first, second, third], {
+          unicode: true,
+        });
+        for (const token of shown.split(" ")) {
+          const cells = [...token];
+          assert(
+            cells.length === 1 || cells.every((cell) => arrows.has(cell)) ||
+              /^\d–\d$/u.test(token),
+            `${JSON.stringify([first, second, third])} reads "${shown}"`,
+          );
+        }
+      }
+    }
+  }
+});
+
 Deno.test("chords display as glyphs, carets, and words", () => {
   const unicode = { unicode: true };
   const ascii = { unicode: false };
