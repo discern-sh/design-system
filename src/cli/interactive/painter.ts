@@ -333,15 +333,18 @@ export class TerminalScreenPainter {
   /**
    * Turn mouse reports off and restore the window title saved before the
    * first title this painter set, so the terminal's own behaviour returns
-   * when the screen is released.
+   * when the screen is released. Returns whether mouse reports were on, so
+   * the caller can fence reports the terminal had already queued.
    */
-  release(): void {
-    const mouse = this.#mouse ? DISABLE_TERMINAL_MOUSE_REPORTS : "";
+  release(): boolean {
+    const reporting = this.#mouse;
+    const mouse = reporting ? DISABLE_TERMINAL_MOUSE_REPORTS : "";
     const title = this.#pushed ? POP_TERMINAL_TITLE : "";
     this.#mouse = false;
     this.#pushed = false;
     this.#title = undefined;
     if (mouse !== "" || title !== "") this.io.write(`${mouse}${title}`);
+    return reporting;
   }
 
   /**

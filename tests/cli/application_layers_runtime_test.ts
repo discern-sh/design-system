@@ -411,3 +411,46 @@ Deno.test("the view a caller leaves after a dismissal must omit what was dismiss
   assert(error instanceof TypeError);
   assert(error.message.includes("layers[0].id was dismissed"));
 });
+
+Deno.test("a handoff fences queued mouse reports and drops clicks read before it", async () => {
+  const io = new FakeTerminalIO([], { holdOpen: true, columns: 80, rows: 24 });
+  let handoffs = 0;
+  let live: TerminalApplicationContext<string> | undefined;
+  const running = runTerminalApplication<string>({
+    view: {
+      ...testView(["a", "b", "c"], { body: "list" }),
+      input: { mouse: true },
+    },
+    keymap: [{ key: "o", action: "open" }],
+    start(context) {
+      live = context;
+    },
+    onAction: (action) =>
+      action === "open"
+        ? { kind: "foreground", run: () => void (handoffs += 1) }
+        : undefined,
+  }, { io, clock: new ManualTerminalClock() });
+  await settle();
+  const mark = io.output().length;
+  // A key that hands off, and a wheel report the same read already holds.
+  io.enqueue("o\x1b[<65;20;4M");
+  io.enqueue("\x1b[24;1R");
+  await new Promise((resolve) => setTimeout(resolve, 150));
+  await settle();
+  assertEquals(handoffs, 1);
+  const after = io.output().slice(mark);
+  const released = after.indexOf(DISABLE_TERMINAL_MOUSE_REPORTS);
+  assert(released >= 0, "reports stopped before the handoff");
+  assert(
+    after.indexOf(QUERY_TERMINAL_CURSOR_POSITION, released) > released,
+    "queued reports are fenced although no mouse event was applied",
+  );
+  assertEquals(
+    live?.state.lists.items?.selectedId,
+    "a",
+    "the wheel turn read before the handoff did not apply afterwards",
+  );
+  io.enqueue("\x03");
+  await running.catch(() => undefined);
+  io.close();
+});

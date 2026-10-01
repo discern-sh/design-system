@@ -634,10 +634,15 @@ export async function runTerminalApplication<A>(
             ticker.stop();
             stopTimer();
             stopResize();
-            screen.release();
+            const reporting = screen.release();
             painter = undefined;
-            // Reports already queued when tracking stopped must not reach a child.
-            if (mouseObserved) {
+            // Clicks read before the handoff resolve against a frame that is
+            // gone; keys typed ahead still apply when the screen returns.
+            const typed = pendingEvents.filter((event) => event.kind === "key");
+            pendingEvents.splice(0, pendingEvents.length, ...typed);
+            // Reports the terminal queued before tracking stopped must not
+            // reach a child, whether or not one was already read.
+            if (reporting || mouseObserved) {
               mouseObserved = false;
               await drainTerminalMouseInput(io);
             }
