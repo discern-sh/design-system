@@ -59,6 +59,8 @@ import {
 } from "./list-model.ts";
 import {
   assertTerminalApplicationView,
+  type TerminalApplicationViewIssue,
+  viewIssues,
   type ViewRuleContext,
 } from "./validate.ts";
 import { fieldText } from "./validate-rules.ts";
@@ -143,6 +145,8 @@ export interface ListModel<A> {
 export interface ModelState<A> {
   readonly view: TerminalApplicationView<A>;
   readonly keymap: CompiledKeymap<A>;
+  /** Whether a layer that breaks a view rule is refused rather than the view. */
+  readonly refuseBrokenLayers: boolean;
   readonly lists: Readonly<Record<string, ListModel<A>>>;
   /** Whether an empty body's primary hint holds the selection. */
   readonly primaryFocused: boolean;
@@ -262,7 +266,9 @@ export type TerminalApplicationDismissal =
   | "escape"
   | "click-outside"
   | "timeout"
-  | "key";
+  | "key"
+  /** The package refused the layer because it breaks a view rule. */
+  | "refused";
 
 /** Where an action came from. */
 export type TerminalApplicationActionSource =
@@ -304,6 +310,11 @@ export type TerminalApplicationEffect<A> =
     readonly kind: "dismiss";
     readonly target: TerminalApplicationDismissTarget;
     readonly via: TerminalApplicationDismissal;
+  }
+  | {
+    /** Layers of an adopted view broke these rules and were refused. */
+    readonly kind: "rejected";
+    readonly issues: readonly TerminalApplicationViewIssue[];
   }
   | {
     readonly kind: "action";
@@ -479,6 +490,13 @@ export interface TerminalApplicationConfig<A> {
   readonly keymap?: readonly ApplicationKeyBinding<A>[];
   /** Bind j and k to Down and Up. */
   readonly viKeys?: boolean;
+  /**
+   * Refuse a layer that breaks a view rule instead of the whole view: the
+   * view is adopted without it, a `rejected` effect carries the issues, and
+   * a `dismiss` effect with `refused` reports each layer left out. Issues
+   * outside the layers still throw.
+   */
+  readonly refuseBrokenLayers?: boolean;
 }
 
 const EFFECT_ORDER: Readonly<
@@ -487,6 +505,7 @@ const EFFECT_ORDER: Readonly<
   field: 0,
   "selection-moved": 1,
   "selection-change": 2,
+  rejected: 3,
   dismiss: 3,
   action: 4,
   link: 4,
@@ -775,25 +794,96 @@ function stillDeclared<A>(
  */
 export type ViewAdoption = "final" | "provisional";
 
+/** An issue path inside one layer, by its index in the view. */
+const LAYER_ISSUE = /^layers\[(\d+)\]/u;
+
+/**
+ * The layer a broken rule belongs to: one named by its index, or by its id
+ * when a layer-scoped binding collides with a key the layer uses.
+ */
+function issueLayer<A>(
+  path: string,
+  layers: readonly ApplicationLayer<A>[],
+): number | undefined {
+  const indexed = LAYER_ISSUE.exec(path)?.[1];
+  if (indexed !== undefined) return Number(indexed);
+  let found: number | undefined;
+  for (const [index, layer] of layers.entries()) {
+    if (
+      path.startsWith(`keymap.${layer.id}.`) &&
+      (found === undefined ||
+        layer.id.length > (layers[found]?.id.length ?? 0))
+    ) found = index;
+  }
+  return found;
+}
+
+/**
+ * The view to adopt and what was refused: the view itself when it keeps
+ * every rule; when only layers break rules and refusal is on, the view
+ * without them, with a `rejected` effect and a `refused` dismissal for each.
+ * Any other broken rule throws.
+ */
+function refusingBrokenLayers<A>(
+  view: TerminalApplicationView<A>,
+  context: ViewRuleContext<A>,
+  refuse: boolean,
+): {
+  readonly view: TerminalApplicationView<A>;
+  readonly effects: readonly TerminalApplicationEffect<A>[];
+} {
+  const issues = viewIssues(view, context);
+  const layers = view.layers ?? [];
+  const broken = new Set(
+    issues.map((issue) => issueLayer(issue.path, layers)),
+  );
+  if (issues.length === 0 || !refuse || broken.has(undefined)) {
+    assertTerminalApplicationView(view, context);
+    return { view, effects: [] };
+  }
+  const kept = layers.filter((_, index) => !broken.has(index));
+  const { layers: _layers, ...rest } = view;
+  const adopted: TerminalApplicationView<A> = kept.length === 0
+    ? rest
+    : { ...rest, layers: kept };
+  assertTerminalApplicationView(adopted, context);
+  return {
+    view: adopted,
+    effects: [
+      { kind: "rejected", issues },
+      ...layers.filter((_, index) => broken.has(index)).map((
+        layer,
+      ) => ({
+        kind: "dismiss" as const,
+        target: { layer: layer.id },
+        via: "refused" as const,
+      })),
+    ],
+  };
+}
+
 function adopt<A>(
   previous: ModelState<A> | undefined,
-  view: TerminalApplicationView<A>,
+  declaredView: TerminalApplicationView<A>,
   keymap: CompiledKeymap<A>,
   now: number,
+  refuse: boolean,
   adoption: ViewAdoption = "final",
 ): ModelStep<A> {
-  const declared = stillDeclared(previous, view);
+  const announced = stillDeclared(previous, declaredView);
   const context: ViewRuleContext<A> = {
     ...(adoption === "final"
       ? {
-        dismissedMessages: declared.messages,
-        dismissedLayers: declared.layers,
+        dismissedMessages: announced.messages,
+        dismissedLayers: announced.layers,
       }
       : {}),
     keymap,
   };
-  assertTerminalApplicationView(view, context);
-  const effects: TerminalApplicationEffect<A>[] = [];
+  const refusal = refusingBrokenLayers(declaredView, context, refuse);
+  const view = refusal.view;
+  const declared = stillDeclared(previous, view);
+  const effects: TerminalApplicationEffect<A>[] = [...refusal.effects];
   const lists = { ...previous?.lists };
   const list = bodyList(view);
   const viewLayers = view.layers ?? [];
@@ -840,6 +930,7 @@ function adopt<A>(
   const model: ModelState<A> = {
     view,
     keymap,
+    refuseBrokenLayers: refuse,
     lists,
     primaryFocused: view.body.kind === "empty"
       ? previous?.view.body.kind === "empty" ? previous.primaryFocused : true
@@ -882,6 +973,7 @@ export function createModelState<A>(
     view,
     compileKeymap(config.keymap, config.viKeys === true),
     now,
+    config.refuseBrokenLayers === true,
   );
 }
 
@@ -894,7 +986,7 @@ export function updateModelState<A>(
   view: TerminalApplicationView<A>,
   now: number,
 ): ModelStep<A> {
-  return adopt(model, view, model.keymap, now);
+  return adopt(model, view, model.keymap, now, model.refuseBrokenLayers);
 }
 
 /**
@@ -909,7 +1001,14 @@ export function updateModelStateProvisionally<A>(
   view: TerminalApplicationView<A>,
   now: number,
 ): ModelStep<A> {
-  return adopt(model, view, model.keymap, now, "provisional");
+  return adopt(
+    model,
+    view,
+    model.keymap,
+    now,
+    model.refuseBrokenLayers,
+    "provisional",
+  );
 }
 
 /**
@@ -919,12 +1018,13 @@ export function updateModelStateProvisionally<A>(
 export function assertDismissalsHonoured<A>(
   model: ModelState<A>,
 ): void {
-  if (model.dismissed.length === 0 && model.dismissedLayers.length === 0) {
-    return;
-  }
+  // Where broken layers are refused, a dismissed layer the view still
+  // declares stays hidden, and the next view adopted refuses it.
+  const layers = model.refuseBrokenLayers ? [] : model.dismissedLayers;
+  if (model.dismissed.length === 0 && layers.length === 0) return;
   assertTerminalApplicationView(model.view, {
     dismissedMessages: model.dismissed,
-    dismissedLayers: model.dismissedLayers,
+    dismissedLayers: layers,
     keymap: model.keymap,
   });
 }

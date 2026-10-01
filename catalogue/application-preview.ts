@@ -59,6 +59,9 @@ export class ApplicationPreview<A> {
     const created = createTerminalApplicationModel(options.view, {
       ...(options.keymap === undefined ? {} : { keymap: options.keymap }),
       ...(options.viKeys === undefined ? {} : { viKeys: options.viKeys }),
+      ...(options.onViewRejected === undefined
+        ? {}
+        : { refuseBrokenLayers: true }),
     });
     this.#model = created.model;
     this.#queue.push(...created.effects);
@@ -152,6 +155,9 @@ export class ApplicationPreview<A> {
         case "selection-change":
           options.onSelectionChange?.(effect.listId, effect.itemId, context);
           break;
+        case "rejected":
+          options.onViewRejected?.(effect.issues, context);
+          break;
         case "dismiss":
           options.onDismiss?.(effect.target, effect.via, context);
           break;
@@ -163,6 +169,9 @@ export class ApplicationPreview<A> {
           break;
         case "cancel":
           break;
+        default:
+          // Every effect kind the runtime dispatches reaches its callback here too.
+          effect satisfies never;
       }
       if (command !== undefined) this.commands.push(command);
     }

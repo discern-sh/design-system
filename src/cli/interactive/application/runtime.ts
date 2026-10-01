@@ -40,6 +40,7 @@ import type {
   TerminalApplicationSelectionMove,
   TerminalApplicationState,
 } from "./model.ts";
+import type { TerminalApplicationViewIssue } from "./validate.ts";
 import type { ApplicationActivity } from "./layer-view.ts";
 import {
   type ApplicationEpilogueLine,
@@ -208,11 +209,26 @@ export interface TerminalApplicationOptions<A> {
   /**
    * A message or layer was dismissed — by timeout, a key, Escape, the safe
    * button, or a click outside — and the package already hides it. The next
-   * view must omit it.
+   * view must omit it. A layer the package `refused` was left out of the
+   * view because it breaks a rule; a corrected version opens as new.
    */
   readonly onDismiss?: (
     target: TerminalApplicationDismissTarget,
     via: TerminalApplicationDismissal,
+    context: TerminalApplicationContext<A>,
+  ) => void;
+  /**
+   * Layers of a view broke the view rules and were refused instead of the
+   * session: the view was adopted without them, and each is also reported
+   * to `onDismiss` as `refused`. Supplying this callback is what turns
+   * refusal on, so an application that builds layers from observed data
+   * keeps its session — and the background commands running beside it —
+   * when one record makes a layer that breaks a rule. Without it, a broken
+   * layer fails the session like any other broken rule; a rule broken
+   * outside the layers always does.
+   */
+  readonly onViewRejected?: (
+    issues: readonly TerminalApplicationViewIssue[],
     context: TerminalApplicationContext<A>,
   ) => void;
   /**

@@ -23,6 +23,7 @@ import {
   type ModelState,
   modelStateDeadline,
   snapshotModelState,
+  type TerminalApplicationConfig,
   type TerminalApplicationEffect,
   type TerminalApplicationInput,
   type TerminalApplicationLayout,
@@ -185,6 +186,22 @@ interface RunningCommand {
   readonly done: Promise<void>;
 }
 
+/**
+ * The model configuration an application's options ask for: its bindings,
+ * and refusal of broken layers when it listens for refused views.
+ */
+function sessionConfig<A>(
+  options: TerminalApplicationOptions<A>,
+): TerminalApplicationConfig<A> {
+  return {
+    ...(options.keymap === undefined ? {} : { keymap: options.keymap }),
+    ...(options.viKeys === undefined ? {} : { viKeys: options.viKeys }),
+    ...(options.onViewRejected === undefined
+      ? {}
+      : { refuseBrokenLayers: true }),
+  };
+}
+
 /** One application's model, callbacks, mailbox, and background work. */
 export class ApplicationSession<A> implements RunningSession {
   readonly nested: boolean;
@@ -220,10 +237,11 @@ export class ApplicationSession<A> implements RunningSession {
     this.#options = options;
     this.#host = host;
     this.nested = nested;
-    const created = createModelState(options.view, {
-      ...(options.keymap === undefined ? {} : { keymap: options.keymap }),
-      ...(options.viKeys === undefined ? {} : { viKeys: options.viKeys }),
-    }, host.clock.now());
+    const created = createModelState(
+      options.view,
+      sessionConfig(options),
+      host.clock.now(),
+    );
     this.#model = created.model;
     this.#queue.push(...created.effects);
     this.context = this.#createContext();
@@ -405,6 +423,9 @@ export class ApplicationSession<A> implements RunningSession {
           case "selection-change":
             options.onSelectionChange?.(effect.listId, effect.itemId, context);
             break;
+          case "rejected":
+            options.onViewRejected?.(effect.issues, context);
+            break;
           case "dismiss":
             options.onDismiss?.(effect.target, effect.via, context);
             break;
@@ -440,6 +461,9 @@ export class ApplicationSession<A> implements RunningSession {
               break;
             }
             throw new InteractionCancelled("Cancelled.");
+          default:
+            // Every effect kind reaches its callback; a new kind fails here.
+            effect satisfies never;
         }
       }
       // The view a caller leaves in force after hearing of a dismissal must omit it.
@@ -622,10 +646,7 @@ export function nestTerminalApplication<B>(
   options: TerminalApplicationOptions<B>,
   onExit?: (state: TerminalApplicationState) => void,
 ): TerminalApplicationNested {
-  createModelState(options.view, {
-    ...(options.keymap === undefined ? {} : { keymap: options.keymap }),
-    ...(options.viKeys === undefined ? {} : { viKeys: options.viKeys }),
-  });
+  createModelState(options.view, sessionConfig(options));
   return sealNested({
     open: (host) => new ApplicationSession(options, host, true),
     ...(onExit === undefined ? {} : { onExit }),
