@@ -1168,7 +1168,7 @@ export const interactiveExportCoverage: Readonly<
     excluded:
       "The navigation keys each body the application journey shows reserves; a validation list.",
   },
-  TERMINAL_APPLICATION_LAYER_KEYS: {
+  terminalApplicationLayerKeys: {
     excluded:
       "The keys each layer of the application journey uses; a validation list.",
   },

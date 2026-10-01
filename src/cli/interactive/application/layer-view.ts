@@ -7,7 +7,7 @@
  * @module
  */
 
-import type { KeyChord } from "../../key-hints.ts";
+import type { KeyChord, KeyHint } from "../../key-hints.ts";
 import type { TerminalTextTone } from "../../theme.ts";
 import type {
   ActionHint,
@@ -41,6 +41,17 @@ export interface ApplicationLayerBase {
    * takes the whole body.
    */
   readonly anchor?: ApplicationLayerAnchor;
+  /**
+   * Further key hints for the layer's footer, after the keys the package
+   * lists and before Escape, such as a layer binding's key. Each must name
+   * a key the layer handles or binds.
+   */
+  readonly hints?: readonly KeyHint[];
+  /**
+   * The word the footer gives Escape. Defaults to the safe button's label
+   * in sheets and forms, and to the copy's close or back word elsewhere.
+   */
+  readonly escapeLabel?: string;
 }
 
 /**
@@ -51,8 +62,10 @@ export interface LayerDisclosure {
   readonly id: string;
   /** The row's text, such as `Plan · 13 steps`. */
   readonly label: string;
-  /** The short name key hints use; defaults to the label. */
+  /** The short name key hints use while closed; defaults to the label. */
   readonly hint?: string;
+  /** The short name key hints use while open, such as `Hide plan`; defaults to `hint`. */
+  readonly openHint?: string;
   /** Toggles the disclosure while focus is not in a text field. */
   readonly key: KeyChord;
   /**
@@ -238,6 +251,13 @@ export interface ApplicationMenu<A> extends ApplicationLayerBase {
   readonly initialItemId?: string;
   /** Item keys run their item, so the menu teaches them. */
   readonly lettersActivate?: boolean;
+  /**
+   * The word the footer gives Enter, such as `Open`; defaults to the
+   * highlighted item's label.
+   */
+  readonly enterLabel?: string;
+  /** Offer `/` to filter the menu; defaults to true. */
+  readonly filter?: boolean;
 }
 
 /** One palette result. Its meta and key render in their own columns. */

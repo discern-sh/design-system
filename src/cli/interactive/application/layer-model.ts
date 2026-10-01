@@ -812,7 +812,7 @@ function menuKey<A>(
     case "right":
       return runMenuControl(layer, model, step);
     case "/":
-      return { ...model, filtering: true };
+      if (layer.filter !== false) return { ...model, filtering: true };
   }
   if (layer.lettersActivate === true) {
     const item = layer.sections.flatMap((section) => section.items).find((

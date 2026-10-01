@@ -12,7 +12,7 @@ import {
   decodableChord,
   EDITOR_RESERVED_CHORDS,
   fieldOwnsChord,
-  TERMINAL_APPLICATION_LAYER_KEYS,
+  terminalApplicationLayerKeys,
 } from "./keymap.ts";
 import { formTextFields, layerHasTextField } from "./layer-controls.ts";
 import {
@@ -31,6 +31,7 @@ import {
 import {
   blocks,
   controlFree,
+  hints,
   type Issues,
   list,
   runs,
@@ -124,13 +125,13 @@ const STEP_STATES: ReadonlySet<string> = new Set([
 const EDITOR_CHORDS: ReadonlySet<string> = new Set(EDITOR_RESERVED_CHORDS);
 
 /** Keys one layer already gives meaning to, so nothing else may take them. */
-class LayerKeys {
+class LayerKeys<A> {
   readonly #taken = new Map<KeyChord, string>();
   constructor(
     readonly issues: Issues,
-    readonly kind: ApplicationLayer<unknown>["kind"],
+    layer: ApplicationLayer<A>,
   ) {
-    for (const key of TERMINAL_APPLICATION_LAYER_KEYS[kind]) {
+    for (const key of terminalApplicationLayerKeys(layer)) {
       this.#taken.set(key, "the layer's navigation");
     }
   }
@@ -168,11 +169,11 @@ function fieldChord(issues: Issues, path: string, chord: KeyChord): void {
   }
 }
 
-function disclosures(
+function disclosures<A>(
   issues: Issues,
   path: string,
   value: readonly LayerDisclosure[] | undefined,
-  keys: LayerKeys,
+  keys: LayerKeys<A>,
   textFields: boolean,
 ): void {
   const ids = new Set<string>();
@@ -186,6 +187,9 @@ function disclosures(
     text(issues, `${at}.label`, disclosure.label);
     if (disclosure.hint !== undefined) {
       text(issues, `${at}.hint`, disclosure.hint);
+    }
+    if (disclosure.openHint !== undefined) {
+      text(issues, `${at}.openHint`, disclosure.openHint);
     }
     keys.claim(`${at}.key`, disclosure.key, `disclosure ${disclosure.id}`);
     if (disclosure.fieldKey === undefined) {
@@ -212,7 +216,7 @@ function buttons<A>(
   issues: Issues,
   path: string,
   value: readonly SheetButton<A>[],
-  keys: LayerKeys,
+  keys: LayerKeys<A>,
   challenge: boolean,
 ): void {
   const ids = new Set<string>();
@@ -268,7 +272,7 @@ function sheet<A>(
   issues: Issues,
   path: string,
   layer: ApplicationSheet<A>,
-  keys: LayerKeys,
+  keys: LayerKeys<A>,
 ): void {
   text(issues, `${path}.title`, layer.title);
   runs(issues, `${path}.aside`, layer.aside);
@@ -362,10 +366,13 @@ function menu<A>(
   issues: Issues,
   path: string,
   layer: ApplicationMenu<A>,
-  keys: LayerKeys,
+  keys: LayerKeys<A>,
 ): void {
   text(issues, `${path}.title`, layer.title);
   if (layer.aside !== undefined) text(issues, `${path}.aside`, layer.aside);
+  if (layer.enterLabel !== undefined) {
+    text(issues, `${path}.enterLabel`, layer.enterLabel);
+  }
   if (
     layer.columns !== undefined && layer.columns !== 1 && layer.columns !== 2
   ) {
@@ -466,7 +473,7 @@ function textField<A>(
   issues: Issues,
   path: string,
   field: FormTextField<A>,
-  keys: LayerKeys,
+  keys: LayerKeys<A>,
 ): void {
   if (typeof field.initial !== "string") {
     issues.push({ path: `${path}.initial`, message: "must be a string" });
@@ -538,7 +545,7 @@ function form<A>(
   issues: Issues,
   path: string,
   layer: ApplicationForm<A>,
-  keys: LayerKeys,
+  keys: LayerKeys<A>,
 ): void {
   text(issues, `${path}.title`, layer.title);
   if (layer.aside !== undefined) text(issues, `${path}.aside`, layer.aside);
@@ -595,7 +602,7 @@ function reader<A>(
   issues: Issues,
   path: string,
   layer: ApplicationReader<A>,
-  keys: LayerKeys,
+  keys: LayerKeys<A>,
   lists: Set<string>,
 ): void {
   text(issues, `${path}.title`, layer.title);
@@ -666,7 +673,7 @@ export function layerRules<A>(
     ) {
       issues.push({ path: `${path}.anchor`, message: "is not an anchor" });
     }
-    const keys = new LayerKeys(issues, layer.kind);
+    const keys = new LayerKeys(issues, layer);
     switch (layer.kind) {
       case "sheet":
         sheet(issues, path, layer, keys);
@@ -690,6 +697,28 @@ export function layerRules<A>(
     const bindings = context.layerBindings?.get(layer.id);
     if (layer.kind === "sheet" || layer.kind === "form") {
       bypasses(issues, path, layer, bindings);
+    }
+    if (layer.escapeLabel !== undefined) {
+      text(issues, `${path}.escapeLabel`, layer.escapeLabel);
+    }
+    // A hint the caller adds must name a key the layer handles or binds.
+    hints(issues, `${path}.hints`, { left: layer.hints ?? [] });
+    for (const [position, hint] of (layer.hints ?? []).entries()) {
+      for (const key of typeof hint.key === "string" ? [hint.key] : hint.key) {
+        const chord = typeof key === "string" ? decodableChord(key) : undefined;
+        if (
+          chord === undefined ||
+          !(keys.has(chord) || chord === "escape" || chord === "ctrl-c" ||
+            bindings?.has(chord) === true)
+        ) {
+          issues.push({
+            path: `${path}.hints[${position}].key`,
+            message: `advertises ${
+              JSON.stringify(key)
+            }, which nothing handles in this layer; bind it or drop the hint`,
+          });
+        }
+      }
     }
     for (const [chord, binding] of bindings ?? []) {
       const at = `keymap.${layer.id}.${chord}`;

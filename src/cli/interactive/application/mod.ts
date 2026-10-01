@@ -10,7 +10,7 @@ export * from "./view.ts";
 export * from "./layer-view.ts";
 export {
   EDITOR_RESERVED_CHORDS,
-  TERMINAL_APPLICATION_LAYER_KEYS,
+  terminalApplicationLayerKeys,
   type TerminalApplicationReservedKeyOptions,
   terminalApplicationReservedKeys,
 } from "./keymap.ts";

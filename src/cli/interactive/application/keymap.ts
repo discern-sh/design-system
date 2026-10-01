@@ -8,7 +8,7 @@
 
 import { type KeyChord, normalizeKeyChord } from "../../key-hints.ts";
 import { isTerminalKeyName, type TerminalKey } from "../keys.ts";
-import type { ApplicationLayerKind } from "./layer-view.ts";
+import type { ApplicationLayer, ApplicationLayerKind } from "./layer-view.ts";
 import type { TerminalApplicationViewIssue } from "./validate-rules.ts";
 import type { ApplicationBody, GroupedList, KeymapEntry } from "./view.ts";
 
@@ -95,7 +95,7 @@ export function terminalApplicationReservedKeys<A>(
  * text field. Escape is the safe choice or Back in every layer. A palette's
  * query always owns input, so its bindings must be field bindings.
  */
-export const TERMINAL_APPLICATION_LAYER_KEYS: Readonly<
+const LAYER_KEYS: Readonly<
   Record<ApplicationLayerKind, readonly KeyChord[]>
 > = Object.freeze({
   sheet: Object.freeze([
@@ -165,6 +165,25 @@ export const TERMINAL_APPLICATION_LAYER_KEYS: Readonly<
     "escape",
   ]),
 });
+
+/**
+ * The keys the package handles in one layer while focus is not in a text
+ * field, which a layer binding may not take. Escape is the safe choice or
+ * Back in every layer. Sheets and forms move, scroll, page, and choose with
+ * the arrows, page keys, Home, End, Tab, Shift+Tab, Enter, and Space; menus
+ * add Right and drop Space, and claim `/` unless `filter` is false; a
+ * palette's query owns input, so it keeps only movement, Enter, and
+ * Escape; readers move and scroll with the arrows, page keys, Home, End,
+ * Tab, and Shift+Tab, open rows with Enter, and go back with Left.
+ */
+export function terminalApplicationLayerKeys<A>(
+  layer: ApplicationLayer<A>,
+): readonly KeyChord[] {
+  const keys = LAYER_KEYS[layer.kind];
+  return layer.kind === "menu" && layer.filter === false
+    ? keys.filter((key) => key !== "/")
+    : keys;
+}
 
 /** Named keys a focused text field uses for editing and leaving. */
 const FIELD_KEYS: ReadonlySet<string> = new Set([

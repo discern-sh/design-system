@@ -87,9 +87,11 @@ function panelHints<A>(
       : []),
     ...(layer.disclosures ?? []).flatMap((disclosure) => {
       const key = inField ? disclosure.fieldKey : disclosure.key;
-      return key === undefined
-        ? []
-        : [{ key, label: disclosure.hint ?? disclosure.label }];
+      const closed = disclosure.hint ?? disclosure.label;
+      const label = model.open[disclosure.id] === true
+        ? disclosure.openHint ?? closed
+        : closed;
+      return key === undefined ? [] : [{ key, label }];
     }),
     ...(inField
       ? []
@@ -98,9 +100,19 @@ function panelHints<A>(
           ? [{ key: button.key, label: button.label }]
           : []
       )),
-    ...(safe === undefined ? [] : [{ key: "escape", label: safe.label }]),
+    ...(layer.hints ?? []),
+    ...escapeHint(layer, safe?.label),
   ];
   return { left: hints };
+}
+
+/** Escape's hint: the layer's own word, else the given default. */
+function escapeHint<A>(
+  layer: ApplicationLayer<A>,
+  fallback: string | undefined,
+): readonly KeyHint[] {
+  const label = layer.escapeLabel ?? fallback;
+  return label === undefined ? [] : [{ key: "escape", label }];
 }
 
 function menuHints<A>(
@@ -113,7 +125,7 @@ function menuHints<A>(
     : control.kind === "unavailable"
     ? "Why"
     : control.kind === "item"
-    ? menuItem(layer, control.id)?.label
+    ? layer.enterLabel ?? menuItem(layer, control.id)?.label
     : undefined;
   if (model.filtering) {
     return {
@@ -131,8 +143,11 @@ function menuHints<A>(
       ...(layer.lettersActivate === true
         ? [{ key: "Letters", label: "Run" }]
         : []),
-      { key: "/", label: "Filter" },
-      { key: "escape", label: model.query === "" ? "Close" : "Clear" },
+      ...(layer.filter === false ? [] : [{ key: "/", label: "Filter" }]),
+      ...(layer.hints ?? []),
+      ...(model.query === ""
+        ? escapeHint(layer, "Close")
+        : [{ key: "escape", label: "Clear" }]),
     ],
   };
 }
@@ -149,7 +164,10 @@ function paletteHints<A>(
       ...enterHint(item?.label),
       { key: ["up", "down"], label: "Move" },
       { key: "Type", label: "to search" },
-      { key: "escape", label: model.query === "" ? "Close" : "Clear" },
+      ...(layer.hints ?? []),
+      ...(model.query === ""
+        ? escapeHint(layer, "Close")
+        : [{ key: "escape", label: "Clear" }]),
     ],
   };
 }
@@ -163,7 +181,8 @@ function readerHints<A>(layer: ApplicationReader<A>): KeyHints {
         label: layer.rows === undefined ? "Scroll" : "Move",
       },
       ...(layer.keys ?? []),
-      { key: "escape", label: "Back" },
+      ...(layer.hints ?? []),
+      ...escapeHint(layer, "Back"),
     ],
   };
 }

@@ -3,8 +3,8 @@ import { measureText } from "../../src/cli/mod.ts";
 import {
   type ApplicationLayer,
   type ApplicationSheet,
-  TERMINAL_APPLICATION_LAYER_KEYS,
   type TerminalApplicationEffect,
+  terminalApplicationLayerKeys,
   type TerminalApplicationView,
   validateTerminalApplicationView,
 } from "../../src/cli/interactive/mod.ts";
@@ -573,20 +573,25 @@ Deno.test("every key a layer acts on outside a text field is reserved or declare
       const kind = handled.get(layer.kind) ?? new Set();
       kind.add(key);
       handled.set(layer.kind, kind);
-      const reserved = new Set<string>(
-        TERMINAL_APPLICATION_LAYER_KEYS[layer.kind],
-      );
+      const reserved = new Set<string>(terminalApplicationLayerKeys(layer));
       assert(
         reserved.has(key) || declaredKeys(layer).has(key) || key === "ctrl-c",
         `${layer.id} acts on ${key} from ${focus}, but neither reserves nor declares it`,
       );
     }
   }
-  for (const kind of ["sheet", "form", "menu", "reader"] as const) {
-    for (const key of TERMINAL_APPLICATION_LAYER_KEYS[kind]) {
+  for (
+    const layer of [
+      demoRunSheet(IMAGE),
+      demoNewJobForm(),
+      demoActionsMenu(IMAGE),
+      demoKeysReader(),
+    ]
+  ) {
+    for (const key of terminalApplicationLayerKeys(layer)) {
       assert(
-        handled.get(kind)?.has(key) === true,
-        `${kind} reserves ${key} but no prepared state acts on it`,
+        handled.get(layer.kind)?.has(key) === true,
+        `${layer.kind} reserves ${key} but no prepared state acts on it`,
       );
     }
   }
@@ -1165,4 +1170,73 @@ Deno.test("a panel never holds blank rows while it hides body rows", async (t) =
       }
     }
   }
+});
+
+Deno.test("a layer's footer lists the caller's hints, and each must name a key the layer handles", () => {
+  const run = demoRunSheet(IMAGE);
+  const sheet: ApplicationSheet<string> = {
+    ...run,
+    hints: [{ key: "R", label: "Review again" }],
+    escapeLabel: "Not now",
+    disclosures: (run.disclosures ?? []).map((disclosure) => ({
+      ...disclosure,
+      openHint: `Hide ${disclosure.label.toLowerCase()}`,
+    })),
+  };
+  const keymap = [
+    ...DEMO_KEYMAP,
+    { key: "R", action: "review-again", scope: { layer: "run" } },
+  ];
+  const driver = new ApplicationDriver(withLayers(sheet), {
+    colorDepth: "none",
+    keymap,
+  });
+  const footer = () => driver.text.split("\n").at(-1) ?? "";
+  assert(footer().includes("R Review again"), footer());
+  assert(footer().includes("Esc Not now"), footer());
+  const disclosure = run.disclosures?.[0];
+  assert(disclosure !== undefined);
+  driver.key(disclosure.key);
+  assert(
+    footer().includes(`Hide ${disclosure.label.toLowerCase()}`),
+    footer(),
+  );
+  driver.take();
+  driver.key("R");
+  assertEquals(driver.actions(), ["review-again"]);
+  const unbound = validateTerminalApplicationView(withLayers(sheet), {
+    keymap: DEMO_KEYMAP,
+  });
+  assert(
+    unbound.some((issue) => issue.path === "layers[0].hints[0].key"),
+    JSON.stringify(unbound),
+  );
+});
+
+Deno.test("a menu can rename Enter and Escape and leave / to a binding", () => {
+  const menu = {
+    ...demoActionsMenu(IMAGE),
+    enterLabel: "Open",
+    escapeLabel: "Back",
+    filter: false,
+    hints: [{ key: "/", label: "Search" }],
+  };
+  const driver = new ApplicationDriver(withLayers(menu), {
+    colorDepth: "none",
+    keymap: [
+      ...DEMO_KEYMAP,
+      { key: "/", action: "search", scope: { layer: menu.id } },
+    ],
+  });
+  const footer = driver.text.split("\n").at(-1) ?? "";
+  assert(footer.includes("↵ Open"), footer);
+  assert(footer.includes("Esc Back"), footer);
+  assert(!footer.includes("Filter"), footer);
+  driver.take();
+  driver.key("/");
+  assertEquals(driver.actions(), ["search"]);
+  assertEquals(
+    driver.state.layers[menu.id]?.focusedControlId?.startsWith("item:"),
+    true,
+  );
 });
