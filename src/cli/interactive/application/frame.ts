@@ -109,6 +109,7 @@ import {
   type ApplicationDetailBlock,
   type ApplicationHeader,
   type ApplicationList,
+  type ApplicationLivenessState,
   type ApplicationMasterDetailBody,
   type ApplicationRun,
   type ApplicationSplitRules,
@@ -195,6 +196,45 @@ const readingCache = new WeakMap<
   }
 >();
 
+/**
+ * The liveness the header shows: busy only once it has lasted its
+ * `busyAfterMs`, idle until then.
+ */
+function shownLiveness<A>(
+  model: ModelState<A>,
+  now: number,
+): ApplicationLivenessState | undefined {
+  const liveness = model.view.header.liveness;
+  if (liveness === undefined) return undefined;
+  if (liveness.state !== "busy") return liveness.state;
+  return now >= (model.busySince ?? now) + (liveness.busyAfterMs ?? 0)
+    ? "busy"
+    : "idle";
+}
+
+/** Whether detail blocks hold a `pending` block, inside sections too. */
+function holdsPending(blocks: readonly ApplicationDetailBlock[]): boolean {
+  return blocks.some((block) =>
+    block.kind === "pending" ||
+    (block.kind === "section" && holdsPending(block.blocks))
+  );
+}
+
+/** Whether a layer waits on its caller: a loading sheet, or a pending block it shows. */
+function layerPending<A>(layer: ApplicationLayer<A>): boolean {
+  switch (layer.kind) {
+    case "sheet":
+      return layer.state === "loading" || holdsPending(layer.body);
+    case "form":
+      return holdsPending(layer.preview ?? []);
+    case "reader":
+      return holdsPending(layer.blocks);
+    case "menu":
+    case "palette":
+      return false;
+  }
+}
+
 /** The header line, with a hit for every chip that carries an action. */
 function header<A>(
   context: FrameContext,
@@ -235,13 +275,7 @@ function header<A>(
     tightened = leading;
   }
   const liveness = bar.liveness;
-  const busyShown = liveness?.state === "busy" &&
-    now >= (model.busySince ?? now) + (liveness.busyAfterMs ?? 0);
-  const state = liveness === undefined
-    ? undefined
-    : liveness.state === "busy" && !busyShown
-    ? "idle"
-    : liveness.state;
+  const state = shownLiveness(model, now);
   const live = liveness === undefined || state === undefined
     ? ""
     : state === "busy"
@@ -1469,30 +1503,51 @@ function tooSmall<A>(
     renderCalls: 0,
     animated: false,
     clock: false,
-    report: terminalApplicationStateReport(model),
+    report: terminalApplicationStateReport(model, context.motion.now ?? 0),
   };
 }
 
 /**
- * The navigation identities an application reports: the focused control,
- * the body's list and selected item, and whether its detail is zoomed.
+ * The navigation identities an application reports — the top layer, the
+ * focused control, the body's list and selected item, and whether its
+ * detail is zoomed — and what still waits on the caller: the top layer, the
+ * selected item's detail, the message line, and the header's liveness, as
+ * the screen shows them at `now`.
  */
 export function terminalApplicationStateReport<A>(
   model: ModelState<A>,
+  now = 0,
 ): TerminalApplicationStateReport {
   const state = snapshotModelState(model);
-  const list = bodyList(model.view);
+  const view = model.view;
+  const list = bodyList(view);
   const listState = list === undefined ? undefined : state.lists[list.id];
+  const selected = listState?.selectedId === undefined || model.primaryFocused
+    ? undefined
+    : listState.selectedId;
+  const top = visibleLayers(model).at(-1);
+  const message = visibleMessage(model);
+  const liveness = shownLiveness(model, now);
+  const detail = view.body.kind === "master-detail" && selected !== undefined
+    ? view.body.detail.content[selected]
+    : undefined;
   return {
-    ...(state.topLayerId === undefined ? {} : { topLayerId: state.topLayerId }),
+    ...(top === undefined ? {} : {
+      topLayerId: top.id,
+      ...(top.kind === "sheet" ? { topLayerState: top.state } : {}),
+      topLayerPending: layerPending(top),
+    }),
     ...(state.focusedControlId === undefined
       ? {}
       : { focusedControlId: state.focusedControlId }),
     ...(list === undefined ? {} : { listId: list.id }),
-    ...(listState?.selectedId === undefined || model.primaryFocused
-      ? {}
-      : { selectedItemId: listState.selectedId }),
+    ...(selected === undefined ? {} : { selectedItemId: selected }),
     ...(listState === undefined ? {} : { zoomed: listState.zoomed }),
+    ...(view.body.kind === "master-detail" && selected !== undefined
+      ? { detailPending: detail === undefined || holdsPending(detail) }
+      : {}),
+    ...(message === undefined ? {} : { messageId: message.id }),
+    ...(liveness === undefined ? {} : { liveness }),
   };
 }
 
@@ -1619,7 +1674,7 @@ export function renderModelState<A>(
     ...(view.windowTitle === undefined
       ? {}
       : { windowTitle: view.windowTitle }),
-    report: terminalApplicationStateReport(fitted),
+    report: terminalApplicationStateReport(fitted, context.motion.now ?? 0),
   };
 }
 

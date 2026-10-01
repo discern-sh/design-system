@@ -8,14 +8,25 @@
  * @module
  */
 
+import type { ApplicationLivenessState } from "./application/view.ts";
+import type { ApplicationSheetState } from "./application/layer-view.ts";
+
 /**
- * The navigation identities an application reports. Every field is optional,
- * and later versions may add flat scalar fields, so readers ignore names they
- * do not know.
+ * The navigation identities an application reports, and whether what the
+ * screen shows still waits on its caller. Every field is optional, and later
+ * versions may add flat scalar fields, so readers ignore names they do not
+ * know.
  */
 export interface TerminalApplicationStateReport {
   /** The topmost open layer, when one is open. */
   readonly topLayerId?: string;
+  /** The top layer's state, when it is a sheet. */
+  readonly topLayerState?: ApplicationSheetState;
+  /**
+   * Whether the top layer waits on its caller: a sheet still `loading`, or a
+   * `pending` block among what it shows. Present while a layer is open.
+   */
+  readonly topLayerPending?: boolean;
   /** The control or region that receives the next key. */
   readonly focusedControlId?: string;
   /** The list whose selection is reported. */
@@ -24,6 +35,19 @@ export interface TerminalApplicationStateReport {
   readonly selectedItemId?: string;
   /** Whether that list's detail fills the body. */
   readonly zoomed?: boolean;
+  /**
+   * Whether the selected item's detail waits on its caller: it has no
+   * content yet, so it shows the pending label, or a `pending` block is among
+   * its blocks. Present while a master-detail body has an item selected.
+   */
+  readonly detailPending?: boolean;
+  /** The id of the message on the message line, while one shows. */
+  readonly messageId?: string;
+  /**
+   * The liveness the header shows, when it declares one: `busy` only once
+   * it has lasted its `busyAfterMs`, as on screen.
+   */
+  readonly liveness?: ApplicationLivenessState;
   readonly [field: string]: string | number | boolean | undefined;
 }
 
