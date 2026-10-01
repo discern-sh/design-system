@@ -49,6 +49,8 @@ export interface LayerRuleContext {
   readonly dismissedLayers?: readonly string[];
   /** The caller's layer-scoped bindings. */
   readonly layerBindings?: LayerBindings;
+  /** Ids of lists the body already shows; a reader's rows need their own. */
+  readonly listIds?: readonly string[];
 }
 
 const ROLES: ReadonlySet<string> = new Set([
@@ -547,11 +549,22 @@ function reader<A>(
   path: string,
   layer: ApplicationReader<A>,
   keys: LayerKeys,
+  lists: Set<string>,
 ): void {
   text(issues, `${path}.title`, layer.title);
   runs(issues, `${path}.aside`, layer.aside);
   blocks(issues, `${path}.blocks`, layer.blocks);
-  if (layer.rows !== undefined) list(issues, `${path}.rows`, layer.rows);
+  if (layer.rows !== undefined) {
+    list(issues, `${path}.rows`, layer.rows);
+    // Selection is remembered by list id, so two lists may not share one.
+    if (lists.has(layer.rows.id)) {
+      issues.push({
+        path: `${path}.rows.id`,
+        message: "repeats the id of another list on screen",
+      });
+    }
+    lists.add(layer.rows.id);
+  }
   for (const [index, hint] of (layer.keys ?? []).entries()) {
     const at = `${path}.keys[${index}]`;
     if (typeof hint.key !== "string") {
@@ -582,6 +595,7 @@ export function layerRules<A>(
     });
   }
   const ids = new Set<string>();
+  const lists = new Set(context.listIds ?? []);
   for (const [index, layer] of layers.entries()) {
     const path = `layers[${index}]`;
     text(issues, `${path}.id`, layer.id);
@@ -620,7 +634,7 @@ export function layerRules<A>(
         form(issues, path, layer, keys);
         break;
       case "reader":
-        reader(issues, path, layer, keys);
+        reader(issues, path, layer, keys, lists);
         break;
       default:
         issues.push({ path: `${path}.kind`, message: "is not a layer kind" });

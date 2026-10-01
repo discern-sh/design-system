@@ -255,3 +255,19 @@ Deno.test("clicks select rows, the wheel moves the selection and scrolls the det
   );
   await session.finish();
 });
+
+Deno.test("below the minimum size keys keep the top layer's meaning", async () => {
+  const session = await demo();
+  await session.send(".");
+  assertEquals(session.state().topLayerId, "actions");
+  session.io.resize(30, 9);
+  await session.send("q");
+  assert(
+    !session.calls.includes("action:quit:key"),
+    "a base binding fired beneath an open layer",
+  );
+  session.io.resize(80, 24);
+  await session.send("q");
+  assertEquals(session.state().topLayerId, "actions", "the layer survived");
+  await session.finish();
+});

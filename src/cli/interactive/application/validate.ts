@@ -180,7 +180,13 @@ export function validateTerminalApplicationView<A>(
     issues.push({ path: "input.mouse", message: "must be a boolean" });
   }
   runs(issues, "input.selectionHint", view.input?.selectionHint);
+  const shown = body.kind === "master-detail" || body.kind === "list"
+    ? body.list.id
+    : body.kind === "empty"
+    ? body.list?.id
+    : undefined;
   layerRules(issues, view.layers, {
+    ...(shown === undefined ? {} : { listIds: [shown] }),
     ...(context.dismissedLayers === undefined
       ? {}
       : { dismissedLayers: context.dismissedLayers }),

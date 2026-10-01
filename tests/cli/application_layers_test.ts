@@ -684,7 +684,14 @@ Deno.test("the layer rules report every broken rule as data", () => {
         }),
       ],
     ];
-  for (const [path, view] of cases) {
+  const log = demoLogReader(IMAGE);
+  const shared = withLayers({
+    ...log,
+    rows: log.rows === undefined ? undefined : { ...log.rows, id: "jobs" },
+  } as ApplicationLayer<string>);
+  for (
+    const [path, view] of [...cases, ["layers[0].rows.id", shared] as const]
+  ) {
     const issues = validateTerminalApplicationView(view);
     assert(
       issues.some((issue) => issue.path === path),

@@ -46,6 +46,7 @@ import {
   type TerminalApplicationSelectionMove,
   type TerminalApplicationState,
   terminalApplicationState,
+  topLayer,
   transitionTerminalApplication,
   updateTerminalApplication,
 } from "./model.ts";
@@ -396,17 +397,20 @@ export async function runTerminalApplication<A>(
     return dispatch();
   };
   /**
-   * Below the minimum size navigation waits; bindings still run, and Ctrl+C
-   * still cancels unless a binding claims it.
+   * Below the minimum size navigation waits; the bindings of the scope in
+   * force — the top layer's while one is open — still run, and Ctrl+C still
+   * cancels unless a binding claims it.
    */
   const suspendedKey = (
     event: TerminalInputEvent,
   ): TerminalApplicationCommand | void => {
     if (event.kind !== "key") return undefined;
     const chord = keyChordOf(event.key);
-    const binding = chord === undefined
-      ? undefined
-      : model.keymap.base.get(chord);
+    const layer = topLayer(model);
+    const scope = layer === undefined
+      ? model.keymap.base
+      : model.keymap.layers.get(layer.id);
+    const binding = chord === undefined ? undefined : scope?.get(chord);
     if (binding !== undefined) {
       queue.push({ kind: "action", action: binding.action, source: "key" });
     } else if (chord === "ctrl-c") queue.push({ kind: "cancel" });
