@@ -112,7 +112,9 @@ export function layoutListColumns<A>(
 
 /**
  * The width at which no column drops and the longest title, capped at
- * `maxTitle`, fits whole.
+ * `maxTitle`, fits whole. The title's share is never below `minTitle`,
+ * because {@linkcode layoutListColumns} drops a column below it: a list of
+ * short titles still reserves the minimum.
  */
 export function neededListWidth<A>(
   list: ApplicationList<A>,
@@ -129,7 +131,9 @@ export function neededListWidth<A>(
       );
     }
   }
-  return fixedCells(list.columns ?? [], gaps) + Math.min(longest, maxTitle);
+  const minimum = list.minTitle ?? DEFAULT_APPLICATION_LIST_MIN_TITLE;
+  return fixedCells(list.columns ?? [], gaps) +
+    Math.max(Math.min(longest, maxTitle), minimum);
 }
 
 /** The visible slice of a list's rows. */

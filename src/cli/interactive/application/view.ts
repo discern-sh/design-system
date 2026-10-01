@@ -342,8 +342,10 @@ export interface ApplicationSplitRules {
   readonly wideAtColumns: number;
   readonly collapseBelowColumns: number;
   /**
-   * `content` sizes the list to its longest title (capped at `maxTitle`)
-   * and columns, never below `min`; `share` takes a fraction of the width.
+   * `content` sizes the list to its longest title (capped at `maxTitle`,
+   * and never below the list's `minTitle`, so no column drops at that
+   * width) and columns, never below `min`; `share` takes a fraction of the
+   * width.
    * Neither squeezes the detail below its minimum.
    */
   readonly list:

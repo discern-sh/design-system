@@ -5,11 +5,13 @@ import {
   renderTerminalApplication,
   TERMINAL_APPLICATION_MINIMUM,
   type TerminalApplicationLayout,
+  type TerminalApplicationView,
 } from "../../src/cli/interactive/mod.ts";
 import { FakeTerminalIO } from "../../src/cli/interactive/testing.ts";
 import {
   layoutListColumns,
   listGaps,
+  neededListWidth,
   renderListRow,
   renderListViewport,
 } from "../../src/cli/interactive/application/list-render.ts";
@@ -21,7 +23,10 @@ import {
 } from "../../src/cli/interactive/application/detail-render.ts";
 import { paintContext } from "../../src/cli/interactive/application/paint.ts";
 import { ApplicationDriver } from "../fixtures/application-driver.ts";
-import type { ApplicationDetailBlock } from "../../src/cli/interactive/mod.ts";
+import type {
+  ApplicationDetailBlock,
+  ApplicationList,
+} from "../../src/cli/interactive/mod.ts";
 import {
   applicationDemoView,
   DEMO_JOBS,
@@ -162,6 +167,92 @@ Deno.test("a master-detail list is sized to its content and never squeezes the d
       expected,
       `${columns}`,
     );
+  }
+});
+
+/** A list of titles with priority columns, for content-sizing checks. */
+function sizedList(
+  titles: readonly string[],
+  widths: readonly number[],
+  minTitle?: number,
+): ApplicationList<string> {
+  return {
+    id: "sized",
+    groups: [{
+      id: "all",
+      title: "All",
+      items: titles.map((title, index) => ({
+        id: `item-${index}`,
+        title,
+        marker: { unicode: "●", ascii: "*" },
+        cells: Object.fromEntries(
+          widths.map((width, column) => [`c${column}`, [{
+            text: "x".repeat(width),
+          }]]),
+        ),
+      })),
+    }],
+    columns: widths.map((width, column) => ({
+      id: `c${column}`,
+      width,
+      priority: column,
+    })),
+    ...(minTitle === undefined ? {} : { minTitle }),
+  };
+}
+
+Deno.test("a content-sized list never drops a column at the width it was sized to", () => {
+  const titleSets = [
+    ["a"],
+    ["ab", "abc"],
+    ["fifteen chars!!"],
+    ["exactly sixteen!"],
+    ["a title of twenty-two"],
+    ["a title much longer than the thirty-two cell cap"],
+  ];
+  const columnSets = [[], [3], [10, 4], [12, 8, 6], [20, 9, 9, 4]];
+  for (const titles of titleSets) {
+    for (const widths of columnSets) {
+      for (const minTitle of [undefined, 1, 8, 16, 24, 40]) {
+        const list = sizedList(titles, widths, minTitle);
+        for (const roomy of [true, false]) {
+          const gaps = listGaps(list, roomy);
+          for (const maxTitle of [8, 16, 32]) {
+            const needed = neededListWidth(list, gaps, maxTitle);
+            const layout = layoutListColumns(list, needed, gaps);
+            const at = JSON.stringify({ titles, widths, minTitle, maxTitle });
+            assertEquals(layout.columns.length, widths.length, at);
+            const longest = Math.max(...titles.map(measureText));
+            assert(layout.title >= Math.min(longest, maxTitle), at);
+          }
+        }
+      }
+    }
+  }
+  // Short titles beside wide columns: the split keeps every column it sized.
+  const list = sizedList(["Build", "Test", "Ship"], [12, 10, 9]);
+  const view: TerminalApplicationView<string> = {
+    header: { leading: [{ text: "Sized" }] },
+    body: {
+      kind: "master-detail",
+      list,
+      detail: { follows: "sized", content: {} },
+    },
+    footer: { left: [], right: [] },
+  };
+  for (const columns of [120, 140]) {
+    const io = new FakeTerminalIO([], { columns, rows: 24 });
+    const frame = renderTerminalApplication(
+      createTerminalApplicationModel(view).model,
+      io.size(),
+      io.capabilities(),
+    );
+    const row = stripAnsi(frame.frame).split("\n").find((line) =>
+      line.includes("Build")
+    ) ?? "";
+    for (const width of [12, 10, 9]) {
+      assertStringIncludes(row, "x".repeat(width), `${columns}: ${row}`);
+    }
   }
 });
 
