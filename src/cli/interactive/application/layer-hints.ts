@@ -1,8 +1,8 @@
 /**
  * The key hints a layer shows in place of the view's footer: one cluster
  * that names what Enter does now first, then the layer's own keys, and the
- * safe choice last. While a text field has focus, field chords replace the
- * letter keys.
+ * safe choice last — or first, without the accent, when Enter does nothing.
+ * While a text field has focus, field chords replace the letter keys.
  *
  * @module
  */
@@ -201,6 +201,24 @@ function readerHints<A>(
   };
 }
 
+/**
+ * A layer's primary is what Enter does. When Enter does nothing — no
+ * button row, a disabled button focused, nothing highlighted — the footer
+ * has no primary: no key takes the accent Enter's hint owns, and Escape's
+ * hint leads, so the way out is the last hint to drop.
+ */
+function withPrimary(hints: KeyHints): KeyHints {
+  if (hints.left[0]?.key === "enter") return hints;
+  const escape = hints.left.find((hint) => hint.key === "escape");
+  return {
+    ...hints,
+    primary: false,
+    left: escape === undefined
+      ? hints.left
+      : [escape, ...hints.left.filter((hint) => hint !== escape)],
+  };
+}
+
 /** The key hints the top layer shows. */
 export function layerHints<A>(
   layer: ApplicationLayer<A>,
@@ -211,12 +229,12 @@ export function layerHints<A>(
   switch (layer.kind) {
     case "sheet":
     case "form":
-      return panelHints(layer, model, facts, copy);
+      return withPrimary(panelHints(layer, model, facts, copy));
     case "menu":
-      return menuHints(layer, model, copy);
+      return withPrimary(menuHints(layer, model, copy));
     case "palette":
-      return paletteHints(layer, model, copy);
+      return withPrimary(paletteHints(layer, model, copy));
     case "reader":
-      return readerHints(layer, copy);
+      return withPrimary(readerHints(layer, copy));
   }
 }

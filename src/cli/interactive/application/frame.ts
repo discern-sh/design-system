@@ -377,6 +377,9 @@ function footerHints<A>(
       });
     const [primary, ...rest] = view.footer.left;
     return {
+      ...(view.footer.primary === undefined
+        ? {}
+        : { primary: view.footer.primary }),
       left: [
         ...(primary === undefined ? [] : [primary]),
         { key: ["up", "down"], label: copy.next },

@@ -158,6 +158,32 @@ Deno.test("keys stay distinct from their labels at every colour depth", () => {
   );
 });
 
+Deno.test("a cluster without a primary draws every key in ink", () => {
+  const theme = deriveTerminalTheme("dark", { accent: 255 });
+  const accent = theme.colors["--discern-color-accent-700"];
+  const ink = theme.colors["--discern-color-ink"];
+  assert(accent !== undefined && ink !== undefined);
+  const rgb = (color: typeof ink) =>
+    `${color.red};${color.green};${color.blue}`;
+  const hints: KeyHints = {
+    primary: false,
+    left: [{ key: "escape", label: "Hide" }, { key: "d", label: "Plan" }],
+  };
+  const line = renderKeyHintsCli(
+    hints,
+    40,
+    capabilities(40, { colorDepth: "truecolor" }),
+    { theme: "dark", appearance: { accent: 255 } },
+  );
+  assert(!line.includes(`38;2;${rgb(accent)}m`), "no key takes the accent");
+  assert(line.includes(`\x1b[1;38;2;${rgb(ink)}mEsc\x1b[0m`));
+  // Without a primary the first hint still holds its place at any width.
+  assertEquals(
+    stripAnsi(renderKeyHintsCli(hints, 9, capabilities(9))),
+    "Esc Hide ",
+  );
+});
+
 Deno.test("chords display as glyphs, carets, and words", () => {
   const unicode = { unicode: true };
   const ascii = { unicode: false };

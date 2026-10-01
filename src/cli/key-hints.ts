@@ -39,8 +39,15 @@ export interface KeyHint {
 
 /** The complete footer: what the renderer is allowed to show and drop. */
 export interface KeyHints {
-  /** Primary first; hints drop from the end to fit, the primary never. */
+  /** Primary first; hints drop from the end to fit, the first never. */
   readonly left: readonly KeyHint[];
+  /**
+   * Whether the first left hint is the primary action, its key drawn in the
+   * accent; defaults to true. A cluster with no primary — keys whose Enter
+   * does nothing, say — sets false, and every key draws in ink. The first
+   * hint still never drops.
+   */
+  readonly primary?: boolean;
   /** Pinned to the right edge; below `compactBelowColumns` labels drop from the end. */
   readonly right?: readonly KeyHint[];
   /** Appended to the right cluster, in order, only while the left fits whole. */
@@ -223,9 +230,9 @@ function validColumns(label: string, value: number, minimum: number): void {
  * such a key says nothing alone; the primary label then shortens with an
  * ellipsis; any right label that is left drops; right hints drop from the
  * end; and finally the line clips.
- * The primary key is strong accent, other keys strong ink, and labels
- * muted, so the key stays distinct from its words; without colour the
- * key keeps bold where the capabilities allow it.
+ * The primary key is strong accent — unless `primary` is false — other
+ * keys strong ink, and labels muted, so the key stays distinct from its
+ * words; without colour the key keeps bold where the capabilities allow it.
  */
 export function layoutKeyHintsCli(
   hints: KeyHints,
@@ -249,7 +256,9 @@ export function layoutKeyHintsCli(
     primary,
     withLabel: true,
   });
-  let left = hints.left.map((hint, index) => candidate(hint, index === 0));
+  let left = hints.left.map((hint, index) =>
+    candidate(hint, index === 0 && hints.primary !== false)
+  );
   let right = (hints.right ?? []).map((hint) => candidate(hint, false));
   const fits = () => lineWidth(left, right, gap) <= width;
 

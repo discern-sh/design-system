@@ -1,5 +1,10 @@
 import { assert, assertEquals, assertThrows } from "@std/assert";
-import { measureText } from "../../src/cli/mod.ts";
+import {
+  measureText,
+  resolveTerminalTheme,
+  stripAnsi,
+  terminalTextToneColor,
+} from "../../src/cli/mod.ts";
 import {
   type ApplicationButton,
   type ApplicationLayer,
@@ -1255,6 +1260,70 @@ Deno.test("the focused control of every layer stays on screen as focus moves and
         }
       });
     }
+  }
+});
+
+Deno.test("a layer footer's accent belongs to Enter, and Escape leads when Enter does nothing", async (t) => {
+  const theme = resolveTerminalTheme({});
+  const color = terminalTextToneColor(theme, "accent");
+  const accent = `38;2;${color.red};${color.green};${color.blue}m`;
+  const { buttons: _buttons, ...progress } = demoRunSheet(IMAGE, "working", {
+    startedAt: 0,
+    now: 11_000,
+  });
+  const layers: readonly (() => ApplicationLayer<string>)[] = [
+    () => demoRunSheet(IMAGE),
+    () => demoRunSheet(IMAGE, "loading"),
+    () => demoDeleteSheet(ARCHIVE),
+    () => demoNewJobForm(),
+    () => ({
+      ...progress,
+      buttonRow: false,
+      buttons: [{ id: "hide", label: "Hide", role: "safe" }],
+    }),
+    () => demoActionsMenu(IMAGE),
+    () => demoPalette(DEMO_JOBS, false),
+    () => demoKeysReader(),
+    () => demoLogReader(IMAGE),
+  ];
+  for (const [index, make] of layers.entries()) {
+    const layer = make();
+    await t.step(`${index} ${layer.id} ${layer.kind}`, () => {
+      const driver = new ApplicationDriver(withLayers(layer), {
+        columns: 80,
+        rows: 24,
+        colorDepth: "truecolor",
+      });
+      const check = (after: string) => {
+        if (driver.state.topLayerId !== layer.id) return;
+        const footer = driver.last.frame.split("\n").at(-1) ?? "";
+        const plain = stripAnsi(footer).trimStart();
+        const enter = plain.startsWith("↵");
+        assertEquals(
+          footer.includes(accent),
+          enter,
+          `${layer.id} after ${after}: the accent must mark Enter alone\n${plain}`,
+        );
+        if (!enter) {
+          assert(
+            plain.startsWith("Esc"),
+            `${layer.id} after ${after}: Escape leads when Enter does nothing\n${plain}`,
+          );
+        }
+      };
+      check("opening");
+      const step = layer.kind === "sheet" || layer.kind === "form"
+        ? "tab"
+        : "down";
+      for (let turn = 0; turn < 8; turn += 1) {
+        driver.key(step);
+        check(`${step} ${turn + 1}`);
+      }
+      if (layer.kind === "palette") {
+        driver.type("zzzz");
+        check("a query that matches nothing");
+      }
+    });
   }
 });
 
