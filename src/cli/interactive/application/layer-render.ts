@@ -61,6 +61,7 @@ import type { ApplicationDetailBlock } from "./view.ts";
 import {
   clip,
   fitLine,
+  fitProse,
   ink,
   overflowMarker,
   type PaintContext,
@@ -372,7 +373,7 @@ function buttonRows<A>(
   const beside = rows.length === 1 && left !== "" &&
     leftWidth + 2 <= lastStart;
   if (left !== "" && !beside) {
-    lines.push({ text: truncateStyledText(left, width, ellipsis(context)) });
+    lines.push({ text: fitProse(context, left, width) });
   }
   for (const [index, row] of rows.entries()) {
     // Filled buttons on touching rows would merge into one slab, so a
@@ -949,9 +950,7 @@ function panelFoot<A>(
       ? ""
       : styleRuns(context, layer.footnote, RAISED, "faint");
     if (!buttonRowShown(layer)) {
-      return left === ""
-        ? []
-        : [{ text: truncateStyledText(left, width, ellipsis(context)) }];
+      return left === "" ? [] : [{ text: fitProse(context, left, width) }];
     }
     return buttonRows(context, layer, fitted, left, width);
   };
@@ -1236,7 +1235,9 @@ function sheetPanel<A>(
           tone: "accent",
           animation: "spinner",
         }, RAISED)
-      } ${raised(context, clip(context, sheet.busy, width - 2), "muted")}`,
+      } ${
+        raised(context, clip(context, sheet.busy, width - 2, "word"), "muted")
+      }`,
     });
   }
   const body: PanelRow[] = [];
@@ -1524,7 +1525,8 @@ function unavailableRow(
   const reason = inline
     ? `  ${ink(context, item.sentence, { tone: "faint" }, surface)}`
     : "";
-  const text = truncateStyledText(
+  const text = fitProse(
+    context,
     `${
       ink(context, terminalGlyph("unavailable", context.capabilities), {
         tone: "faint",
@@ -1533,7 +1535,6 @@ function unavailableRow(
       ink(context, item.label, { tone: "muted", bold: highlighted }, surface)
     }${reason}`,
     width,
-    ellipsis(context),
   );
   return highlighted ? fitLine(context, text, width, "selection") : text;
 }
@@ -1729,11 +1730,12 @@ function menuPanel<A>(
     })),
   ];
   // The highlighted item's description; an unavailable one's sentence alone.
+  // Two lines at most; a longer one ends at a whole word.
   const describe = (
     label: string,
     runs: readonly ApplicationRun[] | undefined,
-  ) =>
-    wrapRuns(
+  ) => {
+    const lines = wrapRuns(
       context,
       [
         ...(label === "" ? [] : [{ text: label, role: "title" as const }]),
@@ -1743,7 +1745,12 @@ function menuPanel<A>(
       ],
       width,
       "muted",
-    ).slice(0, 2);
+    );
+    return lines.length <= 2 ? lines : [
+      lines[0] ?? "",
+      fitProse(context, lines.slice(1).join(" "), width),
+    ];
+  };
   // A short panel spends its rows on choices, not descriptions.
   const reserved = boxHeight < MENU_DESCRIPTION_ROWS ? 0 : Math.max(
     0,

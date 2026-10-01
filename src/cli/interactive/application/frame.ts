@@ -95,6 +95,7 @@ import {
 } from "./model.ts";
 import {
   fitLine,
+  fitProse,
   ink,
   type PaintContext,
   paintContext,
@@ -461,7 +462,11 @@ function messageLine<A>(
       undefined,
       "muted",
     );
-    return fitLine(context, `  ${hint}`, columns);
+    return fitLine(
+      context,
+      `  ${fitProse(context, hint, columns - 4)}`,
+      columns,
+    );
   }
   const left = styleRuns(
     context,
@@ -472,7 +477,7 @@ function messageLine<A>(
   const right = styleRuns(context, message.trailing, undefined, "faint");
   return fitLine(
     context,
-    `  ${spread(context, left, right, columns - 4)}`,
+    `  ${spread(context, left, right, columns - 4, 2, "word")}`,
     columns,
   );
 }

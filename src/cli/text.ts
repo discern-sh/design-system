@@ -77,18 +77,55 @@ function sliceToWidth(value: string, columns: number): string {
   return result;
 }
 
+/** Where truncation cuts a line that does not fit. */
+export interface TerminalTruncateOptions {
+  /**
+   * `grapheme`, the default, keeps as much as fits, as a name or an
+   * identifier wants. `word` cuts after the last whole word that fits and
+   * drops a clause separator left before the marker, so a sentence reads as
+   * abbreviated rather than broken; only a first word wider than the room
+   * is cut mid-word.
+   */
+  readonly at?: "grapheme" | "word";
+}
+
+/** Separators a word cut leaves off before its marker: `see it,…` reads `see it…`. */
+const TRAILING_SEPARATORS = /[\s,;:·•—–-]+$/u;
+
+/**
+ * The length of `plain`'s prefix a truncation keeps, given the `fits`
+ * code units that fit before the marker: all of them, or with `word`, those
+ * up to the last word that ends inside them.
+ */
+function truncationPoint(
+  plain: string,
+  fits: number,
+  options: TerminalTruncateOptions,
+): number {
+  if (options.at !== "word") return fits;
+  for (let index = fits; index > 0; index -= 1) {
+    if (isWhitespace(plain[index]) && !isWhitespace(plain[index - 1])) {
+      const kept = plain.slice(0, index).replace(TRAILING_SEPARATORS, "");
+      return kept === "" ? fits : kept.length;
+    }
+  }
+  return fits;
+}
+
 /** Truncate plain text to a visible width without splitting a grapheme. */
 export function truncateText(
   value: string,
   columns: number,
   ellipsis = "…",
+  options: TerminalTruncateOptions = {},
 ): string {
   assertColumns("truncate", columns, 0);
   const plain = stripAnsi(value).replaceAll("\n", " ");
   if (lineWidth(plain) <= columns) return plain;
   const marker = sliceToWidth(ellipsis, columns);
   const markerWidth = lineWidth(marker);
-  return `${sliceToWidth(plain, columns - markerWidth)}${marker}`;
+  const fits = sliceToWidth(plain, columns - markerWidth).length;
+  return `${plain.slice(0, truncationPoint(plain, fits, options))}${marker}`;
 }
 
 /**
@@ -101,12 +138,14 @@ export function truncateText(
  * and open hyperlink, everything closes before the marker, and the always
  * unstyled marker ends the line, so a truncated hyperlink can never leak an
  * open envelope. Accepted input and canonical re-emission follow
- * {@linkcode wrapStyledText}.
+ * {@linkcode wrapStyledText}. `options.at` chooses the cut as for
+ * {@linkcode truncateText}.
  */
 export function truncateStyledText(
   value: string,
   columns: number,
   ellipsis = "…",
+  options: TerminalTruncateOptions = {},
 ): string {
   assertColumns("truncate", columns, 0);
   const segments = parseStyledSource(value).map((segment) =>
@@ -117,9 +156,15 @@ export function truncateStyledText(
   const plain = segments.map((segment) => segment.text).join("");
   if (lineWidth(plain) <= columns) return emitStyledLine(segments);
   const marker = sliceToWidth(ellipsis, columns);
-  const kept = sliceToWidth(plain, columns - lineWidth(marker));
+  const fits = sliceToWidth(plain, columns - lineWidth(marker)).length;
   return `${
-    emitStyledLine(sliceStyledSegments(segments, 0, kept.length))
+    emitStyledLine(
+      sliceStyledSegments(
+        segments,
+        0,
+        truncationPoint(plain, fits, options),
+      ),
+    )
   }${marker}`;
 }
 

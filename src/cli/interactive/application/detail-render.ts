@@ -20,6 +20,7 @@ import {
 import type { TerminalSurfaceRole } from "../../theme.ts";
 import {
   clip,
+  fitProse,
   ink,
   overflowMarker,
   type PaintContext,
@@ -306,10 +307,10 @@ function rows(
       ? ""
       : `${fitCell(context, item.lead ?? [], lead, layout.surface)} `;
     const text = padText(
-      truncateStyledText(
+      fitProse(
+        context,
         styleRuns(context, item.text, layout.surface, "ink"),
         textWidth,
-        terminalGlyph("ellipsis", context.capabilities),
       ),
       textWidth,
     );
@@ -358,6 +359,7 @@ function hints(
           context,
           item.description,
           layout.width - keyWidth - 2 - labelWidth,
+          "word",
         ),
         { tone: "faint" },
         layout.surface,

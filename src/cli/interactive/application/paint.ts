@@ -18,6 +18,7 @@ import { terminalGlyph } from "../../terminal-glyphs.ts";
 import {
   fillStyledLine,
   measureText,
+  type TerminalTruncateOptions,
   truncateStyledText,
   truncateText,
 } from "../../text.ts";
@@ -229,11 +230,19 @@ export function fitLine(
   );
 }
 
+/**
+ * Where a line the package fits to its room is cut: a name — a title, a
+ * label, a cell, an identifier — where the room runs out, and prose — a
+ * message, a description, a footnote, a reason — after its last whole word.
+ */
+export type ApplicationCut = NonNullable<TerminalTruncateOptions["at"]>;
+
 /** Truncate plain text with the repertoire's ellipsis, spelled for the repertoire. */
 export function clip(
   context: PaintContext,
   text: string,
   width: number,
+  at: ApplicationCut = "grapheme",
 ): string {
   if (width <= 0) return "";
   const ellipsis = terminalGlyph("ellipsis", context.capabilities);
@@ -241,6 +250,7 @@ export function clip(
     context.capabilities.unicode ? text : asciiSpelling(text),
     width,
     ellipsis,
+    { at },
   );
   // A cut at a word boundary reads `archive…`, never `archive …`.
   return clipped.endsWith(` ${ellipsis}`)
@@ -248,11 +258,25 @@ export function clip(
     : clipped;
 }
 
+/** Fit styled prose to `width` cells, cut after its last whole word that fits. */
+export function fitProse(
+  context: PaintContext,
+  styled: string,
+  width: number,
+): string {
+  return truncateStyledText(
+    styled,
+    Math.max(0, width),
+    terminalGlyph("ellipsis", context.capabilities),
+    { at: "word" },
+  );
+}
+
 /**
  * Place `right` against the end of a `width`-cell line after `left`, keeping
  * at least `gap` cells between them. When both cannot fit, `right` is
- * dropped and `left` truncates with the repertoire's ellipsis, so the line
- * never runs past `width`.
+ * dropped and `left` truncates with the repertoire's ellipsis, cut `at` a
+ * grapheme or after a whole word, so the line never runs past `width`.
  */
 export function spread(
   context: PaintContext,
@@ -260,6 +284,7 @@ export function spread(
   right: string,
   width: number,
   gap = 2,
+  at: ApplicationCut = "grapheme",
 ): string {
   const used = measureText(left);
   const extra = measureText(right);
@@ -268,6 +293,7 @@ export function spread(
       left,
       Math.max(0, width),
       terminalGlyph("ellipsis", context.capabilities),
+      { at },
     );
   }
   return `${left}${" ".repeat(width - used - extra)}${right}`;
