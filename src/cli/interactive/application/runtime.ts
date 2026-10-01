@@ -50,6 +50,7 @@ import {
   updateModelState,
   updateModelStateProvisionally,
 } from "./model.ts";
+import type { ActivitySteps } from "./layer-view.ts";
 import type {
   InlineRun,
   KeymapEntry,
@@ -58,8 +59,9 @@ import type {
 
 /**
  * What an action asks the runtime to do next. `foreground` hands the
- * terminal to a caller operation and resumes afterwards; `exit` ends the
- * session. Any other value is a caller error.
+ * terminal to a caller operation and resumes afterwards; `background`
+ * starts an operation that runs while the screen stays live; `exit` ends
+ * the session. Any other value is a caller error.
  */
 export type TerminalApplicationCommand =
   | {
@@ -70,10 +72,31 @@ export type TerminalApplicationCommand =
     readonly run: () => void | Promise<void>;
   }
   | {
+    readonly kind: "background";
+    /** Names the command for `onReport`, `onCommandSettled`, and `context.abort`. */
+    readonly id: string;
+    /**
+     * Runs without the terminal: it never reads input. `report` sends its
+     * progress to `onReport`; `signal` aborts only through
+     * `context.abort(id)`, an exit, or the session ending — never because
+     * of a key or a terminal signal.
+     */
+    readonly run: (
+      report: (steps: ActivitySteps) => void,
+      signal: AbortSignal,
+    ) => Promise<void>;
+  }
+  | {
     readonly kind: "exit";
     /** Lines printed after the screen is released. */
     readonly epilogue?: readonly string[];
   };
+
+/** How a background command ended. */
+export type TerminalApplicationCommandOutcome =
+  | { readonly status: "completed" }
+  | { readonly status: "aborted" }
+  | { readonly status: "failed"; readonly error: unknown };
 
 /** The caller's handle on a running application. */
 export interface TerminalApplicationContext<A> {
@@ -100,6 +123,11 @@ export interface TerminalApplicationContext<A> {
    * value fails the session like an invalid view.
    */
   setField(layerId: string, fieldId: string, value: string): void;
+  /**
+   * Abort a running background command's signal. Unknown or finished ids
+   * are ignored; the command reports its end through `onCommandSettled`.
+   */
+  abort(commandId: string): void;
   /** End the session with this error after restoring the terminal. */
   fail(error: unknown): void;
   /** The runtime clock's time. */
@@ -144,6 +172,23 @@ export interface TerminalApplicationOptions<A> {
   readonly onDismiss?: (
     target: TerminalApplicationDismissTarget,
     via: TerminalApplicationDismissal,
+    context: TerminalApplicationContext<A>,
+  ) => void;
+  /**
+   * A background command reported progress. Reports arriving together are
+   * coalesced to the newest per command, and while a foreground operation
+   * owns the terminal they wait, so the screen repaints once with the
+   * latest when it returns.
+   */
+  readonly onReport?: (
+    commandId: string,
+    steps: ActivitySteps,
+    context: TerminalApplicationContext<A>,
+  ) => void;
+  /** A background command finished, failed, or was aborted. */
+  readonly onCommandSettled?: (
+    commandId: string,
+    outcome: TerminalApplicationCommandOutcome,
     context: TerminalApplicationContext<A>,
   ) => void;
   /**
@@ -199,7 +244,16 @@ export interface TerminalApplicationRuntime extends InteractionRuntime {
 }
 
 const textEncoder = new TextEncoder();
-const COMMAND_KINDS: ReadonlySet<string> = new Set(["foreground", "exit"]);
+/** Every command kind, checked against the union so the two never drift. */
+const COMMAND_KINDS: ReadonlySet<string> = new Set(
+  Object.keys(
+    {
+      foreground: true,
+      background: true,
+      exit: true,
+    } satisfies Record<TerminalApplicationCommand["kind"], true>,
+  ),
+);
 /** Callbacks one input may cause before its views are judged unstable. */
 const MAXIMUM_CALLBACKS = 512;
 
@@ -210,14 +264,45 @@ function assertCommand(command: unknown): TerminalApplicationCommand | void {
     !COMMAND_KINDS.has(String((command as { kind?: unknown }).kind))
   ) {
     throw new TypeError(
-      "application actions return a foreground or exit command, or nothing",
+      `application actions return a ${
+        [...COMMAND_KINDS].join(", ")
+      } command, or nothing`,
     );
   }
   const typed = command as TerminalApplicationCommand;
-  if (typed.kind === "foreground" && typeof typed.run !== "function") {
-    throw new TypeError("a foreground command runs an operation");
+  if (typed.kind !== "exit" && typeof typed.run !== "function") {
+    throw new TypeError(`a ${typed.kind} command runs an operation`);
+  }
+  if (
+    typed.kind === "background" &&
+    (typeof typed.id !== "string" || typed.id.trim() === "")
+  ) {
+    throw new TypeError("a background command names itself with an id");
   }
   return typed;
+}
+
+/** A callback the runtime owes: a step's effect, or news from a background command. */
+type RuntimeCallback<A> =
+  | TerminalApplicationEffect<A>
+  | {
+    readonly kind: "report";
+    readonly id: string;
+    readonly steps: ActivitySteps;
+  }
+  | {
+    readonly kind: "settled";
+    readonly id: string;
+    readonly outcome: TerminalApplicationCommandOutcome;
+  };
+
+/** A command that ends the screen's bracket: a handoff or an exit. */
+type LoopCommand = Exclude<TerminalApplicationCommand, { kind: "background" }>;
+
+/** A background command that has not settled. */
+interface RunningCommand {
+  readonly controller: AbortController;
+  readonly done: Promise<void>;
 }
 
 /** The plain line a foreground handoff prints on the released screen. */
@@ -255,7 +340,16 @@ export async function runTerminalApplication<A>(
     ...(options.viKeys === undefined ? {} : { viKeys: options.viKeys }),
   }, clock.now());
   let model = created.model;
-  const queue: TerminalApplicationEffect<A>[] = [...created.effects];
+  const queue: RuntimeCallback<A>[] = [...created.effects];
+  /** Background commands by id, until they settle. */
+  const running = new Map<string, RunningCommand>();
+  /** The newest report per command, waiting for the loop. */
+  const reports = new Map<string, ActivitySteps>();
+  /** Commands that settled, waiting for the loop, in order. */
+  const settled: {
+    readonly id: string;
+    readonly outcome: TerminalApplicationCommandOutcome;
+  }[] = [];
   const updates = new ResizeMailbox();
   const ticker = new TerminalAnimationTicker(clock, updates.notify);
   const abort = new AbortMailbox(runtime.abortSignal);
@@ -342,6 +436,9 @@ export async function runTerminalApplication<A>(
       pendingInputs.push(input);
       updates.notify();
     },
+    abort(commandId) {
+      running.get(commandId)?.controller.abort();
+    },
     fail(error) {
       if (!ended) {
         fault = { error };
@@ -351,9 +448,53 @@ export async function runTerminalApplication<A>(
     now: () => clock.now(),
   };
 
+  /**
+   * Start a background command. Its reports and its end wait for the loop,
+   * which delivers them between inputs; nothing reaches the caller once the
+   * session has ended.
+   */
+  const startBackground = (
+    command: Extract<TerminalApplicationCommand, { kind: "background" }>,
+  ): void => {
+    if (running.has(command.id)) {
+      throw new TypeError(
+        `background command ${JSON.stringify(command.id)} is already running`,
+      );
+    }
+    const controller = new AbortController();
+    const report = (steps: ActivitySteps): void => {
+      if (ended || !running.has(command.id)) return;
+      reports.set(command.id, steps);
+      updates.notify();
+    };
+    const finish = (outcome: TerminalApplicationCommandOutcome): void => {
+      running.delete(command.id);
+      if (ended) return;
+      settled.push({ id: command.id, outcome });
+      updates.notify();
+    };
+    const done = (async () => {
+      try {
+        await command.run(report, controller.signal);
+        finish(
+          controller.signal.aborted
+            ? { status: "aborted" }
+            : { status: "completed" },
+        );
+      } catch (error) {
+        finish(
+          controller.signal.aborted
+            ? { status: "aborted" }
+            : { status: "failed", error },
+        );
+      }
+    })();
+    running.set(command.id, { controller, done });
+  };
+
   /** Run queued callbacks in order; the first command an action returns wins. */
-  const dispatch = (): TerminalApplicationCommand | void => {
-    let command: TerminalApplicationCommand | undefined;
+  const dispatch = (): LoopCommand | void => {
+    let command: LoopCommand | undefined;
     dispatching = true;
     viewReplaced = false;
     try {
@@ -390,9 +531,17 @@ export async function runTerminalApplication<A>(
             const result = assertCommand(
               options.onAction?.(effect.action, context, effect.source),
             );
-            command ??= result ?? undefined;
+            if (result === undefined) break;
+            if (result.kind === "background") startBackground(result);
+            else command ??= result;
             break;
           }
+          case "report":
+            options.onReport?.(effect.id, effect.steps, context);
+            break;
+          case "settled":
+            options.onCommandSettled?.(effect.id, effect.outcome, context);
+            break;
           case "cancel":
             throw new InteractionCancelled("Cancelled.");
         }
@@ -406,7 +555,7 @@ export async function runTerminalApplication<A>(
   };
   const apply = (
     input: TerminalApplicationInput,
-  ): TerminalApplicationCommand | void => {
+  ): LoopCommand | void => {
     const step = transitionModelState(model, input, clock.now());
     model = step.model;
     queue.push(...step.effects);
@@ -420,7 +569,7 @@ export async function runTerminalApplication<A>(
    */
   const suspendedKey = (
     event: TerminalInputEvent,
-  ): TerminalApplicationCommand | void => {
+  ): LoopCommand | void => {
     if (event.kind !== "key") return undefined;
     const chord = keyChordOf(event.key);
     if (chord === "ctrl-c") queue.push(interruptEffect(model));
@@ -436,7 +585,7 @@ export async function runTerminalApplication<A>(
   };
 
   /** Apply what waited in the mailbox: the newest view, caller selections, due timers. */
-  const drainMailbox = (): TerminalApplicationCommand | void => {
+  const drainMailbox = (): LoopCommand | void => {
     if (pendingView !== undefined) {
       const view = pendingView;
       pendingView = undefined;
@@ -448,6 +597,13 @@ export async function runTerminalApplication<A>(
       const step = transitionModelState(model, input, clock.now());
       model = step.model;
       queue.push(...step.effects);
+    }
+    for (const [id, steps] of reports) {
+      queue.push({ kind: "report", id, steps });
+    }
+    reports.clear();
+    for (const entry of settled.splice(0)) {
+      queue.push({ kind: "settled", ...entry });
     }
     const command = dispatch();
     return command ?? apply({ kind: "time" });
@@ -478,7 +634,7 @@ export async function runTerminalApplication<A>(
       };
       const command = await withRawTerminal(
         io,
-        async (): Promise<TerminalApplicationCommand> => {
+        async (): Promise<LoopCommand> => {
           const screen = new TerminalScreenPainter(
             io,
             () => clock.now(),
@@ -552,6 +708,12 @@ export async function runTerminalApplication<A>(
             updates.notify();
           }) ?? (() => {});
           try {
+            if (started) {
+              // Back from a foreground operation: what arrived meanwhile —
+              // the newest view and reports — applies before the first paint.
+              const waiting = drainMailbox();
+              if (waiting !== undefined) return waiting;
+            }
             paint();
             if (!started) {
               started = true;
@@ -682,6 +844,11 @@ export async function runTerminalApplication<A>(
     ticker.stop();
     stopTimer();
     abort.stop();
+    // Ending the session ends its background work: every signal aborts,
+    // and the session settles only once each command has.
+    const remaining = [...running.values()];
+    for (const command of remaining) command.controller.abort();
+    await Promise.allSettled(remaining.map((command) => command.done));
     try {
       disposeSubscription();
     } catch (error) {
