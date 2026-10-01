@@ -31,7 +31,8 @@ import {
   fitMarkdownBrowserState,
   renderMarkdownBrowser,
 } from "./markdown-browser-renderer.ts";
-import { CompleteFramePainter } from "./painter.ts";
+import { systemTerminalClock } from "./clock.ts";
+import { TerminalScreenPainter } from "./painter.ts";
 import { signalPassthrough } from "./signals.ts";
 import {
   AbortMailbox,
@@ -174,7 +175,12 @@ export async function runMarkdownBrowserRequest<Action>(
   );
   let frame = render(state, facts.capabilities);
 
-  const painter = new CompleteFramePainter(io);
+  // Every changed frame repaints whole and unsynchronized, keeping the
+  // browser's established output until it moves onto the application runtime.
+  const painter = new TerminalScreenPainter(io, systemTerminalClock.now, {
+    synchronized: false,
+    rowDiff: false,
+  });
   const reader = services.createInputReader?.(io) ??
     new TerminalInputReader(io);
   const resize = new ResizeMailbox();
@@ -188,7 +194,9 @@ export async function runMarkdownBrowserRequest<Action>(
     stopResizeListener();
   };
   const paintLatestFrame = (): void => {
-    while (!painter.replace(frame, facts.size)) {
+    while (
+      painter.paint({ frame, size: facts.size }).status === "resized"
+    ) {
       const currentFacts = browserTerminalFacts(io);
       if (!sameGeometry(state, currentFacts)) {
         state = transitionMarkdownBrowser(

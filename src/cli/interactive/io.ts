@@ -9,6 +9,7 @@ import { InteractionCancelled } from "./errors.ts";
 
 import {
   detectTerminalCapabilities,
+  TERMINAL_APPLICATION_STATE_REPORTS_ENV,
   type TerminalCapabilities,
 } from "../capabilities.ts";
 
@@ -24,6 +25,7 @@ const ENVIRONMENT_KEYS = [
   "LC_ALL",
   "LC_CTYPE",
   "LANG",
+  TERMINAL_APPLICATION_STATE_REPORTS_ENV,
 ] as const;
 
 /** Current dimensions of a terminal viewport. */

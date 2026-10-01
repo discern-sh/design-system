@@ -1,5 +1,9 @@
 import { assertEquals } from "@std/assert";
-import { detectTerminalCapabilities } from "../../src/cli/capabilities.ts";
+import {
+  detectTerminalCapabilities,
+  TERMINAL_APPLICATION_STATE_REPORTS_ENV,
+} from "../../src/cli/capabilities.ts";
+import { DenoTerminalIO } from "../../src/cli/interactive/io.ts";
 
 Deno.test("terminal detection separates tty, colour, width, and Unicode facts", () => {
   assertEquals(
@@ -250,5 +254,41 @@ Deno.test("locale repertoire follows the declaration alone, independent of attac
       { ...testCase.expected, columns: undefined },
       testCase.name,
     );
+  }
+});
+
+Deno.test("application state reports turn on only for the exact environment opt-in", () => {
+  const detect = (value: string | undefined) =>
+    detectTerminalCapabilities({
+      env: {
+        TERM: "xterm-256color",
+        TERMINAL_APPLICATION_STATE_REPORTS: value,
+      },
+      isTty: true,
+    }).applicationStateReports;
+  assertEquals(detect("1"), true);
+  for (const value of [undefined, "", "0", "true", "yes", " 1"]) {
+    assertEquals(detect(value), undefined, JSON.stringify(value));
+  }
+  assertEquals(
+    new DenoTerminalIO({
+      environment: { [TERMINAL_APPLICATION_STATE_REPORTS_ENV]: "1" },
+    }).capabilities().applicationStateReports,
+    true,
+  );
+});
+
+Deno.test("the Deno terminal snapshots the state report opt-in with its other environment facts", () => {
+  const previous = Deno.env.get(TERMINAL_APPLICATION_STATE_REPORTS_ENV);
+  Deno.env.set(TERMINAL_APPLICATION_STATE_REPORTS_ENV, "1");
+  try {
+    assertEquals(
+      new DenoTerminalIO().capabilities().applicationStateReports,
+      true,
+    );
+  } finally {
+    if (previous === undefined) {
+      Deno.env.delete(TERMINAL_APPLICATION_STATE_REPORTS_ENV);
+    } else Deno.env.set(TERMINAL_APPLICATION_STATE_REPORTS_ENV, previous);
   }
 });

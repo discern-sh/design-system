@@ -34,6 +34,7 @@ import type { InteractionEntry } from "./types.ts";
 import type { TerminalSize } from "./io.ts";
 import { isNamedKey, type TerminalKey } from "./keys.ts";
 import { fitInteractionFrame } from "./viewport-budget.ts";
+import type { TerminalApplicationStateReport } from "./state-report.ts";
 
 /** Minimum geometry for a selectable row, region title, tip, and keyboard help. */
 export const TERMINAL_APPLICATION_MINIMUM: TerminalSize = Object.freeze({
@@ -640,5 +641,25 @@ export function renderTerminalApplication<Action>(
     layout,
     regionRows,
     renderCalls,
+  };
+}
+
+/**
+ * The navigation identities an application with regions reports: the focused
+ * region, and the selection when that region is a list.
+ */
+export function terminalApplicationStateReport<Action>(
+  state: TerminalApplicationState<Action>,
+): TerminalApplicationStateReport {
+  const focused = state.view.regions.find((region) =>
+    region.id === state.focusedRegionId
+  );
+  const selectedItemId = state.positions[state.focusedRegionId]?.selectedId;
+  return {
+    focusedControlId: state.focusedRegionId,
+    ...(focused?.kind === "choices" ? { listId: focused.id } : {}),
+    ...(focused?.kind === "choices" && selectedItemId !== undefined
+      ? { selectedItemId }
+      : {}),
   };
 }

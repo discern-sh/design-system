@@ -12,7 +12,7 @@ import {
   markdownBrowserDocumentLines,
   renderMarkdownBrowser,
 } from "../../src/cli/interactive/markdown-browser-renderer.ts";
-import { CompleteFramePainter } from "../../src/cli/interactive/painter.ts";
+import { TerminalScreenPainter } from "../../src/cli/interactive/painter.ts";
 import {
   FakeTerminalIO,
   testTerminalCapabilities,
@@ -69,7 +69,7 @@ Deno.test("complete Markdown browser frames fit and rerender deterministically a
     assertEquals(inspection.spareRows, 0);
 
     const io = new FakeTerminalIO([], profile);
-    new CompleteFramePainter(io).replace(frame);
+    new TerminalScreenPainter(io, () => 0).paint({ frame, size: profile });
     assertEquals(
       io.writes.length,
       1,

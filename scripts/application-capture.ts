@@ -4,6 +4,7 @@ import {
   type PtyInputPhase,
   type PtyOutputCondition,
   ptyOutputContains,
+  ptySettledFrame,
   runPtyProcess,
 } from "@discern-sh/design-system/cli/interactive/testing";
 import { launchBrowser } from "./browser.ts";
@@ -26,29 +27,19 @@ try {
     ] as const
   ) {
     const size = { columns, rows };
-    const when = (marker: string): PtyOutputCondition => ({
-      description: `complete ${name} frame containing ${marker}`,
-      test: (output) => {
-        try {
-          return captureTerminalFrame(output.phaseStdout, size).frame.includes(
-            marker,
-          );
-        } catch {
-          return false;
-        }
-      },
-    });
-    const settled: PtyOutputCondition = {
-      description: "updated complete overview",
-      test: (output) => {
-        try {
-          const frame = captureTerminalFrame(output.phaseStdout, size).frame;
-          return frame.includes("Field notes") && !frame.includes("Working");
-        } catch {
-          return false;
-        }
-      },
-    };
+    const when = (marker: string): PtyOutputCondition =>
+      ptySettledFrame(
+        size,
+        `settled ${name} frame containing ${marker}`,
+        (capture) => capture.text.includes(marker),
+      );
+    const settled = ptySettledFrame(
+      size,
+      "updated settled overview",
+      (capture) =>
+        capture.text.includes("Field notes") &&
+        !capture.text.includes("Working"),
+    );
     const first = columns < 32 ? "Resize" : "Working";
     const phases: readonly PtyInputPhase[] = columns < 32
       ? [{
@@ -106,6 +97,7 @@ try {
         COLORTERM: "truecolor",
         NO_COLOR: color ? "" : "1",
         LC_ALL: unicode ? "en_US.UTF-8" : "C",
+        TERMINAL_APPLICATION_STATE_REPORTS: "1",
       },
       input: phases,
       timeoutMs: 10_000,
@@ -119,6 +111,10 @@ try {
       });
       const stem = `${directory}/${name}-${state}`;
       await Deno.writeTextFile(`${stem}.html`, captured.html);
+      await Deno.writeTextFile(
+        `${stem}.state.json`,
+        `${JSON.stringify(captured.state ?? null)}\n`,
+      );
       const page = await browser.newPage({
         viewport: { width: 1400, height: 1600 },
         deviceScaleFactor: 1,

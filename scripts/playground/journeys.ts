@@ -1130,6 +1130,14 @@ export const interactiveExportCoverage: Readonly<
     excluded:
       "Pure bounded frames exercised by the application journey and capture tool.",
   },
+  DEFAULT_TERMINAL_PAINT_OPTIONS: {
+    excluded:
+      "Painting defaults every application journey paints with; synchronized row writes have no interaction of their own.",
+  },
+  TERMINAL_STATE_REPORT_OSC: {
+    excluded:
+      "Protocol constant for opt-in test reports; terminals ignore the sequence, so a journey has nothing to show.",
+  },
   requestAcknowledgement: { journey: "acknowledge" },
   requestText: { journey: "text" },
   requestMaskedText: { journey: "masked" },

@@ -18,6 +18,14 @@ export interface TerminalCapabilities {
    * Omission preserves the pre-field assumption that controls are available.
    */
   readonly ansiControl?: boolean;
+  /**
+   * Whether an application that owns the screen announces its navigation
+   * state in a private OSC sequence before each paint, for test instruments
+   * that key on stable identities instead of prose. Terminals ignore the
+   * sequence. Detection sets it only when the environment opts in with
+   * `TERMINAL_APPLICATION_STATE_REPORTS=1`; omission means off.
+   */
+  readonly applicationStateReports?: boolean;
   readonly colorDepth: TerminalColorDepth;
   readonly columns: number;
   /**
@@ -67,6 +75,13 @@ export interface TerminalDetectionInput {
 
 const DEFAULT_COLUMNS = 80;
 
+/**
+ * The environment variable that opts an owned application into private state
+ * reports. Only the exact value `1` enables them.
+ */
+export const TERMINAL_APPLICATION_STATE_REPORTS_ENV =
+  "TERMINAL_APPLICATION_STATE_REPORTS";
+
 function effectiveLocale(
   env: TerminalDetectionInput["env"],
 ): string | undefined {
@@ -98,7 +113,8 @@ function supportsUnicode(locale: string | undefined): boolean {
  * styled output. Mouse tracking has no portable positive detector and remains
  * omitted; callers holding terminal-specific knowledge state it directly.
  * Unicode repertoire derives from the locale declaration alone, independent
- * of terminal attachment.
+ * of terminal attachment. Application state reports stay off unless the
+ * environment sets {@linkcode TERMINAL_APPLICATION_STATE_REPORTS_ENV} to `1`.
  */
 export function detectTerminalCapabilities(
   input: TerminalDetectionInput,
@@ -124,6 +140,9 @@ export function detectTerminalCapabilities(
 
   return {
     ansiControl,
+    ...(input.env[TERMINAL_APPLICATION_STATE_REPORTS_ENV] === "1"
+      ? { applicationStateReports: true }
+      : {}),
     colorDepth,
     columns,
     hyperlinks: colorDepth !== "none",

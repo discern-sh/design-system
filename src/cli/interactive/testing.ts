@@ -11,6 +11,7 @@
 import { stripAnsi } from "../ansi.ts";
 import type { TerminalCapabilities } from "../capabilities.ts";
 import { measureText } from "../text.ts";
+import type { TerminalClock } from "./clock.ts";
 import type { TerminalIO, TerminalSize } from "./io.ts";
 import {
   TERMINAL_MOUSE_MAX_COORDINATE,
@@ -25,6 +26,8 @@ const ESCAPE = "\u001b";
 /** Configuration for a queue-backed deterministic terminal. */
 export interface FakeTerminalIOOptions {
   readonly ansiControl?: boolean;
+  /** Report the environment's opt-in to application state reports. */
+  readonly applicationStateReports?: boolean;
   readonly interactive?: boolean;
   readonly colorDepth?: TerminalCapabilities["colorDepth"];
   readonly columns?: number;
@@ -174,6 +177,7 @@ export class FakeTerminalIO implements TerminalIO {
   /** Raw-mode transitions in the order interactions requested them. */
   readonly rawTransitions: boolean[] = [];
   readonly #ansiControl: boolean;
+  readonly #applicationStateReports: boolean | undefined;
   readonly #queue: (Uint8Array | QueuedResize)[];
   readonly #interactive: boolean;
   readonly #colorDepth: TerminalCapabilities["colorDepth"];
@@ -195,6 +199,7 @@ export class FakeTerminalIO implements TerminalIO {
       typeof chunk === "string" ? encoder.encode(chunk) : chunk.slice()
     );
     this.#ansiControl = options.ansiControl ?? true;
+    this.#applicationStateReports = options.applicationStateReports;
     this.#interactive = options.interactive ?? true;
     this.#colorDepth = options.colorDepth ?? "none";
     this.#hyperlinks = options.hyperlinks;
@@ -214,6 +219,9 @@ export class FakeTerminalIO implements TerminalIO {
   capabilities(): TerminalCapabilities {
     return {
       ansiControl: this.#ansiControl,
+      ...(this.#applicationStateReports === undefined
+        ? {}
+        : { applicationStateReports: this.#applicationStateReports }),
       colorDepth: this.#colorDepth,
       columns: this.#columns,
       ...(this.#hyperlinks === undefined
@@ -400,6 +408,83 @@ export class FakeSignalSource implements TerminalSignalSource {
   /** Deliver one SIGINT to every listener installed at this moment. */
   deliver(): void {
     for (const handler of [...this.#handlers]) handler();
+  }
+}
+
+interface ScheduledCallback {
+  readonly at: number;
+  readonly order: number;
+  readonly callback: () => void;
+  cancelled: boolean;
+}
+
+/**
+ * A {@linkcode TerminalClock} that stands still until a test advances it.
+ * Delayed callbacks fire in due-time order, ties in scheduling order,
+ * including callbacks scheduled while advancing that fall due within the
+ * advanced span — so an animation tick or keyframe interval runs exactly as
+ * far as the test asks, without real delays.
+ */
+export class ManualTerminalClock implements TerminalClock {
+  #now: number;
+  #order = 0;
+  readonly #scheduled: ScheduledCallback[] = [];
+
+  constructor(start = 0) {
+    this.#now = start;
+  }
+
+  /** Current manual time in milliseconds. */
+  now(): number {
+    return this.#now;
+  }
+
+  /** Schedule `callback` at `delayMs` from now; returns an idempotent cancellation. */
+  delay(callback: () => void, delayMs: number): () => void {
+    if (!Number.isFinite(delayMs) || delayMs < 0) {
+      throw new TypeError(
+        `delay must be a non-negative number of milliseconds; received ${delayMs}`,
+      );
+    }
+    const entry: ScheduledCallback = {
+      at: this.#now + delayMs,
+      order: this.#order++,
+      callback,
+      cancelled: false,
+    };
+    this.#scheduled.push(entry);
+    return () => {
+      entry.cancelled = true;
+    };
+  }
+
+  /** Callbacks scheduled and neither fired nor cancelled. */
+  get pending(): number {
+    return this.#scheduled.filter((entry) => !entry.cancelled).length;
+  }
+
+  /** Move time forward, firing every callback that falls due on the way. */
+  advance(milliseconds: number): void {
+    if (!Number.isFinite(milliseconds) || milliseconds < 0) {
+      throw new TypeError(
+        `advance must be a non-negative number of milliseconds; received ${milliseconds}`,
+      );
+    }
+    const target = this.#now + milliseconds;
+    while (true) {
+      const due = this.#scheduled
+        .filter((entry) => !entry.cancelled && entry.at <= target)
+        .sort((a, b) => a.at - b.at || a.order - b.order)[0];
+      if (due === undefined) break;
+      due.cancelled = true;
+      this.#scheduled.splice(this.#scheduled.indexOf(due), 1);
+      this.#now = Math.max(this.#now, due.at);
+      due.callback();
+    }
+    this.#now = target;
+    for (let index = this.#scheduled.length - 1; index >= 0; index -= 1) {
+      if (this.#scheduled[index]!.cancelled) this.#scheduled.splice(index, 1);
+    }
   }
 }
 

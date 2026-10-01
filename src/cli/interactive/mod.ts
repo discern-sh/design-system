@@ -8,6 +8,7 @@
 export * from "./activity.ts";
 export * from "./background.ts";
 export * from "./basic-requests.ts";
+export type { TerminalClock } from "./clock.ts";
 export * from "./choice-requests.ts";
 export { filterInteractionEntries } from "./choice-navigation.ts";
 export * from "./discovery-requests.ts";
@@ -28,10 +29,14 @@ export type {
   TerminalLifecycleOptions,
 } from "./lifecycle.ts";
 export * from "./markdown-browser.ts";
-export { InlineFramePainter } from "./painter.ts";
+export {
+  DEFAULT_TERMINAL_PAINT_OPTIONS,
+  InlineFramePainter,
+} from "./painter.ts";
 export type {
   InlineFramePaintResult,
   InlineFrameRefusalReason,
+  TerminalPaintOptions,
 } from "./painter.ts";
 export * from "./sequential-form.ts";
 export {
@@ -44,6 +49,8 @@ export {
 } from "./sequential-steps.ts";
 export type { SequentialRequestStepOptions } from "./sequential-steps.ts";
 export * from "./signals.ts";
+export { TERMINAL_STATE_REPORT_OSC } from "./state-report.ts";
+export type { TerminalApplicationStateReport } from "./state-report.ts";
 export * from "./textarea-request.ts";
 export * from "./types.ts";
 

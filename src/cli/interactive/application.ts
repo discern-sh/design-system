@@ -5,10 +5,12 @@ import {
   type TerminalApplicationAction,
   type TerminalApplicationFrame,
   type TerminalApplicationState,
+  terminalApplicationStateReport,
   type TerminalApplicationView,
   transitionTerminalApplication,
   updateTerminalApplication,
 } from "./application-model.ts";
+import { systemTerminalClock, type TerminalClock } from "./clock.ts";
 import { DenoTerminalIO, type TerminalSize } from "./io.ts";
 import { isNamedKey, TerminalInputReader, type TerminalKey } from "./keys.ts";
 import { assertInteractiveTerminal, withRawTerminal } from "./lifecycle.ts";
@@ -17,7 +19,11 @@ import {
   ResizeMailbox,
   terminalFacts,
 } from "./owned-viewport.ts";
-import { CompleteFramePainter } from "./painter.ts";
+import {
+  type TerminalPaintOptions,
+  terminalPaintOptions,
+  TerminalScreenPainter,
+} from "./painter.ts";
 import { InteractionCancelled } from "./errors.ts";
 import { signalPassthrough } from "./signals.ts";
 import type { InteractionRuntime } from "./types.ts";
@@ -67,21 +73,52 @@ export interface TerminalApplicationObservation {
   readonly layout: TerminalApplicationFrame<unknown>["layout"];
   readonly renderCalls: number;
   readonly renderDurationMs: number;
+  /** How the frame reached the screen: every row, only changed rows, or not at all. */
+  readonly paint: "keyframe" | "rows" | "unchanged";
+  /** Whether this paint wrote anything. */
   readonly written: boolean;
+  /** Rows this paint wrote. */
+  readonly rowsWritten: number;
+  /** UTF-8 bytes this paint wrote, control sequences and any state report included. */
+  readonly bytesWritten: number;
+  /** UTF-8 size of the rendered frame's rows: what rewriting all of them costs. */
   readonly frameBytes: number;
 }
 
-/** Optional cooperative cancellation and diagnostics for the owned session. */
+/** Optional cooperative cancellation, timing, painting, and diagnostics for the owned session. */
 export interface TerminalApplicationRuntime extends InteractionRuntime {
   readonly abortSignal?: AbortSignal;
   readonly observe?: (observation: TerminalApplicationObservation) => void;
+  /**
+   * Time for keyframe intervals. Defaults to the process clock; tests pass a
+   * manual clock and advance it.
+   */
+  readonly clock?: TerminalClock;
+  /**
+   * How frames are written. The defaults bracket each paint in synchronized
+   * output, rewrite only changed rows, and paint a keyframe at least every 30
+   * seconds while the screen changes.
+   */
+  readonly paint?: Partial<TerminalPaintOptions>;
+}
+
+const textEncoder = new TextEncoder();
+
+/** The composition a keyframe follows: the layout, and the region a single-region layout shows. */
+function applicationComposition<Action>(
+  frame: TerminalApplicationFrame<Action>,
+): string {
+  return frame.layout === "single"
+    ? `single:${frame.state.focusedRegionId}`
+    : frame.layout;
 }
 
 /**
  * Own an alternate-screen session with bounded regions, live updates and foreground handoff.
  * No provider runs on navigation. Handlers run synchronously after a consumed read, so a
  * foreground child receives exclusive terminal ownership. Escape exits by default;
- * Ctrl+C, EOF and abort throw InteractionCancelled after terminal restoration.
+ * Ctrl+C, EOF and abort throw InteractionCancelled after terminal restoration. Each paint
+ * is one synchronized update that rewrites only changed rows between keyframes.
  */
 export async function runTerminalApplication<Action>(
   options: TerminalApplicationOptions<Action>,
@@ -93,6 +130,8 @@ export async function runTerminalApplication<Action>(
   const io = runtime.io ?? new DenoTerminalIO();
   assertInteractiveTerminal(io);
   terminalFacts(io);
+  const paintOptions = terminalPaintOptions(runtime.paint);
+  const clock = runtime.clock ?? systemTerminalClock;
   let state = updateTerminalApplication(options.view);
   const updates = new ResizeMailbox();
   const abort = new AbortMailbox(runtime.abortSignal);
@@ -143,8 +182,11 @@ export async function runTerminalApplication<Action>(
       const command = await withRawTerminal(
         io,
         async (): Promise<TerminalApplicationCommand> => {
-          const painter = new CompleteFramePainter(io);
-          let previousFrame: string | undefined;
+          const painter = new TerminalScreenPainter(
+            io,
+            () => clock.now(),
+            paintOptions,
+          );
           let paintedSize: TerminalSize | undefined;
           let rendered: TerminalApplicationFrame<Action>;
           const paint = (): void => {
@@ -161,21 +203,28 @@ export async function runTerminalApplication<Action>(
                 runtime,
               );
               state = rendered.state;
-              const changed = rendered.frame !== previousFrame;
-              if (
-                changed && !painter.replace(rendered.frame, facts.size)
-              ) continue;
-              previousFrame = rendered.frame;
+              const painted = painter.paint({
+                frame: rendered.frame,
+                size: facts.size,
+                layer: applicationComposition(rendered),
+                ...(facts.capabilities.applicationStateReports === true
+                  ? { report: terminalApplicationStateReport(state) }
+                  : {}),
+              });
+              if (painted.status === "resized") continue;
               paintedSize = facts.size;
               runtime.observe?.({
                 size: facts.size,
                 layout: rendered.layout,
                 renderCalls: rendered.renderCalls,
                 renderDurationMs: performance.now() - startedAt,
-                written: changed,
-                frameBytes: changed
-                  ? new TextEncoder().encode(rendered.frame).length
-                  : 0,
+                paint: painted.status === "painted"
+                  ? painted.kind
+                  : "unchanged",
+                written: painted.status === "painted",
+                rowsWritten: painted.status === "painted" ? painted.rows : 0,
+                bytesWritten: painted.status === "painted" ? painted.bytes : 0,
+                frameBytes: textEncoder.encode(rendered.frame).length,
               });
               return;
             }

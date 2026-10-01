@@ -23,6 +23,10 @@ import {
   FakeSignalSource,
   FakeTerminalIO,
 } from "../../src/cli/interactive/testing.ts";
+import {
+  BEGIN_SYNCHRONIZED_UPDATE,
+  ERASE_TERMINAL_DISPLAY,
+} from "../../src/cli/interactive/painter.ts";
 
 const reading = createCliBlock(renderMarkdownCli, {
   source: Array.from(
@@ -173,7 +177,10 @@ Deno.test("background updates coalesce while input remains in order, without res
   assertEquals(result.positions.list?.selectedId, "a");
   assertEquals(starts, 1);
   assertEquals(stops, 1);
-  assert(io.writes.filter((s) => s.startsWith("\x1b[2J")).length <= 5);
+  assert(
+    io.writes.filter((s) => s.startsWith(BEGIN_SYNCHRONIZED_UPDATE)).length <=
+      5,
+  );
   io.close();
 });
 
@@ -318,7 +325,9 @@ Deno.test("application transport failures preserve the primary fault through cle
         return await super.read();
       }
       override write(value: string) {
-        if (mode === "write" && value.startsWith("\x1b[2J")) throw failure;
+        if (mode === "write" && value.includes(ERASE_TERMINAL_DISPLAY)) {
+          throw failure;
+        }
         super.write(value);
       }
       override listenResize(listener: () => void) {

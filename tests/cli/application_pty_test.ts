@@ -2,6 +2,7 @@ import { assert, assertEquals, assertStringIncludes } from "@std/assert";
 import {
   captureTerminalFrame,
   ptyOutputContains,
+  ptySettledFrame,
   runPtyProcess,
 } from "../../src/cli/interactive/testing.ts";
 
@@ -10,17 +11,12 @@ Deno.test({
   ignore: Deno.build.os === "windows",
   fn: async () => {
     const size = { columns: 80, rows: 24 };
-    const ready = (marker: string) => ({
-      description: `complete Studio frame containing ${marker}`,
-      test: (output: { phaseStdout: string }) => {
-        try {
-          const frame = captureTerminalFrame(output.phaseStdout, size).frame;
-          return frame.includes(marker);
-        } catch {
-          return false;
-        }
-      },
-    });
+    const ready = (marker: string) =>
+      ptySettledFrame(
+        size,
+        `settled Studio frame containing ${marker}`,
+        (capture) => capture.text.includes(marker),
+      );
     const result = await runPtyProcess({
       command: Deno.execPath(),
       args: [
@@ -59,18 +55,14 @@ Deno.test({
           { columns: 24, rows: 6 },
           { columns: 80, rows: 24 },
         ] as const).map((geometry, i) => {
-          const when = {
-            description:
-              `complete resized ${geometry.columns} x ${geometry.rows}`,
-            test: (output: { phaseStdout: string }) => {
-              try {
-                return captureTerminalFrame(output.phaseStdout, geometry).frame
-                  .includes(geometry.columns < 32 ? "Resize" : "Run sample");
-              } catch {
-                return false;
-              }
-            },
-          };
+          const when = ptySettledFrame(
+            geometry,
+            `settled resized ${geometry.columns} x ${geometry.rows}`,
+            (capture) =>
+              capture.text.includes(
+                geometry.columns < 32 ? "Resize" : "Run sample",
+              ),
+          );
           return {
             waitFor: when,
             capture: { name: `resize-${i}`, when },

@@ -1,62 +1,123 @@
 /** Strict settled-frame capture and diagnostic I/O observation. @module */
+import { stripAnsi } from "../ansi.ts";
 import {
   inspectTerminalLayout,
   projectTerminalHtml,
   type TerminalHtmlOptions,
   type TerminalLayoutInspection,
 } from "../projection.ts";
-import { measureText } from "../text.ts";
 import type { TerminalSize } from "./io.ts";
-import { ERASE_TERMINAL_DISPLAY, HOME_TERMINAL_CURSOR } from "./painter.ts";
+import type { PtyObservedOutput, PtyOutputCondition } from "./pty-testing.ts";
+import {
+  type ReplayedTerminalFrame,
+  replayTerminalFrame,
+} from "./replay-testing.ts";
+import type { TerminalApplicationStateReport } from "./state-report.ts";
 
-/** Extract one complete, settled full-screen repaint, preserving the package's styled bytes. */
+/** Which paints a capture may settle on. */
+export interface TerminalFrameSettleOptions {
+  /**
+   * A transcript offset the settling paint must complete after. Captures
+   * taken while waiting for a reaction pass the offset at which the reaction
+   * was requested, so a frame painted before it never satisfies them.
+   */
+  readonly paintedAfter?: number;
+}
+
+function settledReplay(
+  transcript: string,
+  size: TerminalSize,
+  options: TerminalFrameSettleOptions,
+): ReplayedTerminalFrame {
+  const replayed = replayTerminalFrame(transcript, size);
+  if (
+    options.paintedAfter !== undefined && replayed.end <= options.paintedAfter
+  ) {
+    throw new TypeError(
+      `capture settled at offset ${replayed.end}, not after ${options.paintedAfter}`,
+    );
+  }
+  inspectTerminalLayout(replayed.frame, size);
+  return replayed;
+}
+
+/**
+ * Replay the package's paints and return the one settled frame they leave,
+ * preserving its styled bytes. Keyframes, synchronized row writes and state
+ * reports replay through the package screen model; any other control, a
+ * partial row, or a frame that does not fill the viewport exactly throws.
+ */
 export function settledTerminalFrame(
   transcript: string,
   size: TerminalSize,
+  options: TerminalFrameSettleOptions = {},
 ): string {
-  const prefix = ERASE_TERMINAL_DISPLAY + HOME_TERMINAL_CURSOR;
-  const at = transcript.lastIndexOf(prefix);
-  if (at < 0) throw new TypeError("capture contains no complete-frame repaint");
-  const tail = transcript.slice(at + prefix.length);
-  // Restoration ends this frame. Child output and the normal screen do not
-  // belong to the application capture. Other cursor controls are rejected.
-  const boundaries = ["\x1b[?25h", "\x1b[?1049l"].map((control) =>
-    tail.indexOf(control)
-  ).filter((index) => index >= 0);
-  const end = boundaries.length === 0 ? -1 : Math.min(...boundaries);
-  const frame = (end < 0 ? tail : tail.slice(0, end)).replaceAll("\r\r\n", "\n")
-    .replaceAll("\r\n", "\n");
-  const lines = frame.split("\n");
-  if (
-    lines.length !== size.rows ||
-    lines.some((line) => measureText(line) !== size.columns)
-  ) {
-    throw new TypeError(
-      "capture is incomplete or does not match the requested geometry",
-    );
-  }
-  inspectTerminalLayout(frame, size);
-  return frame;
+  return settledReplay(transcript, size, options).frame;
 }
 
-/** A validated visible frame and its existing package HTML and geometry projections. */
+/** A validated settled frame, its plain text, its projections, and its state report. */
 export interface TerminalFrameCapture {
+  /** Styled rows joined by LF, exactly as painted. */
   readonly frame: string;
+  /** The frame without styling. */
+  readonly text: string;
   readonly html: string;
   readonly geometry: TerminalLayoutInspection;
+  /** The application's state report, when reports were enabled. */
+  readonly state?: TerminalApplicationStateReport;
 }
 
-/** Project a settled complete repaint without introducing a second ANSI parser or terminal emulator. */
+/** Settling and HTML projection options for {@linkcode captureTerminalFrame}. */
+export interface TerminalFrameCaptureOptions
+  extends TerminalHtmlOptions, TerminalFrameSettleOptions {}
+
+/** Project a settled frame without introducing a second ANSI parser or terminal emulator. */
 export function captureTerminalFrame(
   transcript: string,
   size: TerminalSize,
-  options: TerminalHtmlOptions = {},
+  options: TerminalFrameCaptureOptions = {},
 ): TerminalFrameCapture {
-  const frame = settledTerminalFrame(transcript, size);
+  const { paintedAfter, ...html } = options;
+  const replayed = settledReplay(
+    transcript,
+    size,
+    paintedAfter === undefined ? {} : { paintedAfter },
+  );
   return {
-    frame,
-    html: projectTerminalHtml(frame, options),
-    geometry: inspectTerminalLayout(frame, size),
+    frame: replayed.frame,
+    text: stripAnsi(replayed.frame),
+    html: projectTerminalHtml(replayed.frame, html),
+    geometry: inspectTerminalLayout(replayed.frame, size),
+    ...(replayed.state === undefined ? {} : { state: replayed.state }),
+  };
+}
+
+/**
+ * A PTY readiness condition met when a frame settled during the current
+ * phase passes `test`. The whole standard output replays, so a phase whose
+ * paints only rewrite changed rows still yields the complete frame, and the
+ * settling paint must follow the phase's start. Transcripts that do not yet
+ * hold a settled frame are not ready; a throwing `test` propagates.
+ */
+export function ptySettledFrame(
+  size: TerminalSize,
+  description: string,
+  test: (capture: TerminalFrameCapture) => boolean,
+): PtyOutputCondition {
+  return {
+    description,
+    test: (output: PtyObservedOutput): boolean => {
+      let capture: TerminalFrameCapture;
+      try {
+        capture = captureTerminalFrame(output.stdout, size, {
+          paintedAfter: output.stdout.length - output.phaseStdout.length,
+        });
+      } catch (error) {
+        if (error instanceof TypeError) return false;
+        throw error;
+      }
+      return test(capture);
+    },
   };
 }
 
