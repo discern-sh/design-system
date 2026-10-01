@@ -1116,6 +1116,14 @@ export const interactiveExportCoverage: Readonly<
   >
 > = {
   runTerminalApplication: { journey: "application" },
+  nestTerminalApplication: {
+    excluded:
+      "Runtime composition rather than a screen of its own; the nested application tests drive it end to end.",
+  },
+  TerminalNestedApplication: {
+    excluded:
+      "The opaque payload of a nested command; nothing to show on its own.",
+  },
   TERMINAL_APPLICATION_MINIMUM: {
     excluded:
       "The application journey exercises the minimum viewport and its notice.",

@@ -2,7 +2,7 @@
  * The effects around the pure application model: one alternate screen,
  * input decoded one event at a time, caller callbacks in a fixed order,
  * updates through a coalescing mailbox, timers on the injected clock,
- * painting, foreground handoff, and restoration.
+ * painting, foreground handoff, nested applications, and restoration.
  *
  * @module
  */
@@ -29,39 +29,43 @@ import {
 } from "../painter.ts";
 import { signalPassthrough } from "../signals.ts";
 import type { InteractionRuntime } from "../types.ts";
-import { type RenderedFrame, renderModelState } from "./frame.ts";
-import { keyChordOf } from "./keymap.ts";
-import {
-  assertDismissalsHonoured,
-  bindingInForce,
-  createModelState,
-  interruptEffect,
-  modelStateDeadline,
-  snapshotModelState,
-  type TerminalApplicationActionSource,
-  type TerminalApplicationDismissal,
-  type TerminalApplicationDismissTarget,
-  type TerminalApplicationEffect,
-  type TerminalApplicationInput,
-  type TerminalApplicationLayout,
-  type TerminalApplicationSelectionMove,
-  type TerminalApplicationState,
-  transitionModelState,
-  updateModelState,
-  updateModelStateProvisionally,
+import type {
+  TerminalApplicationActionSource,
+  TerminalApplicationDismissal,
+  TerminalApplicationDismissTarget,
+  TerminalApplicationLayout,
+  TerminalApplicationSelectionMove,
+  TerminalApplicationState,
 } from "./model.ts";
 import type { ApplicationActivity } from "./layer-view.ts";
+import {
+  ApplicationSession,
+  type LoopCommand,
+  nestedStart,
+  type RunningSession,
+  type SessionFrame,
+  type SessionHost,
+  type TerminalApplicationNested,
+} from "./session.ts";
 import type {
   ApplicationKeyBinding,
   ApplicationRun,
   TerminalApplicationView,
 } from "./view.ts";
 
+export {
+  nestTerminalApplication,
+  type TerminalApplicationNested,
+  TerminalNestedApplication,
+} from "./session.ts";
+
 /**
  * What an action asks the runtime to do next. `foreground` hands the
  * terminal to a caller operation and resumes afterwards; `background`
  * starts an operation that runs while the screen stays live; `exit` ends
- * the session. Any other value is a caller error.
+ * the session; `nested`, made by `nestTerminalApplication`, runs another
+ * application on this screen until it exits. Any other value is a caller
+ * error.
  */
 export type TerminalApplicationCommand =
   | {
@@ -88,9 +92,13 @@ export type TerminalApplicationCommand =
   }
   | {
     readonly kind: "exit";
-    /** Lines printed after the screen is released. */
+    /**
+     * Lines printed after the screen is released. A nested application
+     * returns to the one that opened it and prints none.
+     */
     readonly epilogue?: readonly string[];
-  };
+  }
+  | TerminalApplicationNested;
 
 /** How a background command ended. */
 export type TerminalApplicationCommandOutcome =
@@ -148,7 +156,7 @@ export interface TerminalApplicationOptions<A> {
   /**
    * An action chosen by Enter, a binding, a menu, a button, a click, or a
    * chip, as `source` says. Return a command to hand off, run in the
-   * background, or leave.
+   * background, nest another application, or leave.
    */
   readonly onAction?: (
     action: A,
@@ -181,8 +189,8 @@ export interface TerminalApplicationOptions<A> {
   /**
    * A background command reported progress. Reports arriving together are
    * coalesced to the newest per command, and while a foreground operation
-   * owns the terminal they wait, so the screen repaints once with the
-   * latest when it returns.
+   * or a nested application owns the terminal they wait, so the screen
+   * repaints once with the latest when it returns.
    */
   readonly onReport?: (
     commandId: string,
@@ -248,68 +256,9 @@ export interface TerminalApplicationRuntime extends InteractionRuntime {
 }
 
 const textEncoder = new TextEncoder();
-/** Every command kind, checked against the union so the two never drift. */
-const COMMAND_KINDS: ReadonlySet<string> = new Set(
-  Object.keys(
-    {
-      foreground: true,
-      background: true,
-      exit: true,
-    } satisfies Record<TerminalApplicationCommand["kind"], true>,
-  ),
-);
-/** Callbacks one input may cause before its views are judged unstable. */
-const MAXIMUM_CALLBACKS = 512;
 
-function assertCommand(command: unknown): TerminalApplicationCommand | void {
-  if (command === undefined) return undefined;
-  if (
-    typeof command !== "object" || command === null ||
-    !COMMAND_KINDS.has(String((command as { kind?: unknown }).kind))
-  ) {
-    const kinds = [...COMMAND_KINDS];
-    const last = kinds.pop() ?? "";
-    throw new TypeError(
-      `application actions return a ${
-        kinds.join(", ")
-      }, or ${last} command, or nothing`,
-    );
-  }
-  const typed = command as TerminalApplicationCommand;
-  if (typed.kind !== "exit" && typeof typed.run !== "function") {
-    throw new TypeError(`a ${typed.kind} command runs an operation`);
-  }
-  if (
-    typed.kind === "background" &&
-    (typeof typed.id !== "string" || typed.id.trim() === "")
-  ) {
-    throw new TypeError("a background command names itself with an id");
-  }
-  return typed;
-}
-
-/** A callback the runtime owes: a step's effect, or news from a background command. */
-type RuntimeCallback<A> =
-  | TerminalApplicationEffect<A>
-  | {
-    readonly kind: "report";
-    readonly id: string;
-    readonly steps: ApplicationActivity;
-  }
-  | {
-    readonly kind: "settled";
-    readonly id: string;
-    readonly outcome: TerminalApplicationCommandOutcome;
-  };
-
-/** A command that ends the screen's bracket: a handoff or an exit. */
-type LoopCommand = Exclude<TerminalApplicationCommand, { kind: "background" }>;
-
-/** A background command that has not settled. */
-interface RunningCommand {
-  readonly controller: AbortController;
-  readonly done: Promise<void>;
-}
+/** A command that ends the screen's bracket: a handoff or the last exit. */
+type ReleaseCommand = Extract<LoopCommand, { kind: "foreground" | "exit" }>;
 
 /** The plain line a foreground handoff prints on the released screen. */
 function handoffLine(
@@ -325,9 +274,11 @@ function handoffLine(
  * then calls `onField`, `onSelectionMoved`, `onSelectionChange`,
  * `onDismiss`, and `onAction` in that order; an update made inside them
  * applies before the next input, so a key typed after one that opens a
- * layer lands on that layer. Escape never exits by itself. Ctrl+C, EOF, and
- * abort throw `InteractionCancelled` after restoration unless a binding
- * claims Ctrl+C. Resolves with the final state.
+ * layer lands on that layer. A `nested` command runs another application on
+ * the same screen and resumes this one when it exits. Escape never exits by
+ * itself. Ctrl+C, EOF, and abort throw `InteractionCancelled` after
+ * restoration unless a binding claims Ctrl+C. Resolves with the final
+ * state.
  */
 export async function runTerminalApplication<A>(
   options: TerminalApplicationOptions<A>,
@@ -341,34 +292,34 @@ export async function runTerminalApplication<A>(
   terminalFacts(io);
   const paintOptions = terminalPaintOptions(runtime.paint);
   const clock = runtime.clock ?? systemTerminalClock;
-  const created = createModelState(options.view, {
-    ...(options.keymap === undefined ? {} : { keymap: options.keymap }),
-    ...(options.viKeys === undefined ? {} : { viKeys: options.viKeys }),
-  }, clock.now());
-  let model = created.model;
-  const queue: RuntimeCallback<A>[] = [...created.effects];
-  /** Background commands by id, until they settle. */
-  const running = new Map<string, RunningCommand>();
-  /** The newest report per command, waiting for the loop. */
-  const reports = new Map<string, ApplicationActivity>();
-  /** Commands that settled, waiting for the loop, in order. */
-  const settled: {
-    readonly id: string;
-    readonly outcome: TerminalApplicationCommandOutcome;
-  }[] = [];
   const updates = new ResizeMailbox();
+  let ended = false;
+  let fault: { error: unknown } | undefined;
+  const host: SessionHost = {
+    clock,
+    notify: updates.notify,
+    fail: (error) => {
+      if (!ended) {
+        fault = { error };
+        updates.notify();
+      }
+    },
+    ended: () => ended,
+  };
+  const root = new ApplicationSession(options, host, false);
+  /** The applications on this screen, the one in front last. */
+  const stack: RunningSession[] = [root];
+  /** What each nested application's opener runs when it closes. */
+  const onExits = new Map<
+    RunningSession,
+    ((state: TerminalApplicationState) => void) | undefined
+  >();
+  /** Background work of nested applications that already closed. */
+  const closing: Promise<void>[] = [];
+  const front = (): RunningSession => stack[stack.length - 1] ?? root;
   const ticker = new TerminalAnimationTicker(clock, updates.notify);
   const abort = new AbortMailbox(runtime.abortSignal);
   const reader = new TerminalInputReader(io);
-  let ended = false;
-  let dispatching = false;
-  /** Whether a callback replaced the view during the current dispatch. */
-  let viewReplaced = false;
-  let pendingView: TerminalApplicationView<A> | undefined;
-  const pendingInputs: TerminalApplicationInput[] = [];
-  let fault: { error: unknown } | undefined;
-  const subscription: { cleanup?: () => void } = {};
-  let started = false;
   let failure: { error: unknown } | undefined;
   let signalRestored = false;
   let timer: { readonly at: number; readonly cancel: () => void } | undefined;
@@ -377,246 +328,29 @@ export async function runTerminalApplication<A>(
   let mouseObserved = false;
   let painter: TerminalScreenPainter | undefined;
 
-  const disposeSubscription = (): void => {
-    const cleanup = subscription.cleanup;
-    delete subscription.cleanup;
-    cleanup?.();
-  };
   const stopTimer = (): void => {
     timer?.cancel();
     timer = undefined;
   };
-  const context: TerminalApplicationContext<A> = {
-    get state() {
-      return snapshotModelState(model);
-    },
-    update(view) {
-      if (ended) return;
-      if (dispatching) {
-        // Later callbacks of this input may report further dismissals, so
-        // the view is judged against them once the queue drains.
-        const step = updateModelStateProvisionally(
-          model,
-          view,
-          clock.now(),
-        );
-        model = step.model;
-        queue.push(...step.effects);
-        viewReplaced = true;
-        return;
-      }
-      pendingView = view;
-      updates.notify();
-    },
-    select(listId, itemId, selection = {}) {
-      if (ended) return;
-      const input: TerminalApplicationInput = {
-        kind: "select",
-        listId,
-        itemId,
-        ...(selection.reveal === true ? { reveal: true } : {}),
-      };
-      if (dispatching) {
-        const step = transitionModelState(model, input, clock.now());
-        model = step.model;
-        queue.push(...step.effects);
-        return;
-      }
-      pendingInputs.push(input);
-      updates.notify();
-    },
-    setField(layerId, fieldId, value) {
-      if (ended) return;
-      const input: TerminalApplicationInput = {
-        kind: "field",
-        layerId,
-        fieldId,
-        value,
-      };
-      if (dispatching) {
-        const step = transitionModelState(model, input, clock.now());
-        model = step.model;
-        queue.push(...step.effects);
-        return;
-      }
-      pendingInputs.push(input);
-      updates.notify();
-    },
-    abort(commandId) {
-      running.get(commandId)?.controller.abort();
-    },
-    fail(error) {
-      if (!ended) {
-        fault = { error };
-        updates.notify();
-      }
-    },
-    now: () => clock.now(),
-  };
-
-  /**
-   * Start a background command. Its reports and its end wait for the loop,
-   * which delivers them between inputs; nothing reaches the caller once the
-   * session has ended.
-   */
-  const startBackground = (
-    command: Extract<TerminalApplicationCommand, { kind: "background" }>,
-  ): void => {
-    if (running.has(command.id)) {
-      throw new TypeError(
-        `background command ${JSON.stringify(command.id)} is already running`,
-      );
-    }
-    const controller = new AbortController();
-    const report = (steps: ApplicationActivity): void => {
-      if (ended || !running.has(command.id)) return;
-      reports.set(command.id, steps);
-      updates.notify();
-    };
-    const finish = (outcome: TerminalApplicationCommandOutcome): void => {
-      running.delete(command.id);
-      if (ended) return;
-      settled.push({ id: command.id, outcome });
-      updates.notify();
-    };
-    const done = (async () => {
+  const disposeAll = (): void => {
+    const errors: unknown[] = [];
+    for (const session of [...stack].reverse()) {
       try {
-        await command.run(report, controller.signal);
-        finish(
-          controller.signal.aborted
-            ? { status: "aborted" }
-            : { status: "completed" },
-        );
+        session.dispose();
       } catch (error) {
-        finish(
-          controller.signal.aborted
-            ? { status: "aborted" }
-            : { status: "failed", error },
-        );
-      }
-    })();
-    running.set(command.id, { controller, done });
-  };
-
-  /** Run queued callbacks in order; the first command an action returns wins. */
-  const dispatch = (): LoopCommand | void => {
-    let command: LoopCommand | undefined;
-    dispatching = true;
-    viewReplaced = false;
-    try {
-      for (let calls = 0; queue.length > 0; calls += 1) {
-        if (calls >= MAXIMUM_CALLBACKS) {
-          throw new TypeError("application callbacks did not settle");
-        }
-        const effect = queue.shift();
-        if (effect === undefined) break;
-        switch (effect.kind) {
-          case "field":
-            options.onField?.(
-              effect.layerId,
-              effect.fieldId,
-              effect.value,
-              context,
-            );
-            break;
-          case "selection-moved":
-            options.onSelectionMoved?.(
-              effect.listId,
-              effect.itemId,
-              effect.move,
-              context,
-            );
-            break;
-          case "selection-change":
-            options.onSelectionChange?.(effect.listId, effect.itemId, context);
-            break;
-          case "dismiss":
-            options.onDismiss?.(effect.target, effect.via, context);
-            break;
-          case "action": {
-            const result = assertCommand(
-              options.onAction?.(effect.action, context, effect.source),
-            );
-            if (result === undefined) break;
-            if (result.kind === "background") startBackground(result);
-            else command ??= result;
-            break;
-          }
-          case "report":
-            options.onReport?.(effect.id, effect.steps, context);
-            break;
-          case "settled":
-            options.onCommandSettled?.(effect.id, effect.outcome, context);
-            break;
-          case "cancel":
-            throw new InteractionCancelled("Cancelled.");
-        }
-      }
-      // The view a caller leaves in force after hearing of a dismissal must omit it.
-      if (viewReplaced) assertDismissalsHonoured(model);
-    } finally {
-      dispatching = false;
-    }
-    return command;
-  };
-  const apply = (
-    input: TerminalApplicationInput,
-  ): LoopCommand | void => {
-    const step = transitionModelState(model, input, clock.now());
-    model = step.model;
-    queue.push(...step.effects);
-    return dispatch();
-  };
-  /**
-   * Below the minimum size navigation waits; the bindings in force still
-   * run as they would at full size — the top layer's while one is open,
-   * only field bindings while a field owns input — and Ctrl+C keeps its
-   * one meaning.
-   */
-  const suspendedKey = (
-    event: TerminalInputEvent,
-  ): LoopCommand | void => {
-    if (event.kind !== "key") return undefined;
-    const chord = keyChordOf(event.key);
-    if (chord === "ctrl-c") queue.push(interruptEffect(model));
-    else {
-      const binding = chord === undefined
-        ? undefined
-        : bindingInForce(model, chord);
-      if (binding !== undefined) {
-        queue.push({ kind: "action", action: binding.action, source: "key" });
+        errors.push(error);
       }
     }
-    return dispatch();
+    if (errors.length > 0) throw errors[0];
   };
-
-  /** Apply what waited in the mailbox: the newest view, caller selections, due timers. */
-  const drainMailbox = (): LoopCommand | void => {
-    if (pendingView !== undefined) {
-      const view = pendingView;
-      pendingView = undefined;
-      const step = updateModelState(model, view, clock.now());
-      model = step.model;
-      queue.push(...step.effects);
-    }
-    for (const input of pendingInputs.splice(0)) {
-      const step = transitionModelState(model, input, clock.now());
-      model = step.model;
-      queue.push(...step.effects);
-    }
-    for (const [id, steps] of reports) {
-      queue.push({ kind: "report", id, steps });
-    }
-    reports.clear();
-    for (const entry of settled.splice(0)) {
-      queue.push({ kind: "settled", ...entry });
-    }
-    const command = dispatch();
-    return command ?? apply({ kind: "time" });
+  /** Clicks aimed at a screen that has gone are dropped; keys typed ahead stay. */
+  const dropClicks = (): void => {
+    const typed = pendingEvents.filter((event) => event.kind === "key");
+    pendingEvents.splice(0, pendingEvents.length, ...typed);
   };
   const schedule = (): void => {
     const now = clock.now();
-    const deadline = modelStateDeadline(model, now);
+    const deadline = front().deadline(now);
     if (deadline === timer?.at) return;
     stopTimer();
     if (deadline === undefined || ended) return;
@@ -640,7 +374,7 @@ export async function runTerminalApplication<A>(
       };
       const command = await withRawTerminal(
         io,
-        async (): Promise<LoopCommand> => {
+        async (): Promise<ReleaseCommand> => {
           const screen = new TerminalScreenPainter(
             io,
             () => clock.now(),
@@ -648,15 +382,15 @@ export async function runTerminalApplication<A>(
           );
           painter = screen;
           let paintedSize: TerminalSize | undefined;
-          let rendered: RenderedFrame<A> | undefined;
+          let rendered: SessionFrame | undefined;
           const paint = (): void => {
             if (signalRestored) throw new InteractionCancelled("Cancelled.");
             if (fault !== undefined) throw fault.error;
+            const session = front();
             for (let attempt = 0; attempt < 8; attempt += 1) {
               const facts = terminalFacts(io);
               const startedAt = performance.now();
-              const frame = renderModelState(
-                model,
+              const frame = session.render(
                 facts.size,
                 facts.capabilities,
                 runtime,
@@ -668,18 +402,19 @@ export async function runTerminalApplication<A>(
                     : {}),
                 },
               );
-              model = frame.model;
               const painted = screen.paint({
                 frame: frame.frame,
                 size: facts.size,
-                layer: frame.composition,
+                // Each application on the stack is its own composition, so
+                // opening or closing one paints a keyframe.
+                layer: `${stack.length}:${frame.composition}`,
                 ...(frame.windowTitle === undefined
                   ? {}
                   : { title: frame.windowTitle }),
                 ...(facts.capabilities.applicationStateReports === true
                   ? { report: frame.report }
                   : {}),
-                mouse: model.view.input?.mouse === true &&
+                mouse: session.mouse() &&
                   facts.capabilities.mouseTracking !== false,
               });
               if (painted.status === "resized") continue;
@@ -707,6 +442,61 @@ export async function runTerminalApplication<A>(
               "application viewport did not stabilise while painting",
             );
           };
+          /** Start a session: its first frame, then `start` and what it owes. */
+          const begin = (session: RunningSession): LoopCommand | void => {
+            paint();
+            const before = session.revision;
+            const first = session.begin();
+            if (first === undefined && session.revision !== before) paint();
+            return first;
+          };
+          /**
+           * Follow commands that keep the screen — opening a nested
+           * application, and returning from one — until none is left or one
+           * releases the screen.
+           */
+          const follow = (
+            first: LoopCommand | void,
+          ): ReleaseCommand | undefined => {
+            let command = first;
+            while (command !== undefined) {
+              if (command.kind === "nested") {
+                const start = nestedStart(command.application);
+                const session = start.open(host);
+                onExits.set(session, start.onExit);
+                stack.push(session);
+                dropClicks();
+                command = begin(session);
+                continue;
+              }
+              if (command.kind === "foreground") return command;
+              const closed = front();
+              if (!closed.nested) {
+                if (command.kind === "exit") return command;
+                throw new InteractionCancelled("Cancelled.");
+              }
+              stack.pop();
+              dropClicks();
+              closing.push(closed.end());
+              try {
+                closed.dispose();
+              } catch (error) {
+                host.fail(error);
+              }
+              const onExit = onExits.get(closed);
+              onExits.delete(closed);
+              const state = closed.snapshot();
+              const resumed = front();
+              const returned = resumed.resume(
+                onExit === undefined ? undefined : () => onExit(state),
+              );
+              command = command.kind === "interrupt"
+                ? returned ?? resumed.interrupt()
+                : returned;
+              if (command === undefined) paint();
+            }
+            return undefined;
+          };
           // A resize may have damaged the screen even when the size it ends
           // at is the one painted, so the next paint is a keyframe.
           unlistenResize = io.listenResize?.(() => {
@@ -714,26 +504,15 @@ export async function runTerminalApplication<A>(
             updates.notify();
           }) ?? (() => {});
           try {
-            if (started) {
+            if (front().started) {
               // Back from a foreground operation: what arrived meanwhile —
               // the newest view and reports — applies before the first paint.
-              const waiting = drainMailbox();
+              const waiting = follow(front().drain());
               if (waiting !== undefined) return waiting;
-            }
-            paint();
-            if (!started) {
-              started = true;
-              const cleanup = options.start?.(context);
-              if (cleanup !== undefined && typeof cleanup !== "function") {
-                throw new TypeError(
-                  "application start must return synchronous subscription cleanup",
-                );
-              }
-              if (cleanup !== undefined) subscription.cleanup = cleanup;
-              const before = model;
-              const first = dispatch() ?? drainMailbox();
+              paint();
+            } else {
+              const first = follow(begin(front()));
               if (first !== undefined) return first;
-              if (model !== before) paint();
             }
             let inputRead:
               | ReturnType<TerminalInputReader["readEvents"]>
@@ -759,7 +538,7 @@ export async function runTerminalApplication<A>(
                 }
                 if (received.kind === "update") {
                   updateRead = updates.next();
-                  const command = drainMailbox();
+                  const command = follow(front().drain());
                   if (command !== undefined) return command;
                   paint();
                   continue;
@@ -782,16 +561,19 @@ export async function runTerminalApplication<A>(
               ) paint();
               const event = pendingEvents.shift();
               if (event === undefined) continue;
-              const waiting = drainMailbox();
+              const waiting = follow(front().drain());
               if (waiting !== undefined) return waiting;
               if (event.kind === "mouse") mouseObserved = true;
-              const command = rendered?.layout === "too-small"
-                ? suspendedKey(event)
-                : event.kind === "key"
-                ? apply({ kind: "key", key: event.key })
-                : event.kind === "mouse"
-                ? apply({ kind: "mouse", event })
-                : undefined;
+              const session = front();
+              const command = follow(
+                rendered?.layout === "too-small"
+                  ? session.suspendedKey(event)
+                  : event.kind === "key"
+                  ? session.apply({ kind: "key", key: event.key })
+                  : event.kind === "mouse"
+                  ? session.apply({ kind: "mouse", event })
+                  : undefined,
+              );
               if (command !== undefined) return command;
               if (pendingEvents.length === 0) paint();
             }
@@ -803,8 +585,7 @@ export async function runTerminalApplication<A>(
             painter = undefined;
             // Clicks read before the handoff resolve against a frame that is
             // gone; keys typed ahead still apply when the screen returns.
-            const typed = pendingEvents.filter((event) => event.kind === "key");
-            pendingEvents.splice(0, pendingEvents.length, ...typed);
+            dropClicks();
             // Reports the terminal queued before tracking stopped must not
             // reach a child, whether or not one was already read.
             if (reporting || mouseObserved) {
@@ -826,7 +607,7 @@ export async function runTerminalApplication<A>(
             try {
               stopResize();
             } finally {
-              disposeSubscription();
+              disposeAll();
             }
           },
         },
@@ -852,15 +633,16 @@ export async function runTerminalApplication<A>(
     abort.stop();
     // Ending the session ends its background work: every signal aborts,
     // and the session settles only once each command has.
-    const remaining = [...running.values()];
-    for (const command of remaining) command.controller.abort();
-    await Promise.allSettled(remaining.map((command) => command.done));
+    await Promise.allSettled([
+      ...closing,
+      ...stack.map((session) => session.end()),
+    ]);
     try {
-      disposeSubscription();
+      disposeAll();
     } catch (error) {
       failure ??= { error };
     }
   }
   if (failure !== undefined) throw failure.error;
-  return snapshotModelState(model);
+  return root.snapshot();
 }

@@ -24,6 +24,7 @@ import {
   BEGIN_SYNCHRONIZED_UPDATE,
   ERASE_TERMINAL_DISPLAY,
 } from "../../src/cli/interactive/painter.ts";
+import { COMMAND_KINDS } from "../../src/cli/interactive/application/session.ts";
 import { applicationSession, settle } from "../fixtures/application-session.ts";
 import { testView } from "../fixtures/application-views.ts";
 
@@ -277,7 +278,7 @@ Deno.test("an exit command prints its epilogue after the screen is released", as
 
 Deno.test("an action returning anything but a command fails after restoration", async () => {
   const io = new FakeTerminalIO(["\r"]);
-  await assertRejects(
+  const error = await assertRejects(
     () =>
       runTerminalApplication({
         view: testView(),
@@ -285,8 +286,10 @@ Deno.test("an action returning anything but a command fails after restoration", 
         onAction: () => ({ kind: "handled" }) as never,
       }, { io }),
     TypeError,
-    "a foreground, background, or exit command, or nothing",
+    "command, or nothing",
   );
+  // The message names the whole command set, so a new kind enrols itself.
+  for (const kind of COMMAND_KINDS) assertStringIncludes(error.message, kind);
   assertEquals(io.rawTransitions.at(-1), false);
 });
 
