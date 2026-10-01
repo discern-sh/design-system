@@ -7,7 +7,7 @@
  * ```text
  * paint      = [BSU] [mouse] [push] [title] [report] body [ESU]
  * body       = keyframe | row-write* | (empty: a title or report alone)
- * keyframe   = ESC[2J ESC[H row (CR LF row)*      rows exactly the viewport
+ * keyframe   = ESC[2J ESC[H row (CR+ LF row)*     rows exactly the viewport
  * row-write  = ESC[<row>;1H ESC[2K row             one-based row, column 1
  * row        = text with closed SGR and OSC 8 styling, no control characters
  * report     = ESC]<private OSC>;<flat JSON object> ESC\
@@ -27,8 +27,9 @@
  * so earlier output, earlier sessions and foreground children never reach
  * the frame. A synchronized update is a transaction: an update still open at
  * the end of the transcript is in flight and leaves the previous settled
- * frame in place. A PTY may expand LF into CR LF, so a keyframe also accepts
- * CR CR LF between rows.
+ * frame in place. A PTY's line discipline may add carriage returns before a
+ * line feed — expanding LF into CR LF, and on some transports more — so a
+ * keyframe accepts any run of CRs before each LF between rows.
  *
  * @module
  */
@@ -95,7 +96,7 @@ const TOKEN = new RegExp(
     `(?<mouseOn>${literal(ENABLE_TERMINAL_MOUSE_REPORTS)})`,
     `(?<mouseOff>${literal(DISABLE_TERMINAL_MOUSE_REPORTS)})`,
     `(?<query>${literal(QUERY_TERMINAL_CURSOR_POSITION)})`,
-    `(?<newline>\\r\\r?\\n)`,
+    `(?<newline>\\r+\\n)`,
     `(?<boundary>${RESTORATION_BOUNDARIES.map(literal).join("|")})`,
   ].join("|"),
   "gu",

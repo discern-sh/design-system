@@ -95,12 +95,19 @@ Deno.test("every painter output replays to the latest frame under every paint op
         assertEquals(replayed.title, lastTitle);
         assertEquals(replayed.mouse, mouse ? true : undefined);
         assertEquals(replayed.end, transcript.length);
-        // A PTY may expand LF into CR LF; the settled frame must not change.
-        assertEquals(
-          replayTerminalFrame(transcript.replaceAll("\n", "\r\n"), current)
-            .frame,
-          rows.join("\n"),
-        );
+        // A PTY's line discipline may add carriage returns before each line
+        // feed — one when it expands LF, more on some transports; the
+        // settled frame must not change.
+        for (const added of ["\r", "\r\r", "\r\r\r"]) {
+          assertEquals(
+            replayTerminalFrame(
+              transcript.replaceAll("\n", `${added}\n`),
+              current,
+            ).frame,
+            rows.join("\n"),
+            `${JSON.stringify(added)} before each line feed`,
+          );
+        }
       }
       // Release turns reports off and restores the title before restoration.
       painter.release();
@@ -268,6 +275,11 @@ Deno.test("replay rejects every byte outside the paint grammar", () => {
     ["an open style", keyframe + diff(2, "\x1b[1mopen      ")],
     ["a tab inside a row", keyframe + diff(2, "one\ttwo   ")],
     ["a carriage return inside a row", keyframe + diff(2, "one\rtwo   ")],
+    ["a carriage return ending a row write", keyframe + diff(2, `${blank}\r`)],
+    [
+      "a bare line feed between keyframe rows",
+      `${ERASE_TERMINAL_DISPLAY}${HOME_TERMINAL_CURSOR}${rows.join("\n")}`,
+    ],
     [
       "a cursor query inside an update",
       `${keyframe}${BEGIN_SYNCHRONIZED_UPDATE}${QUERY_TERMINAL_CURSOR_POSITION}${
