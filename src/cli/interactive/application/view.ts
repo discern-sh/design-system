@@ -1,8 +1,8 @@
 /**
  * The caller's side of a terminal application: an immutable view built from
- * a header bar, one body, an optional message line, and key hints. The view
- * names content and meaning; the package owns focus, selection, scrolling,
- * folds, filtering, layout, and painting.
+ * a header bar, one body, an optional message line, key hints, and modal
+ * layers. The view names content and meaning; the package owns focus,
+ * selection, scrolling, folds, filtering, fields, layout, and painting.
  *
  * @module
  */
@@ -10,6 +10,7 @@
 import type { CliBlock } from "../../block-composition.ts";
 import type { KeyChord, KeyHint, KeyHints } from "../../key-hints.ts";
 import type { TerminalTextTone } from "../../theme.ts";
+import type { ApplicationLayer } from "./layer-view.ts";
 
 /**
  * One run of styled text. The role sets the treatment — `title` and `key`
@@ -353,23 +354,45 @@ export interface MessageLine {
   readonly dismiss?: { readonly afterMs?: number; readonly onKey?: boolean };
 }
 
+/** Input preferences a view carries. */
+export interface TerminalApplicationInputPreferences {
+  /**
+   * Report mouse clicks and the wheel while this view is shown. Off by
+   * default; turning it on shows the selection hint once.
+   */
+  readonly mouse?: boolean;
+  /**
+   * The message shown once when mouse input turns on, naming how to select
+   * text natively; defaults to `Shift-drag to select text`.
+   */
+  readonly selectionHint?: readonly InlineRun[];
+}
+
 /** Caller-authored screen contents. Replace the value to update the screen. */
 export interface TerminalApplicationView<A> {
   readonly header: HeaderBar<A>;
   readonly body: ApplicationBody<A>;
   readonly message?: MessageLine;
+  /** Key hints while no layer is open; layers show their own. */
   readonly footer: KeyHints<A>;
+  /**
+   * Modal layers, bottom to top, at most two. Only the view opens or removes
+   * one: the package reports a dismissal through `onDismiss` and hides the
+   * layer at once, and the view that follows must omit it.
+   */
+  readonly layers?: readonly ApplicationLayer<A>[];
   /** Plain text for the terminal's window title. */
   readonly windowTitle?: string;
   /** Runtime preferences; mouse input stays off unless requested. */
-  readonly input?: { readonly mouse?: boolean };
+  readonly input?: TerminalApplicationInputPreferences;
 }
 
 /**
  * One caller key binding. Keys are spelled as the key decoder names them
  * (`ctrl-k`, `page-down`) or as one character (`n`, `D`); `normalizeKeyChord`
- * also accepts `ctrl+k`. Base entries apply while the list owns input;
- * `inFields` entries also apply while a text field does, and must be
+ * also accepts `ctrl+k`. Base entries apply while no layer is open and the
+ * list owns input; `{ layer }` entries apply while that layer is on top.
+ * `inFields` entries also apply while a text field owns input, and must be
  * non-printing chords outside `EDITOR_RESERVED_CHORDS`.
  */
 export interface KeymapEntry<A> {

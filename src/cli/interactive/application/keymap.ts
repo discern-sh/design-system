@@ -8,6 +8,7 @@
 
 import { type KeyChord, normalizeKeyChord } from "../../key-hints.ts";
 import { isTerminalKeyName, type TerminalKey } from "../keys.ts";
+import type { ApplicationLayerKind } from "./layer-view.ts";
 import type { KeymapEntry } from "./view.ts";
 
 /**
@@ -51,6 +52,82 @@ export const TERMINAL_APPLICATION_RESERVED_KEYS: readonly KeyChord[] = Object
     "left",
     "/",
   ]);
+
+/**
+ * Keys the package handles in each kind of layer while focus is not in a
+ * text field. Escape is the safe choice or Back in every layer. A palette's
+ * query always owns input, so its bindings must be field bindings.
+ */
+export const TERMINAL_APPLICATION_LAYER_KEYS: Readonly<
+  Record<ApplicationLayerKind, readonly KeyChord[]>
+> = Object.freeze({
+  sheet: Object.freeze([
+    "up",
+    "down",
+    "page-up",
+    "page-down",
+    "home",
+    "end",
+    "left",
+    "right",
+    "tab",
+    "shift-tab",
+    "enter",
+    "space",
+    "escape",
+  ]),
+  form: Object.freeze([
+    "up",
+    "down",
+    "page-up",
+    "page-down",
+    "home",
+    "end",
+    "left",
+    "right",
+    "tab",
+    "shift-tab",
+    "enter",
+    "space",
+    "escape",
+  ]),
+  menu: Object.freeze([
+    "up",
+    "down",
+    "page-up",
+    "page-down",
+    "home",
+    "end",
+    "left",
+    "right",
+    "tab",
+    "shift-tab",
+    "enter",
+    "escape",
+    "/",
+  ]),
+  palette: Object.freeze([
+    "up",
+    "down",
+    "page-up",
+    "page-down",
+    "enter",
+    "escape",
+  ]),
+  reader: Object.freeze([
+    "up",
+    "down",
+    "page-up",
+    "page-down",
+    "home",
+    "end",
+    "left",
+    "tab",
+    "shift-tab",
+    "enter",
+    "escape",
+  ]),
+});
 
 /** Named keys a focused text field uses for editing and leaving. */
 const FIELD_KEYS: ReadonlySet<string> = new Set([
@@ -104,6 +181,11 @@ function printable(chord: KeyChord): boolean {
   return chord === "space" || !isTerminalKeyName(chord);
 }
 
+/** Whether a normalised chord types or edits text, so a field keeps it. */
+export function fieldOwnsChord(chord: KeyChord): boolean {
+  return printable(chord) || FIELD_KEYS.has(chord);
+}
+
 /** One resolved binding. */
 export interface CompiledBinding<A> {
   readonly action: A;
@@ -143,7 +225,7 @@ export function compileKeymap<A>(
   for (const entry of entries) {
     const chord = bindableChord(entry.key);
     const inFields = entry.inFields === true;
-    if (inFields && (printable(chord) || FIELD_KEYS.has(chord))) {
+    if (inFields && fieldOwnsChord(chord)) {
       throw new TypeError(
         `${
           JSON.stringify(entry.key)

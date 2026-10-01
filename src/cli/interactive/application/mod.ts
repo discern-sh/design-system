@@ -1,14 +1,16 @@
 /**
  * Terminal applications: a header bar, a grouped list with a following
- * detail, a reading document, or an empty state, with a message line and key
- * hints, owned by the package from input to paint.
+ * detail, a reading document, or an empty state, with a message line, key
+ * hints, and modal layers, owned by the package from input to paint.
  *
  * @module
  */
 
 export * from "./view.ts";
+export * from "./layer-view.ts";
 export {
   EDITOR_RESERVED_CHORDS,
+  TERMINAL_APPLICATION_LAYER_KEYS,
   TERMINAL_APPLICATION_RESERVED_KEYS,
 } from "./keymap.ts";
 export {

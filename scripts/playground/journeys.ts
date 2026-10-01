@@ -203,7 +203,7 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
     title: "Live bounded application",
     section: "Interactive APIs",
     description:
-      "A grouped list with a following detail: live regrouping, filter, zoom, folds and foreground return. Run playground:application for the real child fixture.",
+      "A grouped list with a following detail and modal layers: live regrouping, filter, zoom, folds, sheets, menus, a palette, a form, readers, and foreground return. Run playground:application for the real child fixture.",
     run: async (runtime) => {
       await runTerminalApplication(
         applicationDemoOptions(async () => {
@@ -1163,6 +1163,14 @@ export const interactiveExportCoverage: Readonly<
   TERMINAL_APPLICATION_RESERVED_KEYS: {
     excluded:
       "The navigation keys the application journey uses; a validation list.",
+  },
+  TERMINAL_APPLICATION_LAYER_KEYS: {
+    excluded:
+      "The keys each layer of the application journey uses; a validation list.",
+  },
+  APPLICATION_LAYER_DEPTH: {
+    excluded:
+      "The layer limit the journey's palette and reader stack up to; a validation bound.",
   },
   isTerminalKeyName: {
     excluded: "A decoder-name predicate with no interaction of its own.",
