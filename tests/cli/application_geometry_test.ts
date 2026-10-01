@@ -114,30 +114,33 @@ Deno.test("application frames fill every pinned geometry and posture exactly", (
 
 Deno.test("every visible row's label and age end on one column per frame", () => {
   for (const geometry of MATRIX) {
-    const io = new FakeTerminalIO([], {
-      columns: geometry.columns,
-      rows: geometry.rows,
-      colorDepth: "none",
-    });
-    const frame = renderTerminalApplication(
-      createTerminalApplicationModel(applicationDemoView(), {
-        keymap: DEMO_KEYMAP,
-      }).model,
-      io.size(),
-      io.capabilities(),
-    );
-    const width = modelState(frame.model).lists.jobs?.density?.width ??
-      geometry.columns;
-    const ends = new Set(
-      listRows(stripAnsi(frame.frame), width).map((row) =>
-        row.trimEnd().length
-      ),
-    );
-    assertEquals(
-      ends.size,
-      1,
-      `${geometry.columns}x${geometry.rows}: ${[...ends]}`,
-    );
+    for (const unicode of [true, false]) {
+      const io = new FakeTerminalIO([], {
+        columns: geometry.columns,
+        rows: geometry.rows,
+        colorDepth: "none",
+        unicode,
+      });
+      const frame = renderTerminalApplication(
+        createTerminalApplicationModel(applicationDemoView(), {
+          keymap: DEMO_KEYMAP,
+        }).model,
+        io.size(),
+        io.capabilities(),
+      );
+      const width = modelState(frame.model).lists.jobs?.density?.width ??
+        geometry.columns;
+      const ends = new Set(
+        listRows(stripAnsi(frame.frame), width).map((row) =>
+          row.trimEnd().length
+        ),
+      );
+      assertEquals(
+        ends.size,
+        1,
+        `${geometry.columns}x${geometry.rows} unicode ${unicode}: ${[...ends]}`,
+      );
+    }
   }
 });
 

@@ -250,9 +250,13 @@ export function fitCell(
   column: ListColumn,
   surface: TerminalSurfaceRole | undefined,
 ): string {
-  const kept = runs.filter((run) => runText(context, run) !== "");
   const blank = (run: InlineRun | undefined) =>
     run !== undefined && runText(context, run).trim() === "";
+  const kept = runs.filter((run) => runText(context, run) !== "");
+  // Spacing that only separated runs which dropped out — such as an ASCII
+  // form that removes a qualifier — must not shift the cell's alignment.
+  while (kept.length > 0 && blank(kept.at(-1))) kept.pop();
+  while (kept.length > 0 && blank(kept[0])) kept.shift();
   while (
     kept.length > 1 &&
     measureText(kept.map((run) => runText(context, run)).join("")) >
