@@ -142,11 +142,11 @@ export interface TerminalApplicationModel<A> {
   readonly busySince?: number;
   /** When the current message appeared. */
   readonly messageSince?: number;
-  /** Message ids reported dismissed that the next view must omit. */
+  /** Message ids reported dismissed that the view still declares; they stay hidden. */
   readonly dismissed: readonly string[];
   /** Open layers by id. */
   readonly layers: Readonly<Record<string, TerminalApplicationLayerModel>>;
-  /** Layer ids reported dismissed that the next view must omit. */
+  /** Layer ids reported dismissed that the view still declares; they stay hidden. */
   readonly dismissedLayers: readonly string[];
   /** When mouse input turned on, while its selection hint shows. */
   readonly mouseHintSince?: number;
@@ -572,15 +572,49 @@ function messageTiming<A>(
     : now;
 }
 
+/**
+ * Dismissed ids a view still declares. They stay hidden; a view adopted
+ * while an input's callbacks still run may declare them, because the caller
+ * may not have heard of every dismissal yet.
+ */
+function stillDeclared<A>(
+  previous: TerminalApplicationModel<A> | undefined,
+  view: TerminalApplicationView<A>,
+): {
+  readonly messages: readonly string[];
+  readonly layers: readonly string[];
+} {
+  const layerIds = new Set((view.layers ?? []).map((layer) => layer.id));
+  return {
+    messages: (previous?.dismissed ?? []).filter((id) =>
+      view.message?.id === id
+    ),
+    layers: (previous?.dismissedLayers ?? []).filter((id) => layerIds.has(id)),
+  };
+}
+
+/**
+ * How a view is adopted. `final` refuses a view that still declares a
+ * dismissed message or layer; `provisional` keeps such ids hidden until a
+ * later view omits them, for views supplied while one input's callbacks run.
+ */
+export type ViewAdoption = "final" | "provisional";
+
 function adopt<A>(
   previous: TerminalApplicationModel<A> | undefined,
   view: TerminalApplicationView<A>,
   keymap: CompiledKeymap<A>,
   now: number,
+  adoption: ViewAdoption = "final",
 ): TerminalApplicationTransition<A> {
+  const declared = stillDeclared(previous, view);
   const context: TerminalApplicationViewContext = {
-    dismissedMessages: previous?.dismissed ?? [],
-    dismissedLayers: previous?.dismissedLayers ?? [],
+    ...(adoption === "final"
+      ? {
+        dismissedMessages: declared.messages,
+        dismissedLayers: declared.layers,
+      }
+      : {}),
     layerBindings: keymap.layers,
   };
   assertTerminalApplicationView(view, context);
@@ -642,9 +676,9 @@ function adopt<A>(
       : { lastKeyAt: previous.lastKeyAt }),
     ...(busySince === undefined ? {} : { busySince }),
     ...(messageSince === undefined ? {} : { messageSince }),
-    dismissed: [],
+    dismissed: declared.messages,
     layers,
-    dismissedLayers: [],
+    dismissedLayers: declared.layers,
     ...(mouseHintSince === undefined ? {} : { mouseHintSince }),
     ...(previous?.geometry === undefined
       ? {}
@@ -682,6 +716,38 @@ export function updateTerminalApplication<A>(
   now: number,
 ): TerminalApplicationTransition<A> {
   return adopt(model, view, model.keymap, now);
+}
+
+/**
+ * Adopt a view supplied while one input's callbacks still run. A dismissed
+ * message or layer it still declares stays hidden instead of failing, since
+ * a later callback of the same input may be the one that reports it; once
+ * the callbacks finish, {@linkcode assertDismissalsHonoured} checks the view
+ * that stands.
+ */
+export function updateTerminalApplicationProvisionally<A>(
+  model: TerminalApplicationModel<A>,
+  view: TerminalApplicationView<A>,
+  now: number,
+): TerminalApplicationTransition<A> {
+  return adopt(model, view, model.keymap, now, "provisional");
+}
+
+/**
+ * Throw unless the view in force omits every message and layer reported
+ * dismissed: the rule a view supplied in answer to a dismissal must keep.
+ */
+export function assertDismissalsHonoured<A>(
+  model: TerminalApplicationModel<A>,
+): void {
+  if (model.dismissed.length === 0 && model.dismissedLayers.length === 0) {
+    return;
+  }
+  assertTerminalApplicationView(model.view, {
+    dismissedMessages: model.dismissed,
+    dismissedLayers: model.dismissedLayers,
+    layerBindings: model.keymap.layers,
+  });
 }
 
 /** Replace one list's model. */

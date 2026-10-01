@@ -35,6 +35,7 @@ import {
 } from "./frame.ts";
 import { keyChordOf } from "./keymap.ts";
 import {
+  assertDismissalsHonoured,
   createTerminalApplicationModel,
   type TerminalApplicationActionSource,
   terminalApplicationDeadline,
@@ -49,6 +50,7 @@ import {
   topLayer,
   transitionTerminalApplication,
   updateTerminalApplication,
+  updateTerminalApplicationProvisionally,
 } from "./model.ts";
 import type {
   InlineRun,
@@ -258,6 +260,8 @@ export async function runTerminalApplication<A>(
   const reader = new TerminalInputReader(io);
   let ended = false;
   let dispatching = false;
+  /** Whether a callback replaced the view during the current dispatch. */
+  let viewReplaced = false;
   let pendingView: TerminalApplicationView<A> | undefined;
   const pendingInputs: TerminalApplicationInput[] = [];
   let fault: { error: unknown } | undefined;
@@ -287,9 +291,16 @@ export async function runTerminalApplication<A>(
     update(view) {
       if (ended) return;
       if (dispatching) {
-        const step = updateTerminalApplication(model, view, clock.now());
+        // Later callbacks of this input may report further dismissals, so
+        // the view is judged against them once the queue drains.
+        const step = updateTerminalApplicationProvisionally(
+          model,
+          view,
+          clock.now(),
+        );
         model = step.model;
         queue.push(...step.effects);
+        viewReplaced = true;
         return;
       }
       pendingView = view;
@@ -342,6 +353,7 @@ export async function runTerminalApplication<A>(
   const dispatch = (): TerminalApplicationCommand | void => {
     let command: TerminalApplicationCommand | undefined;
     dispatching = true;
+    viewReplaced = false;
     try {
       for (let calls = 0; queue.length > 0; calls += 1) {
         if (calls >= MAXIMUM_CALLBACKS) {
@@ -383,6 +395,8 @@ export async function runTerminalApplication<A>(
             throw new InteractionCancelled("Cancelled.");
         }
       }
+      // The view a caller leaves in force after hearing of a dismissal must omit it.
+      if (viewReplaced) assertDismissalsHonoured(model);
     } finally {
       dispatching = false;
     }

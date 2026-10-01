@@ -5,6 +5,7 @@ import {
   type TerminalApplicationObservation,
   type TerminalApplicationOptions,
   type TerminalApplicationState,
+  type TerminalApplicationView,
 } from "../../src/cli/interactive/mod.ts";
 import type { TerminalMouseEvent } from "../../src/cli/interactive/keys.ts";
 import { QUERY_TERMINAL_CURSOR_POSITION } from "../../src/cli/interactive/mouse-input.ts";
@@ -20,6 +21,7 @@ import {
 } from "../../src/cli/interactive/testing.ts";
 import { applicationDemoOptions } from "../../scripts/playground/application.ts";
 import { settle } from "../fixtures/application-session.ts";
+import { testView } from "../fixtures/application-views.ts";
 
 /** The sample application on a fake terminal, with its callbacks recorded. */
 async function demo(options: FakeTerminalIOOptions = {}) {
@@ -270,4 +272,142 @@ Deno.test("below the minimum size keys keep the top layer's meaning", async () =
   await session.send("q");
   assertEquals(session.state().topLayerId, "actions", "the layer survived");
   await session.finish();
+});
+
+/**
+ * A caller that rebuilds its whole view from its own state in every
+ * `onDismiss`, as the sample does, with a message dismissed by the next key
+ * and a sheet open at once.
+ */
+async function messageAndSheet() {
+  const io = new FakeTerminalIO([], {
+    holdOpen: true,
+    columns: 80,
+    rows: 24,
+  });
+  const caller = { message: true, sheet: true };
+  const dismissals: string[] = [];
+  const view = (): TerminalApplicationView<string> => ({
+    ...testView(["a", "b"]),
+    ...(caller.message
+      ? {
+        message: {
+          id: "moved",
+          runs: [{ text: "Item a moved" }],
+          dismiss: { onKey: true },
+        },
+      }
+      : {}),
+    layers: caller.sheet
+      ? [{
+        kind: "sheet",
+        id: "ask",
+        scope: "global",
+        title: "Apply the change?",
+        state: "ready",
+        body: [{ kind: "text", runs: [{ text: "One line of consequence." }] }],
+        buttons: [
+          { id: "keep", label: "Keep", role: "safe" },
+          { id: "apply", label: "Apply", role: "confirm", action: "apply" },
+        ],
+      }]
+      : [],
+    input: { mouse: true },
+  });
+  let outcome = "running";
+  const running = runTerminalApplication<string>({
+    view: view(),
+    onDismiss(target, via, context) {
+      dismissals.push(
+        `${"layer" in target ? target.layer : target.message}:${via}`,
+      );
+      if ("layer" in target) caller.sheet = false;
+      else caller.message = false;
+      context.update(view());
+    },
+  }, { io, clock: new ManualTerminalClock() }).then(
+    () => (outcome = "resolved"),
+    (error: Error) => (outcome = `rejected: ${error.message}`),
+  );
+  await settle();
+  return {
+    io,
+    dismissals,
+    outcome: () => outcome,
+    finish: async () => {
+      io.enqueue("\x03");
+      await running;
+      io.close();
+    },
+  };
+}
+
+Deno.test("one input that dismisses a message and a layer leaves a rebuilding caller running", async (t) => {
+  const routes: readonly {
+    readonly name: string;
+    readonly via: string;
+    readonly send: (io: FakeTerminalIO) => Promise<void>;
+  }[] = [
+    {
+      name: "Escape",
+      via: "escape",
+      send: async (io) => {
+        io.enqueueKeys("escape");
+        await new Promise((resolve) => setTimeout(resolve, 150));
+      },
+    },
+    {
+      name: "Enter on the safe button",
+      via: "safe",
+      send: async (io) => {
+        io.enqueue("\r");
+        await settle();
+      },
+    },
+    {
+      name: "a click outside",
+      via: "click-outside",
+      send: async (io) => {
+        io.enqueueMouse(press(4, 1));
+        await settle();
+      },
+    },
+  ];
+  for (const route of routes) {
+    await t.step(route.name, async () => {
+      const session = await messageAndSheet();
+      await route.send(session.io);
+      await settle();
+      assertEquals(session.outcome(), "running");
+      assert(session.dismissals.includes(`ask:${route.via}`));
+      await session.finish();
+      assertEquals(session.outcome(), "rejected: Cancelled.");
+    });
+  }
+});
+
+Deno.test("the view a caller leaves after a dismissal must omit what was dismissed", async () => {
+  const io = new FakeTerminalIO([], { holdOpen: true, columns: 80, rows: 24 });
+  const sheet = {
+    kind: "sheet" as const,
+    id: "ask",
+    scope: "global" as const,
+    title: "Apply the change?",
+    state: "ready" as const,
+    body: [{ kind: "text" as const, runs: [{ text: "One line." }] }],
+    buttons: [{ id: "keep", label: "Keep", role: "safe" as const }],
+  };
+  const running = runTerminalApplication<string>({
+    view: { ...testView(["a"]), layers: [sheet] },
+    // A caller that ignores the dismissal and supplies the same layers again.
+    onDismiss(_target, _via, context) {
+      context.update({ ...testView(["a"]), layers: [sheet] });
+    },
+  }, { io, clock: new ManualTerminalClock() });
+  await settle();
+  io.enqueue("\r");
+  const error = await running.then(() => undefined, (failure) => failure);
+  io.close();
+  assert(error instanceof TypeError);
+  assert(error.message.includes("layers[0].id was dismissed"));
 });
