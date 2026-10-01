@@ -73,11 +73,12 @@ Deno.test("every painter output replays to the latest frame under every paint op
           frame: rows.join("\n"),
           size: current,
           ...(next() < 0.2 ? { layer: `layer-${paint % 2}` } : {}),
-          ...(option.synchronized === false ? {} : { report }),
+          report,
         });
         const transcript = io.output();
         const replayed = replayTerminalFrame(transcript, current);
         assertEquals(replayed.frame, rows.join("\n"));
+        assertEquals(replayed.state, report);
         assertEquals(replayed.end, transcript.length);
         // A PTY may expand LF into CR LF; the settled frame must not change.
         assertEquals(

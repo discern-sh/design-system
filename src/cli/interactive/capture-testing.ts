@@ -28,7 +28,7 @@ function settledReplay(
   transcript: string,
   size: TerminalSize,
   options: TerminalFrameSettleOptions,
-): ReplayedTerminalFrame {
+): ReplayedTerminalFrame & { readonly geometry: TerminalLayoutInspection } {
   const replayed = replayTerminalFrame(transcript, size);
   if (
     options.paintedAfter !== undefined && replayed.end <= options.paintedAfter
@@ -37,8 +37,7 @@ function settledReplay(
       `capture settled at offset ${replayed.end}, not after ${options.paintedAfter}`,
     );
   }
-  inspectTerminalLayout(replayed.frame, size);
-  return replayed;
+  return { ...replayed, geometry: inspectTerminalLayout(replayed.frame, size) };
 }
 
 /**
@@ -87,7 +86,7 @@ export function captureTerminalFrame(
     frame: replayed.frame,
     text: stripAnsi(replayed.frame),
     html: projectTerminalHtml(replayed.frame, html),
-    geometry: inspectTerminalLayout(replayed.frame, size),
+    geometry: replayed.geometry,
     ...(replayed.state === undefined ? {} : { state: replayed.state }),
   };
 }

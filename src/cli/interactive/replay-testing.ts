@@ -54,6 +54,7 @@ export interface ReplayedTerminalFrame {
 }
 
 const KEYFRAME = `${ERASE_TERMINAL_DISPLAY}${HOME_TERMINAL_CURSOR}`;
+const STRING_TERMINATOR = "\x1b\\";
 const RESTORATION_BOUNDARIES = ["\x1b[?25h", "\x1b[?1049l"] as const;
 
 function literal(value: string): string {
@@ -91,19 +92,21 @@ function reject(reason: string, transcript: string, at: number): never {
 
 /** Back up from a keyframe to the synchronized update and report that opened its paint. */
 function paintStart(transcript: string, keyframe: number): number {
-  const begin = transcript.lastIndexOf(BEGIN_SYNCHRONIZED_UPDATE, keyframe);
-  if (begin < 0) return keyframe;
-  const between = transcript.slice(
-    begin + BEGIN_SYNCHRONIZED_UPDATE.length,
-    keyframe,
-  );
-  return between === "" || REPORT_ONLY.test(between) ? begin : keyframe;
+  let start = keyframe;
+  if (transcript.endsWith(STRING_TERMINATOR, start)) {
+    const report = transcript.lastIndexOf(TERMINAL_STATE_REPORT_PREFIX, start);
+    if (report >= 0 && REPORT_ONLY.test(transcript.slice(report, start))) {
+      start = report;
+    }
+  }
+  return transcript.endsWith(BEGIN_SYNCHRONIZED_UPDATE, start)
+    ? start - BEGIN_SYNCHRONIZED_UPDATE.length
+    : start;
 }
 
 interface Transaction {
   rows: string[] | undefined;
   report: TerminalApplicationStateReport | undefined;
-  readonly at: number;
 }
 
 /** Replay from one paint start; undefined when no paint has completed yet. */
@@ -188,7 +191,6 @@ function replayFrom(
       transaction = {
         rows: screen === undefined ? undefined : [...screen],
         report: undefined,
-        at: match.index,
       };
       continue;
     }
