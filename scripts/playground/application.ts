@@ -23,6 +23,7 @@ import {
   type TerminalApplicationContext,
   type TerminalApplicationOptions,
   type TerminalApplicationView,
+  type TerminalSize,
 } from "@discern-sh/design-system/cli/interactive";
 import { demoGuideOptions } from "./application-guide.ts";
 import {
@@ -35,6 +36,21 @@ import {
   demoPalette,
   demoRunSheet,
 } from "./application-layers.ts";
+
+/**
+ * The sizes every review of an application covers, widest first: the wide,
+ * standard, compact, and narrow width tiers at ordinary heights, a short
+ * screen, and the 32 × 10 minimum. Geometry tests, layer sweeps, captures,
+ * and the resize benchmark all iterate this one list.
+ */
+export const APPLICATION_REVIEW_SIZES: readonly TerminalSize[] = [
+  { columns: 120, rows: 30 },
+  { columns: 80, rows: 24 },
+  { columns: 60, rows: 20 },
+  { columns: 40, rows: 20 },
+  { columns: 80, rows: 13 },
+  { columns: 32, rows: 10 },
+];
 
 /** One sample job: what its row, detail, and strip show. */
 export interface DemoJob {

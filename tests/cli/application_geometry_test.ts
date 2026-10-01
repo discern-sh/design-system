@@ -28,29 +28,56 @@ import type {
   ApplicationList,
 } from "../../src/cli/interactive/mod.ts";
 import {
+  APPLICATION_REVIEW_SIZES,
   applicationDemoView,
   DEMO_JOBS,
   DEMO_KEYMAP,
   DEMO_TIP,
 } from "../../scripts/playground/application.ts";
 
-/** The pinned matrix: width tiers, height tiers, and the minimum. */
-const MATRIX: readonly {
-  readonly columns: number;
-  readonly rows: number;
+/** What the demonstration shows at one review size. */
+interface GeometryExpectation {
   readonly layout: TerminalApplicationLayout;
   /** Whether the overlap flag column survives the column priority rule. */
   readonly flag: boolean;
   /** Whether the age column survives. */
   readonly age: boolean;
-}[] = [
-  { columns: 120, rows: 30, layout: "split", flag: true, age: true },
-  { columns: 80, rows: 24, layout: "split", flag: false, age: true },
-  { columns: 60, rows: 20, layout: "strip", flag: true, age: true },
-  { columns: 40, rows: 20, layout: "strip", flag: false, age: true },
-  { columns: 80, rows: 13, layout: "split", flag: false, age: true },
-  { columns: 32, rows: 10, layout: "strip", flag: false, age: false },
-];
+}
+
+/** The expectation for every review size, keyed `<columns>x<rows>`. */
+const EXPECTED: Readonly<Record<string, GeometryExpectation>> = {
+  "120x30": { layout: "split", flag: true, age: true },
+  "80x24": { layout: "split", flag: false, age: true },
+  "60x20": { layout: "strip", flag: true, age: true },
+  "40x20": { layout: "strip", flag: false, age: true },
+  "80x13": { layout: "split", flag: false, age: true },
+  "32x10": { layout: "strip", flag: false, age: false },
+};
+
+const sizeKey = (size: { columns: number; rows: number }): string =>
+  `${size.columns}x${size.rows}`;
+
+/** The pinned matrix: every review size with what it must show. */
+const MATRIX = APPLICATION_REVIEW_SIZES.map((size) => {
+  const expected = EXPECTED[sizeKey(size)];
+  if (expected === undefined) {
+    throw new Error(`review size ${sizeKey(size)} has no expectation`);
+  }
+  return { ...size, ...expected };
+});
+
+Deno.test("the pinned matrix expects exactly the review sizes, minimum included", () => {
+  assertEquals(
+    Object.keys(EXPECTED),
+    APPLICATION_REVIEW_SIZES.map(sizeKey),
+  );
+  assert(
+    APPLICATION_REVIEW_SIZES.some((size) =>
+      sizeKey(size) === sizeKey(TERMINAL_APPLICATION_MINIMUM)
+    ),
+    "the review sizes include the minimum",
+  );
+});
 
 const POSTURES = [
   { theme: "dark", colorDepth: "truecolor", unicode: true },

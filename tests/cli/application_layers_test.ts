@@ -21,6 +21,7 @@ import {
 } from "../../src/cli/interactive/application/layer-controls.ts";
 import { decodableChord } from "../../src/cli/interactive/application/keymap.ts";
 import {
+  APPLICATION_REVIEW_SIZES,
   applicationDemoView,
   DEMO_JOBS,
   DEMO_KEYMAP,
@@ -822,15 +823,6 @@ Deno.test("no single key reaches a confirm or destructive action around its gate
   );
 });
 
-const GEOMETRY = [
-  { columns: 120, rows: 30 },
-  { columns: 80, rows: 24 },
-  { columns: 60, rows: 20 },
-  { columns: 40, rows: 20 },
-  { columns: 80, rows: 13 },
-  { columns: 32, rows: 10 },
-] as const;
-
 const LAYERS: readonly (() => ApplicationLayer<string>)[] = [
   ...PANELS,
   () => demoActionsMenu(IMAGE),
@@ -840,7 +832,7 @@ const LAYERS: readonly (() => ApplicationLayer<string>)[] = [
 ];
 
 Deno.test("layered frames fill every geometry and posture exactly", () => {
-  for (const size of GEOMETRY) {
+  for (const size of APPLICATION_REVIEW_SIZES) {
     for (const build of LAYERS) {
       for (
         const posture of [
@@ -1181,15 +1173,6 @@ Deno.test("a sheet entering or leaving loading is the sheet a new one would be",
   }
 });
 
-const GEOMETRIES = [
-  [120, 30],
-  [80, 24],
-  [60, 20],
-  [40, 20],
-  [80, 13],
-  [32, 10],
-] as const;
-
 /** Whether the frame drew a clickable region for a layer's control. */
 function controlShown(driver: ApplicationDriver, layer: string): boolean {
   const state = driver.state.layers[layer];
@@ -1247,7 +1230,7 @@ Deno.test("the focused control of every layer stays on screen as focus moves and
   ];
   for (const make of layers) {
     const layer = make();
-    for (const [columns, rows] of GEOMETRIES) {
+    for (const { columns, rows } of APPLICATION_REVIEW_SIZES) {
       await t.step(`${layer.id} at ${columns}x${rows}`, () => {
         const driver = new ApplicationDriver(withLayers(layer), {
           columns,
@@ -1382,7 +1365,7 @@ Deno.test("a panel never holds blank rows while it hides body rows", async (t) =
   ];
   for (const make of layers) {
     const layer = make();
-    for (const [columns, rows] of GEOMETRIES) {
+    for (const { columns, rows } of APPLICATION_REVIEW_SIZES) {
       for (const colorDepth of ["truecolor", "none"] as const) {
         await t.step(`${layer.id} at ${columns}x${rows} ${colorDepth}`, () => {
           const driver = new ApplicationDriver(withLayers(layer), {
@@ -1517,7 +1500,7 @@ Deno.test("without Unicode every frame is pure ASCII", async (t) => {
     ["log", () => withLayers(demoLogReader(IMAGE)), []],
   ];
   for (const [name, view, keys] of scenes) {
-    for (const [columns, rows] of GEOMETRIES) {
+    for (const { columns, rows } of APPLICATION_REVIEW_SIZES) {
       await t.step(`${name} at ${columns}x${rows}`, () => {
         const driver = new ApplicationDriver(view(), {
           columns,
@@ -1538,7 +1521,7 @@ Deno.test("without Unicode every frame is pure ASCII", async (t) => {
 Deno.test("wrapped button rows stay parted, with their overflow line above them", async (t) => {
   for (const make of PANELS) {
     const layer = make();
-    for (const [columns, rows] of GEOMETRIES) {
+    for (const { columns, rows } of APPLICATION_REVIEW_SIZES) {
       await t.step(`${layer.id} at ${columns}x${rows}`, () => {
         const driver = new ApplicationDriver(withLayers(layer), {
           columns,

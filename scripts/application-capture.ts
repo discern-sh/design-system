@@ -8,25 +8,36 @@ import {
   runPtyProcess,
 } from "@discern-sh/design-system/cli/interactive/testing";
 import { launchBrowser } from "./browser.ts";
+import { APPLICATION_REVIEW_SIZES } from "./playground/application.ts";
 const root = new URL("../", import.meta.url).pathname;
 const directory = `${root}.scratch/application`;
 await Deno.mkdir(directory, { recursive: true });
+/** One capture: a name, a size, a theme, whether colour and Unicode are on. */
+type Posture = readonly [
+  name: string,
+  columns: number,
+  rows: number,
+  theme: "dark" | "light",
+  color: boolean,
+  unicode: boolean,
+];
+const postures: readonly Posture[] = [
+  ...APPLICATION_REVIEW_SIZES.map(({ columns, rows }): Posture => [
+    `${columns}x${rows}-dark`,
+    columns,
+    rows,
+    "dark",
+    true,
+    true,
+  ]),
+  ["80x24-light", 80, 24, "light", true, true],
+  ["80x24-no-color", 80, 24, "dark", false, true],
+  ["40x20-ascii", 40, 20, "dark", false, false],
+  ["24x6-fallback", 24, 6, "dark", false, false],
+];
 const browser = await launchBrowser();
 try {
-  for (
-    const [name, columns, rows, theme, color, unicode] of [
-      ["80x24-dark", 80, 24, "dark", true, true],
-      ["120x30-dark", 120, 30, "dark", true, true],
-      ["60x20-dark", 60, 20, "dark", true, true],
-      ["40x20-dark", 40, 20, "dark", true, true],
-      ["80x13-dark", 80, 13, "dark", true, true],
-      ["80x24-light", 80, 24, "light", true, true],
-      ["80x24-no-color", 80, 24, "dark", false, true],
-      ["40x20-ascii", 40, 20, "dark", false, false],
-      ["32x10-dark", 32, 10, "dark", true, true],
-      ["24x6-fallback", 24, 6, "dark", false, false],
-    ] as const
-  ) {
+  for (const [name, columns, rows, theme, color, unicode] of postures) {
     const size = { columns, rows };
     const when = (marker: string): PtyOutputCondition =>
       ptySettledFrame(
