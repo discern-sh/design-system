@@ -144,7 +144,7 @@ const RICH_TABLE_PROPS = {
 Deno.test("Table responsive grids preserve rich wrapped cells, empties, hard breaks, and alignment exactly", () => {
   const capabilities = testTerminalCapabilities({ columns: 44 });
   const noColour =
-    "Rich evidence\n┌─────────────────┬─────────────────┬──────┐\n│ Item _type_     │    Reference    │  Qty │\n├─────────────────┼─────────────────┼──────┤\n│ 日本 **ready**  │   docs _now_    │   12 │\n│ 😀              │ (https://exampl │      │\n│                 │  e.test/docs)   │      │\n├─────────────────┼─────────────────┼──────┤\n│ Line one        │                 │    3 │\n│ Line two        │                 │      │\n└─────────────────┴─────────────────┴──────┘";
+    "Rich evidence\n┌─────────────────┬─────────────────┬──────┐\n│ Item _type_     │    Reference    │  Qty │\n├─────────────────┼─────────────────┼──────┤\n│ 日本 **ready**  │   docs _now_    │   12 │\n│ 😀              │    (https://    │      │\n│                 │  example.test/  │      │\n│                 │      docs)      │      │\n├─────────────────┼─────────────────┼──────┤\n│ Line one        │                 │    3 │\n│ Line two        │                 │      │\n└─────────────────┴─────────────────┴──────┘";
   assertExactFrame(
     renderTableCli(RICH_TABLE_PROPS, capabilities),
     noColour,
@@ -167,7 +167,7 @@ Deno.test("Table responsive grids preserve rich wrapped cells, empties, hard bre
   const ascii = testTerminalCapabilities({ columns: 44, unicode: false });
   assertExactFrame(
     renderTableCli(RICH_TABLE_PROPS, ascii),
-    "Rich evidence\n+-----------------+-----------------+------+\n| Item _type_     |    Reference    |  Qty |\n+-----------------+-----------------+------+\n| 日本 **ready**  |   docs _now_    |   12 |\n| 😀              | (https://exampl |      |\n|                 |  e.test/docs)   |      |\n+-----------------+-----------------+------+\n| Line one        |                 |    3 |\n| Line two        |                 |      |\n+-----------------+-----------------+------+",
+    "Rich evidence\n+-----------------+-----------------+------+\n| Item _type_     |    Reference    |  Qty |\n+-----------------+-----------------+------+\n| 日本 **ready**  |   docs _now_    |   12 |\n| 😀              |    (https://    |      |\n|                 |  example.test/  |      |\n|                 |      docs)      |      |\n+-----------------+-----------------+------+\n| Line one        |                 |    3 |\n| Line two        |                 |      |\n+-----------------+-----------------+------+",
     ascii,
   );
 });

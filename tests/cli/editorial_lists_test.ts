@@ -198,7 +198,7 @@ Deno.test("Footnotes rich inline mode is exact, lossless, and capability-aware",
   const frames = [
     [
       24,
-      "† References\n\n[01] A **measured\n     result** links to\n     the source\n     (https://example.te\n     st/source) beside\n     界🙂.\n\n     ↩ back 1\n     (#source-ref-a)\n     ↩ other citation\n     (#source-ref-b)",
+      "† References\n\n[01] A **measured\n     result** links to\n     the source\n     (https://\n     example.test/\n     source) beside\n     界🙂.\n\n     ↩ back 1\n     (#source-ref-a)\n     ↩ other citation\n     (#source-ref-b)",
     ],
     [
       52,
@@ -228,7 +228,7 @@ Deno.test("Footnotes rich inline mode is exact, lossless, and capability-aware",
   });
   assertExactFrame(
     renderFootnotesCli(richFootnotesProps, ascii),
-    "+ References\n\n[01] A **measured\n     result** links to\n     the source\n     (https://example.te\n     st/source) beside\n     界🙂.\n\n     <- back 1\n     (#source-ref-a)\n     <- other citation\n     (#source-ref-b)",
+    "+ References\n\n[01] A **measured\n     result** links to\n     the source\n     (https://\n     example.test/\n     source) beside\n     界🙂.\n\n     <- back 1\n     (#source-ref-a)\n     <- other citation\n     (#source-ref-b)",
     ascii,
   );
 
@@ -565,7 +565,7 @@ Deno.test("Related content renders exact width, ASCII, and colour frames", () =>
   const frames = [
     [
       24,
-      "CONTINUE\n\nRelated reading\n\n01  [GUIDE] Terminal\n    reading patterns\n    How hierarchy\n    survives capability\n    changes.\n    /guides/terminal-rea\n    ding · 6 min",
+      "CONTINUE\n\nRelated reading\n\n01  [GUIDE] Terminal\n    reading patterns\n    How hierarchy\n    survives capability\n    changes.\n    /guides/terminal-\n    reading · 6 min",
     ],
     [
       52,
@@ -587,7 +587,7 @@ Deno.test("Related content renders exact width, ASCII, and colour frames", () =>
   const ascii = testTerminalCapabilities({ columns: 24, unicode: false });
   assertExactFrame(
     renderRelatedContentCli(relatedContentProps, ascii),
-    "CONTINUE\n\nRelated reading\n\n01  [GUIDE] Terminal\n    reading patterns\n    How hierarchy\n    survives capability\n    changes.\n    /guides/terminal-rea\n    ding | 6 min",
+    "CONTINUE\n\nRelated reading\n\n01  [GUIDE] Terminal\n    reading patterns\n    How hierarchy\n    survives capability\n    changes.\n    /guides/terminal-\n    reading | 6 min",
     ascii,
   );
   const theme = terminalThemes.dark;

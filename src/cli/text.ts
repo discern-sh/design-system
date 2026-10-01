@@ -123,19 +123,48 @@ export function truncateStyledText(
   }${marker}`;
 }
 
+/**
+ * Graphemes after which a word wider than its line breaks before it is cut
+ * mid-segment: identifiers, paths, and addresses hold no spaces but join
+ * their parts with these.
+ */
+const WORD_JOINTS: ReadonlySet<string> = new Set(["-", "/"]);
+
+/**
+ * The length of `chunk` up to and including its last joint, or the whole
+ * chunk when it holds none after a grapheme that is not itself a joint, so a
+ * break never strands a lone `-` or `//` on its line.
+ */
+function jointBreak(chunk: string): number {
+  let at = 0;
+  let joint = 0;
+  let content = false;
+  for (const grapheme of graphemes(chunk)) {
+    at += grapheme.length;
+    if (!WORD_JOINTS.has(grapheme)) content = true;
+    else if (content) joint = at;
+  }
+  return joint === 0 ? chunk.length : joint;
+}
+
+/**
+ * A word wider than its line, cut into line-wide pieces: each breaks after
+ * the last `-` or `/` that fits, and mid-segment only where none does.
+ */
 function splitLongWord(word: string, columns: number): readonly string[] {
   const chunks: string[] = [];
   let remaining = word;
   while (remaining !== "") {
-    const chunk = sliceToWidth(remaining, columns);
-    if (chunk === "") {
-      const first = graphemes(remaining)[0] ?? "";
-      chunks.push(first);
-      remaining = remaining.slice(first.length);
-    } else {
-      chunks.push(chunk);
-      remaining = remaining.slice(chunk.length);
+    if (lineWidth(remaining) <= columns) {
+      chunks.push(remaining);
+      break;
     }
+    const chunk = sliceToWidth(remaining, columns);
+    const piece = chunk === ""
+      ? graphemes(remaining)[0] ?? ""
+      : chunk.slice(0, jointBreak(chunk));
+    chunks.push(piece);
+    remaining = remaining.slice(piece.length);
   }
   return chunks;
 }
@@ -163,7 +192,11 @@ function wrapParagraph(paragraph: string, columns: number): readonly string[] {
   return lines;
 }
 
-/** Wrap plain text into visible-width-bounded lines at word boundaries. */
+/**
+ * Wrap plain text into visible-width-bounded lines at word boundaries. A word
+ * wider than a whole line breaks after the last `-` or `/` that fits, and
+ * mid-segment only where none does.
+ */
 export function wrapText(value: string, columns: number): readonly string[] {
   assertColumns("wrap", columns, 1);
   return stripAnsi(value).split("\n").flatMap((paragraph) =>

@@ -9,6 +9,7 @@ import {
   measureText,
   padText,
   truncateText,
+  wrapStyledText,
   wrapStyledTextPreservingIndent,
   wrapText,
   wrapTextPreservingIndent,
@@ -68,6 +69,61 @@ Deno.test("wrapping and truncation never split a grapheme", () => {
   assertEquals(truncateText("abcdef", 4), "abc…");
   assertEquals(truncateText("👩‍💻tools", 4), "👩‍💻t…");
   assertEquals(truncateText("abcdef", 4, "."), "abc.");
+});
+
+Deno.test("a word wider than its line breaks after a joint before it cuts a segment", () => {
+  assertEquals(
+    wrapText("type agent/homepage-session-prototype-b2c3d4 to drop it", 35),
+    ["type", "agent/homepage-session-prototype-", "b2c3d4 to drop it"],
+  );
+  assertEquals(wrapText("https://example.com/a/b", 12), [
+    "https://",
+    "example.com/",
+    "a/b",
+  ]);
+  // Spaces stay the first choice: a word that fits a line moves whole.
+  assertEquals(wrapText("drop the agent/feature-x branch", 16), [
+    "drop the",
+    "agent/feature-x",
+    "branch",
+  ]);
+  // A lone leading joint never strands on its line; no joint, a hard cut.
+  assertEquals(wrapText("--abcdefgh", 4), ["--ab", "cdef", "gh"]);
+  assertEquals(wrapText("abcdefghij", 4), ["abcd", "efgh", "ij"]);
+  const truecolor = testTerminalCapabilities({ colorDepth: "truecolor" });
+  const styled = wrapStyledText(
+    styleText("agent/homepage-session", { bold: true }, truecolor),
+    15,
+  );
+  assertEquals(styled.map(stripAnsi), ["agent/homepage-", "session"]);
+  assert(styled.every((line) => line.includes(String.fromCharCode(27))));
+});
+
+Deno.test("every piece of a split word ends at a joint when its line held one", () => {
+  const words = [
+    "agent/homepage-session-prototype-b2c3d4",
+    "release/2026-10-01/notes-and-errata",
+    "a-b-c-d-e-f-g-h-i-j-k",
+    "src/cli/interactive/application/layer-render.ts",
+    "no-joints-until-the-very-end-of-a-long-identifierwithoutany",
+  ];
+  for (const word of words) {
+    for (let columns = 3; columns <= word.length; columns += 1) {
+      const lines = wrapText(word, columns);
+      assertEquals(lines.join(""), word, `${word} at ${columns}`);
+      let offset = 0;
+      for (const [index, line] of lines.entries()) {
+        assert(measureText(line) <= columns, `${word} at ${columns}`);
+        const window = word.slice(offset, offset + columns);
+        offset += line.length;
+        if (index === lines.length - 1) continue;
+        assert(
+          !/[^/-][/-]/u.test(window) || /[/-]$/u.test(line),
+          `${word} at ${columns}: "${line}" cut a segment beside a joint`,
+        );
+      }
+    }
+  }
 });
 
 Deno.test("indent-preserving wrap hangs continuations under the indentation", () => {

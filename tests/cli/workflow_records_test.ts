@@ -83,7 +83,7 @@ Deno.test("Artifact card renders exact narrow, standard, wide, and capability fr
     const [columns, expected] of [
       [
         24,
-        "┌ Artifact: CLI reg… ──┐\n│ Public aliases from  │\n│ component metadata   │\n│                      │\n│ Path: src/generated/ │\n│       cli-renderers. │\n│       ts             │\n│ Ownership: Generated │\n│ Provenance: deno     │\n│ task codegen         │\n│ Source: Component    │\n│ metadata             │\n└──────────────────────┘",
+        "┌ Artifact: CLI reg… ──┐\n│ Public aliases from  │\n│ component metadata   │\n│                      │\n│ Path: src/generated/ │\n│       cli-           │\n│       renderers.ts   │\n│ Ownership: Generated │\n│ Provenance: deno     │\n│ task codegen         │\n│ Source: Component    │\n│ metadata             │\n└──────────────────────┘",
       ],
       [52, standard],
       [
@@ -193,7 +193,7 @@ Deno.test("Rule renders exact narrow, standard, wide, and capability frames", ()
     const [columns, expected] of [
       [
         24,
-        "RULE\n  Never hand-edit\n  generated surfaces\nOrigin: AGENTS.md\nScope: src/generated and\n       catalogue/generat\n       ed",
+        "RULE\n  Never hand-edit\n  generated surfaces\nOrigin: AGENTS.md\nScope: src/generated and\n       catalogue/\n       generated",
       ],
       [52, standard],
       [80, standard],
@@ -229,7 +229,7 @@ Deno.test("Task metadata renders exact narrow, standard, wide, and capability fr
     const [columns, expected] of [
       [
         24,
-        "Task overview\nOutcome: Workflow CLI\n         parity\nFor: Design-system\n     maintainers\nPrerequisites:\n  Wave 1 foundation\nComplexity: Multi-compon\n            ent\nFile effects: Changes\n              files\nRetry safety: Check\n              current\n              state\n              before\n              retrying\nEnd state: All owned CLI\n           stances are\n           decided",
+        "Task overview\nOutcome: Workflow CLI\n         parity\nFor: Design-system\n     maintainers\nPrerequisites:\n  Wave 1 foundation\nComplexity: Multi-\n            component\nFile effects: Changes\n              files\nRetry safety: Check\n              current\n              state\n              before\n              retrying\nEnd state: All owned CLI\n           stances are\n           decided",
       ],
       [52, standard],
       [80, standard],

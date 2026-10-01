@@ -27,9 +27,9 @@ Use [the guide](https://example.test/guide).
 
 const exactFrames = {
   "24-true":
-    "# Read **carefully**\n\nUse the guide\n(https://example.test/gu\nide).\n\n• First item\n• Second item",
+    "# Read **carefully**\n\nUse the guide\n(https://example.test/\nguide).\n\n• First item\n• Second item",
   "24-false":
-    "# Read **carefully**\n\nUse the guide\n(https://example.test/gu\nide).\n\n* First item\n* Second item",
+    "# Read **carefully**\n\nUse the guide\n(https://example.test/\nguide).\n\n* First item\n* Second item",
   "48-true":
     "# Read **carefully**\n\nUse the guide (https://example.test/guide).\n\n• First item\n• Second item",
   "48-false":

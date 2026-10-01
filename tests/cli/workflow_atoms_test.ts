@@ -38,10 +38,10 @@ Deno.test("Path reference renders exact narrow, standard, wide, and capability f
   } as const;
   for (
     const [columns, expected] of [
-      [16, "src/components/w\norkflow/command/\ncommand.cli.ts"],
+      [16, "src/components/\nworkflow/\ncommand/\ncommand.cli.ts"],
       [
         40,
-        "src/components/workflow/command/command.\ncli.ts",
+        "src/components/workflow/command/\ncommand.cli.ts",
       ],
       [80, "src/components/workflow/command/command.cli.ts"],
     ] as const
@@ -55,8 +55,8 @@ Deno.test("Path reference renders exact narrow, standard, wide, and capability f
   }
   assertCapabilityLevels(
     (capabilities) => renderPathReferenceCli(props, capabilities),
-    "src/components/workflow/command/command.\ncli.ts",
-    "src/components/workflow/command/command.\ncli.ts",
+    "src/components/workflow/command/\ncommand.cli.ts",
+    "src/components/workflow/command/\ncommand.cli.ts",
   );
 });
 
@@ -162,7 +162,7 @@ Deno.test("File change renders exact narrow, standard, wide, and capability fram
     const [columns, expected] of [
       [
         16,
-        "◇ Generated\nPath: src/genera\n      ted/cli-re\n      nderers.ts\n+24 -3",
+        "◇ Generated\nPath: src/\n      generated/\n      cli-\n      renderers.\n      ts\n+24 -3",
       ],
       [40, "◇ Generated\nPath: src/generated/cli-renderers.ts\n+24 -3"],
       [80, "◇ Generated src/generated/cli-renderers.ts +24 -3"],

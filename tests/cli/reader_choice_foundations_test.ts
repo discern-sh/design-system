@@ -259,7 +259,7 @@ Deno.test("narrow group headings wrap losslessly beneath the motif lead", () => 
   const unicodeFrame = renderSelectCli(state, unicode);
   assertExactFrame(
     unicodeFrame,
-    "Documents\n┌──────────────────────┐\n│                      │\n│ ━━ ▲ ORIENTATION ━━━ │\n│      AND             │\n│      DEVELOPMENT     │\n│      00-orientation- │\n│      and-development │\n│      /               │\n│ › [●] Open           │\n│       open.md        │\n└──────────────────────┘\n",
+    "Documents\n┌──────────────────────┐\n│                      │\n│ ━━ ▲ ORIENTATION ━━━ │\n│      AND             │\n│      DEVELOPMENT     │\n│      00-orientation- │\n│      and-            │\n│      development/    │\n│ › [●] Open           │\n│       open.md        │\n└──────────────────────┘\n",
     unicode,
   );
   const inspection = inspectTerminalLayout(unicodeFrame, {
@@ -271,7 +271,7 @@ Deno.test("narrow group headings wrap losslessly beneath the motif lead", () => 
   const ascii = testTerminalCapabilities({ columns: 24, unicode: false });
   assertExactFrame(
     renderSelectCli(state, ascii),
-    "Documents\n+----------------------+\n|                      |\n| == ^ ORIENTATION === |\n|      AND             |\n|      DEVELOPMENT     |\n|      00-orientation- |\n|      and-development |\n|      /               |\n| > [*] Open           |\n|       open.md        |\n+----------------------+\n",
+    "Documents\n+----------------------+\n|                      |\n| == ^ ORIENTATION === |\n|      AND             |\n|      DEVELOPMENT     |\n|      00-orientation- |\n|      and-            |\n|      development/    |\n| > [*] Open           |\n|       open.md        |\n+----------------------+\n",
     ascii,
   );
 });

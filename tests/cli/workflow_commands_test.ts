@@ -45,7 +45,7 @@ Deno.test("Command renders exact narrow, standard, wide, and capability frames",
     const [columns, expected] of [
       [
         20,
-        "Run in: /workspace/d\n        esign-system\nRun: deno task\n     verify\n✓ Expect: All\n          configured\n          checks\n          pass\n! If this fails:\n  Fix the first\n  diagnostic",
+        "Run in: /workspace/\n        design-\n        system\nRun: deno task\n     verify\n✓ Expect: All\n          configured\n          checks\n          pass\n! If this fails:\n  Fix the first\n  diagnostic",
       ],
       [
         48,
@@ -161,7 +161,7 @@ Deno.test("Diagnostic renders exact narrow, standard, wide, and capability frame
     const [columns, expected] of [
       [
         20,
-        "FAILURE: Type check\n         failed\nWhy: The public CLI\n     export cannot\n     be consumed\nFix: Export the\n     missing\n     renderer type\nAt: src/generated/cl\n    i-renderers.ts:1\n    2:4\nReproduce:\n  $ deno task\n  typecheck",
+        "FAILURE: Type check\n         failed\nWhy: The public CLI\n     export cannot\n     be consumed\nFix: Export the\n     missing\n     renderer type\nAt: src/generated/\n    cli-\n    renderers.ts:12:\n    4\nReproduce:\n  $ deno task\n  typecheck",
       ],
       [48, standard],
       [80, standard],

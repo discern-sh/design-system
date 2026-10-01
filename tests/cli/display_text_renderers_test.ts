@@ -373,10 +373,11 @@ Deno.test("Heading rich no-colour fallback is exact, lossless, and width-bounded
     "   _heading_**",
     "   links to the",
     "   reference guide",
-    "   (https://exampl",
-    "   e.test/guide)",
-    "   across 漢字 and",
-    "   🚀 tools.",
+    "   (https://",
+    "   example.test/",
+    "   guide) across",
+    "   漢字 and 🚀",
+    "   tools.",
   ].join("\n");
   for (const unicode of [true, false]) {
     const capabilities = testTerminalCapabilities({
