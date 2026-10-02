@@ -4,6 +4,18 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
+## 0.39.0
+
+Terminal applications can pin a few entries above their titled groups — an overview, a way to every command — so the first thing a person sees can be what the application offers rather than a key they have yet to learn. The release is additive: views that set none of the new fields render and behave exactly as before.
+
+### Terminal applications
+
+- `ApplicationListGroup.headless` shows a group's items with no header row. They are ordinary rows: they take the selection, which starts on the first of them when the group leads the list, carry the following detail, match the filter, run their `primary` with Enter or a click, and zoom, where the breadcrumb names the item alone. Tab and Shift+Tab reach the group as they reach any other, and the same blank row parts it from the next group, going with the others when the list is tight.
+- A headless group never folds — not with Enter, not into a summary row on a short screen — while its rows still count toward fitting the list. A list that scrolls inside one gives its first line to the `↑ N more` marker.
+- `validateTerminalApplicationView` refuses a headless group that sets a field only a header or summary row shows — `shortTitle`, `count`, `foldable`, `initiallyFolded`, or `aside` (`false` leaves a flag unset) — and a density `foldOrder` that names a headless group.
+- Whether a group shows a header is structure: a group that becomes headless, or stops being so, waits for the list's settle window as a membership change does.
+- `ApplicationLayerAnchor` now documents what `detail` does below the wide tier: the layer takes its own place there — the top for a palette, the whole body for a reader, the bottom for the rest. Behaviour is unchanged; a palette that names `anchor: "detail"` sits in the detail column beside a wide list.
+
 ## 0.38.0
 
 Terminal applications are rebuilt around a grouped list, a detail that follows its selection, and modal layers that own focus and keep the safe choice one key away. They paint only the rows that change inside synchronized updates, animate what is running, run background work beside the live screen, and open one application inside another — which is how the Markdown browser now runs, on its own screen or inside a running application. Beneath them, terminal surfaces, one glyph table, key hints, and a colour policy that keeps weight without colour are new foundations every terminal consumer can use. The application API is replaced outright, with no adapter.
