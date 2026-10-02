@@ -581,7 +581,7 @@
 [standards.resilience_conformance_lines]
   metric = "resilience_conformance_lines"
   direction = "down"
-  limit = 1712
+  limit = 1691
   run = "printf 'DISCERN_METRIC resilience_conformance_lines %s\\n' \"$(wc -l < scripts/resilience-conformance.ts | tr -d ' ')\""
   inputs = ["scripts/resilience-conformance.ts"]
 
