@@ -73,8 +73,8 @@ Deno.test("wrapping and truncation never split a grapheme", () => {
 
 Deno.test("a word wider than its line breaks after a joint before it cuts a segment", () => {
   assertEquals(
-    wrapText("type agent/homepage-session-prototype-b2c3d4 to drop it", 35),
-    ["type", "agent/homepage-session-prototype-", "b2c3d4 to drop it"],
+    wrapText("type agent/homepage-session-prototype-b2c3d4 to drop it", 30),
+    ["type agent/homepage-session-", "prototype-b2c3d4 to drop it"],
   );
   assertEquals(wrapText("https://example.com/a/b", 12), [
     "https://",
@@ -97,6 +97,43 @@ Deno.test("a word wider than its line breaks after a joint before it cuts a segm
   );
   assertEquals(styled.map(stripAnsi), ["agent/homepage-", "session"]);
   assert(styled.every((line) => line.includes(String.fromCharCode(27))));
+});
+
+Deno.test("a path breaks after the slash before its last name when that costs no line", () => {
+  assertEquals(wrapText("~/…/project.worktrees/tidy-scripts-b8c9d0", 26), [
+    "~/…/project.worktrees/",
+    "tidy-scripts-b8c9d0",
+  ]);
+  // The name after the slash fits the next line, and the slash's line
+  // takes the word before it, so the paragraph keeps its three lines.
+  assertEquals(
+    wrapText("type agent/homepage-session-prototype-b2c3d4 to drop it", 35),
+    ["type agent/", "homepage-session-prototype-b2c3d4", "to drop it"],
+  );
+  // Here breaking at the slash would cost a line, so the last joint wins.
+  const full = "abcdefghijklmnopqrstuvwxyz0123456";
+  assertEquals(
+    wrapText(
+      `${full} agent/homepage-session-prototype-b2c3d4 to drop it`,
+      35,
+    ),
+    [full, "agent/homepage-session-prototype-", "b2c3d4 to drop it"],
+  );
+  // A name too long for the next line keeps the last joint that fits.
+  assertEquals(wrapText("agent/homepage-session-prototype-b2c3d4", 30), [
+    "agent/homepage-session-",
+    "prototype-b2c3d4",
+  ]);
+  const truecolor = testTerminalCapabilities({ colorDepth: "truecolor" });
+  assertEquals(
+    wrapStyledText(
+      styleText("~/…/project.worktrees/tidy-scripts-b8c9d0", {
+        bold: true,
+      }, truecolor),
+      26,
+    ).map(stripAnsi),
+    ["~/…/project.worktrees/", "tidy-scripts-b8c9d0"],
+  );
 });
 
 Deno.test("every piece of a split word ends at a joint when its line held one", () => {

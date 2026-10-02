@@ -176,27 +176,58 @@ export function truncateStyledText(
 const WORD_JOINTS: ReadonlySet<string> = new Set(["-", "/"]);
 
 /**
- * The length of `chunk` up to and including its last joint, or the whole
- * chunk when it holds none after a grapheme that is not itself a joint, so a
- * break never strands a lone `-` or `//` on its line.
+ * The length of `chunk` up to and including its last joint — the last of
+ * `joints` when given — or the whole chunk when it holds none after a
+ * grapheme that is not itself a joint, so a break never strands a lone `-`
+ * or `//` on its line.
  */
-function jointBreak(chunk: string): number {
+function jointBreak(
+  chunk: string,
+  joints: ReadonlySet<string> = WORD_JOINTS,
+): number {
   let at = 0;
   let joint = 0;
   let content = false;
   for (const grapheme of graphemes(chunk)) {
     at += grapheme.length;
     if (!WORD_JOINTS.has(grapheme)) content = true;
-    else if (content) joint = at;
+    else if (content && joints.has(grapheme)) joint = at;
   }
   return joint === 0 ? chunk.length : joint;
 }
 
+/** A path's names are its units: `/` is the joint a path-like break prefers. */
+const PATH_JOINTS: ReadonlySet<string> = new Set(["/"]);
+
+/**
+ * Where a line-wide `chunk` of `remaining` breaks: after its last joint,
+ * or with `paths`, after its last `/` when everything after that `/` fits
+ * the next line whole, so a path keeps its last name together.
+ */
+function pieceBreak(
+  chunk: string,
+  remaining: string,
+  columns: number,
+  paths: boolean,
+): number {
+  const last = jointBreak(chunk);
+  if (!paths) return last;
+  const slash = jointBreak(chunk, PATH_JOINTS);
+  return slash < last && lineWidth(remaining.slice(slash)) <= columns
+    ? slash
+    : last;
+}
+
 /**
  * A word wider than its line, cut into line-wide pieces: each breaks after
- * the last `-` or `/` that fits, and mid-segment only where none does.
+ * the last `-` or `/` that fits — with `paths`, after an earlier `/` when
+ * the rest then fits one line — and mid-segment only where none does.
  */
-function splitLongWord(word: string, columns: number): readonly string[] {
+function splitLongWord(
+  word: string,
+  columns: number,
+  paths: boolean,
+): readonly string[] {
   const chunks: string[] = [];
   let remaining = word;
   while (remaining !== "") {
@@ -207,11 +238,62 @@ function splitLongWord(word: string, columns: number): readonly string[] {
     const chunk = sliceToWidth(remaining, columns);
     const piece = chunk === ""
       ? graphemes(remaining)[0] ?? ""
-      : chunk.slice(0, jointBreak(chunk));
+      : chunk.slice(0, pieceBreak(chunk, remaining, columns, paths));
     chunks.push(piece);
     remaining = remaining.slice(piece.length);
   }
   return chunks;
+}
+
+/** Place one piece after `current`, pushing finished lines; returns the open line. */
+function placePiece(
+  lines: string[],
+  current: string,
+  piece: string,
+  columns: number,
+): string {
+  const joined = current === "" ? piece : `${current} ${piece}`;
+  if (lineWidth(joined) <= columns) return joined;
+  if (current !== "") lines.push(current);
+  return piece;
+}
+
+/** The pieces one word places: itself, or a long word's line-wide pieces. */
+function wordPieces(
+  word: string,
+  columns: number,
+  paths: boolean,
+): readonly string[] {
+  return lineWidth(word) > columns
+    ? splitLongWord(word, columns, paths)
+    : [word];
+}
+
+/** Lines that `pieces` and then `words` from `from` take after `current`. */
+function linesAfter(
+  current: string,
+  pieces: readonly string[],
+  words: readonly string[],
+  from: number,
+  columns: number,
+): number {
+  const lines: string[] = [];
+  let line = current;
+  for (const piece of pieces) line = placePiece(lines, line, piece, columns);
+  for (const word of words.slice(from)) {
+    for (const piece of wordPieces(word, columns, false)) {
+      line = placePiece(lines, line, piece, columns);
+    }
+  }
+  return lines.length + (line === "" ? 0 : 1);
+}
+
+function samePieces(
+  first: readonly string[],
+  second: readonly string[],
+): boolean {
+  return first.length === second.length &&
+    first.every((piece, index) => piece === second[index]);
 }
 
 function wrapParagraph(paragraph: string, columns: number): readonly string[] {
@@ -220,17 +302,17 @@ function wrapParagraph(paragraph: string, columns: number): readonly string[] {
   if (words.length === 0) return [""];
   const lines: string[] = [];
   let current = "";
-  for (const word of words) {
-    const candidates = lineWidth(word) > columns
-      ? splitLongWord(word, columns)
-      : [word];
-    for (const candidate of candidates) {
-      const joined = current === "" ? candidate : `${current} ${candidate}`;
-      if (lineWidth(joined) <= columns) current = joined;
-      else {
-        if (current !== "") lines.push(current);
-        current = candidate;
-      }
+  for (const [index, word] of words.entries()) {
+    const joints = wordPieces(word, columns, false);
+    const paths = wordPieces(word, columns, true);
+    // A path keeps its last name whole when that costs the paragraph no line.
+    const pieces = samePieces(joints, paths) ||
+        linesAfter(current, paths, words, index + 1, columns) >
+          linesAfter(current, joints, words, index + 1, columns)
+      ? joints
+      : paths;
+    for (const piece of pieces) {
+      current = placePiece(lines, current, piece, columns);
     }
   }
   if (current !== "") lines.push(current);
@@ -239,8 +321,10 @@ function wrapParagraph(paragraph: string, columns: number): readonly string[] {
 
 /**
  * Wrap plain text into visible-width-bounded lines at word boundaries. A word
- * wider than a whole line breaks after the last `-` or `/` that fits, and
- * mid-segment only where none does.
+ * wider than a whole line breaks after the last `-` or `/` that fits —
+ * after an earlier `/` when everything after it then fits the next line and
+ * the paragraph takes no more lines, so a path keeps its last name whole —
+ * and mid-segment only where none does.
  */
 export function wrapText(value: string, columns: number): readonly string[] {
   assertColumns("wrap", columns, 1);
