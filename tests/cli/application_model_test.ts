@@ -263,6 +263,25 @@ Deno.test("the filter narrows while typing, keeps arrows moving, and Enter or Es
   assert(driver.render().includes("Item cherry"));
 });
 
+Deno.test("a filter that matches nothing keeps the selection through an update", () => {
+  const view = testView(["apple", "banana", "cherry"], { filter: true });
+  const driver = new Driver(view);
+  driver.key("down");
+  assertEquals(driver.selected, "banana");
+  driver.key("/", "z", "z");
+  assert(driver.render().includes("0 of 3"));
+  // The same list again, as a live application repaints its view.
+  driver.idle().update(
+    testView(["apple", "banana", "cherry"], { filter: true }),
+  );
+  driver.key("escape");
+  assertEquals(driver.selected, "banana", "clearing the filter returns to it");
+  driver.key("/", "z", "z");
+  driver.idle().update(testView(["apple", "cherry"], { filter: true }));
+  driver.key("escape");
+  assert(driver.selected !== "banana", "a removed item still moves on");
+});
+
 Deno.test("fuzzy filters match characters in order", () => {
   const view = testView(["alpha", "bravo"], { filter: true });
   const body = view.body;

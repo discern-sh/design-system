@@ -648,6 +648,13 @@ function reconcileSelection<A>(
   if (index >= 0) {
     return regrouped ? { ...after, anchor: before.line ?? 0 } : after;
   }
+  // A filter that matches nothing hides the selection without moving it,
+  // so clearing the filter returns to it; an update meanwhile keeps it
+  // while the list still holds the item.
+  if (
+    after.filter !== undefined && newGroup !== undefined &&
+    rows.rows.every((row) => rowKey(row) === undefined)
+  ) return after;
   const successor = rowKey(
     rows.rows[successorRow(listModelRows(before), rows, key, after.zoomed)],
   );
