@@ -471,7 +471,8 @@ export interface ListDensityDecision {
  * Fit a list to `available` rows: keep separators if everything fits, drop
  * them if that fits, then fold quiet groups in order — never a `neverFold`
  * group or the group holding the selection — until it fits or nothing more
- * may fold; the rest scrolls.
+ * may fold, and keep separators after all when the folds leave them room;
+ * the rest scrolls.
  */
 export function decideListDensity<A>(
   list: ApplicationList<A>,
@@ -509,5 +510,11 @@ export function decideListDensity<A>(
         available
     ) break;
   }
-  return { separators: false, densityFolds: [...folded] };
+  // Folding may free the rows the separators need again.
+  const separated = rowCount(list, {
+    folds,
+    densityFolds: folded,
+    separators: true,
+  }) <= available;
+  return { separators: separated, densityFolds: [...folded] };
 }

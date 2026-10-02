@@ -185,6 +185,13 @@ interface Region {
    * the list scrolls instead.
    */
   readonly borrowed: number;
+  /**
+   * Borrowed rows a density decision counts against the list after all:
+   * a persistent message's row always, and a passing message's row in a
+   * list's first decision, so a first frame folds a quiet group rather than
+   * scroll groups out of sight.
+   */
+  readonly reserve?: { readonly rows: number; readonly always: boolean };
 }
 
 interface FrameContext extends PaintContext {
@@ -626,12 +633,19 @@ function contentListWidth<A>(
  */
 function fitDensity<A>(
   list: ListModel<A>,
-  available: number,
+  region: Region,
+  height: number,
   geometry: string,
   width: (display: ApplicationList<A>) => number | undefined,
 ): ListModel<A> {
   const key = `${geometry}|${listLayoutKey(list.display)}`;
   if (list.density?.key === key) return list;
+  const reserve = region.reserve;
+  const reserved = reserve !== undefined &&
+      (reserve.always || list.density === undefined)
+    ? reserve.rows
+    : 0;
+  const available = height + region.borrowed - reserved;
   const base = {
     ...list,
     density: { key, separators: true, densityFolds: [] },
@@ -962,7 +976,8 @@ function masterDetail<A>(
     : region.height;
   const fitted = fitDensity(
     listModel,
-    listHeight + region.borrowed,
+    region,
+    listHeight,
     `${columns}x${size.rows}`,
     (display) =>
       tier === "strip"
@@ -1161,7 +1176,8 @@ function listOnly<A>(
   if (listModel === undefined) throw new TypeError("list model is missing");
   const fitted = fitDensity(
     listModel,
-    region.height + region.borrowed,
+    region,
+    region.height,
     `${size.columns}x${size.rows}`,
     () => undefined,
   );
@@ -1661,10 +1677,21 @@ export function renderModelState<A>(
   const messageRow = message !== undefined && !short;
   const top = 1 + (rows >= SPACIOUS_ROWS ? 1 : 0);
   const bottom = rows - 1 - (messageRow ? 1 : 0);
-  const region = {
+  const lasting = visibleMessage(model);
+  const region: Region = {
     top,
     height: Math.max(1, bottom - top),
     borrowed: messageRow ? 1 : 0,
+    ...(messageRow
+      ? {
+        reserve: {
+          rows: 1,
+          always: shownLine?.id !== undefined &&
+            lasting?.dismiss?.afterMs === undefined &&
+            lasting?.dismiss?.onKey !== true,
+        },
+      }
+      : {}),
   };
   const layers = visibleLayers(model);
   let fitted: ModelState<A>;
@@ -1778,7 +1805,8 @@ function detailColumn<A>(
     contentListWidth(display, split, "wide", size.columns);
   const fitted = fitDensity(
     list,
-    region.height + region.borrowed,
+    region,
+    region.height,
     `${size.columns}x${size.rows}`,
     width,
   );
@@ -1954,7 +1982,7 @@ function renderLayers<A>(
     size,
     covered > 0
       ? {
-        top: region.top,
+        ...region,
         height: Math.max(1, region.height - covered),
         borrowed: region.borrowed + covered,
       }

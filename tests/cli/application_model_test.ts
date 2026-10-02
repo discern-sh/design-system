@@ -358,6 +358,13 @@ Deno.test("short screens fold quiet groups into one summary row, never the selec
   const frame = driver.render();
   assert(frame.includes("▸ Second 3 · Third 3"), frame);
   assert(frame.includes("Item c"), "the selection's group stays open");
+  const lines = frame.split("\n");
+  const summary = lines.findIndex((line) => line.includes("▸ Second"));
+  assertEquals(
+    (lines[summary - 1] ?? "x").slice(0, 30).trim(),
+    "",
+    `the folds leave room for the separator above the summary:\n${frame}`,
+  );
   driver.key("down", "down", "down");
   assertEquals(
     terminalApplicationState(driver.model).lists.items?.selectedGroupId,
@@ -564,6 +571,65 @@ Deno.test("an optional message shows only whole and never in the footer's place"
     new FakeTerminalIO([], { columns: 80, rows: 13 }),
   );
   assert(required.render().split("\n").at(-1)?.includes("Each item"));
+});
+
+Deno.test("a first or persistent message's row folds a quiet group before the list scrolls", () => {
+  const items: TestItem[] = [
+    ...["a", "b", "c"].map((id) => ({ id, group: "first" })),
+    ...["d", "e", "f"].map((id) => ({ id, group: "second" })),
+    ...["g", "h", "i"].map((id) => ({ id, group: "third" })),
+  ];
+  const plain = grouped(items, { density: true, body: "list" });
+  // The least height, tall enough for a message row of its own, at which
+  // the list fits whole without a message.
+  let rows = 14;
+  for (; rows < 30; rows += 1) {
+    const frame = new Driver(
+      plain,
+      new FakeTerminalIO([], { columns: 60, rows }),
+    ).render();
+    if (frame.includes("Item i") && !frame.includes("more")) break;
+  }
+  for (
+    const dismiss of [undefined, { onKey: true }] as const
+  ) {
+    const driver = new Driver(
+      grouped(items, {
+        density: true,
+        body: "list",
+        message: {
+          id: "note",
+          runs: [{ text: "A note" }],
+          ...(dismiss === undefined ? {} : { dismiss }),
+        },
+      }),
+      new FakeTerminalIO([], { columns: 60, rows }),
+    );
+    const frame = driver.render();
+    assert(frame.includes("A note"), frame);
+    assert(!/\d+ more/u.test(frame), `the list scrolled:\n${frame}`);
+    assert(frame.includes("Third"), `a group went out of sight:\n${frame}`);
+  }
+  // A message that arrives later passes without refolding the list.
+  const later = new Driver(
+    plain,
+    new FakeTerminalIO([], { columns: 60, rows }),
+  );
+  later.update(grouped(items, {
+    density: true,
+    body: "list",
+    message: {
+      id: "toast",
+      runs: [{ text: "Saved" }],
+      dismiss: { afterMs: 1 },
+    },
+  }));
+  const toast = later.render();
+  assert(toast.includes("Saved"), toast);
+  assert(
+    /\d+ more/u.test(toast),
+    `a passing toast refolded the list:\n${toast}`,
+  );
 });
 
 Deno.test("a message dismissed on key reports before the key's own action", () => {
