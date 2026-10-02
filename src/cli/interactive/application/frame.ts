@@ -31,6 +31,7 @@ import type { ApplicationHit } from "./hits.ts";
 import { layerHints } from "./layer-hints.ts";
 import { requiresFullRead } from "./layer-model.ts";
 import {
+  extendLayer,
   type LayerBox,
   layerContentWidth,
   type LayerPaint,
@@ -948,6 +949,8 @@ interface BodyResult<A> {
   readonly readingRows: number;
   /** Clickable and scrollable regions, rows counted from the body's top. */
   readonly hits: readonly ApplicationHit[];
+  /** No whole detail block fits beneath a layer in the detail column. */
+  readonly beneathEmpty?: boolean;
 }
 
 function withList<A>(
@@ -973,27 +976,45 @@ function scrolled<A>(
 }
 
 /**
- * A detail viewport beneath a layer that covers its first `cover` rows. The
- * rows of a block that began under the layer stay blank, so what shows below
- * the layer starts at a block's first line — a section's title, say — never
- * part-way through one; with no block beginning below it, nothing shows.
+ * The receded detail beside a layer that covers its first `cover` rows:
+ * beneath the layer, whole blocks only, starting with the first block the
+ * layer did not cut across and set directly under the layer, never a
+ * section's tail without its title or blank rows before a block. When no
+ * whole block fits, nothing shows and `empty` says so, so the layer can
+ * take those rows.
  */
 function beneathCover(
+  lines: readonly string[],
   viewport: DetailViewport,
   starts: readonly number[],
   cover: number,
-): readonly string[] {
-  if (cover <= 0) return viewport.lines;
-  const begins = new Set(starts);
-  const shown = [...viewport.lines];
-  for (let row = cover; row < shown.length; row += 1) {
-    const line = row - viewport.offset;
-    if (
-      line >= 0 && line < viewport.shown && begins.has(viewport.first + line)
-    ) break;
-    shown[row] = "";
+  height: number,
+): { readonly lines: readonly string[]; readonly empty: boolean } {
+  if (cover <= 0) return { lines: viewport.lines, empty: false };
+  const shown = viewport.lines.slice(0, cover);
+  // The detail line that would sit at the layer's lower edge.
+  const edge = viewport.first + Math.max(0, cover - viewport.offset);
+  const ends = (index: number) => {
+    let end = starts[index + 1] ?? lines.length;
+    while (end > (starts[index] ?? 0) && (lines[end - 1] ?? "").trim() === "") {
+      end -= 1;
+    }
+    return end;
+  };
+  for (
+    let index = starts.findIndex((start) => start >= edge);
+    index >= 0 && index < starts.length;
+    index += 1
+  ) {
+    const block = lines.slice(starts[index] ?? 0, ends(index));
+    // A block after the first keeps its blank line above it.
+    const lead = shown.length > cover ? [""] : [];
+    if (shown.length + lead.length + block.length > height) break;
+    shown.push(...lead, ...block);
   }
-  return shown;
+  const empty = shown.length === cover;
+  while (shown.length < height) shown.push("");
+  return { lines: shown, empty };
 }
 
 function masterDetail<A>(
@@ -1179,7 +1200,8 @@ function masterDetail<A>(
     !short,
     { keeps, markers: context.recede !== true },
   );
-  const detailLines = beneathCover(viewport, starts, cover);
+  const beneath = beneathCover(lines, viewport, starts, cover, region.height);
+  const detailLines = beneath.lines;
   // Without fills nothing tints the detail, so a faint rule parts it from
   // the list instead.
   const inset = context.painted || left < 1 ? " ".repeat(left) : `${
@@ -1213,6 +1235,7 @@ function masterDetail<A>(
       ...listHits(body.list.id, painted.keys, 0, 0, listWidth),
       ...areaHits(region.height, 0, listWidth, columns, { kind: "detail" }),
     ],
+    ...(beneath.empty ? { beneathEmpty: true } : {}),
   };
 }
 
@@ -2049,6 +2072,23 @@ function renderLayers<A>(
   context.animated ||= receded.animated;
   context.clock ||= receded.clock;
   context.renderCalls = receded.renderCalls;
+  // Where no whole block of the receded detail fits beneath a layer in the
+  // detail column, the layer takes those rows instead of leaving them empty.
+  if (base.beneathEmpty === true) {
+    for (const [index, entry] of painted.entries()) {
+      if (entry.place.anchor !== "detail") continue;
+      painted[index] = {
+        ...entry,
+        paint: extendLayer(
+          context,
+          entry.paint,
+          entry.layer.id,
+          entry.place.box.width,
+          region.height,
+        ),
+      };
+    }
+  }
   const lines = [...base.lines.slice(0, region.height)];
   while (lines.length < region.height) {
     lines.push(fitLine(context, "", size.columns));

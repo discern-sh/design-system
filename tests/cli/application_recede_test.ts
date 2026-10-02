@@ -1,4 +1,4 @@
-import { assert, assertEquals } from "@std/assert";
+import { assert, assertEquals, assertStringIncludes } from "@std/assert";
 import { createCliBlock, renderMarkdownCli } from "../../src/cli/mod.ts";
 import type {
   ApplicationDetailBlock,
@@ -295,4 +295,59 @@ Deno.test("a receded list fills its rows, cuts a group partway, and keeps its ga
       assertEquals((base[second - 1] ?? "x").trim(), "", `${rows}\n${text}`);
     }
   }
+});
+
+/** A sheet placed where its kind goes by default: the detail column, on wide screens. */
+function withoutAnchor(
+  sheet: ApplicationSheet<string>,
+): ApplicationSheet<string> {
+  const { anchor: _anchor, ...rest } = sheet;
+  return rest;
+}
+
+Deno.test("beneath a layer in the detail column show whole blocks set under it, or let the layer take the rows", () => {
+  const view = testView(["a"]);
+  const body = view.body;
+  if (body.kind !== "master-detail") throw new Error("expected detail");
+  const section = (title: string, count: number) => ({
+    kind: "section" as const,
+    title,
+    blocks: [{
+      kind: "marks" as const,
+      items: Array.from({ length: count }, (_, index) => ({
+        mark: glyph,
+        runs: [{ text: `${title} ${index}` }],
+      })),
+    }],
+  });
+  const at = (blocks: readonly ApplicationDetailBlock[], sheet = SHEET) =>
+    new ApplicationDriver({
+      ...view,
+      body: { ...body, detail: { ...body.detail, content: { a: blocks } } },
+      layers: [withoutAnchor(sheet)],
+    }, { columns: 120, rows: 30, colorDepth: "none" });
+  // A section that fits shows whole, directly beneath the layer.
+  const fits = at([
+    { kind: "heading", title: "Item a" },
+    section("Covered", 4),
+    section("Shown", 3),
+  ]);
+  const panel = Math.max(
+    ...fits.hits.flatMap((hit) => hit.target.kind === "layer" ? [hit.row] : []),
+  );
+  const lines = fits.text.split("\n");
+  assertStringIncludes(lines[panel + 1] ?? "", "Shown");
+  assertStringIncludes(fits.text, "Shown 2");
+  // A section too tall for the rows beneath leaves them to the layer.
+  const tall = at([
+    { kind: "heading", title: "Item a" },
+    section("Covered", 4),
+    section("Long", 40),
+  ]);
+  const covered = new Set(
+    tall.hits.flatMap((hit) => hit.target.kind === "layer" ? [hit.row] : []),
+  );
+  assert(!tall.text.includes("Long 0"), tall.text);
+  // Every body row between the header's gap and the footer.
+  assertEquals(covered.size, 30 - 3, tall.text);
 });

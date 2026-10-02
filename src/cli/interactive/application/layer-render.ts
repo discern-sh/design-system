@@ -2276,6 +2276,47 @@ function twoColumns(
 }
 
 /**
+ * A painted layer extended to `rows` by blank rows inside its frame, above
+ * its lower edge, so it takes rows beneath it that would otherwise stand
+ * empty; the rows it adds still keep clicks from what lies beneath.
+ */
+export function extendLayer(
+  context: PaintContext,
+  paint: LayerPaint,
+  layerId: string,
+  width: number,
+  rows: number,
+): LayerPaint {
+  const extra = rows - paint.lines.length;
+  if (extra <= 0 || paint.lines.length < 2) return paint;
+  const glyphs = terminalFrameGlyphs("rounded", context.capabilities.unicode);
+  const edge = ink(context, glyphs.vertical, { tone: "faint" });
+  const blank = context.painted
+    ? fitLine(context, "", width, RAISED)
+    : `${edge}${fitLine(context, "", width - 2, RAISED)}${edge}`;
+  const last = paint.lines.length - 1;
+  return {
+    ...paint,
+    lines: [
+      ...paint.lines.slice(0, last),
+      ...Array.from({ length: extra }, () => blank),
+      ...paint.lines.slice(last),
+    ],
+    hits: [
+      ...paint.hits.map((hit) =>
+        hit.row >= last ? { ...hit, row: hit.row + extra } : hit
+      ),
+      ...Array.from({ length: extra }, (_, index) => ({
+        row: last + index,
+        start: 0,
+        end: width,
+        target: { kind: "layer" as const, layerId },
+      })),
+    ],
+  };
+}
+
+/**
  * Render one layer into its box. Returns exactly the box's width on each
  * line, at most its height in lines, hits relative to the layer's first
  * cell, and the layer model with its scroll and page fitted to this frame;
