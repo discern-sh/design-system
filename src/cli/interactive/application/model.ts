@@ -169,6 +169,8 @@ export interface ModelState<A> {
   readonly busySince?: number;
   /** When the current message appeared. */
   readonly messageSince?: number;
+  /** The message the last frame showed; an optional one may not fit. */
+  readonly messageShown?: string;
   /** Message ids reported dismissed that the view still declares; they stay hidden. */
   readonly dismissed: readonly string[];
   /** Open layers by id. */
@@ -954,6 +956,9 @@ function adopt<A>(
       ? {}
       : { geometry: previous.geometry }),
     ...(previous?.hits === undefined ? {} : { hits: previous.hits }),
+    ...(previous?.messageShown === undefined
+      ? {}
+      : { messageShown: previous.messageShown }),
   };
   selectionEffects(previous, model, effects);
   return { model, effects: ordered(effects) };
@@ -1088,6 +1093,19 @@ export function visibleMessage<A>(
 ): ApplicationMessage | undefined {
   const message = model.view.message;
   return message === undefined || model.dismissed.includes(message.id)
+    ? undefined
+    : message;
+}
+
+/**
+ * The message on screen: the visible message, unless it is optional and
+ * the last frame had no room to show it whole.
+ */
+export function shownMessage<A>(
+  model: ModelState<A>,
+): ApplicationMessage | undefined {
+  const message = visibleMessage(model);
+  return message?.optional === true && model.messageShown !== message.id
     ? undefined
     : message;
 }
@@ -1468,7 +1486,7 @@ function escape<A>(
   if (listView !== undefined && list?.zoomed === true) {
     return replaceList(model, listView.id, { ...list, zoomed: false });
   }
-  const message = visibleMessage(model);
+  const message = shownMessage(model);
   if (message !== undefined) {
     step.effects.push({
       kind: "dismiss",

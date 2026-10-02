@@ -500,6 +500,15 @@ export interface ApplicationMessage {
   readonly runs: readonly ApplicationRun[];
   readonly trailing?: readonly ApplicationRun[];
   readonly dismiss?: { readonly afterMs?: number; readonly onKey?: boolean };
+  /**
+   * Show the message only where its runs and trailing runs fit the message
+   * line whole, and never in the footer's place on a short screen, as a
+   * teaching line that reads only whole wants. While it is not shown,
+   * Escape passes it by and state reports omit it; its dismissal timer and
+   * key still apply. A required message — a warning, a toast — is cut to
+   * fit and takes the footer's place on a short screen.
+   */
+  readonly optional?: boolean;
 }
 
 /** Input preferences a view carries. */

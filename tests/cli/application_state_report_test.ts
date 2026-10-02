@@ -107,6 +107,27 @@ Deno.test("the report names the message on the message line until it goes", () =
   assertEquals(driver.last.report.messageId, undefined);
 });
 
+Deno.test("the report names an optional message only while it shows", () => {
+  const view = testView(["a"], {
+    message: {
+      id: "teach",
+      runs: [{
+        text: "A teaching line long enough to need eighty columns whole",
+      }],
+      optional: true,
+    },
+  });
+  assertEquals(
+    new ApplicationDriver(view, { columns: 80 }).last.report.messageId,
+    "teach",
+  );
+  assertEquals(
+    new ApplicationDriver(view, { columns: 40, rows: 20 }).last.report
+      .messageId,
+    undefined,
+  );
+});
+
 Deno.test("the report names the liveness the header shows", () => {
   const live = (state: "busy" | "stale"): TerminalApplicationView<string> => ({
     ...testView(["a"]),

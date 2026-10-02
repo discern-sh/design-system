@@ -530,6 +530,42 @@ Deno.test("Enter runs an item's action, Escape dismisses a message, and Ctrl+C c
   assertEquals(driver.take(), [{ kind: "cancel" }]);
 });
 
+Deno.test("an optional message shows only whole and never in the footer's place", () => {
+  const teaching = "Each item keeps its own workspace; press Enter to open it";
+  const view = testView(["a"], {
+    message: {
+      id: "teach",
+      runs: [{ text: teaching }],
+      optional: true,
+      dismiss: { onKey: true },
+    },
+  });
+  const at = (columns: number, rows: number) =>
+    new Driver(view, new FakeTerminalIO([], { columns, rows }));
+  // Wide enough: the whole line shows above the footer.
+  const wide = at(80, 24);
+  assert(wide.render().includes(teaching));
+  assertEquals(wide.render().split("\n").at(-1)?.includes("Open"), true);
+  // Too narrow to show it whole: no part of it shows, and Escape passes by.
+  const narrow = at(40, 20);
+  const frame = narrow.render();
+  assert(!frame.includes("Each item"), frame);
+  narrow.take();
+  narrow.key("escape");
+  assertEquals(narrow.take(), [], "Escape never dismisses a message unseen");
+  // Short: the footer keeps its row.
+  const short = at(80, 13);
+  const shortFrame = short.render();
+  assert(!shortFrame.includes("Each item"), shortFrame);
+  assert(shortFrame.split("\n").at(-1)?.includes("Open"), shortFrame);
+  // A required message still shows cut, and takes the footer's place.
+  const required = new Driver(
+    testView(["a"], { message: { id: "warn", runs: [{ text: teaching }] } }),
+    new FakeTerminalIO([], { columns: 80, rows: 13 }),
+  );
+  assert(required.render().split("\n").at(-1)?.includes("Each item"));
+});
+
 Deno.test("a message dismissed on key reports before the key's own action", () => {
   const driver = new Driver(testView(["a", "b"], {
     message: {

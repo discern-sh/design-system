@@ -89,6 +89,7 @@ import {
   modelState,
   replaceLayer,
   sealModelState,
+  shownMessage,
   snapshotModelState,
   type TerminalApplicationLayout,
   type TerminalApplicationModel,
@@ -102,6 +103,7 @@ import {
   ink,
   type PaintContext,
   paintContext,
+  runsWidth,
   spread,
   styleGlyph,
   styleRuns,
@@ -539,12 +541,23 @@ function footer(
   };
 }
 
+/** The message line, and the id of the message it shows, if any. */
 function messageLine<A>(
   context: FrameContext,
   model: ModelState<A>,
   columns: number,
-): string | undefined {
-  const message = visibleMessage(model);
+  short: boolean,
+): { readonly line: string; readonly id?: string } | undefined {
+  const visible = visibleMessage(model);
+  // An optional message shows only whole, and never in the footer's place.
+  const message = visible?.optional === true &&
+      (short ||
+        runsWidth(context, visible.runs) +
+              (visible.trailing === undefined
+                ? 0
+                : 2 + runsWidth(context, visible.trailing)) > columns - 4)
+    ? undefined
+    : visible;
   if (message === undefined) {
     if (model.mouseHintSince === undefined) return undefined;
     const hint = styleRuns(
@@ -553,11 +566,13 @@ function messageLine<A>(
       undefined,
       "muted",
     );
-    return fitLine(
-      context,
-      `  ${fitProse(context, hint, columns - 4)}`,
-      columns,
-    );
+    return {
+      line: fitLine(
+        context,
+        `  ${fitProse(context, hint, columns - 4)}`,
+        columns,
+      ),
+    };
   }
   const left = styleRuns(
     context,
@@ -566,11 +581,14 @@ function messageLine<A>(
     message.tone ?? "muted",
   );
   const right = styleRuns(context, message.trailing, undefined, "faint");
-  return fitLine(
-    context,
-    `  ${spread(context, left, right, columns - 4, 2, "word")}`,
-    columns,
-  );
+  return {
+    line: fitLine(
+      context,
+      `  ${spread(context, left, right, columns - 4, 2, "word")}`,
+      columns,
+    ),
+    id: message.id,
+  };
 }
 
 /** The width tier a master-detail body uses at this many columns. */
@@ -1555,7 +1573,7 @@ export function terminalApplicationStateReport<A>(
     ? undefined
     : listState.selectedId;
   const top = visibleLayers(model).at(-1);
-  const message = visibleMessage(model);
+  const message = shownMessage(model);
   const liveness = shownLiveness(model, now);
   const detail = view.body.kind === "master-detail" && selected !== undefined
     ? view.body.detail.content[selected]
@@ -1638,7 +1656,8 @@ export function renderModelState<A>(
     ? (view.body.split ?? DEFAULT_APPLICATION_SPLIT_RULES).strip.shortBelowRows
     : DEFAULT_APPLICATION_SPLIT_RULES.strip.shortBelowRows;
   const short = rows < shortBelow;
-  const message = messageLine(context, model, columns);
+  const shownLine = messageLine(context, model, columns, short);
+  const message = shownLine?.line;
   const messageRow = message !== undefined && !short;
   const top = 1 + (rows >= SPACIOUS_ROWS ? 1 : 0);
   const bottom = rows - 1 - (messageRow ? 1 : 0);
@@ -1686,8 +1705,10 @@ export function renderModelState<A>(
     ...(messageRow && message !== undefined ? [message] : []),
     replaced ? message : foot.line,
   ];
+  const { messageShown: _previous, ...rest } = fitted;
   fitted = {
-    ...fitted,
+    ...rest,
+    ...(shownLine?.id === undefined ? {} : { messageShown: shownLine.id }),
     hits: [...head.hits, ...hits, ...(replaced ? [] : foot.hits)],
   };
   return {
