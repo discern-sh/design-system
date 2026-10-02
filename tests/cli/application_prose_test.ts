@@ -121,6 +121,11 @@ const SCENES: readonly {
   readonly keys?: readonly string[];
   /** Widths at which the surface shows; a detail needs its split. */
   readonly widths?: readonly number[];
+  /**
+   * Heights at which the surface shows; a footnote or reason above the
+   * buttons wraps whole while the panel has rows and is cut only when short.
+   */
+  readonly heights?: readonly number[];
 }[] = [
   {
     name: "message line",
@@ -216,6 +221,7 @@ const SCENES: readonly {
   },
   {
     name: "footnote",
+    heights: [10, 24],
     view: withLayer({
       kind: "sheet",
       id: "sheet",
@@ -232,6 +238,7 @@ const SCENES: readonly {
   },
   {
     name: "footnote without a button row",
+    heights: [10, 24],
     view: withLayer({
       kind: "sheet",
       id: "sheet",
@@ -250,6 +257,7 @@ const SCENES: readonly {
   },
   {
     name: "disabled reason",
+    heights: [10, 24],
     view: withLayer({
       kind: "sheet",
       id: "sheet",
@@ -293,15 +301,41 @@ function assertWordCuts(text: string, label: string): number {
   return cuts;
 }
 
+Deno.test("a footnote or reason above the buttons wraps whole while the panel has rows", async (t) => {
+  for (const scene of SCENES.filter((scene) => scene.heights !== undefined)) {
+    await t.step(scene.name, () => {
+      for (const columns of [40, 60, 80, 120]) {
+        const driver = new ApplicationDriver(scene.view, {
+          columns,
+          rows: 24,
+          colorDepth: "none",
+        });
+        driver.key(...(scene.keys ?? []));
+        const text = driver.text.replace(/[│|]/gu, " ");
+        for (const word of WORDS) {
+          assert(
+            text.includes(word),
+            `${scene.name} at ${columns}x24 lost "${word}"\n${driver.text}`,
+          );
+        }
+      }
+    });
+  }
+});
+
 Deno.test("every prose surface cuts after a whole word", async (t) => {
   for (const scene of SCENES) {
     await t.step(scene.name, () => {
       let cuts = 0;
       for (const columns of scene.widths ?? [40, 60, 80, 120]) {
-        for (const unicode of [true, false]) {
+        for (
+          const [rows, unicode] of (scene.heights ?? [24]).flatMap((
+            rows,
+          ) => [[rows, true], [rows, false]] as const)
+        ) {
           const driver = new ApplicationDriver(scene.view, {
             columns,
-            rows: 24,
+            rows,
             colorDepth: "none",
             unicode,
           });
@@ -312,7 +346,7 @@ Deno.test("every prose surface cuts after a whole word", async (t) => {
           );
           cuts += assertWordCuts(
             unicode ? driver.text : driver.text.replaceAll("...", "…"),
-            `${scene.name} at ${columns}`,
+            `${scene.name} at ${columns}x${rows}`,
           );
         }
       }

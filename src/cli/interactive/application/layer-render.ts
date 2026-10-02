@@ -19,7 +19,11 @@ import {
   wrapStyledText,
 } from "../../text.ts";
 import type { TerminalSurfaceRole, TerminalTextTone } from "../../theme.ts";
-import { hintsKeyWidth, renderDetailBlocks } from "./detail-render.ts";
+import {
+  hintsKeyWidth,
+  layoutDetailBlocks,
+  renderDetailBlocks,
+} from "./detail-render.ts";
 import type { ApplicationHit, ApplicationHitTarget } from "./hits.ts";
 import {
   buttonControl,
@@ -126,6 +130,17 @@ interface PanelRow {
   readonly controls?: readonly LayerControl[];
   /** A section's title, which never ends a viewport that hides rows below it. */
   readonly heading?: boolean;
+  /**
+   * The row continues the unit above it, such as a mark's wrapped text, so
+   * a viewport that hides rows below ends before the unit rather than
+   * inside it.
+   */
+  readonly continues?: boolean;
+  /**
+   * A foot row that names what the body hides; it follows the body's last
+   * row directly, and the rows the body leaves free fall beneath it.
+   */
+  readonly attached?: boolean;
 }
 
 /** Whether a row shows a control. */
@@ -140,18 +155,16 @@ interface Panel {
   /** Body rows, from the top, that must pass through view before confirming. */
   readonly read: number;
   /**
-   * The pinned foot, given how many body rows are hidden below, the body
-   * rows this frame shows, and whether the footnote moved into the body. A
-   * panel whose foot names what is hidden sets `footOverflow`.
+   * The pinned foot, given how many body rows are hidden below and the body
+   * rows this frame shows. A panel whose foot names what is hidden sets
+   * `footOverflow`; its overflow row is `attached` to the body.
    */
   readonly foot: (
     hidden: number,
     shown: BodySpan,
-    moved: boolean,
+    room: number,
   ) => readonly PanelRow[];
   readonly footOverflow: boolean;
-  /** A footnote that moves into the body when the body cannot fit. */
-  readonly footnote?: readonly PanelRow[];
   /** Keep the body row holding this control in view. */
   readonly follow?: LayerControl;
   /**
@@ -203,6 +216,26 @@ function wrapRuns(
   if (styled === "") return [""];
   if (measureText(styled) <= width) return [styled];
   return wrapStyledText(styled, Math.max(1, width));
+}
+
+/**
+ * Detail blocks as panel rows at a panel's width, each row that continues
+ * a unit above it — a mark's wrapped text, a fact's further values — saying
+ * so, so a viewport ends at a whole unit.
+ */
+function detailRows(
+  context: PaintContext,
+  blocks: readonly ApplicationDetailBlock[],
+  width: number,
+): readonly PanelRow[] {
+  const { lines, continued } = layoutDetailBlocks(context, blocks, {
+    width,
+    wide: true,
+    surface: RAISED,
+  });
+  return lines.map((text, index) =>
+    continued.has(index) ? { text, continues: true } : { text }
+  );
 }
 
 /** A key as its hint shows it, such as `^T` or `d`. */
@@ -326,7 +359,11 @@ export function renderButton(
 
 /**
  * Lay out buttons right-aligned after a left text, which takes its own row
- * when it does not fit beside them; buttons that do not fit one row wrap.
+ * when it does not fit beside them. Buttons that do not fit one row first
+ * close the gap between them to one cell, and then stand one per row, so
+ * no button is left alone on a row beneath the others; the text above them
+ * wraps. A `compact` layout, for a panel short of rows, instead packs as
+ * many buttons as fit on each row and cuts the text to one line.
  */
 function buttonRows<A>(
   context: PaintContext,
@@ -334,8 +371,8 @@ function buttonRows<A>(
   model: TerminalApplicationLayerModel,
   left: string,
   width: number,
+  compact = false,
 ): readonly PanelRow[] {
-  const gap = 2;
   const render = () =>
     layer.buttons.map((button) => {
       const enabled = buttonEnabled(layer, model, button);
@@ -352,24 +389,31 @@ function buttonRows<A>(
       );
       return { button, text, width: measureText(text) };
     });
-  const pack = (parts: ReturnType<typeof render>) => {
-    const rows: (typeof parts)[] = [];
+  const parts = render();
+  const across = (gap: number) =>
+    parts.reduce((total, part) => total + part.width, 0) +
+        gap * Math.max(0, parts.length - 1) <= width;
+  const gap = across(2) ? 2 : 1;
+  const pack = () => {
+    const packed: (typeof parts)[] = [];
     let current: typeof parts = [];
     let used = 0;
     for (const part of parts) {
-      const extra = current.length === 0 ? part.width : part.width + gap;
-      if (current.length > 0 && used + extra > width) {
-        rows.push(current);
+      if (current.length > 0 && used + gap + part.width > width) {
+        packed.push(current);
         current = [];
-        used = 0;
       }
+      used = current.length === 0 ? part.width : used + gap + part.width;
       current.push(part);
-      used += current.length === 1 ? part.width : part.width + gap;
     }
-    if (current.length > 0) rows.push(current);
-    return rows;
+    if (current.length > 0) packed.push(current);
+    return packed;
   };
-  const rows = pack(render());
+  const rows = across(gap)
+    ? [parts]
+    : compact
+    ? pack()
+    : parts.map((part) => [part]);
   const lines: PanelRow[] = [];
   const leftWidth = measureText(left);
   const lastContent = rows.at(-1)?.map((part) => part.text).join(
@@ -380,8 +424,15 @@ function buttonRows<A>(
   // it takes its own row above the whole block, never between its rows.
   const beside = rows.length === 1 && left !== "" &&
     leftWidth + 2 <= lastStart;
+  // Above the buttons the text wraps: a footnote is the sheet's closing
+  // sentence and a reason says why a button cannot run, so neither is cut
+  // while the panel has the rows.
   if (left !== "" && !beside) {
-    lines.push({ text: fitProse(context, left, width) });
+    lines.push(
+      ...(compact
+        ? [fitProse(context, left, width)]
+        : wrapStyledText(left, width)).map((text) => ({ text })),
+    );
   }
   for (const [index, row] of rows.entries()) {
     // Filled buttons on touching rows would merge into one slab, so a
@@ -571,12 +622,7 @@ function disclosureRows(
         hits: [{ start: 0, end: width, target: controlHit(layerId, control) }],
         control,
       });
-      const content = renderDetailBlocks(context, disclosure.content, {
-        width,
-        wide: true,
-        surface: RAISED,
-      });
-      rows.push(...content.map((text) => ({ text })));
+      rows.push(...detailRows(context, disclosure.content, width));
       // Open content ends with a blank row before the next disclosure.
       if (index < disclosures.length - 1) rows.push(BLANK);
       continue;
@@ -662,6 +708,12 @@ function visibleRows(rows: readonly PanelRow[]): number {
   ).length;
 }
 
+/** Whether a row is a blank separator. */
+function blankRow(row: PanelRow | undefined): boolean {
+  return row !== undefined && typeof row.text === "string" &&
+    row.text.trim() === "";
+}
+
 /** The choices among rows: what a menu's or palette's markers count. */
 function choiceRows(rows: readonly PanelRow[]): number {
   return rows.reduce(
@@ -710,6 +762,15 @@ function settlePanel(
   reveal: LayerControl | undefined,
 ) {
   const width = layerContentWidth(box);
+  /**
+   * Rows the foot may take while the body keeps three, so a roomier foot
+   * never squeezes the consequences it closes to a line or two.
+   */
+  const footRoom = Math.max(
+    0,
+    box.height - 2 - panel.head.length -
+      Math.max(1, Math.min(PINNED_BODY_ROWS, panel.body.length)),
+  );
   // A list of choices counts choices; anything else counts lines of text.
   const count = panel.counts === "choices" ? choiceRows : visibleRows;
   /** The gaps, body, and viewport height left beside a foot of `footRows`. */
@@ -724,11 +785,7 @@ function settlePanel(
     if (room() < panel.body.length) gapAfterHead = 0;
     if (room() < Math.min(3, panel.body.length)) gapBeforeFoot = 0;
     const available = Math.max(1, room());
-    const moved = panel.body.length > available &&
-      panel.footnote !== undefined;
-    const body = moved
-      ? [...panel.body, BLANK, ...(panel.footnote ?? [])]
-      : panel.body;
+    const body = panel.body;
     const visible = box.stretch
       ? available
       : Math.min(available, Math.max(1, body.length));
@@ -737,7 +794,6 @@ function settlePanel(
       available: room(),
       gapAfterHead,
       gapBeforeFoot,
-      moved,
       body,
       visible,
       overflows: body.length > visible,
@@ -758,6 +814,13 @@ function settlePanel(
     // first page shows at least two lines; otherwise that line would never
     // be on screen at any scroll.
     const covers = visible >= (panel.footOverflow ? 2 : 3);
+    /** Body rows this frame must keep in view: the revealed and followed controls. */
+    const keptRows = () =>
+      [reveal, panel.follow].flatMap((control) =>
+        control === undefined
+          ? []
+          : [body.findIndex((row) => holds(row, control))]
+      ).filter((index) => index >= 0);
     const viewport = (scroll: number) => {
       const up = scroll > 0 && visible >= 2 ? 1 : 0;
       const first = scroll + (covers ? up : 0);
@@ -804,11 +867,7 @@ function settlePanel(
     if (overflows && scroll < maxScroll) {
       const now = viewport(scroll);
       const end = now.first + now.rows;
-      const kept = [reveal, panel.follow].flatMap((control) =>
-        control === undefined
-          ? []
-          : [body.findIndex((row) => holds(row, control))]
-      ).filter((index) => index >= 0);
+      const kept = keptRows();
       const next = viewport(scroll + 1);
       if (
         body[end - 1]?.heading === true && end < body.length &&
@@ -821,13 +880,32 @@ function settlePanel(
       : { up: 0, first: 0, rows: body.length, down: 0 };
     let gapBeforeFoot = fitted.gapBeforeFoot;
     const last = body[at.first + at.rows - 1];
-    // A viewport that ends on a blank separator while rows stay hidden
-    // takes the foot's gap for one more row, so two blank rows never stand
-    // between hidden content and the foot.
     if (
+      overflows && panel.footOverflow && at.first + at.rows < body.length &&
+      panel.foot(1, { start: at.first, end: at.first + at.rows }, footRoom)[0]
+          ?.attached === true
+    ) {
+      // The foot's overflow row follows the body directly, so the body
+      // ends at a whole unit and never on a blank row while rows stay
+      // hidden; the rows it leaves free fall beneath that row.
+      const floor = Math.max(
+        at.first + 1,
+        ...keptRows().map((index) => index + 1),
+      );
+      let end = at.first + at.rows;
+      if (body[end]?.continues === true) {
+        let start = end - 1;
+        while (start > at.first && body[start]?.continues === true) start -= 1;
+        if (start >= floor) end = start;
+      }
+      while (end > floor && blankRow(body[end - 1])) end -= 1;
+      at = { ...at, rows: end - at.first };
+    } else if (
+      // A viewport that ends on a blank separator while rows stay hidden
+      // takes the foot's gap for one more row, so two blank rows never
+      // stand between hidden content and the foot.
       overflows && gapBeforeFoot > 0 && at.down === 0 &&
-      at.first + at.rows < body.length && last !== undefined &&
-      typeof last.text === "string" && last.text.trim() === ""
+      at.first + at.rows < body.length && blankRow(last)
     ) {
       at = { ...at, rows: at.rows + 1 };
       gapBeforeFoot = 0;
@@ -835,7 +913,7 @@ function settlePanel(
     const below = Math.max(0, body.length - at.first - at.rows);
     const hidden = count(body.slice(at.first + at.rows));
     const shown = { start: at.first, end: at.first + at.rows };
-    const foot = panel.foot(below > 0 ? hidden : 0, shown, fitted.moved);
+    const foot = panel.foot(below > 0 ? hidden : 0, shown, footRoom);
     return {
       fitted: {
         ...fitted,
@@ -852,7 +930,7 @@ function settlePanel(
   // Size the foot from the variant this frame draws, not the tallest one it
   // might: read progress and the hidden count change the foot's words, and
   // the foot's height changes the body's viewport, so settle the two.
-  let placed = place(panel.foot(0, NOTHING_SHOWN, false).length);
+  let placed = place(panel.foot(0, NOTHING_SHOWN, footRoom).length);
   let tallest = placed.fitted.footRows;
   for (let pass = 0; pass < 4; pass += 1) {
     if (placed.foot.length === placed.fitted.footRows) break;
@@ -877,16 +955,23 @@ function drawPanel(
     direction: "up" | "down",
     count: number,
     key: "page-up" | "page-down",
-  ) => ({
-    // A marker with nothing countable behind it, such as a section heading
-    // alone, holds its row blank rather than claim `0 more`.
-    text: count === 0 ? "" : spread(
+  ) => {
+    const text = raised(
       context,
-      "",
-      raised(context, overflowMarker(context, direction, count, key), "faint"),
-      width,
-    ),
-  });
+      overflowMarker(context, direction, count, key),
+      "faint",
+    );
+    // A marker with nothing countable behind it, such as a section heading
+    // alone, holds its row blank rather than claim `0 more`. Where the foot
+    // names what is hidden below, at the start, the upper marker matches.
+    return {
+      text: count === 0
+        ? ""
+        : panel.footOverflow
+        ? text
+        : spread(context, "", text, width),
+    };
+  };
   const slice = body.slice(at.first, at.first + at.rows);
   // A title that still ends the viewport, because showing its first row
   // would hide the row kept in view, gives its row to the lower marker.
@@ -907,14 +992,23 @@ function drawPanel(
       : []),
     ...(widowed ? [BLANK] : []),
   ];
-  while (bodyRows.length < visible) bodyRows.push(BLANK);
   const foot = [...placed.foot];
   // Only a layout that never settled holds more foot rows than it draws.
   while (foot.length < fitted.footRows) foot.unshift(BLANK);
+  // The row that names what the body hides follows its last row; the rows
+  // the body leaves free fall beneath it, before the foot's gap.
+  const attached = foot[0]?.attached === true ? foot.splice(0, 1) : [];
+  let free = Math.max(0, visible - bodyRows.length);
+  // A row the body leaves free first restores the title's gap.
+  const titleGap = gapAfterHead > 0 ||
+    (attached.length > 0 && panel.head.length > 0 && free > 0);
+  if (titleGap && gapAfterHead === 0) free -= 1;
   const content: PanelRow[] = [
     ...panel.head,
-    ...(gapAfterHead > 0 ? [BLANK] : []),
+    ...(titleGap ? [BLANK] : []),
     ...bodyRows,
+    ...attached,
+    ...Array.from({ length: free }, () => BLANK),
     ...(gapBeforeFoot > 0 ? [BLANK] : []),
     ...foot,
   ];
@@ -937,7 +1031,7 @@ function drawPanel(
       target: { kind: "layer", layerId },
     });
   }
-  const bodyStart = 1 + panel.head.length + gapAfterHead;
+  const bodyStart = 1 + panel.head.length + (titleGap ? 1 : 0);
   for (let row = bodyStart; row < bodyStart + visible; row += 1) {
     hits.push({
       row,
@@ -991,9 +1085,12 @@ function drawPanel(
 }
 
 /**
- * The foot of a sheet or form: unread overflow, a disabled reason, or the
- * footnote, then buttons. `pinned` rows, such as a challenge the body would
- * hide, sit between what the body hides and the buttons.
+ * The foot of a sheet or form: a row naming what the body hides, attached
+ * to the body, then `pinned` rows such as a challenge the body would hide,
+ * then the buttons with the disabled reason or the footnote, the sheet's
+ * closing sentence, beside them or wrapped above them. A foot short of
+ * rows packs its buttons and cuts that text to a line, and shorter still
+ * names what the body hides beside the buttons in the footnote's place.
  */
 function panelFoot<A>(
   context: PaintContext,
@@ -1002,7 +1099,7 @@ function panelFoot<A>(
   width: number,
   pinned?: readonly PanelRow[],
 ): Panel["foot"] {
-  return (hidden, shown, moved) => {
+  return (hidden, shown, room) => {
     const fitted = model(shown);
     const reason = disabledReason(layer, fitted);
     const unread = layer.kind === "sheet" && layer.readHint !== undefined &&
@@ -1017,47 +1114,68 @@ function panelFoot<A>(
       overflowMarker(context, "down", hidden, "page-down"),
       overflowMarker(context, "down", hidden),
     ];
-    const left = hidden > 0
+    const marker = hidden > 0
       ? raised(
         context,
         variants.find((variant) => measureText(variant) <= width) ??
           variants.at(-1) ?? "",
         "faint",
       )
-      : reason !== undefined
+      : "";
+    const overflow: readonly PanelRow[] = marker === ""
+      ? []
+      : [{ text: fitProse(context, marker, width), attached: true }];
+    const left = reason !== undefined
       ? raised(context, reason, "muted")
-      : moved
-      ? ""
       : styleRuns(context, layer.footnote, RAISED, "faint");
-    if (!buttonRowShown(layer)) {
-      return left === "" ? [] : [{ text: fitProse(context, left, width) }];
+    const before = pinned === undefined ? [] : [...pinned, BLANK];
+    const feet: readonly (() => readonly PanelRow[])[] = buttonRowShown(layer)
+      ? [
+        () => [
+          ...overflow,
+          ...before,
+          ...buttonRows(context, layer, fitted, left, width),
+        ],
+        () => [
+          ...overflow,
+          ...before,
+          ...buttonRows(context, layer, fitted, left, width, true),
+        ],
+        () => [
+          ...before,
+          ...buttonRows(
+            context,
+            layer,
+            fitted,
+            marker === "" ? left : marker,
+            width,
+            true,
+          ),
+        ],
+      ]
+      : [
+        () => [
+          ...overflow,
+          ...(left === ""
+            ? []
+            : wrapStyledText(left, width).map((text) => ({ text }))),
+        ],
+        () => [
+          ...overflow,
+          ...(left === "" ? [] : [{ text: fitProse(context, left, width) }]),
+        ],
+        () =>
+          marker === "" && left === "" ? [] : [{
+            text: fitProse(context, marker === "" ? left : marker, width),
+          }],
+      ];
+    let foot: readonly PanelRow[] = [];
+    for (const make of feet) {
+      foot = make();
+      if (foot.length <= room) break;
     }
-    if (pinned === undefined) {
-      return buttonRows(context, layer, fitted, left, width);
-    }
-    // What the body hides is named right beneath it; a reason or footnote
-    // stays with the buttons.
-    return [
-      ...(hidden > 0 ? [{ text: fitProse(context, left, width) }, BLANK] : []),
-      ...pinned,
-      BLANK,
-      ...buttonRows(context, layer, fitted, hidden > 0 ? "" : left, width),
-    ];
+    return foot;
   };
-}
-
-/** Wrapped footnote rows, for when the footnote moves into the body. */
-function footnoteRows<A>(
-  context: PaintContext,
-  layer: ApplicationSheet<A> | ApplicationForm<A>,
-  width: number,
-): readonly PanelRow[] | undefined {
-  if (layer.footnote === undefined || layer.footnote.length === 0) {
-    return undefined;
-  }
-  return wrapRuns(context, layer.footnote, width, "faint").map((text) => ({
-    text,
-  }));
 }
 
 /** Add one `[start, end)` range to sorted, disjoint ranges, merging neighbours. */
@@ -1154,9 +1272,9 @@ function challengeRows<A>(
   };
   const beside = boxWidth + 3 + measureText(hint) <= width;
   return [
-    ...wrapRuns(context, challenge.label, width, "ink").map((text) => ({
-      text,
-    })),
+    ...wrapRuns(context, challenge.label, width, "ink").map((text, index) =>
+      index === 0 ? { text } : { text, continues: true }
+    ),
     beside
       ? { text: `${field}   ${hint}`, hits: [fieldHit], control }
       : { text: field, hits: [fieldHit], control },
@@ -1335,12 +1453,8 @@ function sheetPanel<A>(
   if (activity !== undefined) {
     body.push(...activityRows(context, activity, width, now));
   } else {
-    const lines = renderDetailBlocks(context, sheet.body, {
-      width,
-      wide: true,
-      surface: RAISED,
-    });
-    body.push(...lines.map((text) => ({ text })));
+    const lines = detailRows(context, sheet.body, width);
+    body.push(...lines);
     read = lines.length;
   }
   const challenge = sheetChallengeShown(sheet)
@@ -1358,7 +1472,6 @@ function sheetPanel<A>(
       width,
     ),
   ];
-  const footnote = footnoteRows(context, sheet, width);
   const progress = (shown: BodySpan) =>
     top ? readProgress(sheet, model, read, shown) : model;
   const panel: Panel = {
@@ -1370,7 +1483,6 @@ function sheetPanel<A>(
     ],
     read,
     footOverflow: true,
-    ...(footnote === undefined ? {} : { footnote }),
     foot: panelFoot(context, sheet, progress, width),
   };
   return {
@@ -1550,11 +1662,7 @@ function formPanel<A>(
   if (form.preview !== undefined && form.preview.length > 0) {
     body.push(
       BLANK,
-      ...renderDetailBlocks(context, form.preview, {
-        width,
-        wide: true,
-        surface: RAISED,
-      }).map((text) => ({ text })),
+      ...detailRows(context, form.preview, width),
     );
   }
   const disclosures = form.disclosures ?? [];
@@ -1571,13 +1679,11 @@ function formPanel<A>(
       ),
     );
   }
-  const footnote = footnoteRows(context, form, width);
   return {
     head,
     body,
     read: 0,
     footOverflow: true,
-    ...(footnote === undefined ? {} : { footnote }),
     foot: panelFoot(context, form, () => model, width),
   };
 }
