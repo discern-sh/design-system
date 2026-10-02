@@ -357,6 +357,12 @@ export interface ApplicationPalette<A> extends ApplicationLayerBase {
   readonly kind: "palette";
   readonly placeholder: string;
   readonly sections: readonly ApplicationPaletteSection<A>[];
+  /**
+   * Highlighted on open, and scrolled into view, so a palette opened from a
+   * place that promised one entry starts on it; defaults to the first item.
+   * Typing ranks from the best match, as always.
+   */
+  readonly initialItemId?: string;
 }
 
 /** A one-line or multi-line text field. */

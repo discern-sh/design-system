@@ -202,7 +202,9 @@ export function createLayerModel<A>(
     filtering: false,
     ...(layer.kind === "palette"
       ? (() => {
-        const first = paletteRows(layer, "").items[0];
+        const items = paletteRows(layer, "").items;
+        const first = items.find((item) => item.id === layer.initialItemId) ??
+          items[0];
         return first === undefined ? {} : { highlight: first.id };
       })()
       : {}),

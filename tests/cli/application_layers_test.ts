@@ -457,6 +457,42 @@ Deno.test("the palette ranks matches while typing and Escape clears before it cl
   assertEquals(dismissals(driver.take()), ["palette:escape"]);
 });
 
+Deno.test("a palette opens on its initial item, in view, and typing ranks from the best match", () => {
+  const palette = demoPalette(DEMO_JOBS, false);
+  const last = palette.sections.at(-1)?.items.at(-1)?.id;
+  assert(last !== undefined, "the sample palette has items");
+  // Short enough that the last item starts below the palette's fold.
+  const driver = new ApplicationDriver(
+    withLayers({ ...palette, initialItemId: last }),
+    { columns: 80, rows: 14 },
+  );
+  assertEquals(driver.state.layers.palette?.highlightedId, last);
+  const label = palette.sections.at(-1)?.items.at(-1)?.label ?? "";
+  assert(
+    driver.text.includes(label),
+    `the initial item shows:\n${driver.text}`,
+  );
+  driver.take();
+  driver.key("enter");
+  assertEquals(actions(driver.take()), [
+    palette.sections.at(-1)?.items.at(-1)?.action,
+  ]);
+  driver.type("mail");
+  assertEquals(driver.state.layers.palette?.highlightedId, "next-mail-digest");
+  driver.key("escape");
+  assertEquals(
+    driver.state.layers.palette?.highlightedId,
+    palette.sections[0]?.items[0]?.id,
+    "a cleared query ranks from the first item",
+  );
+  const plain = new ApplicationDriver(withLayers(palette));
+  assertEquals(
+    plain.state.layers.palette?.highlightedId,
+    palette.sections[0]?.items[0]?.id,
+    "without one the first item leads",
+  );
+});
+
 Deno.test("forms cycle with Tab, move to the safe button on Enter, and report fields first", () => {
   const driver = new ApplicationDriver(withLayers(demoNewJobForm()), {
     colorDepth: "none",
@@ -715,6 +751,13 @@ Deno.test("the layer rules report every broken rule as data", () => {
       [
         "layers[0].initialItemId",
         withLayers({ ...demoActionsMenu(IMAGE), initialItemId: "resume" }),
+      ],
+      [
+        "layers[0].initialItemId",
+        withLayers({
+          ...demoPalette(DEMO_JOBS, false),
+          initialItemId: "nowhere",
+        }),
       ],
       [
         "layers[0].fields[1].fields[1].editor.key",

@@ -490,6 +490,12 @@ function palette<A>(
       }
     }
   }
+  if (layer.initialItemId !== undefined && !ids.has(layer.initialItemId)) {
+    issues.push({
+      path: `${path}.initialItemId`,
+      message: "must name an item",
+    });
+  }
 }
 
 function textField<A>(

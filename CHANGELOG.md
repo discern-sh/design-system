@@ -6,7 +6,7 @@ Each release is cut from a green run of the full release gate — formatting, li
 
 ## 0.39.0
 
-Terminal applications can pin a few entries above their titled groups — an overview, a way to every command — so the first thing a person sees can be what the application offers rather than a key they have yet to learn. The release is additive: views that set none of the new fields render and behave exactly as before.
+Terminal applications can pin a few entries above their titled groups — an overview, a way to every command — so the first thing a person sees can be what the application offers rather than a key they have yet to learn, and a palette opened from such an entry can start on the command it promised. The release is additive: views that set none of the new fields render and behave exactly as before.
 
 ### Terminal applications
 
@@ -15,6 +15,7 @@ Terminal applications can pin a few entries above their titled groups — an ove
 - A headless group never folds — not with Enter, not into a summary row on a short screen — while its rows still count toward fitting the list. A list that scrolls inside one gives its first line to the `↑ N more` marker.
 - `validateTerminalApplicationView` refuses a headless group that sets a field only a header or summary row shows — `shortTitle`, `count`, `foldable`, `initiallyFolded`, or `aside` (`false` leaves a flag unset) — and a density `foldOrder` that names a headless group.
 - Whether a group shows a header is structure: a group that becomes headless, or stops being so, waits for the list's settle window as a membership change does.
+- `ApplicationPalette.initialItemId` names the item the highlight starts on, scrolled into view, as a menu's does, so a palette opened from a place that promised one entry starts on it. `validateTerminalApplicationView` refuses one that names no item.
 - `ApplicationLayerAnchor` now documents what `detail` does below the wide tier: the layer takes its own place there — the top for a palette, the whole body for a reader, the bottom for the rest. Behaviour is unchanged; a palette that names `anchor: "detail"` sits in the detail column beside a wide list.
 
 ## 0.38.0
