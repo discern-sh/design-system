@@ -54,6 +54,15 @@ export function groupFoldable<A>(group: ApplicationListGroup<A>): boolean {
   return group.foldable === true && groupCanFold(group);
 }
 
+/**
+ * Whether a group's items are the list's searchable, numbered content. An
+ * uncounted group's are the application's own entries, which a filter
+ * passes over and zoom does not number.
+ */
+export function groupCounted<A>(group: ApplicationListGroup<A>): boolean {
+  return group.counted !== false;
+}
+
 /** One display row of a grouped list. */
 export type ListRow<A> =
   | { readonly kind: "blank" }
@@ -79,7 +88,10 @@ export type ListRow<A> =
 /** The rows a list shows, with indexes the viewport and navigation use. */
 export interface ListRows<A> {
   readonly rows: readonly ListRow<A>[];
-  /** Item rows before each index; one longer than `rows`. */
+  /**
+   * Counted item rows before each index, which zoom numbers; one longer
+   * than `rows`.
+   */
   readonly itemPrefix: readonly number[];
   /**
    * Items the rows before each index stand for, counting the items a fold
@@ -91,9 +103,9 @@ export interface ListRows<A> {
    * headless group's items, which no header heads.
    */
   readonly headerOf: readonly number[];
-  /** Items the filter matched, or every item without a filter. */
+  /** Counted items the filter matched, or every one without a filter. */
   readonly matched: number;
-  /** Every item in the list. */
+  /** Every counted item in the list. */
   readonly total: number;
 }
 
@@ -187,7 +199,10 @@ export function itemMatches<A>(
     : haystack.includes(needle);
 }
 
-/** Every item, and the items an active filter keeps, by group. */
+/**
+ * Every item, and the items an active filter keeps, by group. A filter
+ * passes over an uncounted group, whose items hide while it applies.
+ */
 function visibleItems<A>(
   list: ApplicationList<A>,
   query: string | undefined,
@@ -197,7 +212,9 @@ function visibleItems<A>(
       group.id,
       query === undefined || query.trim() === ""
         ? group.items
-        : group.items.filter((item) => itemMatches(list, item, query)),
+        : groupCounted(group)
+        ? group.items.filter((item) => itemMatches(list, item, query))
+        : [],
     ]),
   );
 }
@@ -225,9 +242,11 @@ export function flattenList<A>(
   let total = 0;
   let matched = 0;
   for (const group of list.groups) {
-    total += group.items.length;
     const items = shown.get(group.id) ?? [];
-    matched += items.length;
+    if (groupCounted(group)) {
+      total += group.items.length;
+      matched += items.length;
+    }
     if (items.length === 0) continue;
     const count = filtering ? items.length : group.count ?? group.items.length;
     const density = !filtering && groupCanFold(group) &&
@@ -292,7 +311,10 @@ export function flattenList<A>(
   const itemPrefix = [0];
   const heldPrefix = [0];
   for (const row of rows) {
-    itemPrefix.push((itemPrefix.at(-1) ?? 0) + (row.kind === "item" ? 1 : 0));
+    itemPrefix.push(
+      (itemPrefix.at(-1) ?? 0) +
+        (row.kind === "item" && groupCounted(row.group) ? 1 : 0),
+    );
     heldPrefix.push(
       (heldPrefix.at(-1) ?? 0) +
         (row.kind === "item" ? 1 : row.kind === "fold"

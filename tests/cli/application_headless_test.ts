@@ -253,6 +253,52 @@ Deno.test("zoom names a headless group's item alone and counts it", () => {
   assertEquals(driver.state.lists.items?.selectedId, "p");
 });
 
+Deno.test("an uncounted group stays out of the filter and zoom's numbering", () => {
+  const groups = [{ ...PINNED, counted: false }, ...GROUPS.slice(1)];
+  const list = (() => {
+    const body = testView(ITEMS, { groups }).body;
+    if (body.kind !== "master-detail") throw new Error("expected a split");
+    return body.list;
+  })();
+  const shape = { folds: new Set<string>(), densityFolds: new Set<string>() };
+  const all = flattenList(list, { ...shape, separators: true });
+  assertEquals([all.matched, all.total], [9, 9], "no count includes it");
+  assert(all.rows.some((row) => row.kind === "item" && row.item.id === "p"));
+  const filtered = flattenList(list, {
+    ...shape,
+    separators: true,
+    query: "item p",
+  });
+  assertEquals([filtered.matched, filtered.total], [0, 9]);
+  assertEquals(filtered.rows, [], "the filter passes over it");
+
+  const driver = new ApplicationDriver(
+    testView(ITEMS, { groups, filter: true }),
+    { columns: 80, rows: 24 },
+  );
+  const selected = () => driver.state.lists.items?.selectedId;
+  assertEquals(selected(), "p");
+  driver.key("/").type("item");
+  assert(driver.text.includes("9 of 9"), driver.text);
+  assert(!driver.text.includes("Item p"), "it hides while a filter applies");
+  assertEquals(selected(), "a", "the selection moves to the first match");
+  driver.key("escape");
+  assert(driver.text.includes("Item p"), "it returns with the list");
+  assertEquals(selected(), "a", "clearing the filter keeps the selection");
+  driver.key("/").type("item p");
+  assert(driver.text.includes("0 of 9"), driver.text);
+  driver.key("escape", "home");
+  assertEquals(selected(), "p");
+  driver.key("space");
+  const crumb = driver.text.split("\n").find((line) => line.includes("Item p"));
+  assert(crumb !== undefined && !/\d+ of \d+/u.test(crumb), driver.text);
+  driver.key("down");
+  assert(driver.text.includes("First  ›  Item a"), driver.text);
+  assert(driver.text.includes("1 of 9"), "zoom numbers counted items alone");
+  driver.key("up");
+  assertEquals(selected(), "p", "zoom still walks to it");
+});
+
 Deno.test("a long headless group keeps its upper marker on a line of its own", () => {
   const items = Array.from({ length: 30 }, (_, index) => ({
     id: `${index}`,

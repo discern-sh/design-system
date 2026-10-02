@@ -465,6 +465,9 @@ export function applicationDemoView(
         id: "pinned",
         title: "Pinned",
         headless: true,
+        // The way to every command is the sample's own, not a job: the
+        // filter passes over it and zoom numbers only the jobs.
+        counted: false,
         items: [COMMANDS_ROW],
       }]
       : []),

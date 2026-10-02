@@ -64,6 +64,7 @@ import {
 import { decodableChord } from "./keymap.ts";
 import {
   decideListDensity,
+  groupCounted,
   keyItemId,
   listLayoutKey,
   type ListRow,
@@ -905,8 +906,10 @@ function crumb<A>(
     }${ink(context, row.item.title, { tone: "muted" }, "surface")}`
     : "";
   // The position counts the items Up and Down walk in zoom: those a filter
-  // matched, less those folded away, so every count is one step away.
-  const position = row?.kind === "item"
+  // matched, less those folded away, so every count is one step away. An
+  // uncounted item is the application's own entry, not one of them, and
+  // shows no position.
+  const position = row?.kind === "item" && groupCounted(row.group)
     ? ink(
       context,
       context.copy.count(

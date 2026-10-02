@@ -244,6 +244,7 @@ export const LIST_GROUP_FIELDS = {
   id: "group",
   title: "group",
   headless: "group",
+  counted: "group",
   items: "group",
   shortTitle: "header",
   count: "header",

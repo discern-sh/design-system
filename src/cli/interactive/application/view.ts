@@ -181,6 +181,16 @@ export interface ApplicationListGroup<A> {
    * `count`, `foldable`, `initiallyFolded`, or `aside`.
    */
   readonly headless?: boolean;
+  /**
+   * `false` keeps the items out of the list's searchable, numbered content,
+   * as entries that belong to the application rather than to the list want,
+   * such as a way to every command: a filter passes over them, so they hide
+   * while one applies and neither its matches nor its total count them, and
+   * zoom numbers only counted items, showing no position on these. They
+   * still take the selection, walk in zoom, and count in `↑ N more`, as
+   * rows one step away. Defaults to `true`.
+   */
+  readonly counted?: boolean;
   /** The name a summary row uses; defaults to the title. */
   readonly shortTitle?: string;
   /** The header's count; defaults to the number of items. */
