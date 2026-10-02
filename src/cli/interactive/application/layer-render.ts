@@ -567,9 +567,11 @@ function fieldArea(
 // ── Disclosures ──────────────────────────────────────────────────────────
 
 /**
- * Closed disclosures flow along rows, three cells apart; an open one takes
- * its own row with its key against the end, followed by its content. The
- * key shown is the field chord while a text field has focus.
+ * Disclosure rows. Closed disclosures flow along one row while they all
+ * fit it, and otherwise stand one per row, so none is left alone on a row
+ * beneath the others; an open one takes its own row with its key against
+ * the end, followed by its content. The key shown is the field chord while
+ * a text field has focus.
  */
 function disclosureRows(
   context: PaintContext,
@@ -579,17 +581,7 @@ function disclosureRows(
   inField: boolean,
   width: number,
 ): readonly PanelRow[] {
-  const rows: PanelRow[] = [];
-  let flow:
-    | { text: string; hits: RowHit[]; width: number; controls: LayerControl[] }
-    | undefined;
-  const flush = () => {
-    if (flow !== undefined) {
-      rows.push({ text: flow.text, hits: flow.hits, controls: flow.controls });
-    }
-    flow = undefined;
-  };
-  for (const [index, disclosure] of disclosures.entries()) {
+  const drawn = disclosures.map((disclosure) => {
     const control = disclosureControl(disclosure.id);
     const open = model.open[disclosure.id] === true;
     const focused = model.focus === control;
@@ -614,48 +606,62 @@ function disclosureRows(
     const keyed = key === ""
       ? ""
       : ink(context, key, { tone: "ink", bold: true }, surface);
-    if (open) {
-      flush();
-      const line = spread(context, `${marker} ${label}`, keyed, width);
-      rows.push({
-        text: focused ? fitLine(context, line, width, "selection") : line,
-        hits: [{ start: 0, end: width, target: controlHit(layerId, control) }],
-        control,
-      });
-      rows.push(...detailRows(context, disclosure.content, width));
-      // Open content ends with a blank row before the next disclosure.
-      if (index < disclosures.length - 1) rows.push(BLANK);
-      continue;
-    }
     let segment = `${marker} ${label}${keyed === "" ? "" : `  ${keyed}`}`;
     if (focused) {
       segment = fitLine(context, segment, measureText(segment), "selection");
     }
-    const segmentWidth = measureText(segment);
-    if (flow !== undefined && flow.width + 3 + segmentWidth > width) flush();
-    if (flow === undefined) {
-      flow = {
-        text: segment,
-        hits: [{
-          start: 0,
-          end: segmentWidth,
-          target: controlHit(layerId, control),
-        }],
-        width: segmentWidth,
-        controls: [control],
+    /** The disclosure on a row of its own, its key against the end. */
+    const own = (): PanelRow => {
+      const line = spread(context, `${marker} ${label}`, keyed, width);
+      return {
+        text: focused ? fitLine(context, line, width, "selection") : line,
+        hits: [{ start: 0, end: width, target: controlHit(layerId, control) }],
+        control,
       };
-    } else {
-      flow.controls.push(control);
-      flow.hits.push({
-        start: flow.width + 3,
-        end: flow.width + 3 + segmentWidth,
-        target: controlHit(layerId, control),
-      });
-      flow.text = `${flow.text}   ${segment}`;
-      flow.width += 3 + segmentWidth;
+    };
+    return { disclosure, control, open, segment, own };
+  });
+  const rows: PanelRow[] = [];
+  /** Closed disclosures in a run: one row when they all fit, else one each. */
+  const flow = (run: typeof drawn) => {
+    if (run.length === 0) return;
+    const widths = run.map((entry) => measureText(entry.segment));
+    const across = widths.reduce((total, cells) => total + cells, 0) +
+      3 * (run.length - 1);
+    if (run.length > 1 && across > width) {
+      rows.push(...run.map((entry) => entry.own()));
+      return;
     }
+    const hits: RowHit[] = [];
+    let at = 0;
+    for (const [index, entry] of run.entries()) {
+      hits.push({
+        start: at,
+        end: at + (widths[index] ?? 0),
+        target: controlHit(layerId, entry.control),
+      });
+      at += (widths[index] ?? 0) + 3;
+    }
+    rows.push({
+      text: run.map((entry) => entry.segment).join("   "),
+      hits,
+      controls: run.map((entry) => entry.control),
+    });
+  };
+  let run: typeof drawn = [];
+  for (const [index, entry] of drawn.entries()) {
+    if (!entry.open) {
+      run.push(entry);
+      continue;
+    }
+    flow(run);
+    run = [];
+    rows.push(entry.own());
+    rows.push(...detailRows(context, entry.disclosure.content, width));
+    // Open content ends with a blank row before the next disclosure.
+    if (index < drawn.length - 1) rows.push(BLANK);
   }
-  flush();
+  flow(run);
   return rows;
 }
 

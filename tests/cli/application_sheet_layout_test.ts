@@ -1,11 +1,13 @@
 /**
  * How a sheet lays out its foot and scrolled body: the row naming what the
  * body hides follows the body's last whole unit, the footnote stays with
- * the buttons, and buttons stand on one row or one per row.
+ * the buttons, buttons stand on one row or one per row, and closed
+ * disclosures share one row or stand one per row.
  */
 import { assert, assertEquals } from "@std/assert";
 import { TERMINAL_GLYPHS } from "../../src/cli/mod.ts";
 import type {
+  ApplicationDisclosure,
   ApplicationLayer,
   ApplicationSheet,
 } from "../../src/cli/interactive/mod.ts";
@@ -161,4 +163,42 @@ Deno.test("buttons stand on one row or one per row while the panel has rows", as
     driver(demoDeleteSheet(job("photo-archive")), 32, 10),
   );
   assert(short.length < 3, JSON.stringify(short));
+});
+
+const disclosure = (
+  id: string,
+  label: string,
+  key: string,
+): ApplicationDisclosure => ({
+  id,
+  label,
+  key,
+  content: [{ kind: "text", runs: [{ text: `${label} content` }] }],
+});
+
+Deno.test("closed disclosures share one row or stand one per row", async (t) => {
+  const sheet: ApplicationSheet<string> = {
+    ...unitSheet(1),
+    disclosures: [
+      disclosure("changes", "Changes · 1 file", "v"),
+      disclosure("plan", "Technical plan · 9 steps", "d"),
+      disclosure("command", "Command", "c"),
+    ],
+  };
+  for (let columns = 32; columns <= 120; columns += 1) {
+    await t.step(`${columns} columns`, () => {
+      const counts = new Map<number, number>();
+      for (const hit of driver(sheet, columns, 30).hits) {
+        if (
+          hit.target.kind === "control" &&
+          hit.target.control.startsWith("disclosure:")
+        ) counts.set(hit.row, (counts.get(hit.row) ?? 0) + 1);
+      }
+      const rows = [...counts.values()];
+      assert(
+        rows.length === 1 || rows.every((count) => count === 1),
+        `${columns}: disclosures split ${JSON.stringify(rows)}`,
+      );
+    });
+  }
 });
