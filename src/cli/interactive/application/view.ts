@@ -299,7 +299,10 @@ export interface ApplicationRowsBlock {
   readonly kind: "rows";
   /** A fixed column before the text, such as a short id. */
   readonly lead?: ApplicationListColumn;
-  /** Trailing aligned columns, dropping by priority like a list's. */
+  /**
+   * Trailing aligned columns, dropping by priority like a list's. A row's
+   * text runs on into the cells it leaves empty, up to the first it fills.
+   */
   readonly columns?: readonly ApplicationListColumn[];
   readonly items: readonly ApplicationDetailRow[];
 }

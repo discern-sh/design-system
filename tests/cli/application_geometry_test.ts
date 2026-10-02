@@ -671,6 +671,44 @@ Deno.test("a compact marks block sets its text one space after the mark and its 
   assertEquals([...continued], [1, 2]);
 });
 
+Deno.test("a row's text runs on into the trailing cells it leaves empty, and the filled ones stay aligned", () => {
+  const context = paintContext(
+    { colorDepth: "none", unicode: true, columns: 30 },
+    {},
+    { phase: 0 },
+  );
+  const block: ApplicationDetailBlock = {
+    kind: "rows",
+    columns: [
+      { id: "meta", width: 6, align: "end", priority: 1 },
+      { id: "key", width: 1 },
+    ],
+    items: [
+      { text: [{ text: "A label too long for its own share" }] },
+      {
+        text: [{ text: "Short" }],
+        cells: { meta: [{ text: "2 left" }], key: [{ text: "k" }] },
+      },
+      {
+        text: [{ text: "Keyed label running on" }],
+        cells: { key: [{ text: "n" }] },
+      },
+      { text: [{ text: "Middle" }], cells: { meta: [{ text: "1" }] } },
+    ],
+  };
+  const lines = renderDetailBlocks(context, [block], {
+    width: 30,
+    wide: false,
+    surface: undefined,
+  }).map(stripAnsi);
+  assertEquals(lines, [
+    "A label too long for its own… ",
+    "Short                2 left  k",
+    "Keyed label running on       n",
+    "Middle                    1   ",
+  ]);
+});
+
 Deno.test("a block that renders nothing leaves no trace, and a section never heads nothing", () => {
   const hints: ApplicationDetailBlock = {
     kind: "hints",

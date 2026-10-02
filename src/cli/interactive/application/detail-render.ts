@@ -303,7 +303,10 @@ const ROW_MIN_TEXT = 12;
 /**
  * Aligned rows: a lead cell, text that takes the remaining width and
  * truncates, and trailing columns that drop lowest priority first while the
- * text would keep fewer than twelve cells.
+ * text would keep fewer than twelve cells. A row's text runs on into the
+ * trailing cells it leaves empty, up to the first it fills, so a long label
+ * with nothing beside it keeps its words while the cells other rows fill
+ * stay aligned.
  */
 function rows(
   context: PaintContext,
@@ -333,15 +336,22 @@ function rows(
     const leadText = lead === undefined
       ? ""
       : `${fitCell(context, item.lead ?? [], lead, layout.surface)} `;
+    const filled = shown.findIndex((column) =>
+      (item.cells?.[column.id] ?? []).some((run) => run.text !== "")
+    );
+    const kept = filled < 0 ? [] : shown.slice(filled);
+    const runOn = shown.slice(0, filled < 0 ? shown.length : filled)
+      .reduce((total, column) => total + column.width + gap, 0);
+    const width = textWidth + runOn;
     const text = padText(
       fitProse(
         context,
         styleRuns(context, item.text, layout.surface, "ink"),
-        textWidth,
+        width,
       ),
-      textWidth,
+      width,
     );
-    const cells = shown.map((column) =>
+    const cells = kept.map((column) =>
       `${" ".repeat(gap)}${
         fitCell(context, item.cells?.[column.id] ?? [], column, layout.surface)
       }`

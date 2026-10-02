@@ -16,6 +16,7 @@ Terminal applications can pin a few entries above their titled groups — an ove
 - `validateTerminalApplicationView` refuses a headless group that sets a field only a header or summary row shows — `shortTitle`, `count`, `foldable`, `initiallyFolded`, or `aside` (`false` leaves a flag unset) — and a density `foldOrder` that names a headless group.
 - Whether a group shows a header is structure: a group that becomes headless, or stops being so, waits for the list's settle window as a membership change does.
 - `ApplicationPalette.initialItemId` names the item the highlight starts on, scrolled into view, as a menu's does, so a palette opened from a place that promised one entry starts on it. `validateTerminalApplicationView` refuses one that names no item.
+- A `rows` detail block's row runs its text on into the trailing cells it leaves empty, up to the first it fills, so a long label with nothing beside it keeps its words while the cells other rows fill stay aligned.
 - `ApplicationLayerAnchor` now documents what `detail` does below the wide tier: the layer takes its own place there — the top for a palette, the whole body for a reader, the bottom for the rest. Behaviour is unchanged; a palette that names `anchor: "detail"` sits in the detail column beside a wide list.
 
 ## 0.38.0
