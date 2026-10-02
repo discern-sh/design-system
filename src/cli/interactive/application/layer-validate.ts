@@ -420,6 +420,9 @@ function menu<A>(
       unique(where, item.id);
       text(issues, `${where}.label`, item.label);
       text(issues, `${where}.sentence`, item.sentence);
+      if (item.reason !== undefined) {
+        text(issues, `${where}.reason`, item.reason);
+      }
       if (item.key !== undefined) {
         keys.claim(`${where}.key`, item.key, `item ${item.id}`);
       }
@@ -433,6 +436,9 @@ function menu<A>(
       unique(at, item.id);
       text(issues, `${at}.label`, item.label);
       text(issues, `${at}.sentence`, item.sentence);
+      if (item.reason !== undefined) {
+        text(issues, `${at}.reason`, item.reason);
+      }
       if (item.key !== undefined) {
         keys.claim(`${at}.key`, item.key, `item ${item.id}`);
       }

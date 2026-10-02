@@ -1760,7 +1760,9 @@ function unavailableRow(
 ): string {
   const surface: TerminalSurfaceRole = highlighted ? "selection" : RAISED;
   const reason = inline
-    ? `  ${ink(context, item.sentence, { tone: "faint" }, surface)}`
+    ? `  ${
+      ink(context, item.reason ?? item.sentence, { tone: "faint" }, surface)
+    }`
     : "";
   const text = fitProse(
     context,

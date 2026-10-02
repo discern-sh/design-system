@@ -402,6 +402,8 @@ Deno.test("a section's own unavailable item sits inline with its reason and neve
   driver.take();
   driver.key("enter");
   assertEquals(actions(driver.take()), [], "it explains itself, never runs");
+  // The row carries the short reason; the full sentence is what Enter shows.
+  assert(driver.text.includes("connect one in Settings"), driver.text);
 });
 
 Deno.test("an unavailable menu item explains itself on Enter and never runs", () => {

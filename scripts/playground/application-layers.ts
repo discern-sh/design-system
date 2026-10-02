@@ -297,7 +297,9 @@ export function demoActionsMenu(job: DemoJob): ApplicationMenu<string> {
         unavailable: [{
           id: "calendar",
           label: "Add to calendar",
-          sentence: "no calendar is connected",
+          sentence:
+            "No calendar is connected: connect one in Settings, then add the job again.",
+          reason: "no calendar",
         }],
         items: [
           {

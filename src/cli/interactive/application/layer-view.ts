@@ -282,7 +282,14 @@ export interface ApplicationMenuSection<A> {
 export interface ApplicationUnavailableItem {
   readonly id: string;
   readonly label: string;
+  /** Why it cannot run and what would let it, in full; Enter shows it. */
   readonly sentence: string;
+  /**
+   * A short reason for its row, such as `not installed`, beside the label
+   * where a section lists it inline; without one the row shows the
+   * sentence, cut to fit.
+   */
+  readonly reason?: string;
   /** Pressing it shows the sentence; it never activates anything. */
   readonly key?: KeyChord;
 }
