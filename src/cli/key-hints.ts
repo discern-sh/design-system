@@ -35,11 +35,21 @@ export interface KeyHint {
   /** One key, or several shown together such as `["up", "down"]`. */
   readonly key: KeyChord | readonly KeyChord[];
   readonly label?: string;
+  /**
+   * How long a left hint holds its place as the line narrows: left hints
+   * drop lowest rank first, from the end within a rank, so a way out or a
+   * key on screen can outlast generic hints placed before it. Defaults to
+   * 0; the first left hint never drops.
+   */
+  readonly rank?: number;
 }
 
 /** The complete footer: what the renderer is allowed to show and drop. */
 export interface KeyHints {
-  /** Primary first; hints drop from the end to fit, the first never. */
+  /**
+   * Primary first; hints drop from the end to fit, lowest `rank` first,
+   * the first never.
+   */
   readonly left: readonly KeyHint[];
   /**
    * Whether the first left hint is the primary action, its key drawn in the
@@ -86,6 +96,8 @@ const HINT_GAP = 3;
 const COMPACT_HINT_GAP = 2;
 const CLUSTER_GAP = 3;
 const EXTRA_CLUSTER_GAP = 6;
+/** Cells the primary label keeps while it shortens to make room for ranked hints. */
+const PRIMARY_LABEL_FLOOR = 8;
 
 /** Keys shown as their terminal glyph, falling back to a word without Unicode. */
 const GLYPH_CHORDS: Readonly<Record<string, TerminalGlyphName>> = {
@@ -269,11 +281,24 @@ function validColumns(label: string, value: number, minimum: number): void {
   }
 }
 
+/** `left` less the hint that drops next: the last of the lowest rank, never the first. */
+function withoutWeakest(left: readonly Shown[]): Shown[] {
+  let weakest = left.length - 1;
+  for (let index = left.length - 1; index > 0; index -= 1) {
+    if ((left[index]?.hint.rank ?? 0) < (left[weakest]?.hint.rank ?? 0)) {
+      weakest = index;
+    }
+  }
+  return left.filter((_, index) => index !== weakest);
+}
+
 /**
  * Lay out key hints on one line of exactly `width` cells. The ladder is
  * fixed: extras join the right cluster in order while the whole left
  * cluster still leaves six cells between the clusters; left hints then
- * drop from the end, never the primary; below `compactBelowColumns` gaps
+ * drop lowest `rank` first and from the end within a rank, never the
+ * first — once only ranked hints remain, the primary label shortens to
+ * eight cells before one of them drops; below `compactBelowColumns` gaps
  * tighten from three cells to two and right labels drop from the end —
  * a hint whose key is one printable character drops whole instead, since
  * such a key says nothing alone; the primary label then shortens with an
@@ -319,7 +344,26 @@ export function layoutKeyHintsCli(
     ) break;
     right = next;
   }
-  while (!fits() && left.length > 1) left = left.slice(0, -1);
+  const ellipsisWidth = measureText(ellipsis);
+  /** The left cluster with the primary label cut to fit, if it keeps `floor` cells. */
+  const shortened = (floor: number): Shown[] | undefined => {
+    const primary = left[0];
+    if (primary === undefined || primary.label === "") return undefined;
+    const room = width - (lineWidth(left, right, gap) - hintWidth(primary)) -
+      measureText(primary.key) - 1;
+    if (room < Math.max(floor, 1 + ellipsisWidth)) return undefined;
+    return [
+      { ...primary, label: truncateText(primary.label, room, ellipsis) },
+      ...left.slice(1),
+    ];
+  };
+  while (!fits() && left.length > 1) {
+    // A ranked hint holds its place over the primary's whole label.
+    const ranked = left.slice(1).every((hint) => (hint.hint.rank ?? 0) > 0);
+    const cut = ranked ? shortened(PRIMARY_LABEL_FLOOR) : undefined;
+    if (cut !== undefined) left = cut;
+    else left = withoutWeakest(left);
+  }
   // A key of one printable ASCII character, such as "." or "q", says
   // nothing on its own, so such a hint drops whole rather than its label.
   const bare = (hint: Shown): boolean => /^[!-~]$/u.test(hint.key);
@@ -339,11 +383,7 @@ export function layoutKeyHintsCli(
   if (compact) { while (!fits() && dropRightLabel()); }
   const primary = left[0];
   if (!fits() && primary !== undefined && primary.label !== "") {
-    const room = width - (lineWidth(left, right, gap) - hintWidth(primary)) -
-      measureText(primary.key) - 1;
-    left = room >= 1 + measureText(ellipsis)
-      ? [{ ...primary, label: truncateText(primary.label, room, ellipsis) }]
-      : [{ ...primary, withLabel: false }];
+    left = shortened(0) ?? [{ ...primary, withLabel: false }];
   }
   while (!fits() && dropRightLabel());
   while (!fits() && right.length > 0) right = right.slice(0, -1);

@@ -184,6 +184,45 @@ Deno.test("a cluster without a primary draws every key in ink", () => {
   );
 });
 
+Deno.test("ranked left hints outlast lower ranks, whatever their order", () => {
+  const hints: KeyHints = {
+    left: [
+      { key: "enter", label: "Land" },
+      { key: ["left", "right"], label: "Choose" },
+      { key: "c", label: "Command" },
+      { key: "u", label: "Update", rank: 1 },
+      { key: "escape", label: "Close", rank: 2 },
+    ],
+  };
+  const shown = (width: number) =>
+    layoutKeyHintsCli(hints, width, capabilities(width)).placed.map((
+      placed,
+    ) => placed.hint.label);
+  assertEquals(shown(80), ["Land", "Choose", "Command", "Update", "Close"]);
+  assertEquals(shown(40), ["Land", "Choose", "Update", "Close"]);
+  assertEquals(shown(28), ["Land", "Update", "Close"]);
+  assertEquals(shown(20), ["Land", "Close"]);
+  assertEquals(shown(15), ["Land"]);
+  // At every width, no shown hint outranks a dropped one, and the order
+  // on the line is the order given.
+  for (let width = 0; width <= 80; width += 1) {
+    const kept = layoutKeyHintsCli(hints, width, capabilities(width)).placed
+      .map((placed) => placed.hint);
+    const dropped = hints.left.filter((hint) => !kept.includes(hint));
+    for (const hint of kept.slice(1)) {
+      assert(
+        dropped.every((other) => (other.rank ?? 0) <= (hint.rank ?? 0)),
+        `${width}: kept ${hint.label} over a higher rank`,
+      );
+    }
+    assertEquals(
+      kept,
+      hints.left.filter((hint) => kept.includes(hint)),
+      `${width}: order`,
+    );
+  }
+});
+
 Deno.test("one-cell alternatives stay readable as one hint", () => {
   const unicode = { unicode: true };
   const ascii = { unicode: false };

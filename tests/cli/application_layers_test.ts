@@ -1353,6 +1353,65 @@ Deno.test("a layer footer's accent belongs to Enter, and Escape leads when Enter
   }
 });
 
+Deno.test("a layer's footer keeps Escape and the keys of buttons on screen over generic hints", async (t) => {
+  const layers: readonly (() => ApplicationLayer<string>)[] = [
+    ...PANELS,
+    () => demoActionsMenu(IMAGE),
+    () => demoPalette(DEMO_JOBS, false),
+    () => demoKeysReader(),
+    () => demoLogReader(IMAGE),
+  ];
+  for (const make of layers) {
+    const layer = make();
+    for (const { columns, rows } of APPLICATION_REVIEW_SIZES) {
+      await t.step(`${layer.id} at ${columns}x${rows}`, () => {
+        const driver = new ApplicationDriver(withLayers(layer), {
+          columns,
+          rows,
+        });
+        for (let step = 0; step <= controls(layer); step += 1) {
+          if (step > 0) driver.key("tab");
+          if (driver.state.topLayerId !== layer.id) break;
+          const focus = driver.state.layers[layer.id]?.focusedControlId ?? "";
+          const buttonKeys = new Set(
+            (layer.kind === "sheet" || layer.kind === "form") &&
+              !isTextControl(layer, focus)
+              ? layer.buttons.flatMap((button) =>
+                button.role === "alternative" && button.key !== undefined
+                  ? [button.key]
+                  : []
+              )
+              : [],
+          );
+          const footer = driver.hits.flatMap((hit) =>
+            hit.row === rows - 1 && hit.target.kind === "hint"
+              ? [hit.target.chord]
+              : []
+          );
+          const rank = (chord: string) =>
+            chord === "escape" ? 2 : buttonKeys.has(chord) ? 1 : 0;
+          const shown = new Set(footer.slice(1));
+          const missing = [...buttonKeys, "escape"].filter((chord) =>
+            footer[0] !== chord && !shown.has(chord)
+          );
+          assert(
+            !missing.includes("escape"),
+            `after ${step} Tab: the footer lost Escape\n${driver.text}`,
+          );
+          for (const chord of shown) {
+            for (const lost of missing) {
+              assert(
+                rank(chord) >= rank(lost),
+                `after ${step} Tab: "${chord}" outlasted "${lost}"\n${driver.text}`,
+              );
+            }
+          }
+        }
+      });
+    }
+  }
+});
+
 Deno.test("a panel never holds blank rows while it hides body rows", async (t) => {
   const layers: readonly (() => ApplicationLayer<string>)[] = [
     () => demoRunSheet(IMAGE),

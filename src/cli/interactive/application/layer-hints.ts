@@ -2,7 +2,9 @@
  * The key hints a layer shows in place of the view's footer: one cluster
  * that names what Enter does now first, then the layer's own keys, and the
  * safe choice last — or first, without the accent, when Enter does nothing.
- * While a text field has focus, field chords replace the letter keys.
+ * While a text field has focus, field chords replace the letter keys. As
+ * the footer narrows, generic hints drop before the keys of buttons on
+ * screen, and those before Escape's.
  *
  * @module
  */
@@ -31,6 +33,14 @@ import type {
   ApplicationReader,
   ApplicationSheet,
 } from "./layer-view.ts";
+
+/**
+ * How long a layer's hints hold their place as the footer narrows: the way
+ * out outlasts the keys of buttons on screen, which outlast generic hints
+ * such as `←→ Choose`, disclosure keys, or `PgDn Read more`.
+ */
+const ESCAPE_RANK = 2;
+const BUTTON_KEY_RANK = 1;
 
 /** What a layer's frame adds to its hints. */
 export interface LayerHintFacts {
@@ -106,7 +116,11 @@ function panelHints<A>(
       ? []
       : layer.buttons.flatMap((button) =>
         button.role === "alternative" && button.key !== undefined
-          ? [{ key: button.key, label: button.label }]
+          ? [{
+            key: button.key,
+            label: button.label,
+            ...(shown ? { rank: BUTTON_KEY_RANK } : {}),
+          }]
           : []
       )),
     ...(layer.hints ?? []),
@@ -121,7 +135,9 @@ function escapeHint<A>(
   fallback: string | undefined,
 ): readonly KeyHint[] {
   const label = layer.escapeLabel ?? fallback;
-  return label === undefined ? [] : [{ key: "escape", label }];
+  return label === undefined
+    ? []
+    : [{ key: "escape", label, rank: ESCAPE_RANK }];
 }
 
 function menuHints<A>(
@@ -142,7 +158,7 @@ function menuHints<A>(
       left: [
         ...enterHint(enter),
         { key: ["up", "down"], label: copy.move },
-        { key: "escape", label: copy.clear },
+        { key: "escape", label: copy.clear, rank: ESCAPE_RANK },
       ],
     };
   }
@@ -157,7 +173,7 @@ function menuHints<A>(
       ...(layer.hints ?? []),
       ...(model.query === ""
         ? escapeHint(layer, copy.close)
-        : [{ key: "escape", label: copy.clear }]),
+        : [{ key: "escape", label: copy.clear, rank: ESCAPE_RANK }]),
     ],
   };
 }
@@ -178,7 +194,7 @@ function paletteHints<A>(
       ...(layer.hints ?? []),
       ...(model.query === ""
         ? escapeHint(layer, copy.close)
-        : [{ key: "escape", label: copy.clear }]),
+        : [{ key: "escape", label: copy.clear, rank: ESCAPE_RANK }]),
     ],
   };
 }
