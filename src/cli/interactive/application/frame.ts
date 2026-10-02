@@ -44,7 +44,6 @@ import type { TerminalApplicationStateReport } from "../state-report.ts";
 import {
   type DetailViewport,
   layoutDetailBlocks,
-  renderDetailBlocks,
   renderStrip,
   scrollDetail,
   scrollToShow,
@@ -1000,7 +999,7 @@ function masterDetail<A>(
     // Zoom gives the detail the whole width, so it lays out as roomily as
     // the wide tier, but shows hints only at that tier, as the split does:
     // zooming in shows the same blocks larger, never more of them.
-    const lines = renderDetailBlocks(context, blocks, {
+    const { lines, keeps } = layoutDetailBlocks(context, blocks, {
       width,
       wide: true,
       hints: tier === "wide",
@@ -1013,6 +1012,7 @@ function masterDetail<A>(
       model.detailScroll[itemId] ?? 0,
       width,
       false,
+      { keeps },
     );
     const inset = " ".repeat(left);
     const top = [
@@ -1115,7 +1115,7 @@ function masterDetail<A>(
   const detailWidth = columns - listWidth;
   const [left, right] = split.detailPadding[tier];
   const contentWidth = Math.max(1, detailWidth - left - right);
-  const { lines, starts } = layoutDetailBlocks(context, blocks, {
+  const { lines, starts, keeps } = layoutDetailBlocks(context, blocks, {
     width: contentWidth,
     wide: tier === "wide",
     surface: "surface",
@@ -1127,6 +1127,7 @@ function masterDetail<A>(
     itemId === undefined ? 0 : model.detailScroll[itemId] ?? 0,
     contentWidth,
     !short,
+    { keeps },
   );
   const detailLines = beneathCover(viewport, starts, cover);
   // Without fills nothing tints the detail, so a faint rule parts it from
@@ -1311,6 +1312,8 @@ function reading<A>(
       focused.endRow,
     );
   }
+  // Markers end at the document's right edge, and a heading never ends
+  // the page while its first lines are hidden.
   const viewport = scrollDetail(
     context,
     lines,
@@ -1318,6 +1321,9 @@ function reading<A>(
     requested,
     width,
     false,
+    projection === undefined
+      ? {}
+      : { keeps: projection.keeps, end: projection.end },
   );
   const hits: ApplicationHit[] = [
     ...areaHits(region.height, 0, 0, size.columns, { kind: "reading" }),

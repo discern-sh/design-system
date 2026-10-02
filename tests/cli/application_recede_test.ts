@@ -69,6 +69,10 @@ const EVERY_KIND: {
     count: 2,
     blocks: [{ kind: "text", runs: [{ text: "Inner", role: "key" }] }],
   },
+  markdown: {
+    kind: "markdown",
+    source: "# Title\n\nSome **strong** text with `code`.\n\n## Part\n\nMore.",
+  },
 };
 
 const BLOCKS: readonly ApplicationDetailBlock[] = Object.values(EVERY_KIND);

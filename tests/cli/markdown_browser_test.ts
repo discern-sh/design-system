@@ -424,6 +424,8 @@ Deno.test("the reader carries Accent and degrades to plain ASCII", () => {
       appearance,
     },
   );
+  // The reading's headings are quiet, so the accent marks the footer's
+  // primary key, the one thing on screen it should.
   preview.key("enter");
   const palette = resolveTerminalTheme({ theme: "light", appearance });
   const probe = styleText(
@@ -431,7 +433,8 @@ Deno.test("the reader carries Accent and degrades to plain ASCII", () => {
     { color: terminalToneColor(palette, "accent") },
     testTerminalCapabilities({ colorDepth: "truecolor" }),
   );
-  assertStringIncludes(preview.frame, probe.slice(0, probe.indexOf("x")));
+  const accent = probe.slice(probe.indexOf("38;"), probe.indexOf("m"));
+  assertStringIncludes(preview.frame, accent);
 
   const plain = browse(markdownBrowserOptions, {
     colorDepth: "none",

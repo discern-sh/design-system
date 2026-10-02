@@ -320,7 +320,8 @@ export type ApplicationDetailBlock =
   | ApplicationRowsBlock
   | ApplicationComponentBlock
   | ApplicationPendingBlock
-  | ApplicationSectionBlock;
+  | ApplicationSectionBlock
+  | ApplicationMarkdown;
 
 /**
  * One consequence line: a one-cell mark, its text, and indented lines that

@@ -41,8 +41,13 @@ import type { HeadingLevel } from "./heading.types.ts";
 /** Width behavior for terminal Heading content. */
 export type HeadingCliOverflowPolicy = "truncate" | "wrap";
 
-/** Visual treatments available to terminal Heading callers. */
-export type HeadingCliTreatment = "default" | "document";
+/**
+ * Visual treatments available to terminal Heading callers. `reading` is the
+ * document hierarchy for an interactive screen, where the accent marks
+ * selection and focus and state marks carry meaning: no motif marker before
+ * the first level, a faint rule beneath it, and no rule beneath the second.
+ */
+export type HeadingCliTreatment = "default" | "document" | "reading";
 
 interface HeadingCliOptions extends CliPresentationOptions {
   readonly accent?: string;
@@ -58,8 +63,8 @@ interface HeadingCliOptions extends CliPresentationOptions {
   readonly leadingBlankLines?: number;
   /**
    * Keep source-like level markers or opt into styled document hierarchy.
-   * Document treatment degrades to the default markers without colour or
-   * Unicode. Defaults to `default`.
+   * Document and reading treatments degrade to the default markers without
+   * colour or Unicode. Defaults to `default`.
    */
   readonly treatment?: HeadingCliTreatment;
 }
@@ -135,6 +140,8 @@ interface DocumentHeadingOptions {
   readonly overflow: HeadingCliOverflowPolicy;
   readonly width: number;
   readonly theme: TerminalTheme;
+  /** The reading treatment: no first-level marker and quiet rules. */
+  readonly reading: boolean;
 }
 
 function renderDocumentHeading(
@@ -142,8 +149,8 @@ function renderDocumentHeading(
   options: DocumentHeadingOptions,
   capabilities: TerminalCapabilities,
 ): string {
-  const { accent, content, level, overflow, theme, width } = options;
-  const prefix = level === 1
+  const { accent, content, level, overflow, reading, theme, width } = options;
+  const prefix = level === 1 && !reading
     ? `${
       terminalMotifRegisterRoles(
         terminalMotifRepertoire(props.motif, capabilities.unicode),
@@ -219,12 +226,12 @@ function renderDocumentHeading(
   if (level === 1) {
     const rule = styleText(
       "━".repeat(width),
-      { color: terminalToneColor(theme, "accent") },
+      reading ? quietRuleStyle : { color: terminalToneColor(theme, "accent") },
       capabilities,
     );
     return `${heading}\n${rule}`;
   }
-  if (level === 2) {
+  if (level === 2 && !reading) {
     const rule = styleText(
       "─".repeat(width),
       { color: terminalToneColor(theme, "accent") },
@@ -256,7 +263,10 @@ const renderHeadingCli: CliRenderer<HeadingCliProps> = (
     throw new TypeError(`unknown heading overflow policy: ${overflow}`);
   }
   const treatment = props.treatment ?? "default";
-  if (treatment !== "default" && treatment !== "document") {
+  if (
+    treatment !== "default" && treatment !== "document" &&
+    treatment !== "reading"
+  ) {
     throw new TypeError(`unknown heading treatment: ${treatment}`);
   }
   const requestedWidth = props.maxWidth ?? capabilities.columns;
@@ -284,14 +294,22 @@ const renderHeadingCli: CliRenderer<HeadingCliProps> = (
   };
 
   if (
-    treatment === "document" && capabilities.colorDepth !== "none" &&
+    treatment !== "default" && capabilities.colorDepth !== "none" &&
     capabilities.unicode
   ) {
     const content = hasText ? props.text : props.content;
     return withCliHeadingBoundary(
       renderDocumentHeading(
         props,
-        { content, accent, level, overflow, width, theme },
+        {
+          content,
+          accent,
+          level,
+          overflow,
+          width,
+          theme,
+          reading: treatment === "reading",
+        },
         capabilities,
       ),
       props.leadingBlankLines,

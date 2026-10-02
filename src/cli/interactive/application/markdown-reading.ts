@@ -54,6 +54,13 @@ export interface ReadingProjection {
   readonly links: readonly ReadingLink[];
   /** Heading ids and their rows, for fragments. */
   readonly headings: ReadonlyMap<string, number>;
+  /**
+   * Every row a heading draws, its rule included, so a viewport never ends
+   * on a heading while the lines beneath it are hidden.
+   */
+  readonly keeps: ReadonlySet<number>;
+  /** The cell after the document's measure, where its right edge falls. */
+  readonly end: number;
 }
 
 /** Whether reading content is Markdown rather than a Component block. */
@@ -150,6 +157,7 @@ export function projectMarkdownReading(
       source: markdown.source,
       ...cliPresentationPassthrough(presentation),
       maxWidth: measure,
+      headings: "reading",
       ...(markdown.diagrams === undefined
         ? {}
         : { diagrams: markdown.diagrams }),
@@ -214,15 +222,21 @@ export function projectMarkdownReading(
     };
   });
   const headings = new Map<string, number>();
+  const keeps = new Set<number>();
   for (const heading of projected.headings) {
     const row = cells.find((candidate) =>
       candidate.spans.some((span) => span.link === heading.projectionTarget)
     );
-    if (row !== undefined && !headings.has(heading.id)) {
-      headings.set(heading.id, row.row - 1);
-    }
+    if (row === undefined) continue;
+    if (!headings.has(heading.id)) headings.set(heading.id, row.row - 1);
+    // A heading draws its title and rule up to the blank line after it.
+    for (
+      let index = row.row - 1;
+      index < lines.length && stripAnsi(lines[index] ?? "").trim() !== "";
+      index += 1
+    ) keeps.add(index);
   }
-  return { lines, links, headings };
+  return { lines, links, headings, keeps, end: indent + measure };
 }
 
 /** The heading id a fragment such as `#details` names, decoded. */

@@ -7,6 +7,7 @@
  */
 
 import { measureText } from "../../text.ts";
+import { applicationMarkdownIssues } from "./markdown-reading.ts";
 import { TERMINAL_TEXT_TONES } from "../../theme.ts";
 import type { KeyHints } from "../../key-hints.ts";
 import type {
@@ -408,6 +409,11 @@ export function blocks(
         if (depth > 0) {
           issues.push({ path: at, message: "sections do not nest" });
         } else blocks(issues, `${at}.blocks`, block.blocks, depth + 1);
+        break;
+      case "markdown":
+        for (const issue of applicationMarkdownIssues(block)) {
+          issues.push({ path: `${at}.${issue.path}`, message: issue.message });
+        }
         break;
       default:
         issues.push({ path: at, message: "is not a detail block" });

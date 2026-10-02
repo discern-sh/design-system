@@ -17,6 +17,7 @@ import {
 } from "../../src/cli/interactive/testing.ts";
 import { ApplicationDriver } from "../fixtures/application-driver.ts";
 import { settle } from "../fixtures/application-session.ts";
+import { testView } from "../fixtures/application-views.ts";
 
 const filler = (from: number, count: number) =>
   Array.from(
@@ -294,5 +295,118 @@ Deno.test("keys read together meet the model their predecessors left, as keys re
       apart.links.length > 0 || apart.scroll > 0,
       `${sequence.join(" ")} reaches a link`,
     );
+  }
+});
+
+/** A document of short sections, each heading over two paragraphs. */
+const SECTIONS = [
+  "# Handbook",
+  "",
+  ...Array.from({ length: 12 }, (_, index) => [
+    `## Section ${index}`,
+    "",
+    `Body ${index} first paragraph.`,
+    "",
+    `Body ${index} second paragraph.`,
+    "",
+  ]).flat(),
+].join("\n");
+
+/** The last row above the lower marker that holds text, or undefined. */
+function lastAboveMarker(lines: readonly string[]): string | undefined {
+  const marker = lines.findIndex((line) => /↓ \d+ more/u.test(line));
+  if (marker < 0) return undefined;
+  return lines.slice(0, marker).filter((line) => line.trim() !== "").at(-1);
+}
+
+Deno.test("a reading page never ends on a heading while its body is hidden", async (t) => {
+  for (const rows of [10, 13, 17, 20, 24, 30]) {
+    for (const colorDepth of ["none", "truecolor"] as const) {
+      await t.step(`80x${rows} ${colorDepth}`, () => {
+        const reading = new ApplicationDriver(readingView(markdown(SECTIONS)), {
+          keymap: [{ key: "q", action: "quit" }],
+          columns: 80,
+          rows,
+          colorDepth,
+        });
+        for (let step = 0; step < 80; step += 1) {
+          const last = lastAboveMarker(reading.text.split("\n").slice(1, -1));
+          if (last === undefined) break;
+          assert(
+            !/Section \d+|Handbook|━━━/u.test(last),
+            `step ${step}: the page ends on a heading\n${reading.text}`,
+          );
+          reading.key("down");
+        }
+      });
+    }
+  }
+});
+
+Deno.test("a reading heads its document quietly and marks its edges at the measure", () => {
+  const reading = new ApplicationDriver(readingView(markdown(SECTIONS, 40)), {
+    keymap: [{ key: "q", action: "quit" }],
+    columns: 80,
+    rows: 20,
+    colorDepth: "truecolor",
+  });
+  const lines = reading.text.split("\n");
+  // No first-level marker, and the second level draws no rule.
+  assert(!/[▲△◆◇]/u.test(reading.text), reading.text);
+  const section = lines.findIndex((line) => line.includes("Section 0"));
+  assert(section > 0, reading.text);
+  assert(!(lines[section + 1] ?? "").includes("─"), reading.text);
+  // The document sits centred at its measure; the lower marker ends where
+  // the document does, not at the window's edge.
+  const marker = lines.find((line) => /↓ \d+ more/u.test(line)) ?? "";
+  const heading = lines.find((line) => line.includes("━")) ?? "";
+  assertEquals(
+    marker.trimEnd().length,
+    heading.trimEnd().length,
+    `${JSON.stringify(marker)} and ${JSON.stringify(heading)}`,
+  );
+});
+
+Deno.test("Markdown in a detail reads like a reading body and keeps its headings with their lines", async (t) => {
+  const base = testView(["a"]);
+  if (base.body.kind !== "master-detail") throw new Error("master-detail");
+  const view: TerminalApplicationView<string> = {
+    ...base,
+    body: {
+      ...base.body,
+      detail: { follows: "items", content: { a: [markdown(SECTIONS)] } },
+    },
+  };
+  for (
+    const { columns, rows } of [
+      { columns: 120, rows: 30 },
+      { columns: 80, rows: 24 },
+      { columns: 80, rows: 13 },
+    ]
+  ) {
+    for (const colorDepth of ["none", "truecolor"] as const) {
+      await t.step(`${columns}x${rows} ${colorDepth}`, () => {
+        const detail = new ApplicationDriver(view, {
+          columns,
+          rows,
+          colorDepth,
+        });
+        if (colorDepth === "truecolor") {
+          assert(!/[▲△]/u.test(detail.text), detail.text);
+        }
+        for (let step = 0; step < 80; step += 1) {
+          const lines = detail.text.split("\n").slice(1, -1).map((line) =>
+            line.slice(Math.floor(columns / 3))
+          );
+          const last = lastAboveMarker(lines);
+          if (last === undefined) break;
+          assert(
+            !/Section \d+|Handbook|━━━/u.test(last),
+            `step ${step}: the detail ends on a heading\n${detail.text}`,
+          );
+          detail.key("shift-down");
+        }
+      });
+    }
   }
 });

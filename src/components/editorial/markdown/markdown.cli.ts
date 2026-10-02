@@ -81,6 +81,13 @@ export interface MarkdownCliProps extends CliPresentationOptions {
   readonly charts?: readonly MarkdownChartResource[];
   /** Chart projection preference; defaults to automatic exact-frame fallback. */
   readonly chartMode?: ChartCliMode;
+  /**
+   * How headings read: `document`, the default, marks the first level with
+   * the motif and rules the first two in the accent; `reading` drops the
+   * marker and draws quiet rules, for an interactive screen where the
+   * accent marks selection and focus.
+   */
+  readonly headings?: "document" | "reading";
 }
 
 /** One semantic Markdown link identified before terminal wrapping. */
@@ -190,6 +197,7 @@ interface MarkdownCliTracking {
 
 interface MarkdownCliContext {
   readonly presentation: MarkdownCliPresentation;
+  readonly headings: "document" | "reading";
   readonly diagramMode: DiagramCliMode;
   readonly chartMode: ChartCliMode;
   readonly tracking?: MarkdownCliTracking;
@@ -314,7 +322,7 @@ function blockToCli(
         content: cliInline(block.content, context),
         level: block.level,
         overflow: "wrap",
-        treatment: "document",
+        treatment: context.headings,
         leadingBlankLines: 0,
       } as const;
       const tracking = context.tracking;
@@ -451,6 +459,7 @@ function renderMarkdownDocument(
     presentation,
     diagramMode: props.diagramMode ?? "auto",
     chartMode: props.chartMode ?? "auto",
+    headings: props.headings ?? "document",
     ...(tracking === undefined ? {} : { tracking }),
   };
   return renderCliBlocks(

@@ -102,6 +102,46 @@ Deno.test("Heading retains every semantic level in its exact CLI prefix", () => 
   }
 });
 
+Deno.test("Heading reading treatment drops the first-level marker and quiets the rules", () => {
+  const capabilities = testTerminalCapabilities({
+    colorDepth: "truecolor",
+    columns: 32,
+    unicode: true,
+  });
+  const render = (level: 1 | 2 | 3, treatment: "document" | "reading") =>
+    renderHeadingCli({
+      text: `Level ${level}`,
+      level,
+      treatment,
+      overflow: "wrap",
+      leadingBlankLines: 0,
+    }, capabilities);
+  assertEquals(stripAnsi(render(1, "reading")), `Level 1\n${"━".repeat(32)}`);
+  assertEquals(stripAnsi(render(2, "reading")), "Level 2");
+  assertEquals(
+    stripAnsi(render(3, "reading")),
+    stripAnsi(render(3, "document")),
+  );
+  // No rule takes the accent the document treatment gives it.
+  const accent = projectTerminalSpans(render(1, "document")).find((span) =>
+    span.text.startsWith("━")
+  )?.style?.color;
+  const quiet = projectTerminalSpans(render(1, "reading")).find((span) =>
+    span.text.startsWith("━")
+  )?.style?.color;
+  assert(accent !== undefined && quiet !== undefined);
+  assert(JSON.stringify(accent) !== JSON.stringify(quiet));
+  // Without colour it degrades to the level markers, as document does.
+  const plain = testTerminalCapabilities({ colorDepth: "none", columns: 32 });
+  assertEquals(
+    renderHeadingCli(
+      { text: "Level 1", level: 1, treatment: "reading" },
+      plain,
+    ),
+    renderHeadingCli({ text: "Level 1", level: 1 }, plain),
+  );
+});
+
 Deno.test("Heading document treatment styles H1 through H6 and degrades to level markers", () => {
   const styledVisible = {
     1: `▲ Level 1\n${"━".repeat(32)}`,

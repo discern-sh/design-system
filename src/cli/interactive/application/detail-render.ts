@@ -31,9 +31,11 @@ import {
   styleRuns,
 } from "./paint.ts";
 import { fitCell } from "./list-render.ts";
+import { projectMarkdownReading } from "./markdown-reading.ts";
 import type {
   ApplicationDetailBlock,
   ApplicationDetailStrip,
+  ApplicationMarkdown,
   ApplicationRun,
 } from "./view.ts";
 
@@ -170,7 +172,7 @@ function facts(
   context: PaintContext,
   block: Extract<ApplicationDetailBlock, { kind: "facts" }>,
   layout: DetailLayout,
-): readonly (readonly string[])[] {
+): readonly DetailUnit[] {
   const longest = Math.max(
     0,
     ...block.rows.map((row) => measureText(row.label)),
@@ -214,7 +216,7 @@ function facts(
       }
     }
   }
-  return units;
+  return units.map((lines) => ({ lines }));
 }
 
 function meter(
@@ -259,28 +261,39 @@ const MARK_LINE_INDENT = 2;
 /** Cells a compact mark's text starts after: the mark and one space. */
 const COMPACT_MARK_INDENT = 2;
 
+/**
+ * Lines a viewport keeps together where it can. A `keep` unit — a title —
+ * also never ends a viewport while the lines beneath it are hidden.
+ */
+interface DetailUnit {
+  readonly lines: readonly string[];
+  readonly keep?: boolean;
+}
+
 /** Each mark with its wrapped text and lines, one unit per item. */
 function marks(
   context: PaintContext,
   block: Extract<ApplicationDetailBlock, { kind: "marks" }>,
   layout: DetailLayout,
-): readonly (readonly string[])[] {
+): readonly DetailUnit[] {
   const compact = block.compact === true;
   const indent = compact ? COMPACT_MARK_INDENT : MARK_INDENT;
   const hanging = compact ? indent : indent + MARK_LINE_INDENT;
   const gap = " ".repeat(indent - 1);
   return block.items.map((item) => {
     const mark = styleGlyph(context, item.mark, layout.surface, "muted");
-    return [
-      ...wrapRuns(context, item.runs, layout.width, layout, "ink", indent)
-        .map((line, index) =>
-          index === 0 ? `${mark}${gap}${line.trimStart()}` : line
+    return {
+      lines: [
+        ...wrapRuns(context, item.runs, layout.width, layout, "ink", indent)
+          .map((line, index) =>
+            index === 0 ? `${mark}${gap}${line.trimStart()}` : line
+          ),
+        ...(item.lines ?? []).flatMap((runs) =>
+          wrapRuns(context, runs, layout.width - hanging, layout, "muted", 0)
+            .map((line) => `${" ".repeat(hanging)}${line}`)
         ),
-      ...(item.lines ?? []).flatMap((runs) =>
-        wrapRuns(context, runs, layout.width - hanging, layout, "muted", 0)
-          .map((line) => `${" ".repeat(hanging)}${line}`)
-      ),
-    ];
+      ],
+    };
   });
 }
 
@@ -432,7 +445,7 @@ function section(
   context: PaintContext,
   block: Extract<ApplicationDetailBlock, { kind: "section" }>,
   layout: DetailLayout,
-): readonly (readonly string[])[] {
+): readonly DetailUnit[] {
   const content = layoutDetailBlocks(context, block.blocks, layout);
   if (content.lines.length === 0) return [];
   const title = [
@@ -441,40 +454,93 @@ function section(
     ...(block.caption === undefined ? [] : [block.caption]),
   ].join("  ");
   return [
-    [
-      ink(
-        context,
-        clip(context, title, layout.width),
-        { tone: "faint" },
-        layout.surface,
-      ),
-    ],
+    {
+      lines: [
+        ink(
+          context,
+          clip(context, title, layout.width),
+          { tone: "faint" },
+          layout.surface,
+        ),
+      ],
+      keep: true,
+    },
     ...unitsOf(content),
   ];
 }
 
-/** Lines grouped back into the units their continuations name. */
-function unitsOf(content: DetailBlockLines): readonly (readonly string[])[] {
-  const units: string[][] = [];
+/** Lines grouped back into the units their continuations and keeps name. */
+function unitsOf(content: DetailBlockLines): readonly DetailUnit[] {
+  const units: { lines: string[]; keep: boolean }[] = [];
   for (const [index, line] of content.lines.entries()) {
     const current = units.at(-1);
+    const keep = content.keeps.has(index);
     if (current !== undefined && content.continued.has(index)) {
-      current.push(line);
-    } else units.push([line]);
+      current.lines.push(line);
+    } else units.push({ lines: [line], keep });
   }
-  return units;
+  return units.map((unit) => unit.keep ? unit : { lines: unit.lines });
+}
+
+const markdownCache = new WeakMap<
+  object,
+  { readonly key: string; readonly units: readonly DetailUnit[] }
+>();
+
+/**
+ * Markdown read as a reading body reads it, at the detail's width: its
+ * headings in the reading treatment, each heading one unit that keeps with
+ * the line beneath it, and every other line its own unit.
+ */
+function markdown(
+  context: PaintContext,
+  block: ApplicationMarkdown,
+  layout: DetailLayout,
+): readonly DetailUnit[] {
+  const capabilities = { ...context.capabilities, columns: layout.width };
+  const receded = context.recede === true;
+  const key = JSON.stringify([
+    capabilities,
+    cliPresentationPassthrough(context.presentation),
+    receded,
+    layout.surface ?? "",
+  ]);
+  const cached = markdownCache.get(block);
+  if (cached?.key === key) return cached.units;
+  const projection = projectMarkdownReading(
+    block,
+    layout.width,
+    capabilities,
+    context.presentation,
+  );
+  const units: { lines: string[]; keep: boolean }[] = [];
+  for (const [index, rendered] of projection.lines.entries()) {
+    const line = receded
+      ? ink(context, stripAnsi(rendered), { tone: "faint" }, layout.surface)
+      : rendered;
+    const keep = projection.keeps.has(index);
+    const current = units.at(-1);
+    if (keep && current?.keep === true && projection.keeps.has(index - 1)) {
+      current.lines.push(line);
+    } else units.push({ lines: [line], keep });
+  }
+  const result = units.map((unit) => unit.keep ? unit : { lines: unit.lines });
+  markdownCache.set(block, { key, units: result });
+  return result;
 }
 
 /**
  * A block's lines grouped into units a viewport keeps whole where it can:
  * a mark with its wrapped text and lines, a fact with its values, a state
- * or heading with its own wrapped lines; any other line stands alone.
+ * or heading with its own wrapped lines, a Markdown heading with its rule;
+ * any other line stands alone. Headings and section titles keep with the
+ * line beneath them.
  */
 function renderBlockUnits(
   context: PaintContext,
   block: ApplicationDetailBlock,
   layout: DetailLayout,
-): readonly (readonly string[])[] {
+): readonly DetailUnit[] {
   switch (block.kind) {
     case "marks":
       return marks(context, block, layout);
@@ -482,15 +548,20 @@ function renderBlockUnits(
       return facts(context, block, layout);
     case "section":
       return section(context, block, layout);
+    case "markdown":
+      return markdown(context, block, layout);
     case "heading":
     case "state":
     case "meter":
     case "pending": {
       const lines = renderBlock(context, block, layout);
-      return lines.length === 0 ? [] : [lines];
+      if (lines.length === 0) return [];
+      return [block.kind === "heading" ? { lines, keep: true } : { lines }];
     }
     default:
-      return renderBlock(context, block, layout).map((line) => [line]);
+      return renderBlock(context, block, layout).map((line) => ({
+        lines: [line],
+      }));
   }
 }
 
@@ -509,7 +580,10 @@ function renderBlock(
     case "facts":
     case "marks":
     case "section":
-      return renderBlockUnits(context, block, layout).flat();
+    case "markdown":
+      return renderBlockUnits(context, block, layout).flatMap((unit) =>
+        unit.lines
+      );
     case "meter":
       return meter(context, block, layout);
     case "rows":
@@ -556,6 +630,11 @@ export interface DetailBlockLines {
    * lines, a fact's further values — so a viewport can end at a whole unit.
    */
   readonly continued: ReadonlySet<number>;
+  /**
+   * Title lines — headings, section titles, a Markdown heading and its
+   * rule — that never end a viewport while the lines beneath are hidden.
+   */
+  readonly keeps: ReadonlySet<number>;
 }
 
 /** Render detail blocks and record where each begins. */
@@ -570,6 +649,7 @@ export function layoutDetailBlocks(
   const lines: string[] = [];
   const starts: number[] = [];
   const continued = new Set<number>();
+  const keeps = new Set<number>();
   let previous: ApplicationDetailBlock["kind"] | undefined;
   for (const block of blocks) {
     const units = renderBlockUnits(context, block, layout);
@@ -579,14 +659,15 @@ export function layoutDetailBlocks(
     if (previous !== undefined && !hugs) lines.push("");
     if (!hugs) starts.push(lines.length);
     for (const unit of units) {
-      for (const [index, line] of unit.entries()) {
+      for (const [index, line] of unit.lines.entries()) {
         if (index > 0) continued.add(lines.length);
+        if (unit.keep === true) keeps.add(lines.length);
         lines.push(line);
       }
     }
     previous = block.kind;
   }
-  return { lines, starts, continued };
+  return { lines, starts, continued, keeps };
 }
 
 /** One scrolled slice of detail lines. */
@@ -674,6 +755,37 @@ function detailWindow(
   };
 }
 
+/** How a detail viewport keeps its titles and where its markers end. */
+export interface DetailScrollOptions {
+  /**
+   * Title lines that never end a viewport while lines below are hidden: a
+   * title there moves below the fold with the line it heads.
+   */
+  readonly keeps?: ReadonlySet<number>;
+  /** The cell after which markers end; defaults to the width. */
+  readonly end?: number;
+}
+
+/**
+ * The rows a window shows once a title at its end — after any blank rows
+ * beneath it — has moved below the fold with the lines it heads.
+ */
+function wholeRows(
+  window: DetailWindow,
+  lines: readonly string[],
+  keeps: ReadonlySet<number> | undefined,
+): number {
+  if (!window.below || keeps === undefined) return window.rows;
+  let last = window.first + window.rows;
+  while (last > window.first + 1 && (lines[last - 1] ?? "").trim() === "") {
+    last -= 1;
+  }
+  if (!keeps.has(last - 1)) return window.rows;
+  let start = last - 1;
+  while (start > window.first && keeps.has(start - 1)) start -= 1;
+  return start > window.first ? start - window.first : window.rows;
+}
+
 /**
  * Show `lines` in `height` rows from `scroll`, clamped so the end is
  * reachable. Hidden content is named by `↑ N more · PgUp` on the first row —
@@ -686,10 +798,17 @@ export function scrollDetail(
   requested: number,
   width: number,
   padded: boolean,
+  options: DetailScrollOptions = {},
 ): DetailViewport {
-  const at = detailWindow(lines.length, height, requested, padded);
+  const window = detailWindow(lines.length, height, requested, padded);
+  const at = { ...window, rows: wholeRows(window, lines, options.keeps) };
   const marker = (text: string) =>
-    spread(context, "", ink(context, text, { tone: "faint" }), width);
+    spread(
+      context,
+      "",
+      ink(context, text, { tone: "faint" }),
+      options.end ?? width,
+    );
   const top: string[] = [];
   if (at.above) {
     top.push(
@@ -704,6 +823,8 @@ export function scrollDetail(
     );
   } else if (at.padded) top.push("");
   const shown = lines.slice(at.first, at.first + at.rows);
+  // Rows a title gave up stand blank above the lower marker.
+  const gap = Array.from({ length: window.rows - at.rows }, () => "");
   const bottom = at.below
     ? [
       marker(
@@ -716,7 +837,7 @@ export function scrollDetail(
       ),
     ]
     : [];
-  const result = [...top, ...shown, ...bottom];
+  const result = [...top, ...shown, ...gap, ...bottom];
   while (result.length < height) result.push("");
   return {
     lines: result.slice(0, height),
