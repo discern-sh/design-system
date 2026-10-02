@@ -1468,11 +1468,11 @@ Deno.test("a panel never holds blank rows while it hides body rows", async (t) =
 });
 
 Deno.test("a menu or palette never ends on empty rows, and keeps its title's gap while it scrolls", async (t) => {
+  // A reader's lower marker follows its last whole unit instead, with the
+  // rows that frees beneath it (application_viewport_end_test.ts).
   const layers: readonly (() => ApplicationLayer<string>)[] = [
     () => demoActionsMenu(IMAGE),
     () => demoPalette(DEMO_JOBS, false),
-    () => demoKeysReader(),
-    () => demoLogReader(IMAGE),
   ];
   for (const make of layers) {
     const layer = make();

@@ -23,6 +23,8 @@ import {
   hintsKeyWidth,
   layoutDetailBlocks,
   renderDetailBlocks,
+  viewportEnd,
+  type ViewportRows,
 } from "./detail-render.ts";
 import type { ApplicationHit, ApplicationHitTarget } from "./hits.ts";
 import {
@@ -130,8 +132,18 @@ interface PanelRow {
   readonly control?: LayerControl;
   /** Further controls sharing the row, such as closed disclosures in one flow. */
   readonly controls?: readonly LayerControl[];
-  /** A section's title, which never ends a viewport that hides rows below it. */
+  /**
+   * A section's title, which never ends a viewport that hides rows below
+   * it: a viewport that would end on it scrolls one row further while the
+   * row it keeps in view allows.
+   */
   readonly heading?: boolean;
+  /**
+   * A title among detail blocks — a heading block, a section's title, a
+   * Markdown heading — which a viewport that hides rows below never ends
+   * on: the title moves below the fold with the lines it heads.
+   */
+  readonly title?: boolean;
   /**
    * The row continues the unit above it, such as a mark's wrapped text, so
    * a viewport that hides rows below ends before the unit rather than
@@ -222,22 +234,35 @@ function wrapRuns(
 
 /**
  * Detail blocks as panel rows at a panel's width, each row that continues
- * a unit above it — a mark's wrapped text, a fact's further values — saying
- * so, so a viewport ends at a whole unit.
+ * a unit above it — a mark's wrapped text, a fact's further values — or
+ * holds a title saying so, so a viewport ends at a whole unit and never on
+ * a title.
  */
 function detailRows(
   context: PaintContext,
   blocks: readonly ApplicationDetailBlock[],
   width: number,
-): readonly PanelRow[] {
-  const { lines, continued } = layoutDetailBlocks(context, blocks, {
+): PanelRow[] {
+  const { lines, continued, keeps } = layoutDetailBlocks(context, blocks, {
     width,
     wide: true,
     surface: RAISED,
   });
-  return lines.map((text, index) =>
-    continued.has(index) ? { text, continues: true } : { text }
-  );
+  return lines.map((text, index) => ({
+    text,
+    ...(continued.has(index) ? { continues: true } : {}),
+    ...(keeps.has(index) ? { title: true } : {}),
+  }));
+}
+
+/** Panel body rows as a viewport ends among them. */
+function panelViewportRows(body: readonly PanelRow[]): ViewportRows {
+  return {
+    blank: (index) => blankRow(body[index]),
+    continues: (index) => body[index]?.continues === true,
+    keeps: (index) =>
+      body[index]?.heading === true || body[index]?.title === true,
+  };
 }
 
 /** A key as its hint shows it, such as `^T` or `d`. */
@@ -818,27 +843,32 @@ function settlePanel(
     // be on screen at any scroll.
     const covers = visible >= (panel.footOverflow ? 2 : 3);
     /**
-     * Where a body of `budget` rows from `first` ends at a whole unit and
-     * not on a blank row, freeing no more rows than the foot's gap and the
-     * title's gap take back; undefined when no such end exists.
+     * Where a body showing `first` up to `end` ends while rows stay hidden
+     * below, keeping the rows this frame must show: after a whole unit,
+     * never on a blank row or a title; undefined when no such end exists.
+     */
+    const settledEnd = (first: number, end: number): number | undefined =>
+      viewportEnd(
+        panelViewportRows(body),
+        first,
+        end,
+        Math.max(
+          first,
+          ...keptRows().filter((index) => index >= first && index < end),
+        ),
+      );
+    /**
+     * Where a body of `budget` rows from `first` ends whole, freeing no
+     * more rows than the foot's gap and the title's gap take back;
+     * undefined when no such end exists.
      */
     const wholeEnd = (first: number, budget: number): number | undefined => {
-      const floor = Math.max(
-        first + 1,
-        ...keptRows().map((index) => index + 1),
-      );
+      const settled = settledEnd(first, Math.min(body.length, first + budget));
       const absorbed = 1 +
         (fitted.gapAfterHead === 0 && panel.head.length > 0 ? 1 : 0);
-      for (
-        let end = Math.min(body.length, first + budget);
-        end >= floor && first + budget - end <= absorbed;
-        end -= 1
-      ) {
-        if (body[end]?.continues !== true && !blankRow(body[end - 1])) {
-          return end;
-        }
-      }
-      return undefined;
+      return settled !== undefined && first + budget - settled <= absorbed
+        ? settled
+        : undefined;
     };
     /** Body rows this frame must keep in view: the revealed and followed controls. */
     const keptRows = () =>
@@ -939,6 +969,12 @@ function settlePanel(
     ) {
       at = { ...at, rows: at.rows + 1 };
       gapBeforeFoot = 0;
+    } else if (overflows && at.down > 0 && panel.counts !== "choices") {
+      // A reader's lower marker follows its last whole unit directly; the
+      // rows that frees fall beneath it. A menu's or palette's stays at the
+      // panel's foot, so no row inside the frame stands empty beneath it.
+      const settled = settledEnd(at.first, at.first + at.rows);
+      if (settled !== undefined) at = { ...at, rows: settled - at.first };
     }
     const below = Math.max(0, body.length - at.first - at.rows);
     const hidden = count(body.slice(at.first + at.rows));
@@ -1031,9 +1067,12 @@ function drawPanel(
   // the body leaves free fall beneath it, before the foot's gap.
   const attached = foot[0]?.attached === true ? foot.splice(0, 1) : [];
   let free = Math.max(0, visible - bodyRows.length);
-  // A row the body leaves free first restores the title's gap.
+  // A row the body leaves free above the row naming what it hides first
+  // restores the title's gap.
+  const ended = attached.length > 0 ||
+    (at.down > 0 && panel.counts !== "choices");
   const titleGap = gapAfterHead > 0 ||
-    (attached.length > 0 && panel.head.length > 0 && free > 0);
+    (ended && panel.head.length > 0 && free > 0);
   if (titleGap && gapAfterHead === 0) free -= 1;
   const content: PanelRow[] = [
     ...panel.head,
@@ -2184,14 +2223,9 @@ function readerPanel<A>(
 ): Panel {
   const aside = styleRuns(context, reader.aside, RAISED, "faint");
   const head = headRows(context, reader.title, aside, width);
-  const body: PanelRow[] =
-    (reader.columns === 2 && width >= READER_TWO_COLUMNS
-      ? twoColumns(context, reader.blocks, width)
-      : renderDetailBlocks(context, reader.blocks, {
-        width,
-        wide: true,
-        surface: RAISED,
-      })).map((text) => ({ text }));
+  const body: PanelRow[] = reader.columns === 2 && width >= READER_TWO_COLUMNS
+    ? twoColumns(context, reader.blocks, width).map((text) => ({ text }))
+    : detailRows(context, reader.blocks, width);
   if (rows !== undefined) {
     if (body.length > 0) body.push(BLANK);
     for (const [index, line] of rows.lines.entries()) {

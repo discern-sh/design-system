@@ -680,6 +680,52 @@ export interface DetailViewport {
   readonly shown: number;
   /** Rows above the first content line: padding or the upper marker. */
   readonly offset: number;
+  /** The scrolls Page Down and Page Up take from here. */
+  readonly pages: DetailPages;
+}
+
+/**
+ * Where paging goes from a viewport: Page Down shows the first hidden line
+ * first, and Page Up shows the furthest page back that still reaches the
+ * first line shown, so paging never skips a line a viewport ended before.
+ */
+export interface DetailPages {
+  readonly down: number;
+  readonly up: number;
+}
+
+/** What a viewport needs to know of the rows it ends among. */
+export interface ViewportRows {
+  /** Whether a row is a blank separator. */
+  readonly blank: (index: number) => boolean;
+  /** Whether a row continues the unit above it, such as a mark's wrapped text. */
+  readonly continues: (index: number) => boolean;
+  /** Whether a row is a title, which never ends a viewport while lines beneath it hide. */
+  readonly keeps: (index: number) => boolean;
+}
+
+/**
+ * Where a viewport showing rows from `first` up to (not including) `end`
+ * ends while rows stay hidden below it: the latest end after the last row
+ * of a whole unit, never on a blank row and never on a title whose lines
+ * are hidden, so the row that names what is hidden sits directly beneath
+ * content. The row `floor` (the first by default) stays on screen; where
+ * no such end keeps it — a unit taller than the viewport — there is none.
+ */
+export function viewportEnd(
+  rows: ViewportRows,
+  first: number,
+  end: number,
+  floor = first,
+): number | undefined {
+  let at = end;
+  for (let before = -1; before !== at;) {
+    before = at;
+    while (at > first && rows.blank(at - 1)) at -= 1;
+    while (at > first && rows.continues(at)) at -= 1;
+    while (at > first && rows.keeps(at - 1)) at -= 1;
+  }
+  return at > floor ? at : undefined;
 }
 
 function hiddenCount(lines: readonly string[]): number {
@@ -756,13 +802,20 @@ function detailWindow(
   };
 }
 
-/** How a detail viewport keeps its titles and where its markers end. */
+/** How a detail viewport ends its rows and where its markers end. */
 export interface DetailScrollOptions {
   /**
    * Title lines that never end a viewport while lines below are hidden: a
    * title there moves below the fold with the line it heads.
    */
   readonly keeps?: ReadonlySet<number>;
+  /**
+   * Lines that continue the unit above them, so a viewport that hides
+   * lines below ends before the unit rather than inside it.
+   */
+  readonly continued?: ReadonlySet<number>;
+  /** A line that stays on screen however the viewport ends, such as a focused link's last. */
+  readonly hold?: number;
   /** The cell after which markers end; defaults to the width. */
   readonly end?: number;
   /**
@@ -773,29 +826,12 @@ export interface DetailScrollOptions {
 }
 
 /**
- * The rows a window shows once a title at its end — after any blank rows
- * beneath it — has moved below the fold with the lines it heads.
- */
-function wholeRows(
-  window: DetailWindow,
-  lines: readonly string[],
-  keeps: ReadonlySet<number> | undefined,
-): number {
-  if (!window.below || keeps === undefined) return window.rows;
-  let last = window.first + window.rows;
-  while (last > window.first + 1 && (lines[last - 1] ?? "").trim() === "") {
-    last -= 1;
-  }
-  if (!keeps.has(last - 1)) return window.rows;
-  let start = last - 1;
-  while (start > window.first && keeps.has(start - 1)) start -= 1;
-  return start > window.first ? start - window.first : window.rows;
-}
-
-/**
  * Show `lines` in `height` rows from `scroll`, clamped so the end is
  * reachable. Hidden content is named by `↑ N more · PgUp` on the first row —
- * the padding row when there is one — and `↓ N more · PgDn` on the last.
+ * the padding row when there is one — and `↓ N more · PgDn` directly
+ * beneath the last line shown. While lines stay hidden below, the viewport
+ * ends after a whole unit and never on a blank row or a title, and the rows
+ * that frees stand blank beneath the lower marker.
  */
 export function scrollDetail(
   context: PaintContext,
@@ -806,14 +842,31 @@ export function scrollDetail(
   padded: boolean,
   options: DetailScrollOptions = {},
 ): DetailViewport {
-  const window = detailWindow(
-    lines.length,
-    height,
-    requested,
-    padded,
-    options.markers ?? true,
-  );
-  const at = { ...window, rows: wholeRows(window, lines, options.keeps) };
+  const markers = options.markers ?? true;
+  const rows: ViewportRows = {
+    blank: (index) => (lines[index] ?? "").trim() === "",
+    continues: (index) => options.continued?.has(index) === true,
+    keeps: (index) => options.keeps?.has(index) === true,
+  };
+  /** The window at a scroll, ended whole while lines stay hidden below. */
+  const settle = (scroll: number) => {
+    const window = detailWindow(lines.length, height, scroll, padded, markers);
+    if (!window.below) return window;
+    const floor = options.hold !== undefined &&
+        options.hold >= window.first &&
+        options.hold < window.first + window.rows
+      ? options.hold
+      : window.first;
+    // A unit taller than the viewport is cut where the viewport ends.
+    const end = viewportEnd(
+      rows,
+      window.first,
+      window.first + window.rows,
+      floor,
+    ) ?? window.first + window.rows;
+    return { ...window, rows: end - window.first };
+  };
+  const at = settle(requested);
   const marker = (text: string) =>
     spread(
       context,
@@ -835,8 +888,6 @@ export function scrollDetail(
     );
   } else if (at.padded) top.push("");
   const shown = lines.slice(at.first, at.first + at.rows);
-  // Rows a title gave up stand blank above the lower marker.
-  const gap = Array.from({ length: window.rows - at.rows }, () => "");
   const bottom = at.below
     ? [
       marker(
@@ -849,7 +900,7 @@ export function scrollDetail(
       ),
     ]
     : [];
-  const result = [...top, ...shown, ...gap, ...bottom];
+  const result = [...top, ...shown, ...bottom];
   while (result.length < height) result.push("");
   return {
     lines: result.slice(0, height),
@@ -857,7 +908,36 @@ export function scrollDetail(
     first: at.first,
     shown: shown.length,
     offset: top.length,
+    pages: detailPages(settle, at),
   };
+}
+
+/**
+ * The scrolls paging takes from a settled window: Page Down to the first
+ * scroll whose first line is the first one hidden, and Page Up to the
+ * furthest scroll back whose viewport still reaches the first line shown.
+ */
+function detailPages(
+  settle: (scroll: number) => DetailWindow,
+  at: DetailWindow,
+): DetailPages {
+  const hidden = at.first + at.rows;
+  let down = at.scroll;
+  if (at.below) {
+    for (;;) {
+      const next = settle(down + 1);
+      if (next.scroll === down) break;
+      down = next.scroll;
+      if (next.first >= hidden) break;
+    }
+  }
+  let up = at.scroll;
+  while (up > 0) {
+    const previous = settle(up - 1);
+    if (previous.first + previous.rows < at.first) break;
+    up = previous.scroll;
+  }
+  return { down, up };
 }
 
 /**

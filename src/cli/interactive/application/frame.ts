@@ -85,6 +85,7 @@ import {
   bodyList,
   type ListModel,
   listModelRows,
+  type ModelPages,
   type ModelState,
   modelState,
   replaceLayer,
@@ -951,6 +952,8 @@ interface BodyResult<A> {
   readonly hits: readonly ApplicationHit[];
   /** No whole detail block fits beneath a layer in the detail column. */
   readonly beneathEmpty?: boolean;
+  /** Where paging takes the detail or reading body shown. */
+  readonly pages?: ModelPages;
 }
 
 function withList<A>(
@@ -1070,7 +1073,7 @@ function masterDetail<A>(
     // Zoom gives the detail the whole width, so it lays out as roomily as
     // the wide tier, but shows hints only at that tier, as the split does:
     // zooming in shows the same blocks larger, never more of them.
-    const { lines, keeps } = layoutDetailBlocks(context, blocks, {
+    const { lines, keeps, continued } = layoutDetailBlocks(context, blocks, {
       width,
       wide: true,
       hints: tier === "wide",
@@ -1083,7 +1086,7 @@ function masterDetail<A>(
       model.detailScroll[itemId] ?? 0,
       width,
       false,
-      { keeps },
+      { keeps, continued },
     );
     const inset = " ".repeat(left);
     const top = [
@@ -1105,6 +1108,7 @@ function masterDetail<A>(
       detailRows: region.height,
       readingRows: 0,
       hits: areaHits(region.height, 0, 0, columns, { kind: "detail" }),
+      pages: { id: itemId, ...viewport.pages },
     };
   }
   if (tier === "strip") {
@@ -1186,11 +1190,11 @@ function masterDetail<A>(
   const detailWidth = columns - listWidth;
   const [left, right] = split.detailPadding[tier];
   const contentWidth = Math.max(1, detailWidth - left - right);
-  const { lines, starts, keeps } = layoutDetailBlocks(context, blocks, {
-    width: contentWidth,
-    wide: tier === "wide",
-    surface: "surface",
-  });
+  const { lines, starts, keeps, continued } = layoutDetailBlocks(
+    context,
+    blocks,
+    { width: contentWidth, wide: tier === "wide", surface: "surface" },
+  );
   const viewport = scrollDetail(
     context,
     lines,
@@ -1198,7 +1202,7 @@ function masterDetail<A>(
     itemId === undefined ? 0 : model.detailScroll[itemId] ?? 0,
     contentWidth,
     !short,
-    { keeps, markers: context.recede !== true },
+    { keeps, continued, markers: context.recede !== true },
   );
   const beneath = beneathCover(lines, viewport, starts, cover, region.height);
   const detailLines = beneath.lines;
@@ -1236,6 +1240,9 @@ function masterDetail<A>(
       ...areaHits(region.height, 0, listWidth, columns, { kind: "detail" }),
     ],
     ...(beneath.empty ? { beneathEmpty: true } : {}),
+    ...(itemId === undefined
+      ? {}
+      : { pages: { id: itemId, ...viewport.pages } }),
   };
 }
 
@@ -1394,9 +1401,11 @@ function reading<A>(
     requested,
     width,
     false,
-    projection === undefined
-      ? {}
-      : { keeps: projection.keeps, end: projection.end },
+    projection === undefined ? {} : {
+      keeps: projection.keeps,
+      end: projection.end,
+      ...(focused === undefined ? {} : { hold: focused.endRow }),
+    },
   );
   const hits: ApplicationHit[] = [
     ...areaHits(region.height, 0, 0, size.columns, { kind: "reading" }),
@@ -1473,6 +1482,7 @@ function reading<A>(
     detailRows: 0,
     readingRows: region.height,
     hits,
+    pages: { id, ...viewport.pages },
   };
 }
 
@@ -1786,6 +1796,7 @@ export function renderModelState<A>(
         listRows: result.listRows,
         detailRows: result.detailRows,
         readingRows: result.readingRows,
+        ...(result.pages === undefined ? {} : { pages: result.pages }),
       },
     };
     bodyLines = result.lines;

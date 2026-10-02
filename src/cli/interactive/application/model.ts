@@ -89,6 +89,19 @@ export interface ModelGeometry {
   /** Rows of a detail column or zoom; 0 while the detail is a strip or absent. */
   readonly detailRows: number;
   readonly readingRows: number;
+  /** Where paging takes the detail or reading body the frame showed. */
+  readonly pages?: ModelPages;
+}
+
+/**
+ * The scrolls Page Down and Page Up take a viewport to, settled by the
+ * frame that showed it, so a page continues from the last line it showed.
+ */
+export interface ModelPages {
+  /** The item whose detail, or the reading body, the frame showed. */
+  readonly id: string;
+  readonly down: number;
+  readonly up: number;
 }
 
 /** A list's filter while it applies. */
@@ -1393,6 +1406,15 @@ function navigate<A>(
     case "page-up":
     case "page-down":
       if (detailVisible) {
+        const pages = geometry.pages;
+        if (itemId !== undefined && pages?.id === itemId) {
+          return scrollDetail(
+            model,
+            itemId,
+            (chord === "page-up" ? pages.up : pages.down) -
+              (model.detailScroll[itemId] ?? 0),
+          );
+        }
         return scrollDetail(
           model,
           itemId,
@@ -1523,14 +1545,17 @@ function readingKey<A>(
   }
   const rows = Math.max(1, (model.geometry?.readingRows ?? 2) - 1);
   const current = model.readingScroll[id] ?? 0;
+  const pages = model.geometry?.pages?.id === id
+    ? model.geometry.pages
+    : undefined;
   const next = chord === "up"
     ? current - 1
     : chord === "down"
     ? current + 1
     : chord === "page-up"
-    ? current - rows
+    ? pages?.up ?? current - rows
     : chord === "page-down"
-    ? current + rows
+    ? pages?.down ?? current + rows
     : chord === "home"
     ? 0
     : chord === "end"
