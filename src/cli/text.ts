@@ -83,8 +83,10 @@ export interface TerminalTruncateOptions {
    * `grapheme`, the default, keeps as much as fits, as a name or an
    * identifier wants. `word` cuts after the last whole word that fits and
    * drops a clause separator left before the marker, so a sentence reads as
-   * abbreviated rather than broken; only a first word wider than the room
-   * is cut mid-word.
+   * abbreviated rather than broken; it cuts mid-word instead when the word
+   * cut would keep less than half of what fits — a first word wider than
+   * the room, or a short word before a long token — so the line keeps its
+   * information.
    */
   readonly at?: "grapheme" | "word";
 }
@@ -95,7 +97,8 @@ const TRAILING_SEPARATORS = /[\s,;:·•—–-]+$/u;
 /**
  * The length of `plain`'s prefix a truncation keeps, given the `fits`
  * code units that fit before the marker: all of them, or with `word`, those
- * up to the last word that ends inside them.
+ * up to the last word that ends inside them while that keeps at least half
+ * of their cells.
  */
 function truncationPoint(
   plain: string,
@@ -106,7 +109,10 @@ function truncationPoint(
   for (let index = fits; index > 0; index -= 1) {
     if (isWhitespace(plain[index]) && !isWhitespace(plain[index - 1])) {
       const kept = plain.slice(0, index).replace(TRAILING_SEPARATORS, "");
-      return kept === "" ? fits : kept.length;
+      return kept === "" ||
+          lineWidth(kept) * 2 < lineWidth(plain.slice(0, fits))
+        ? fits
+        : kept.length;
     }
   }
   return fits;

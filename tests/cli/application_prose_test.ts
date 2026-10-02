@@ -75,6 +75,37 @@ Deno.test("a word cut keeps whole words and drops the separator before the marke
   assertEquals(stripAnsi(styled), "Exit it to…");
 });
 
+Deno.test("a word cut that would keep only a sliver cuts mid-word instead", () => {
+  const word = { at: "word" } as const;
+  assertEquals(
+    truncateText("Add manual-concision-a1b2c3 fixture commit 4", 14, "…", word),
+    "Add manual-co…",
+  );
+  assertEquals(
+    truncateText("Add retry to the upload path", 14, "…", word),
+    "Add retry to…",
+  );
+  for (
+    const prose of [
+      PROSE,
+      "Add manual-concision-a1b2c3 fixture commit 4",
+      "Run it, then see what changed in agent/homepage-session-prototype",
+    ]
+  ) {
+    for (let room = 2; room < prose.length; room += 1) {
+      const cut = truncateText(prose, room, "…", word).slice(0, -1);
+      const grapheme = truncateText(prose, room, "…").slice(0, -1);
+      assert(
+        cut === grapheme ||
+          (/\s/u.test(prose[cut.length] ?? " ") ||
+              /[,;:·•—–-]/u.test(prose[cut.length] ?? "")) &&
+            cut.length * 2 >= grapheme.length,
+        `"${prose}" at ${room}: "${cut}…" against "${grapheme}…"`,
+      );
+    }
+  }
+});
+
 const run = { text: PROSE };
 
 function withLayer(layer: ApplicationLayer<string>): TerminalApplicationView<
