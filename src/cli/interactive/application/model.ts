@@ -42,6 +42,7 @@ import { mouseTransition } from "./mouse.ts";
 import {
   firstSelectable,
   flattenList,
+  groupFoldable,
   itemKey,
   jumpGroup,
   keyGroupId,
@@ -685,7 +686,7 @@ function adoptList<A>(
 ): ListModel<A> {
   const initialFolds = (groups: ApplicationList<A>["groups"]) =>
     groups.filter((group) =>
-      group.foldable === true && group.initiallyFolded === true
+      groupFoldable(group) && group.initiallyFolded === true
     ).map((group) => group.id);
   if (previous === undefined) {
     return {
@@ -1484,7 +1485,7 @@ export function enterRow<A>(
       row.groups.map((folded) => folded.group.id),
     );
   }
-  if (row.group.foldable !== true) return model;
+  if (!groupFoldable(row.group)) return model;
   return replaceList(model, listId, {
     ...list,
     folds: [...list.folds, row.group.id],

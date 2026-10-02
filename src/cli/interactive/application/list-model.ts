@@ -41,6 +41,19 @@ export interface FoldedGroup<A> {
   readonly count: number;
 }
 
+/**
+ * Whether a group can fold at all. A headless group has no header to fold
+ * into, so neither Enter nor a short screen folds it.
+ */
+export function groupCanFold<A>(group: ApplicationListGroup<A>): boolean {
+  return group.headless !== true;
+}
+
+/** Whether the person can fold a group with Enter on its header. */
+export function groupFoldable<A>(group: ApplicationListGroup<A>): boolean {
+  return group.foldable === true && groupCanFold(group);
+}
+
 /** One display row of a grouped list. */
 export type ListRow<A> =
   | { readonly kind: "blank" }
@@ -73,7 +86,10 @@ export interface ListRows<A> {
    * row holds; one longer than `rows`. Overflow markers count with it.
    */
   readonly heldPrefix: readonly number[];
-  /** For each row, the index of its group's header, or -1. */
+  /**
+   * For each row, the index of its group's header, or -1 — as for a
+   * headless group's items, which no header heads.
+   */
   readonly headerOf: readonly number[];
   /** Items the filter matched, or every item without a filter. */
   readonly matched: number;
@@ -97,13 +113,18 @@ const layoutKeys = new WeakMap<object, string>();
 
 /**
  * A list's membership and order: which items sit in which group, in what
- * sequence. Content changes leave it unchanged.
+ * sequence, and which groups show a header. Content changes leave it
+ * unchanged.
  */
 export function listLayoutKey<A>(list: ApplicationList<A>): string {
   const found = layoutKeys.get(list);
   if (found !== undefined) return found;
   const key = JSON.stringify(
-    list.groups.map((group) => [group.id, group.items.map((item) => item.id)]),
+    list.groups.map((group) => [
+      group.id,
+      group.headless === true,
+      group.items.map((item) => item.id),
+    ]),
   );
   layoutKeys.set(list, key);
   return key;
@@ -112,7 +133,8 @@ export function listLayoutKey<A>(list: ApplicationList<A>): string {
 /**
  * Show a settled list's membership and order with the latest content: each
  * group and item takes its newest version by id, and one the latest list no
- * longer has keeps its last version until the change settles.
+ * longer has keeps its last version until the change settles. Whether a
+ * group shows a header is structure, so it stays settled too.
  */
 export function mergeDisplayList<A>(
   settled: ApplicationList<A>,
@@ -125,10 +147,15 @@ export function mergeDisplayList<A>(
   }
   return {
     ...latest,
-    groups: settled.groups.map((group) => ({
-      ...(groups.get(group.id) ?? group),
-      items: group.items.map((item) => items.get(item.id) ?? item),
-    })),
+    groups: settled.groups.map((group) => {
+      const { headless: _headless, ...content } = groups.get(group.id) ??
+        group;
+      return {
+        ...content,
+        ...(group.headless === true ? { headless: true } : {}),
+        items: group.items.map((item) => items.get(item.id) ?? item),
+      };
+    }),
   };
 }
 
@@ -179,7 +206,8 @@ function visibleItems<A>(
  * Flatten groups into display rows. Empty groups are hidden. A folded group
  * becomes a fold row; folded groups next to each other share one summary
  * row when any of them was folded for density, and otherwise keep a row
- * each. Blank rows separate groups when `separators` is set.
+ * each. A headless group's items stand without a header and never fold.
+ * Blank rows separate groups when `separators` is set.
  */
 export function flattenList<A>(
   list: ApplicationList<A>,
@@ -202,9 +230,10 @@ export function flattenList<A>(
     matched += items.length;
     if (items.length === 0) continue;
     const count = filtering ? items.length : group.count ?? group.items.length;
-    const density = !filtering && shape.densityFolds.has(group.id);
+    const density = !filtering && groupCanFold(group) &&
+      shape.densityFolds.has(group.id);
     const folded = !filtering &&
-      (density || (group.foldable === true && shape.folds.has(group.id)));
+      (density || (groupFoldable(group) && shape.folds.has(group.id)));
     if (!folded) {
       segments.push({ open: group, items });
       continue;
@@ -236,19 +265,20 @@ export function flattenList<A>(
       headerOf.push(-1);
       continue;
     }
-    const header = rows.length;
-    const count = filtering
-      ? segment.items.length
-      : segment.open.count ?? segment.open.items.length;
-    rows.push({
-      kind: "header",
-      group: segment.open,
-      count,
-      ...(segment.open.foldable === true && !filtering
-        ? { key: groupKey(segment.open.id) }
-        : {}),
-    });
-    headerOf.push(-1);
+    const header = segment.open.headless === true ? -1 : rows.length;
+    if (header >= 0) {
+      rows.push({
+        kind: "header",
+        group: segment.open,
+        count: filtering
+          ? segment.items.length
+          : segment.open.count ?? segment.open.items.length,
+        ...(groupFoldable(segment.open) && !filtering
+          ? { key: groupKey(segment.open.id) }
+          : {}),
+      });
+      headerOf.push(-1);
+    }
     for (const item of segment.items) {
       rows.push({
         kind: "item",
@@ -364,11 +394,19 @@ export function lastSelectable<A>(
   return -1;
 }
 
-/** Where each group's rows start, in display order. */
+/**
+ * Where each group's rows start, in display order: its header, its fold
+ * row, or, for a headless group, its first item.
+ */
 function groupStarts<A>(rows: readonly ListRow<A>[]): readonly number[] {
   const starts: number[] = [];
   for (const [index, row] of rows.entries()) {
-    if (row.kind === "header" || row.kind === "fold") starts.push(index);
+    const previous = rows[index - 1];
+    if (
+      row.kind === "header" || row.kind === "fold" ||
+      (row.kind === "item" && row.group.headless === true &&
+        !(previous?.kind === "item" && previous.group.id === row.group.id))
+    ) starts.push(index);
   }
   return starts;
 }
@@ -469,10 +507,10 @@ export interface ListDensityDecision {
 
 /**
  * Fit a list to `available` rows: keep separators if everything fits, drop
- * them if that fits, then fold quiet groups in order — never a `neverFold`
- * group or the group holding the selection — until it fits or nothing more
- * may fold, and keep separators after all when the folds leave them room;
- * the rest scrolls.
+ * them if that fits, then fold quiet groups in order — never a headless
+ * group, a `neverFold` group, or the group holding the selection — until it
+ * fits or nothing more may fold, and keep separators after all when the
+ * folds leave them room; the rest scrolls.
  */
 export function decideListDensity<A>(
   list: ApplicationList<A>,
@@ -496,14 +534,13 @@ export function decideListDensity<A>(
     ...(list.density.neverFold ?? []),
     ...selectedGroups,
   ]);
-  const present = new Set(
-    list.groups.filter((group) => group.items.length > 0).map((group) =>
-      group.id
-    ),
+  const candidates = new Set(
+    list.groups.filter((group) => group.items.length > 0 && groupCanFold(group))
+      .map((group) => group.id),
   );
   const folded = new Set<string>();
   for (const id of order) {
-    if (never.has(id) || !present.has(id) || folds.has(id)) continue;
+    if (never.has(id) || !candidates.has(id) || folds.has(id)) continue;
     folded.add(id);
     if (
       rowCount(list, { folds, densityFolds: folded, separators: false }) <=

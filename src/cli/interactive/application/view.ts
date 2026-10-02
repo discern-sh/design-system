@@ -143,8 +143,9 @@ export interface ApplicationListFilter {
 
 /**
  * Which groups fold into a summary row when the list does not fit. Groups
- * fold in `foldOrder` (by default bottom-up); `neverFold` groups and the
- * group holding the selection never fold. Without `density` nothing folds.
+ * fold in `foldOrder` (by default bottom-up), which names no headless
+ * group; headless groups, `neverFold` groups, and the group holding the
+ * selection never fold. Without `density` nothing folds.
  */
 export interface ApplicationListDensity {
   readonly foldOrder?: readonly string[];
@@ -169,7 +170,17 @@ export interface ApplicationListItem<A> {
 /** One group of items under a header. Empty groups are not shown. */
 export interface ApplicationListGroup<A> {
   readonly id: string;
+  /** The header's title; a headless group's is never drawn. */
   readonly title: string;
+  /**
+   * Show the items with no header row, as entries pinned above the titled
+   * groups want, such as an overview or a way to every command. The items
+   * are ordinary rows; the group never folds, by Enter or to fit a short
+   * screen, and stands apart from the next group as any group does. A
+   * headless group declares none of the header's fields: `shortTitle`,
+   * `count`, `foldable`, `initiallyFolded`, or `aside`.
+   */
+  readonly headless?: boolean;
   /** The name a summary row uses; defaults to the title. */
   readonly shortTitle?: string;
   /** The header's count; defaults to the number of items. */

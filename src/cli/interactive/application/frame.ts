@@ -891,11 +891,17 @@ function crumb<A>(
     ? undefined
     : body.detail.breadcrumb?.[itemId];
   const separator = `  ${terminalGlyph("crumb", context.capabilities)}  `;
+  // A headless group shows no title in the list, so its items' crumb names
+  // the item alone.
   const left = custom !== undefined
     ? styleRuns(context, custom, "surface", "muted")
     : row?.kind === "item"
-    ? `${ink(context, row.group.title, { tone: "faint" }, "surface")}${
-      ink(context, separator, { tone: "faint" }, "surface")
+    ? `${
+      row.group.headless === true
+        ? ""
+        : `${ink(context, row.group.title, { tone: "faint" }, "surface")}${
+          ink(context, separator, { tone: "faint" }, "surface")
+        }`
     }${ink(context, row.item.title, { tone: "muted" }, "surface")}`
     : "";
   // The position counts the items Up and Down walk in zoom: those a filter

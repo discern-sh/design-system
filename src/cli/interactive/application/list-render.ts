@@ -141,16 +141,27 @@ export interface ListWindow {
   readonly scroll: number;
   /** A header shown on the first line for the group the slice starts inside. */
   readonly sticky?: number;
-  /** Rows shown after any sticky header. */
+  /**
+   * The first line carries only the upper marker, because the slice starts
+   * on an item no header heads, such as one in a headless group, and an
+   * item row has no room for it.
+   */
+  readonly markerLine?: true;
+  /** Rows shown after any sticky header or marker line. */
   readonly count: number;
   /** Items hidden above and below, those inside fold rows included. */
   readonly above: number;
   readonly below: number;
 }
 
+/** Lines a window spends before its rows: a sticky header or a marker line. */
+function leadLines(window: ListWindow): 0 | 1 {
+  return window.sticky !== undefined || window.markerLine === true ? 1 : 0;
+}
+
 /**
  * The slice that starts at `scroll` in `height` lines. Without `markers`,
- * as beneath a layer, no row is held for the lower marker.
+ * as beneath a layer, no row is held for either marker.
  */
 export function listWindow<A>(
   rows: ListRows<A>,
@@ -160,11 +171,14 @@ export function listWindow<A>(
 ): ListWindow {
   const total = rows.rows.length;
   const header = rows.headerOf[scroll] ?? -1;
-  // A viewport under three rows has no room for a sticky header and a row.
-  const sticky = header >= 0 && header < scroll && height >= 3
-    ? header
-    : undefined;
-  const available = Math.max(1, height - (sticky === undefined ? 0 : 1));
+  const above = rows.heldPrefix[scroll] ?? 0;
+  // A viewport under three rows has no room for a lead line and a row.
+  const roomy = height >= 3;
+  const sticky = header >= 0 && header < scroll && roomy ? header : undefined;
+  const markerLine = markers && roomy && sticky === undefined && above > 0 &&
+    rows.rows[scroll]?.kind === "item";
+  const lead = sticky !== undefined || markerLine ? 1 : 0;
+  const available = Math.max(1, height - lead);
   const remaining = total - scroll;
   const count = remaining <= available
     ? remaining
@@ -175,8 +189,9 @@ export function listWindow<A>(
   return {
     scroll,
     ...(sticky === undefined ? {} : { sticky }),
+    ...(markerLine ? { markerLine: true } : {}),
     count,
-    above: rows.heldPrefix[scroll] ?? 0,
+    above,
     below: (rows.heldPrefix[total] ?? 0) - (rows.heldPrefix[end] ?? 0),
   };
 }
@@ -212,9 +227,9 @@ export function fitListScroll<A>(
   let scroll = clamp(previous);
   if (anchor !== undefined) {
     scroll = clamp(selected - anchor);
-    if (listWindow(rows, height, scroll, markers).sticky !== undefined) {
-      scroll = clamp(scroll + 1);
-    }
+    scroll = clamp(
+      scroll + leadLines(listWindow(rows, height, scroll, markers)),
+    );
   }
   const shows = (at: number) =>
     selected >= at &&
@@ -551,10 +566,21 @@ export function renderListViewport<A>(
       trailing,
     );
   };
-  const first = window.sticky ?? scroll;
-  lines.push(render(first, marker("up", window.above)));
-  keys.push(rowKey(rows.rows[first]));
-  if (first === viewport.selected) line = 0;
+  if (window.markerLine === true) {
+    lines.push(
+      fitLine(
+        context,
+        spread(context, "", marker("up", window.above), width),
+        width,
+      ),
+    );
+    keys.push(undefined);
+  } else {
+    const first = window.sticky ?? scroll;
+    lines.push(render(first, marker("up", window.above)));
+    keys.push(rowKey(rows.rows[first]));
+    if (first === viewport.selected) line = 0;
+  }
   // A header the window still ends on, because showing its first row would
   // move the selection, holds its row blank rather than stand over nothing.
   const widowed = markers && endsOnHeader(rows, height, scroll) &&
@@ -562,7 +588,7 @@ export function renderListViewport<A>(
     ? scroll + window.count - 1
     : undefined;
   for (
-    let index = scroll + (window.sticky === undefined ? 1 : 0);
+    let index = scroll + 1 - leadLines(window);
     index < scroll + window.count;
     index += 1
   ) {

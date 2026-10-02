@@ -16,6 +16,7 @@ import type {
   ApplicationList,
   ApplicationListColumn,
   ApplicationListGaps,
+  ApplicationListGroup,
   ApplicationRun,
 } from "./view.ts";
 
@@ -234,6 +235,56 @@ function columns(
   return ids;
 }
 
+/**
+ * What each group field describes: the group itself, or the header row and
+ * summary entry that show it. A headless group has neither, so it may set
+ * no header field. Every field is named here, so a new one must choose.
+ */
+export const LIST_GROUP_FIELDS = {
+  id: "group",
+  title: "group",
+  headless: "group",
+  items: "group",
+  shortTitle: "header",
+  count: "header",
+  foldable: "header",
+  initiallyFolded: "header",
+  aside: "header",
+} as const satisfies Record<
+  keyof ApplicationListGroup<unknown>,
+  "group" | "header"
+>;
+
+/** The group fields only a header or summary row shows. */
+export type ListGroupHeaderField = {
+  [Field in keyof typeof LIST_GROUP_FIELDS]:
+    (typeof LIST_GROUP_FIELDS)[Field] extends "header" ? Field
+      : never;
+}[keyof typeof LIST_GROUP_FIELDS];
+
+const HEADER_FIELDS = (Object.keys(LIST_GROUP_FIELDS) as (
+  keyof typeof LIST_GROUP_FIELDS
+)[]).filter((field): field is ListGroupHeaderField =>
+  LIST_GROUP_FIELDS[field] === "header"
+);
+
+/** A headless group sets no header field; `false` leaves one unset. */
+function headless<A>(
+  issues: Issues,
+  path: string,
+  group: ApplicationListGroup<A>,
+): void {
+  if (group.headless !== true) return;
+  for (const field of HEADER_FIELDS) {
+    const value = group[field];
+    if (value === undefined || value === false) continue;
+    issues.push({
+      path: `${path}.${field}`,
+      message: "does not apply to a headless group",
+    });
+  }
+}
+
 /** One list's structure, identities, and presentation numbers. */
 export function list<A>(
   issues: Issues,
@@ -278,6 +329,7 @@ export function list<A>(
     groups.add(group.id);
     if (group.count !== undefined) count(issues, `${at}.count`, group.count, 0);
     runs(issues, `${at}.aside`, group.aside);
+    headless(issues, at, group);
     for (const [position, item] of group.items.entries()) {
       const where = `${at}.items[${position}]`;
       text(issues, `${where}.id`, item.id);
@@ -299,6 +351,19 @@ export function list<A>(
         }
         runs(issues, `${where}.cells.${column}`, cell);
       }
+    }
+  }
+  const pinned = new Set(
+    value.groups.filter((group) => group.headless === true).map((group) =>
+      group.id
+    ),
+  );
+  for (const [index, id] of (value.density?.foldOrder ?? []).entries()) {
+    if (pinned.has(id)) {
+      issues.push({
+        path: `${path}.density.foldOrder[${index}]`,
+        message: "names a headless group, which never folds",
+      });
     }
   }
 }
