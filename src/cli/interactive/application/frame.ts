@@ -1309,7 +1309,7 @@ function readingLines<A>(
       width,
       capabilities,
       context.presentation,
-      focus,
+      focus === undefined ? {} : { focus },
     )
     : undefined;
   const lines = markdown?.lines ?? renderCliBlock(

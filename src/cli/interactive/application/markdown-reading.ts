@@ -134,19 +134,34 @@ export function assertMarkdownResources(markdown: ApplicationMarkdown): void {
   }
 }
 
+/** How a Markdown reading sits in its width and which link has focus. */
+export interface MarkdownReadingOptions {
+  readonly focus?: {
+    readonly link: string;
+    readonly origin: ReadingFocusOrigin;
+  };
+  /**
+   * Where the measure sits in a wider width: `center`, the default, as a
+   * reading body sets a document, or `start`, at the text column of a
+   * detail the document sits in beneath other blocks.
+   */
+  readonly align?: "center" | "start";
+}
+
 /**
- * Render Markdown at a width, centred at its measure, with every admitted
- * link's identity, destination, and cells, and every heading's row. The
- * internal hyperlink identities are remapped to real destinations, or
- * removed where the terminal shows no hyperlinks, before any line leaves.
+ * Render Markdown at a width, at its measure, with every admitted link's
+ * identity, destination, and cells, and every heading's row. The internal
+ * hyperlink identities are remapped to real destinations, or removed where
+ * the terminal shows no hyperlinks, before any line leaves.
  */
 export function projectMarkdownReading(
   markdown: ApplicationMarkdown,
   width: number,
   capabilities: TerminalCapabilities,
   presentation: CliPresentationOptions,
-  focus?: { readonly link: string; readonly origin: ReadingFocusOrigin },
+  options: MarkdownReadingOptions = {},
 ): ReadingProjection {
+  const focus = options.focus;
   const measure = Math.min(
     markdown.measure ?? DEFAULT_APPLICATION_READING_MEASURE,
     width,
@@ -181,7 +196,9 @@ export function projectMarkdownReading(
     if (headingTargets.has(target)) return undefined;
     return hyperlinks ? target : undefined;
   });
-  const indent = Math.floor((width - measure) / 2);
+  const indent = options.align === "start"
+    ? 0
+    : Math.floor((width - measure) / 2);
   const pad = " ".repeat(indent);
   const lines = rendered === "" ? [] : rendered.split("\n").map((line) => {
     const value = `${pad}${line}`;

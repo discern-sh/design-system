@@ -488,9 +488,10 @@ const markdownCache = new WeakMap<
 >();
 
 /**
- * Markdown read as a reading body reads it, at the detail's width: its
- * headings in the reading treatment, each heading one unit that keeps with
- * the line beneath it, and every other line its own unit.
+ * Markdown read as a reading body reads it, at the detail's width and from
+ * its text column, so it lines up with the blocks above it: its headings in
+ * the reading treatment, each heading one unit that keeps with the line
+ * beneath it, and every other line its own unit.
  */
 function markdown(
   context: PaintContext,
@@ -512,6 +513,7 @@ function markdown(
     layout.width,
     capabilities,
     context.presentation,
+    { align: "start" },
   );
   const units: { lines: string[]; keep: boolean }[] = [];
   for (const [index, rendered] of projection.lines.entries()) {

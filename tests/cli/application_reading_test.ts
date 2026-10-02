@@ -18,6 +18,7 @@ import {
 import { ApplicationDriver } from "../fixtures/application-driver.ts";
 import { settle } from "../fixtures/application-session.ts";
 import { testView } from "../fixtures/application-views.ts";
+import { APPLICATION_REVIEW_SIZES } from "../../scripts/playground/application.ts";
 
 const filler = (from: number, count: number) =>
   Array.from(
@@ -408,5 +409,45 @@ Deno.test("Markdown in a detail reads like a reading body and keeps its headings
         }
       });
     }
+  }
+});
+
+Deno.test("Markdown in a detail starts at the detail's text column, as the blocks above it do", async (t) => {
+  const base = testView(["a"]);
+  if (base.body.kind !== "master-detail") throw new Error("master-detail");
+  const view: TerminalApplicationView<string> = {
+    ...base,
+    body: {
+      ...base.body,
+      detail: {
+        follows: "items",
+        content: {
+          a: [
+            { kind: "heading", title: "Preview title" },
+            markdown("A paragraph that opens the document."),
+          ],
+        },
+      },
+    },
+  };
+  for (const { columns, rows } of APPLICATION_REVIEW_SIZES) {
+    await t.step(`${columns}x${rows}`, () => {
+      const detail = new ApplicationDriver(view, {
+        columns,
+        rows,
+        colorDepth: "none",
+      });
+      // The split where it shows the detail, then zoom, which every size has.
+      for (const zoomed of [false, true]) {
+        if (zoomed) detail.key("space");
+        if (!detail.text.includes("A paragraph")) continue;
+        assertEquals(
+          detail.find("A paragraph").column,
+          detail.find("Preview title").column,
+          detail.text,
+        );
+      }
+      assertStringIncludes(detail.text, "A paragraph");
+    });
   }
 });
