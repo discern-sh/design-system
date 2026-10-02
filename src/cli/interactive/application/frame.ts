@@ -1943,6 +1943,7 @@ function renderLayers<A>(
     cover,
   );
   context.animated ||= receded.animated;
+  context.clock ||= receded.clock;
   context.renderCalls = receded.renderCalls;
   const lines = [...base.lines.slice(0, region.height)];
   while (lines.length < region.height) {

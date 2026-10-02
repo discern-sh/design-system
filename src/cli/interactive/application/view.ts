@@ -21,11 +21,29 @@ import type { ApplicationLayer } from "./layer-view.ts";
  * given, sets the colour. Text is plain and control-free.
  */
 export interface ApplicationRun {
+  /** The run's words; with `clock`, what a frame without a time shows. */
   readonly text: string;
   readonly tone?: TerminalTextTone;
   readonly role?: "title" | "body" | "label" | "key" | "code";
   /** Replacement without Unicode; an empty string drops the run. */
   readonly ascii?: string;
+  /**
+   * Show the time elapsed since a moment instead of `text`, painted from
+   * the same clock time as every other clock on screen and repainted each
+   * second while it shows, so a caller never rebuilds its view to tick it.
+   */
+  readonly clock?: ApplicationRunClock;
+}
+
+/** Elapsed time a run shows, measured on the application's clock. */
+export interface ApplicationRunClock {
+  /** When the time began, in the application clock's milliseconds. */
+  readonly since: number;
+  /**
+   * `clock`, the default, reads `0:07` and `12:05`; `duration` reads
+   * `7s` under a minute and as a clock after.
+   */
+  readonly format?: "clock" | "duration";
 }
 
 /**

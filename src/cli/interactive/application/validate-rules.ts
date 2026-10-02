@@ -135,6 +135,23 @@ export function runs(
     if (run.role !== undefined && !ROLES.has(run.role)) {
       issues.push({ path: `${path}[${index}].role`, message: "is unknown" });
     }
+    if (run.clock !== undefined) {
+      if (!Number.isFinite(run.clock.since)) {
+        issues.push({
+          path: `${path}[${index}].clock.since`,
+          message: "must be a finite time",
+        });
+      }
+      if (
+        run.clock.format !== undefined && run.clock.format !== "clock" &&
+        run.clock.format !== "duration"
+      ) {
+        issues.push({
+          path: `${path}[${index}].clock.format`,
+          message: "is unknown",
+        });
+      }
+    }
   }
 }
 

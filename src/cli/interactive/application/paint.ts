@@ -34,7 +34,11 @@ import {
   DEFAULT_TERMINAL_APPLICATION_COPY,
   type TerminalApplicationCopy,
 } from "./copy.ts";
-import type { ApplicationGlyph, ApplicationRun } from "./view.ts";
+import type {
+  ApplicationGlyph,
+  ApplicationRun,
+  ApplicationRunClock,
+} from "./view.ts";
 
 /** Where the application's animation and clock stand when a frame renders. */
 export interface TerminalApplicationMotion {
@@ -124,9 +128,33 @@ export function ink(
  * the run.
  */
 export function runText(context: PaintContext, run: ApplicationRun): string {
+  if (run.clock !== undefined && context.motion.now !== undefined) {
+    context.clock = true;
+    return elapsedText(run.clock, context.motion.now);
+  }
   return context.capabilities.unicode
     ? run.text
     : run.ascii ?? asciiSpelling(run.text);
+}
+
+/** Minutes and seconds, as a clock: `0:41`, `12:05`. */
+export function clockText(ms: number): string {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`;
+}
+
+/** A duration: seconds under a minute, else a clock. */
+export function durationText(ms: number): string {
+  const seconds = Math.max(0, Math.floor(ms / 1000));
+  return seconds < 60 ? `${seconds}s` : clockText(ms);
+}
+
+/** The time a clock run shows at `now`. */
+export function elapsedText(clock: ApplicationRunClock, now: number): string {
+  const elapsed = now - clock.since;
+  return clock.format === "duration"
+    ? durationText(elapsed)
+    : clockText(elapsed);
 }
 
 /** The tone and weight a run's role and tone give it. */

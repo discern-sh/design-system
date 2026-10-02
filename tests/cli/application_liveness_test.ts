@@ -20,6 +20,16 @@ import {
   settle,
 } from "../fixtures/application-session.ts";
 import { testView } from "../fixtures/application-views.ts";
+import {
+  applicationDemoView,
+  DEMO_JOBS,
+  DEMO_KEYMAP,
+} from "../../scripts/playground/application.ts";
+import {
+  demoActionsMenu,
+  demoRunSheet,
+} from "../../scripts/playground/application-layers.ts";
+import { validateTerminalApplicationView } from "../../src/cli/interactive/mod.ts";
 
 function view(animated = true, count = 3): TerminalApplicationView<string> {
   return testView(
@@ -188,4 +198,105 @@ Deno.test("animated markers are one plain cell and name the spinner", () => {
       TypeError,
     );
   }
+});
+
+Deno.test("a clock run and a sheet's clock read one time and tick together", async () => {
+  const clock = new ManualTerminalClock(0);
+  const job = DEMO_JOBS.find((candidate) => candidate.id === "image-resize");
+  if (job === undefined) throw new Error("image-resize");
+  // The job's row shows how long it has run, beside its own progress sheet.
+  const base = applicationDemoView(DEMO_JOBS, undefined, {
+    layers: [demoRunSheet(job, "working", { startedAt: 0, now: 6_900 })],
+  });
+  if (base.body.kind !== "master-detail") throw new Error("master-detail");
+  const list = base.body.list;
+  const view: TerminalApplicationView<string> = {
+    ...base,
+    body: {
+      ...base.body,
+      list: {
+        ...list,
+        groups: list.groups.map((group) => ({
+          ...group,
+          items: group.items.map((item) =>
+            item.id === job.id
+              ? {
+                ...item,
+                cells: {
+                  ...item.cells,
+                  age: [{ text: "0:00", clock: { since: 0 }, tone: "muted" }],
+                },
+              }
+              : item
+          ),
+        })),
+      },
+    },
+  };
+  clock.advance(6_900);
+  const live = await applicationSession(view, {
+    columns: 120,
+    rows: 30,
+    clock,
+    colorDepth: "none",
+    // Nothing animates, so only the clocks keep the screen ticking.
+    runtime: { reducedMotion: true },
+    options: {
+      keymap: DEMO_KEYMAP.filter((binding) => binding.key !== "q"),
+    },
+  });
+  // The list row's own cells: the row that names the job and its status.
+  const times = () => {
+    const frame = live.frame();
+    const row =
+      frame.split("\n").find((line) =>
+        line.includes("Image resize") && line.includes("Failed")
+      ) ?? "";
+    return [...row.matchAll(/\b\d+:\d\d\b/gu)].map((match) => match[0]);
+  };
+  assertEquals(times()[0], "0:06");
+  assertStringIncludes(live.frame(), "Running Image resize");
+  // One second later both clocks repaint from the same time.
+  clock.advance(1_000);
+  await settle();
+  assertEquals(times()[0], "0:07");
+  const header =
+    live.frame().split("\n").find((line) =>
+      line.includes("Running Image resize")
+    ) ?? "";
+  assertStringIncludes(header, "0:07");
+  // Beneath a layer without a clock of its own, the receded row still ticks.
+  live.context().update({ ...view, layers: [demoActionsMenu(job)] });
+  await settle();
+  clock.advance(1_000);
+  await settle();
+  assertEquals(times()[0], "0:08");
+  live.context().update({ ...view, layers: [] });
+  await settle();
+  await live.finish();
+});
+
+Deno.test("a clock run names a finite start and a known format", () => {
+  const view = testView(["a"]);
+  const issues = validateTerminalApplicationView({
+    ...view,
+    header: {
+      leading: [
+        { text: "Up", clock: { since: Number.NaN } },
+        {
+          text: "Up",
+          clock: { since: 0, format: "weeks" as unknown as "clock" },
+        },
+      ],
+    },
+  });
+  assertEquals(
+    issues.map((issue) => issue.path).filter((path) =>
+      path.startsWith("header")
+    ),
+    [
+      "header.leading[0].clock.since",
+      "header.leading[1].clock.format",
+    ],
+  );
 });

@@ -64,6 +64,8 @@ import type {
 import type { ApplicationDetailBlock } from "./view.ts";
 import {
   clip,
+  clockText,
+  durationText,
   fitLine,
   fitProse,
   ink,
@@ -241,18 +243,6 @@ function detailRows(
 /** A key as its hint shows it, such as `^T` or `d`. */
 function keyText(context: PaintContext, key: KeyChord): string {
   return formatKeyChord(key, context.capabilities);
-}
-
-/** Minutes and seconds, as a clock: `0:41`, `12:05`. */
-export function clockText(ms: number): string {
-  const total = Math.max(0, Math.floor(ms / 1000));
-  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`;
-}
-
-/** A step's duration: seconds under a minute, else a clock. */
-function durationText(ms: number): string {
-  const seconds = Math.max(0, Math.floor(ms / 1000));
-  return seconds < 60 ? `${seconds}s` : clockText(ms);
 }
 
 function ellipsis(context: PaintContext): string {
