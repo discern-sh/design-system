@@ -104,6 +104,7 @@ import {
   type PaintContext,
   paintContext,
   runsWidth,
+  runText,
   spread,
   styleGlyph,
   styleRuns,
@@ -143,6 +144,9 @@ const HEADER_TIGHT_GAP = 2;
  * further.
  */
 const HEADER_IDENTITY_FLOOR = 8;
+
+/** A run that only separates: spaces, punctuation, and symbols, such as ` · `. */
+const SEPARATOR_RUN = /^[\s\p{P}\p{S}]+$/u;
 
 /** From this many rows a blank line separates the header from the body. */
 const SPACIOUS_ROWS = 20;
@@ -258,17 +262,21 @@ function header<A>(
   const list = listView === undefined ? undefined : model.lists[listView.id];
   let leading = styleRuns(context, bar.leading, undefined);
   // The identity with its own wide gaps closed, as it reads when space runs short.
-  let tightened = styleRuns(
-    context,
-    bar.leading.map((run) => ({
-      ...run,
-      text: run.text.replaceAll(/ {2,}/gu, " "),
-      ...(run.ascii === undefined
-        ? {}
-        : { ascii: run.ascii.replaceAll(/ {2,}/gu, " ") }),
-    })),
-    undefined,
-  );
+  const closed = bar.leading.map((run) => ({
+    ...run,
+    text: run.text.replaceAll(/ {2,}/gu, " "),
+    ...(run.ascii === undefined
+      ? {}
+      : { ascii: run.ascii.replaceAll(/ {2,}/gu, " ") }),
+  }));
+  let tightened = styleRuns(context, closed, undefined);
+  // Shorter identities, longest first: whole segments dropped from the end
+  // at each separator run, such as a branch after a project's name.
+  let segments = closed.flatMap((run, index) =>
+    index > 0 && SEPARATOR_RUN.test(runText(context, run))
+      ? [styleRuns(context, closed.slice(0, index), undefined)]
+      : []
+  ).reverse();
   if (listView?.filter !== undefined && list?.filter !== undefined) {
     const rows = listModelRows(list);
     const cursor = list.filter.editing
@@ -284,10 +292,11 @@ function header<A>(
       })
     }`;
     tightened = leading;
+    segments = [];
   }
   const liveness = bar.liveness;
   const state = shownLiveness(model, now);
-  const live = liveness === undefined || state === undefined
+  const liveWord = liveness === undefined || state === undefined
     ? ""
     : state === "busy"
     ? `${
@@ -316,7 +325,13 @@ function header<A>(
    * The right side with the first `shown` chips, the trailing runs or not,
    * and the liveness word, and where each chip starts.
    */
-  const compose = (shown: number, withTrailing: boolean, gap: number) => {
+  const compose = (
+    shown: number,
+    withTrailing: boolean,
+    gap: number,
+    withLive = true,
+  ) => {
+    const live = withLive ? liveWord : "";
     const parts = [
       ...chips.slice(0, shown).map((text, index) => ({ text, index })),
       { text: withTrailing ? trailing : "", index: -1 },
@@ -353,15 +368,26 @@ function header<A>(
     identity: Rung["identity"],
   ): Rung => ({ right, gap, identity });
   const floor = Math.min(HEADER_IDENTITY_FLOOR, measureText(tightened));
-  /** The identity yielding beside one right side: its gaps, then its length. */
-  const shortening = (right: ReturnType<typeof compose>): readonly Rung[] => [
-    rung(right, HEADER_CLUSTER_GAP, "whole"),
-    rung(right, HEADER_CLUSTER_GAP, "tightened"),
-    rung(right, HEADER_CLUSTER_GAP, "floor"),
-    rung(right, HEADER_TIGHT_GAP, "floor"),
+  // An idle liveness word says the least on the line, so it goes before
+  // the identity shortens; any other state stays to the last.
+  const idle = state === "idle";
+  const side = (withTrailing: boolean, withLive: boolean) =>
+    compose(0, withTrailing, 2, withLive);
+  const at = (
+    right: ReturnType<typeof compose>,
+    identity: Rung["identity"],
+    gap = HEADER_CLUSTER_GAP,
+  ) => rung(right, gap, identity);
+  /** The identity whole, then with its gaps closed, beside one right side. */
+  const kept = (right: ReturnType<typeof compose>) => [
+    at(right, "whole"),
+    at(right, "tightened"),
   ];
-  const counted = compose(0, true, 2);
-  const uncounted = compose(0, false, 2);
+  /** The identity at its floor beside one right side, the gap tightening last. */
+  const floored = (right: ReturnType<typeof compose>) => [
+    at(right, "floor"),
+    at(right, "floor", HEADER_TIGHT_GAP),
+  ];
   // Chips go first, from the end, while the identity stays whole. Then the
   // side that yields gives way — the identity closing its own gaps and
   // shortening to its floor, or the trailing counts — and the liveness
@@ -376,8 +402,18 @@ function header<A>(
       )
     ),
     ...(bar.yields === "trailing"
-      ? [rung(counted, HEADER_CLUSTER_GAP, "whole"), ...shortening(uncounted)]
-      : [...shortening(counted), ...shortening(uncounted).slice(2)]),
+      ? [
+        at(side(true, true), "whole"),
+        ...kept(side(false, true)),
+        ...(idle ? [at(side(false, false), "tightened")] : []),
+        ...floored(side(false, !idle)),
+      ]
+      : [
+        ...kept(side(true, true)),
+        ...(idle ? [at(side(true, false), "tightened")] : []),
+        ...floored(side(true, !idle)),
+        ...floored(side(false, !idle)),
+      ]),
   ];
   const fits = ({ right, gap, identity }: Rung): boolean => {
     const width = measureText(right.text);
@@ -392,13 +428,19 @@ function header<A>(
     rung({ text: "", starts: [] }, 0, "floor");
   const right = chosen.right;
   const separation = chosen.gap;
-  const identity = chosen.identity === "whole" ? leading : tightened;
   const rightWidth = measureText(right.text);
-  const left = fitName(
-    context,
-    identity,
-    Math.max(0, room - (rightWidth === 0 ? 0 : rightWidth + separation)),
+  const space = Math.max(
+    0,
+    room - (rightWidth === 0 ? 0 : rightWidth + separation),
   );
+  // A shortened identity drops whole segments before it cuts one, so a
+  // name shown whole carries no ellipsis.
+  const left = chosen.identity === "whole"
+    ? fitName(context, leading, space)
+    : measureText(tightened) <= space
+    ? tightened
+    : segments.find((segment) => measureText(segment) <= space) ??
+      fitName(context, segments.at(-1) ?? tightened, space);
   const origin = 2 + room - rightWidth;
   const hits: ApplicationHit[] = right.starts.flatMap(({ index, at }) => {
     const chip = bar.chips?.[index];

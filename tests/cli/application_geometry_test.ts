@@ -458,9 +458,30 @@ Deno.test("the header drops chips, then shortens its identity, then drops counts
       `${columns}: the identity runs into the right side`,
     );
   }
-  // At the minimum the identity shortens to its floor and everything else
-  // stays.
-  assert(/Studio… {2,}1 to review {3}Live/u.test(header(32)), header(32));
+  // An idle liveness word says the least, so at the minimum it goes before
+  // the identity shortens.
+  assert(/Studio · jobs {2,}1 to review {2}$/u.test(header(32)), header(32));
+  // A shortened identity drops whole segments before it cuts a name, and
+  // a name shown whole carries no ellipsis.
+  const branch = {
+    leading: [
+      { text: "engine-test", role: "title" as const },
+      { text: "  ·  ", tone: "faint" as const },
+      { text: "main", tone: "muted" as const },
+    ],
+    trailing: [{ text: "4 need you" }],
+  };
+  for (let columns = 32; columns <= 120; columns += 1) {
+    const line = header(columns, branch);
+    assertStringIncludes(line, "4 need you", `${columns}`);
+    assert(!line.includes("…"), `${columns}: a whole name was cut\n${line}`);
+    // The idle word never outlasts the identity's last segment.
+    assert(
+      !line.includes("Live") || line.includes("main"),
+      `${columns}: Live outlasted the branch\n${line}`,
+    );
+  }
+  assertEquals(header(34, branch).trim().split(/ {2,}/u)[0], "engine-test");
   // Counts go before liveness: a state the person must see stays longest.
   const offline = {
     leading: [
