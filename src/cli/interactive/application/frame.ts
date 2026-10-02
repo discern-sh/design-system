@@ -1511,7 +1511,8 @@ function tooSmall<A>(
     ...(hints.length === 0 ? [] : [
       "",
       layoutKeyHintsCli(
-        { left: hints },
+        // Enter does nothing here, so no key takes its accent.
+        { left: hints, primary: false },
         Math.max(1, size.columns - inset.length),
         context.capabilities,
         cliPresentationPassthrough(context.presentation),

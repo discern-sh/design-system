@@ -5,7 +5,11 @@ import {
   assertStringIncludes,
   assertThrows,
 } from "@std/assert";
-import { stripAnsi } from "../../src/cli/mod.ts";
+import {
+  resolveTerminalTheme,
+  stripAnsi,
+  terminalTextToneColor,
+} from "../../src/cli/mod.ts";
 import {
   createTerminalApplicationModel,
   InteractionCancelled,
@@ -33,6 +37,7 @@ import {
   settle,
 } from "../fixtures/application-session.ts";
 import { testView } from "../fixtures/application-views.ts";
+import { ApplicationDriver } from "../fixtures/application-driver.ts";
 
 const quit = {
   keymap: [{ key: "q", action: "quit" }],
@@ -574,6 +579,21 @@ Deno.test("below the minimum size bindings still run while navigation waits", as
     stripAnsi(captureTerminalFrame(io.output(), io.size()).frame),
     "Too small",
   );
+});
+
+Deno.test("the too-small notice draws its keys as keys, never in the accent", () => {
+  const theme = resolveTerminalTheme({});
+  const tone = (name: "accent" | "ink") => {
+    const color = terminalTextToneColor(theme, name);
+    return `38;2;${color.red};${color.green};${color.blue}m`;
+  };
+  const driver = new ApplicationDriver({
+    ...testView(["a"]),
+    tooSmallHints: [{ key: "q", label: "Quit" }],
+  }, { columns: 30, rows: 9, colorDepth: "truecolor" });
+  assertStringIncludes(driver.text, "q Quit");
+  assert(!driver.last.frame.includes(tone("accent")), driver.last.frame);
+  assertStringIncludes(driver.last.frame, `\x1b[1;${tone("ink")}q`);
 });
 
 Deno.test("below the minimum size a field keeps the keys it would type", async () => {
