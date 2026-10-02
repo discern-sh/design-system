@@ -1,5 +1,6 @@
 import { Progress, progressStep } from "./progress.ts";
 import { generateGlyphs } from "./glyphs.ts";
+import { warmThenAll } from "./warm-then-all.ts";
 import type { EmbeddedRuntimeAsset } from "../src/runtime-assets.ts";
 import {
   DIAGRAM_RELEASE_POSTURES,
@@ -811,12 +812,11 @@ async function generateBehaviorSources(): Promise<string> {
     url.pathname.endsWith(".js")
   );
   const sources = new Map(
-    await Promise.all(files.map(async (url) =>
+    await warmThenAll(files, async (url) =>
       [
         url.pathname.slice(url.pathname.lastIndexOf("/") + 1, -3),
         `{${await minifyBehaviorSource(await bundleBehaviorModule(url))}}`,
-      ] as const
-    )),
+      ] as const),
   );
   for (const behavior of componentBehaviors) {
     if (!sources.has(behavior)) {
