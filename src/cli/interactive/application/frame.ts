@@ -96,6 +96,7 @@ import {
   visibleMessage,
 } from "./model.ts";
 import {
+  emptyBodyLines,
   fitLine,
   fitName,
   fitProse,
@@ -1421,9 +1422,8 @@ function empty<A>(
     listModelRows(listModel).rows.length,
     Math.max(1, region.height - 7),
   );
-  const wrapped = wrapStyledText(
-    styleRuns(context, body.body, undefined, "muted"),
-    width,
+  const wrapped = emptyBodyLines(body.body).flatMap((line) =>
+    wrapStyledText(styleRuns(context, line, undefined, "muted"), width)
   );
   const label = (text: string | undefined) =>
     context.capabilities.unicode ? text ?? "" : (text ?? "").replaceAll(

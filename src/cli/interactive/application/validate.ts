@@ -20,6 +20,7 @@ import {
   type TerminalApplicationCopy,
 } from "./copy.ts";
 import { layerRules } from "./layer-validate.ts";
+import { emptyBodyLines } from "./paint.ts";
 import {
   applicationMarkdownIssues,
   isApplicationMarkdown,
@@ -302,7 +303,15 @@ export function viewIssues<A>(
       break;
     case "empty":
       text(issues, "body.title", body.title);
-      runs(issues, "body.body", body.body);
+      for (const [index, line] of emptyBodyLines(body.body).entries()) {
+        runs(
+          issues,
+          body.body.some((entry) => Array.isArray(entry))
+            ? `body.body[${index}]`
+            : "body.body",
+          line,
+        );
+      }
       hints(issues, "body.primary", { left: [body.primary] });
       hints(issues, "body.secondary", { left: body.secondary ?? [] });
       if (body.list !== undefined) list(issues, "body.list", body.list);

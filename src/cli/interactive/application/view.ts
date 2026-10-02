@@ -474,7 +474,13 @@ export interface ApplicationActionHint<A> {
 export interface ApplicationEmptyBody<A> {
   readonly kind: "empty";
   readonly title: string;
-  readonly body: readonly ApplicationRun[];
+  /**
+   * The explanation: one paragraph of runs, or several lines of runs, each
+   * wrapped and centred on its own, so two sentences can read one per line.
+   */
+  readonly body:
+    | readonly ApplicationRun[]
+    | readonly (readonly ApplicationRun[])[];
   /** Selected first; Enter runs its action. */
   readonly primary: ApplicationActionHint<A>;
   /** Further keys to show; each must be bound, like every advertised key. */

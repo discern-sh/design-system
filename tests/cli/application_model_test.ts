@@ -709,6 +709,51 @@ Deno.test("busy liveness appears only after it has lasted", () => {
   );
 });
 
+Deno.test("an empty body's explanation may hold several lines, each centred on its own", () => {
+  const view = (body: TerminalApplicationView<string>["body"]) => ({
+    header: { leading: [{ text: "Studio" }] },
+    body,
+    footer: { left: [{ key: "enter", label: "New item" }] },
+  });
+  const first = "Each item gets its own workspace for one change.";
+  const second = "Hand it to a helper; you review the result.";
+  const lines = new Driver(view({
+    kind: "empty",
+    title: "Nothing here yet",
+    body: [[{ text: first }], [{ text: second }]],
+    primary: { key: "enter", label: "New item", action: "create" },
+  })).render().split("\n");
+  const at = (text: string) => lines.find((line) => line.includes(text)) ?? "";
+  // Each sentence is a line of its own, centred by its own width.
+  for (const text of [first, second]) {
+    const line = at(text);
+    assertEquals(line.trim(), text);
+    const left = line.length - line.trimStart().length;
+    const right = line.length - line.trimEnd().length;
+    assert(Math.abs(left - right) <= 1, JSON.stringify(line));
+  }
+  // One paragraph still wraps where it falls.
+  const paragraph = new Driver(view({
+    kind: "empty",
+    title: "Nothing here yet",
+    body: [{ text: `${first} ${second}` }],
+    primary: { key: "enter", label: "New item", action: "create" },
+  })).render();
+  assert(!paragraph.includes(second), paragraph);
+  assertEquals(
+    validateTerminalApplicationView(
+      view({
+        kind: "empty",
+        title: "Nothing",
+        body: [[{ text: "Fine" }], [{ text: "bad\u0007" }]],
+        primary: { key: "enter", label: "New item", action: "create" },
+      }),
+      { keymap: [] },
+    ).map((issue) => issue.path).filter((path) => path.startsWith("body.body")),
+    ["body.body[1][0].text"],
+  );
+});
+
 Deno.test("an empty body selects its primary hint and Down reaches its list", () => {
   const empty: TerminalApplicationView<string> = {
     header: { leading: [{ text: "Studio" }] },

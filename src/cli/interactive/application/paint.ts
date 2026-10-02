@@ -373,3 +373,22 @@ export function overflowMarker(
       formatKeyChord(key, context.capabilities)
     }`;
 }
+
+/** An empty body's explanation as its lines: one paragraph, or each line given. */
+export function emptyBodyLines(
+  body: readonly ApplicationRun[] | readonly (readonly ApplicationRun[])[],
+): readonly (readonly ApplicationRun[])[] {
+  const lines: (readonly ApplicationRun[])[] = [];
+  const paragraph: ApplicationRun[] = [];
+  for (const entry of body) {
+    if (isRunLine(entry)) lines.push(entry);
+    else paragraph.push(entry);
+  }
+  return paragraph.length > 0 ? [paragraph, ...lines] : lines;
+}
+
+function isRunLine(
+  entry: ApplicationRun | readonly ApplicationRun[],
+): entry is readonly ApplicationRun[] {
+  return Array.isArray(entry);
+}
