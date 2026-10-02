@@ -36,6 +36,7 @@ import {
   demoPalette,
   demoRunSheet,
 } from "../../scripts/playground/application-layers.ts";
+import { modelState } from "../../src/cli/interactive/application/model.ts";
 import { ApplicationDriver } from "../fixtures/application-driver.ts";
 
 function job(id: string): DemoJob {
@@ -912,6 +913,33 @@ Deno.test("on wide screens a layer occupies the detail column beside the list", 
     !narrow.text.includes("Quarterly report"),
     "narrow layers take the body",
   );
+});
+
+Deno.test("a palette anchored to the detail takes the detail column at the wide tier and its own place below it", () => {
+  const palette = {
+    ...demoPalette(DEMO_JOBS, false),
+    anchor: "detail" as const,
+  };
+  for (const size of APPLICATION_REVIEW_SIZES) {
+    const where = `${size.columns}x${size.rows}`;
+    const plain = new ApplicationDriver(applicationDemoView(), size);
+    const width = modelState(plain.model).lists.jobs?.density?.width;
+    const driver = new ApplicationDriver(withLayers(palette), size);
+    const layer = driver.hits.filter((hit) =>
+      hit.target.kind === "layer" && hit.target.layerId === palette.id
+    );
+    assert(layer.length > 0, `${where}: the palette shows`);
+    const left = Math.min(...layer.map((hit) => hit.start));
+    const right = Math.max(...layer.map((hit) => hit.end));
+    const top = Math.min(...layer.map((hit) => hit.row));
+    if (size.columns >= 100) {
+      assertEquals(left, width, `${where}: the detail column`);
+      assert(driver.text.includes("Quarterly report"), `${where}: the list`);
+    } else {
+      assertEquals([left, right], [0, size.columns], `${where}: full width`);
+      assert(top <= 2, `${where}: at the top of the body`);
+    }
+  }
 });
 
 Deno.test("mouse input reaches the model only while the view asks for it", () => {

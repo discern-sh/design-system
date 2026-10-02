@@ -24,9 +24,11 @@ export type ApplicationLayerScope = "item" | "global";
 
 /**
  * Where a layer sits. `detail` occupies the detail column beside the list on
- * wide screens and becomes `bottom` elsewhere; `bottom` and `top` span the
- * width with their height sized to content; `full` takes the whole body.
- * Below 56 columns every layer takes the whole body.
+ * wide screens and takes the layer's own place elsewhere: the top for a
+ * palette, the whole body for a reader, and the bottom for the rest;
+ * `bottom` and `top` span the width with their height sized to content;
+ * `full` takes the whole body. Below 56 columns every layer takes the whole
+ * body.
  */
 export type ApplicationLayerAnchor = "detail" | "bottom" | "top" | "full";
 
