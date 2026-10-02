@@ -56,7 +56,7 @@ try {
       "overview at a later spinner phase",
       (capture) => capture.text.includes("◑") && capture.state !== undefined,
     );
-    const first = columns < 32 ? "Too small" : "Running";
+    const first = columns < 32 ? "Too small" : "Commands";
     const phases: readonly PtyInputPhase[] = columns < 32
       ? [{
         waitFor: when(first),
@@ -77,10 +77,12 @@ try {
             steps: [],
           }]
           : []),
+        // The pinned Commands row holds the first selection; two steps
+        // down reach the job that just finished.
         {
           waitFor: when("2 to review"),
           capture: { name: "updated", when: when("2 to review") },
-          steps: [{ bytes: "\x1b[B" }],
+          steps: [{ bytes: "\x1b[B\x1b[B" }],
         },
         {
           waitFor: settled,

@@ -30,6 +30,27 @@ const marks = (
   items: items.map(([glyph, runs]) => ({ mark: glyph, runs })),
 });
 
+/** One of the sample's commands: the key that runs it, its name, and what it does. */
+export interface DemoCommand {
+  readonly key: string;
+  readonly label: string;
+  readonly description: string;
+}
+
+/**
+ * The commands the sample binds, in the order it lists them: the keys
+ * reader's Act section and the pinned Commands row both read this list.
+ */
+export const DEMO_COMMANDS: readonly DemoCommand[] = [
+  { key: "ctrl-k", label: "Commands", description: "Search jobs and commands" },
+  { key: ".", label: "Actions", description: "Act on the selected job" },
+  { key: "n", label: "New job…", description: "Start one from a template" },
+  { key: "/", label: "Filter", description: "Narrow the list as you type" },
+  { key: "g", label: "Guide", description: "Read how the sample works" },
+  { key: "?", label: "Keys", description: "Every key in one place" },
+  { key: "q", label: "Quit", description: "Leave the sample" },
+];
+
 /** A slug for a job, used as its folder and its command target. */
 export function demoSlug(title: string): string {
   return title.toLowerCase().replace(/[^a-z0-9]+/gu, "-").replace(
@@ -623,12 +644,7 @@ export function demoKeysReader(): ApplicationReader<string> {
         title: "Act",
         blocks: [keys([
           ["enter", "Run sample"],
-          [".", "Actions"],
-          ["ctrl-k", "Commands"],
-          ["n", "New job…"],
-          ["/", "Filter"],
-          ["g", "Guide"],
-          ["q", "Quit"],
+          ...DEMO_COMMANDS.map(({ key, label }) => [key, label] as const),
         ])],
       },
       {

@@ -1,6 +1,8 @@
 /** Generic terminal application demonstration consuming only public package entrypoints. */
 import {
   createCliBlock,
+  formatKeyChord,
+  measureText,
   renderMarkdownCli,
   TERMINAL_GLYPHS,
   type TerminalGlyph,
@@ -27,6 +29,7 @@ import {
 } from "@discern-sh/design-system/cli/interactive";
 import { demoGuideOptions } from "./application-guide.ts";
 import {
+  DEMO_COMMANDS,
   demoActionsMenu,
   demoDeleteSheet,
   type DemoFormValues,
@@ -255,6 +258,72 @@ const GROUPS: readonly {
   { id: "paused", title: "Paused", foldable: true },
 ];
 
+/** The pinned row that leads the list and opens every command. */
+export const DEMO_COMMANDS_ID = "commands";
+
+/** A key as the footer shows it, as runs with and without Unicode. */
+function keyRun(key: string): ApplicationRun {
+  return {
+    text: formatKeyChord(key, { unicode: true }),
+    ascii: formatKeyChord(key, { unicode: false }),
+    role: "key",
+  };
+}
+
+/** The pinned Commands row: Enter opens the palette, its detail lists each key. */
+const COMMANDS_ROW: ApplicationListItem<string> = {
+  id: DEMO_COMMANDS_ID,
+  title: "Commands",
+  marker: { unicode: "≡", ascii: "=", tone: "muted" },
+  cells: { status: [{ ...keyRun("ctrl-k"), role: "body", tone: "faint" }] },
+  primary: "palette",
+  keywords: DEMO_COMMANDS.map((command) => command.label).join(" "),
+};
+
+/** Cells the longest command name takes, so the descriptions line up. */
+const COMMAND_LABEL_WIDTH = Math.max(
+  ...DEMO_COMMANDS.map((command) => measureText(command.label)),
+);
+
+const COMMANDS_DETAIL: readonly ApplicationDetailBlock[] = [
+  { kind: "heading", title: "Commands" },
+  {
+    kind: "text",
+    runs: [{
+      text:
+        "Everything the sample can do, from anywhere in the list. Enter searches these with the jobs.",
+    }],
+  },
+  {
+    kind: "rows",
+    lead: { id: "key", width: 3 },
+    items: DEMO_COMMANDS.map((command) => ({
+      lead: [keyRun(command.key)],
+      text: [
+        { text: command.label, role: "title" },
+        {
+          text: " ".repeat(
+            COMMAND_LABEL_WIDTH - measureText(command.label) + 2,
+          ),
+        },
+        { text: command.description, tone: "muted" },
+      ],
+    })),
+  },
+];
+
+const COMMANDS_STRIP: ApplicationDetailStrip = {
+  title: [
+    { text: "≡", ascii: "=", tone: "muted" },
+    { text: " " },
+    { text: "Commands", role: "title" },
+  ],
+  facts: [[{ text: `${DEMO_COMMANDS.length} commands` }], [
+    keyRun("ctrl-k"),
+    { text: " anywhere", tone: "muted" },
+  ]],
+};
+
 function marker(job: DemoJob): ApplicationGlyph {
   return {
     unicode: job.glyph.unicode,
@@ -374,6 +443,13 @@ function strip(job: DemoJob): ApplicationDetailStrip {
 export interface ApplicationDemoViewOptions {
   readonly layers?: readonly ApplicationLayer<string>[];
   readonly mouse?: boolean;
+  /** Pin the Commands row above the groups, in a headless group. */
+  readonly pinned?: boolean;
+  /**
+   * The selected row, which names what Enter does in the footer; the
+   * first row when absent.
+   */
+  readonly selected?: string;
 }
 
 /** The sample view for a set of jobs, an optional message, and open layers. */
@@ -382,12 +458,25 @@ export function applicationDemoView(
   message?: ApplicationMessage,
   options: ApplicationDemoViewOptions = {},
 ): TerminalApplicationView<string> {
-  const groups: ApplicationListGroup<string>[] = GROUPS.map((group) => ({
-    ...group,
-    ...(group.foldable === true ? { initiallyFolded: true } : {}),
-    items: jobs.filter((job) => job.group === group.id).map(row),
-  }));
+  const pinned = options.pinned === true;
+  const groups: ApplicationListGroup<string>[] = [
+    ...(pinned
+      ? [{
+        id: "pinned",
+        title: "Pinned",
+        headless: true,
+        items: [COMMANDS_ROW],
+      }]
+      : []),
+    ...GROUPS.map((group) => ({
+      ...group,
+      ...(group.foldable === true ? { initiallyFolded: true } : {}),
+      items: jobs.filter((job) => job.group === group.id).map(row),
+    })),
+  ];
   const review = jobs.filter((job) => job.group === "review").length;
+  const opensCommands = pinned &&
+    (options.selected ?? DEMO_COMMANDS_ID) === DEMO_COMMANDS_ID;
   return {
     header: {
       leading: [
@@ -428,20 +517,27 @@ export function applicationDemoView(
       },
       detail: {
         follows: "jobs",
-        content: Object.fromEntries(jobs.map((job) => [job.id, detail(job)])),
-        strip: Object.fromEntries(jobs.map((job) => [job.id, strip(job)])),
+        content: Object.fromEntries([
+          ...(pinned ? [[DEMO_COMMANDS_ID, COMMANDS_DETAIL] as const] : []),
+          ...jobs.map((job) => [job.id, detail(job)] as const),
+        ]),
+        strip: Object.fromEntries([
+          ...(pinned ? [[DEMO_COMMANDS_ID, COMMANDS_STRIP] as const] : []),
+          ...jobs.map((job) => [job.id, strip(job)] as const),
+        ]),
       },
     },
     ...(message === undefined ? {} : { message }),
     footer: {
       left: [
-        { key: "enter", label: "Run sample" },
+        { key: "enter", label: opensCommands ? "Open" : "Run sample" },
         { key: "space", label: "Details" },
       ],
-      right: [{ key: ".", label: "Actions" }, {
-        key: "ctrl-k",
-        label: "Commands",
-      }],
+      // Actions concern a job, so the pinned row leaves them out.
+      right: [
+        ...(opensCommands ? [] : [{ key: ".", label: "Actions" }]),
+        { key: "ctrl-k", label: "Commands" },
+      ],
       extra: [
         { key: "/", label: "Filter" },
         { key: "g", label: "Guide" },
@@ -513,6 +609,8 @@ export interface ApplicationDemoSettings {
   readonly updateAfterMs?: number;
   /** Show the tip on the first frame; defaults to true. */
   readonly tip?: boolean;
+  /** Pin the Commands row above the groups; defaults to true. */
+  readonly pinned?: boolean;
 }
 
 /** Build deterministic sample data and caller-owned navigation for the live application review. */
@@ -527,12 +625,21 @@ export function applicationDemoOptions(
     : DEMO_TIP;
   let layers: readonly ApplicationLayer<string>[] = [];
   let mouse = false;
+  const pinned = settings.pinned ?? true;
   /** Where the reader left the guide, so opening it again resumes there. */
   let guide: MarkdownBrowserResumableState | undefined;
-  let selected: string | undefined = DEMO_JOBS[0]?.id;
+  let selected: string | undefined = pinned
+    ? DEMO_COMMANDS_ID
+    : DEMO_JOBS[0]?.id;
   let form: DemoFormValues = { title: "", schedule: "daily", notes: "" };
   let live: TerminalApplicationContext<string> | undefined;
-  const view = () => applicationDemoView(jobs, message, { layers, mouse });
+  const view = () =>
+    applicationDemoView(jobs, message, {
+      layers,
+      mouse,
+      pinned,
+      ...(selected === undefined ? {} : { selected }),
+    });
   const publish = () => live?.update(view());
   const find = (id: string | undefined) =>
     jobs.find((candidate) => candidate.id === id);
@@ -566,8 +673,13 @@ export function applicationDemoOptions(
       }, updateAfterMs);
       return () => clearTimeout(timer);
     },
-    onSelectionChange(listId, itemId) {
-      if (listId === "jobs") selected = itemId;
+    onSelectionChange(listId, itemId, context) {
+      if (listId !== "jobs") return;
+      // The footer names what Enter does, which differs on the pinned row.
+      const crossed = (selected === DEMO_COMMANDS_ID) !==
+        (itemId === DEMO_COMMANDS_ID);
+      selected = itemId;
+      if (crossed) context.update(view());
     },
     onSelectionMoved(_list, itemId, move) {
       if (move.kind !== "regrouped") return;

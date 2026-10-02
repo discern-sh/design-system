@@ -502,7 +502,7 @@ const io = new FakeTerminalIO(["\\x1b[B", "\\r", "q"]);
 let calls = 0;
 const state = await runTerminalApplication(applicationDemoOptions(() => { calls++; }), { io });
 const capture = captureTerminalFrame(io.output(), io.size());
-if (calls !== 1 || state.lists.jobs?.selectedId !== "image-resize" || !capture.html.includes("Run sample") || typeof runPtyProcess !== "function") throw new Error("Published application contract failed");
+if (calls !== 1 || state.lists.jobs?.selectedId !== "quarterly-report" || !capture.html.includes("Run sample") || typeof runPtyProcess !== "function") throw new Error("Published application contract failed");
 console.log("application-public-ok");
 `,
     );

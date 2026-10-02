@@ -33,9 +33,11 @@ async function demo(options: FakeTerminalIOOptions = {}) {
     ...options,
   });
   const clock = new ManualTerminalClock(1_000_000);
+  // The journeys below start on the first job, so no row is pinned above it.
   const sample = applicationDemoOptions(() => {}, {
     updateAfterMs: 600_000,
     tip: false,
+    pinned: false,
   });
   const calls: string[] = [];
   const observations: TerminalApplicationObservation[] = [];

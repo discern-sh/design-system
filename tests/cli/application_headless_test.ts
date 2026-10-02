@@ -1,4 +1,5 @@
 import { assert, assertEquals } from "@std/assert";
+import { measureText } from "../../src/cli/mod.ts";
 import {
   type ApplicationListGroup,
   type TerminalApplicationView,
@@ -16,6 +17,12 @@ import {
 import { modelState } from "../../src/cli/interactive/application/model.ts";
 import { type TestItem, testView } from "../fixtures/application-views.ts";
 import { ApplicationDriver } from "../fixtures/application-driver.ts";
+import {
+  APPLICATION_REVIEW_SIZES,
+  applicationDemoView,
+  DEMO_COMMANDS_ID,
+  DEMO_TIP,
+} from "../../scripts/playground/application.ts";
 
 const PINNED = { id: "pinned", title: "Pinned", headless: true } as const;
 const GROUPS = [
@@ -357,4 +364,29 @@ Deno.test("a density fold order may not name a headless group", () => {
       message: "names a headless group, which never folds",
     }],
   );
+});
+
+Deno.test("the sample's pinned Commands row leads every review size", () => {
+  for (const size of APPLICATION_REVIEW_SIZES) {
+    for (const unicode of [true, false]) {
+      const where = `${size.columns}x${size.rows} unicode ${unicode}`;
+      const driver = new ApplicationDriver(
+        applicationDemoView(undefined, DEMO_TIP, { pinned: true }),
+        { ...size, colorDepth: "none", unicode },
+      );
+      const lines = driver.text.split("\n");
+      assertEquals(lines.length, size.rows, where);
+      for (const line of lines) assertEquals(measureText(line), size.columns);
+      assertEquals(driver.state.lists.jobs?.selectedId, DEMO_COMMANDS_ID);
+      const row = lines.findIndex((line) => line.includes("Commands"));
+      assert(row >= 1 && row <= 2, `${where}: the pinned row leads`);
+      assert(!driver.text.includes("Pinned"), where);
+      // Below 14 rows the tip takes the footer's row.
+      if (size.rows >= 14) {
+        assert(lines.at(-1)?.includes("Open"), `${where}: Enter opens it`);
+      }
+      driver.key("down");
+      assertEquals(driver.state.lists.jobs?.selectedId, "quarterly-report");
+    }
+  }
 });
