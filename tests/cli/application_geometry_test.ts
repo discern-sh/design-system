@@ -707,6 +707,42 @@ Deno.test("a row's text runs on into the trailing cells it leaves empty, and the
     "Keyed label running on       n",
     "Middle                    1   ",
   ]);
+  // A fitted block sizes each column to its widest cell, drops one no row
+  // fills, and keeps its longest label whole, so the column with a
+  // priority gives way before a label is cut.
+  const labels: ApplicationDetailBlock = {
+    kind: "rows",
+    columns: [
+      { id: "meta", width: 24, align: "end", priority: 1 },
+      { id: "unused", width: 6 },
+      { id: "key", width: 1 },
+    ],
+    fit: true,
+    items: [
+      {
+        text: [{ text: "Keyboard shortcuts" }],
+        cells: { key: [{ text: "?" }] },
+      },
+      {
+        text: [{ text: "Session activity" }],
+        cells: { meta: [{ text: "nothing yet" }] },
+      },
+    ],
+  };
+  const at = (width: number) =>
+    renderDetailBlocks(context, [labels], {
+      width,
+      wide: false,
+      surface: undefined,
+    }).map(stripAnsi);
+  assertEquals(at(36), [
+    "Keyboard shortcuts                 ?",
+    "Session activity      nothing yet   ",
+  ]);
+  assertEquals(at(30), [
+    "Keyboard shortcuts           ?",
+    "Session activity              ",
+  ]);
 });
 
 Deno.test("a block that renders nothing leaves no trace, and a section never heads nothing", () => {

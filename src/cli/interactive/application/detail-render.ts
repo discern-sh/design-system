@@ -303,10 +303,11 @@ const ROW_MIN_TEXT = 12;
 /**
  * Aligned rows: a lead cell, text that takes the remaining width and
  * truncates, and trailing columns that drop lowest priority first while the
- * text would keep fewer than twelve cells. A row's text runs on into the
- * trailing cells it leaves empty, up to the first it fills, so a long label
- * with nothing beside it keeps its words while the cells other rows fill
- * stay aligned.
+ * text would keep fewer than twelve cells. A `fit` block sizes each column
+ * to its widest cell, up to its width, and keeps its longest text whole
+ * instead. A row's text runs on into the trailing cells it leaves empty, up
+ * to the first it fills, so a long label with nothing beside it keeps its
+ * words while the cells other rows fill stay aligned.
  */
 function rows(
   context: PaintContext,
@@ -316,10 +317,25 @@ function rows(
   const gap = 2;
   const lead = block.lead;
   const leadCells = lead === undefined ? 0 : lead.width + 1;
-  let shown = [...(block.columns ?? [])];
+  const fit = block.fit === true;
+  let shown = (block.columns ?? []).flatMap((column) => {
+    if (!fit) return [column];
+    const widest = Math.max(
+      0,
+      ...block.items.map((item) =>
+        runsWidth(context, item.cells?.[column.id] ?? [])
+      ),
+    );
+    return widest === 0
+      ? []
+      : [{ ...column, width: Math.min(column.width, widest) }];
+  });
   const trailing = () =>
     shown.reduce((total, column) => total + column.width + gap, 0);
-  while (layout.width - leadCells - trailing() < ROW_MIN_TEXT) {
+  const minText = fit
+    ? Math.max(0, ...block.items.map((item) => runsWidth(context, item.text)))
+    : ROW_MIN_TEXT;
+  while (layout.width - leadCells - trailing() < minText) {
     let drop = -1;
     for (const [index, column] of shown.entries()) {
       if (column.priority === undefined) continue;

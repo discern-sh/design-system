@@ -304,6 +304,14 @@ export interface ApplicationRowsBlock {
    * text runs on into the cells it leaves empty, up to the first it fills.
    */
   readonly columns?: readonly ApplicationListColumn[];
+  /**
+   * Lay the block out by its content: each trailing column as wide as its
+   * widest cell, up to its declared width, and gone when no row fills it,
+   * and the longest text kept whole before a column with a priority drops,
+   * as named entries with short values beside them want. Otherwise every
+   * column keeps its width and twelve text cells are kept.
+   */
+  readonly fit?: boolean;
   readonly items: readonly ApplicationDetailRow[];
 }
 
