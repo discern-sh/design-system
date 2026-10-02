@@ -18,6 +18,7 @@ import {
 import {
   clip,
   fitLine,
+  fitProse,
   ink,
   overflowMarker,
   type PaintContext,
@@ -371,12 +372,29 @@ function itemLine<A>(
   return fitLine(context, content, width, paint.surface);
 }
 
+/**
+ * A header's or fold row's words, kept to the cells an item row's text and
+ * columns use: an aside, faint prose, stops short of the list's right pad,
+ * cut after a whole word, as an item's last column does.
+ */
+function headWords(
+  context: PaintContext,
+  content: string,
+  aside: boolean,
+  room: number,
+): string {
+  return aside && measureText(content) > room
+    ? fitProse(context, content, room)
+    : content;
+}
+
 function headerLine<A>(
   context: PaintContext,
   row: Extract<ListRow<A>, { kind: "header" }>,
   width: number,
   paint: RowPaint,
   marker: string,
+  pad: number,
 ): string {
   const lead = row.key === undefined
     ? "  "
@@ -397,7 +415,12 @@ function headerLine<A>(
   }${ink(context, `  ${row.count}`, { tone: "faint" }, paint.surface)}${aside}`;
   return fitLine(
     context,
-    spread(context, content, marker, width),
+    spread(
+      context,
+      headWords(context, content, aside !== "", width - pad),
+      marker,
+      width,
+    ),
     width,
     paint.surface,
   );
@@ -409,6 +432,7 @@ function foldLine<A>(
   width: number,
   paint: RowPaint,
   marker: string,
+  pad: number,
 ): string {
   const separator = ` ${terminalGlyph("separator", context.capabilities)} `;
   const part = (index: number) => {
@@ -451,7 +475,12 @@ function foldLine<A>(
   } ${compose(shown)}${aside}`;
   return fitLine(
     context,
-    spread(context, content, marker, width),
+    spread(
+      context,
+      headWords(context, content, aside !== "", width - pad),
+      marker,
+      width,
+    ),
     width,
     paint.surface,
   );
@@ -475,11 +504,11 @@ export function renderListRow<A>(
     case "blank":
       return fitLine(context, spread(context, "", marker, width), width);
     case "header":
-      return headerLine(context, row, width, paint, marker);
+      return headerLine(context, row, width, paint, marker, layout.gaps.pad);
     case "item":
       return itemLine(context, row.item, layout, width, paint);
     case "fold":
-      return foldLine(context, row, width, paint, marker);
+      return foldLine(context, row, width, paint, marker, layout.gaps.pad);
   }
 }
 

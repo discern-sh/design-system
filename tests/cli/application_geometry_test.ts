@@ -353,6 +353,44 @@ Deno.test("below the minimum the notice names the size it needs", () => {
   }
 });
 
+Deno.test("a header's or fold row's aside stops at the list's right pad, as an item's columns do", () => {
+  const context = paintContext(
+    { colorDepth: "none", unicode: true, columns: 30 },
+    {},
+    { phase: 0 },
+  );
+  const group = {
+    id: "paused",
+    title: "Paused",
+    aside: [{ text: "jobs that wait for a person" }],
+    items: [],
+  };
+  const list = { id: "items", groups: [group] };
+  for (const pad of [1, 2]) {
+    const gaps = { afterTitle: 1, between: 1, pad };
+    const layout = layoutListColumns(list, 30, gaps);
+    for (
+      const row of [
+        { kind: "header" as const, group, count: 3 },
+        {
+          kind: "fold" as const,
+          groups: [{ group, count: 3 }],
+          key: "g:paused",
+        },
+      ]
+    ) {
+      const line = stripAnsi(renderListRow(context, row, layout, 30, false));
+      assertEquals(measureText(line), 30, line);
+      assertEquals(
+        line.slice(30 - pad),
+        " ".repeat(pad),
+        `${row.kind}: ${line}`,
+      );
+      assert(line.includes("…"), `${row.kind}: the aside is cut: ${line}`);
+    }
+  }
+});
+
 Deno.test("a selection under a layer recedes to the muted fill and keeps its bar", () => {
   const io = new FakeTerminalIO([], { columns: 40, rows: 10 });
   const capabilities = {
