@@ -174,12 +174,13 @@ const ARROW_CHORDS: ReadonlySet<string> = new Set([
 ]);
 
 /**
- * One-cell alternatives as one hint: arrows that touch read as a pair
- * (`↑↓`), three or more consecutive digits read as a range (`1–5`), and
- * every other neighbour stands a space apart (`↑↓ k j`, `→ .`), so no two
- * keys run together into what reads as one unknown key.
+ * Alternatives shown as one hint: arrows drawn as one-cell glyphs that
+ * touch read as a pair (`↑↓`), three or more consecutive digits read as a
+ * range (`1–5`), and every other neighbour stands a space apart (`↑↓ k j`,
+ * `→ .`, `PgUp PgDn`, `Tab ⇧Tab`, `Up Down`), so no two keys run together
+ * into what reads as one unknown key and one keys list uses one separator.
  */
-function joinOneCell(
+function joinAlternatives(
   chords: readonly KeyChord[],
   parts: readonly string[],
   unicode: boolean,
@@ -200,9 +201,11 @@ function joinOneCell(
       index = end + 1;
       continue;
     }
+    const text = parts[index] ?? "";
     pieces.push({
-      text: parts[index] ?? "",
-      arrow: ARROW_CHORDS.has(normalizeKeyChord(chords[index] ?? "")),
+      text,
+      arrow: ARROW_CHORDS.has(normalizeKeyChord(chords[index] ?? "")) &&
+        measureText(text) === 1,
     });
     index += 1;
   }
@@ -216,9 +219,8 @@ function joinOneCell(
 /**
  * Display one chord, or several shown as one hint. Arrows and Enter use
  * their terminal glyphs, falling back to names without Unicode; Ctrl
- * chords read `^K`; one-cell keys join as {@linkcode joinOneCell} reads
- * them — `↑↓`, `↑↓ k j`, `1–5` — and anything wider joins with a slash
- * (`Up/Down`).
+ * chords read `^K`; alternatives join as {@linkcode joinAlternatives}
+ * reads them — `↑↓`, `↑↓ k j`, `1–5`, `PgUp PgDn`, `Up Down`.
  */
 export function formatKeyChord(
   chord: KeyChord | readonly KeyChord[],
@@ -226,9 +228,7 @@ export function formatKeyChord(
 ): string {
   const chords = typeof chord === "string" ? [chord] : chord;
   const parts = chords.map((part) => formatOne(part, capabilities));
-  return parts.every((part) => measureText(part) === 1)
-    ? joinOneCell(chords, parts, capabilities.unicode)
-    : parts.join("/");
+  return joinAlternatives(chords, parts, capabilities.unicode);
 }
 
 interface Candidate {

@@ -195,17 +195,30 @@ Deno.test("one-cell alternatives stay readable as one hint", () => {
   assertEquals(formatKeyChord(["1", "2", "3", "4", "5"], ascii), "1-5");
   assertEquals(formatKeyChord(["1", "2"], unicode), "1 2");
   assertEquals(formatKeyChord(["3", "4", "5", "7"], unicode), "3–5 7");
-  // Wider names keep the slash.
-  assertEquals(formatKeyChord(["up", "down", "k"], ascii), "Up/Down/k");
+  // Wider names stand a space apart too, so a keys list has one separator.
+  assertEquals(formatKeyChord(["up", "down", "k"], ascii), "Up Down k");
+  assertEquals(formatKeyChord(["page-up", "page-down"], unicode), "PgUp PgDn");
+  assertEquals(formatKeyChord(["home", "end"], unicode), "Home End");
+  assertEquals(formatKeyChord(["tab", "shift-tab"], unicode), "Tab ⇧Tab");
+  assertEquals(formatKeyChord(["ctrl-k", ":"], unicode), "^K :");
+  assertEquals(formatKeyChord(["d", "ctrl-t"], unicode), "d ^T");
+  assertEquals(formatKeyChord(["left", "right"], ascii), "Left Right");
 });
 
-Deno.test("no two one-cell keys but a pair of arrows ever touch", () => {
+Deno.test("every token of an alternatives hint is one key, an arrow pair, or a digit range", () => {
   const pool = [
     "up",
     "down",
     "left",
     "right",
     "enter",
+    "escape",
+    "page-up",
+    "page-down",
+    "home",
+    "tab",
+    "shift-tab",
+    "ctrl-k",
     "j",
     "k",
     ".",
@@ -218,19 +231,26 @@ Deno.test("no two one-cell keys but a pair of arrows ever touch", () => {
     "5",
   ];
   const arrows = new Set(["↑", "↓", "←", "→"]);
-  for (const first of pool) {
-    for (const second of pool) {
-      for (const third of pool) {
-        const shown = formatKeyChord([first, second, third], {
-          unicode: true,
-        });
-        for (const token of shown.split(" ")) {
-          const cells = [...token];
-          assert(
-            cells.length === 1 || cells.every((cell) => arrows.has(cell)) ||
-              /^\d–\d$/u.test(token),
-            `${JSON.stringify([first, second, third])} reads "${shown}"`,
-          );
+  for (const unicode of [true, false]) {
+    const capabilities = { unicode };
+    const single = new Set(
+      pool.map((key) => formatKeyChord(key, capabilities)),
+    );
+    const range = unicode ? /^\d–\d$/u : /^\d-\d$/u;
+    for (const first of pool) {
+      for (const second of pool) {
+        for (const third of pool) {
+          const shown = formatKeyChord([first, second, third], capabilities);
+          assert(!shown.includes("/") || [first, second, third].includes("/"));
+          for (const token of shown.split(" ")) {
+            const cells = [...token];
+            assert(
+              single.has(token) ||
+                (unicode && cells.every((cell) => arrows.has(cell))) ||
+                range.test(token),
+              `${JSON.stringify([first, second, third])} reads "${shown}"`,
+            );
+          }
         }
       }
     }
@@ -243,7 +263,7 @@ Deno.test("chords display as glyphs, carets, and words", () => {
   assertEquals(formatKeyChord("enter", unicode), "↵");
   assertEquals(formatKeyChord("enter", ascii), "Enter");
   assertEquals(formatKeyChord(["up", "down"], unicode), "↑↓");
-  assertEquals(formatKeyChord(["up", "down"], ascii), "Up/Down");
+  assertEquals(formatKeyChord(["up", "down"], ascii), "Up Down");
   assertEquals(formatKeyChord("shift-down", unicode), "⇧↓");
   assertEquals(formatKeyChord("shift-down", ascii), "Shift+Down");
   assertEquals(formatKeyChord("shift-tab", ascii), "Shift+Tab");

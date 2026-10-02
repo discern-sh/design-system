@@ -387,7 +387,7 @@ export interface ApplicationMasterDetailBody<A> {
   readonly split?: ApplicationSplitRules;
   /**
    * The footer while the detail is zoomed. By default the package adds
-   * Up/Down after the primary hint and a Back hint on the right.
+   * Up and Down after the primary hint and a Back hint on the right.
    */
   readonly zoomFooter?: KeyHints;
 }
