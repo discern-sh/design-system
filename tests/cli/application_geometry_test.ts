@@ -18,6 +18,7 @@ import {
 import { flattenList } from "../../src/cli/interactive/application/list-model.ts";
 import { modelState } from "../../src/cli/interactive/application/model.ts";
 import {
+  layoutDetailBlocks,
   renderDetailBlocks,
   renderStrip,
 } from "../../src/cli/interactive/application/detail-render.ts";
@@ -561,6 +562,15 @@ Deno.test("every detail block line fits the width it was given", () => {
       ],
     },
     {
+      kind: "marks",
+      compact: true,
+      items: [{
+        mark: { unicode: "✕", ascii: "x" },
+        runs: [{ text: "A compact evidence line that wraps" }],
+        lines: [[{ text: "with a location line beneath its text" }]],
+      }],
+    },
+    {
       kind: "hints",
       items: [{
         key: "enter",
@@ -600,6 +610,44 @@ Deno.test("every detail block line fits the width it was given", () => {
       }
     }
   }
+});
+
+Deno.test("a compact marks block sets its text one space after the mark and its lines at the text", () => {
+  const context = paintContext(
+    { colorDepth: "none", unicode: true, columns: 40 },
+    {},
+    { phase: 0 },
+  );
+  const block = (compact: boolean): ApplicationDetailBlock => ({
+    kind: "marks",
+    ...(compact ? { compact } : {}),
+    items: [{
+      mark: { unicode: "✕", ascii: "x" },
+      runs: [{ text: "Failing test name that wraps here" }],
+      lines: [[{ text: "tests/feature_test.ts:42" }]],
+    }],
+  });
+  const layout = { width: 28, wide: false, surface: undefined };
+  const compact = renderDetailBlocks(context, [block(true)], layout).map(
+    stripAnsi,
+  );
+  assertEquals(compact, [
+    "✕ Failing test name that",
+    "  wraps here",
+    "  tests/feature_test.ts:42",
+  ]);
+  const roomy = renderDetailBlocks(context, [block(false)], layout).map(
+    stripAnsi,
+  );
+  assertEquals(roomy, [
+    "✕  Failing test name that",
+    "   wraps here",
+    "     tests/",
+    "     feature_test.ts:42",
+  ]);
+  // Each item is one unit a viewport keeps whole.
+  const { continued } = layoutDetailBlocks(context, [block(true)], layout);
+  assertEquals([...continued], [1, 2]);
 });
 
 Deno.test("a block that renders nothing leaves no trace, and a section never heads nothing", () => {

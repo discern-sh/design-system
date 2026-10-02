@@ -234,6 +234,14 @@ export interface ApplicationMeterBlock {
 export interface ApplicationMarksBlock {
   readonly kind: "marks";
   readonly items: readonly ApplicationDetailMark[];
+  /**
+   * Draw each item as its mark, one space, and its text, with the item's
+   * `lines` starting at the text's own column, as a compact evidence list
+   * in a narrow detail column wants. By default a mark stands two spaces
+   * from its text and its lines hang two cells further in, as a sheet's
+   * consequences read.
+   */
+  readonly compact?: boolean;
 }
 
 /** Keys and what they do, shown at the wide tier, in the split and in zoom alike. */
@@ -303,7 +311,10 @@ export type ApplicationDetailBlock =
 export interface ApplicationDetailMark {
   readonly mark: ApplicationGlyph;
   readonly runs: readonly ApplicationRun[];
-  /** Lines hanging under the text, each wrapped on its own. */
+  /**
+   * Lines under the text, each wrapped on its own: two cells further in
+   * than the text, or at its column in a `compact` block.
+   */
   readonly lines?: readonly (readonly ApplicationRun[])[];
 }
 

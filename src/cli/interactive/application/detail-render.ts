@@ -165,11 +165,12 @@ function state(
     .map((line, index) => index === 0 ? `${glyph} ${line}` : `  ${line}`);
 }
 
+/** A label column and values, one unit per fact. */
 function facts(
   context: PaintContext,
   block: Extract<ApplicationDetailBlock, { kind: "facts" }>,
   layout: DetailLayout,
-): readonly string[] {
+): readonly (readonly string[])[] {
   const longest = Math.max(
     0,
     ...block.rows.map((row) => measureText(row.label)),
@@ -185,8 +186,10 @@ function facts(
       layout.width - 8,
     ),
   );
-  const lines: string[] = [];
+  const units: string[][] = [];
   for (const row of block.rows) {
+    const lines: string[] = [];
+    units.push(lines);
     const label = ink(
       context,
       padText(clip(context, row.label, labelWidth - 1), labelWidth),
@@ -211,7 +214,7 @@ function facts(
       }
     }
   }
-  return lines;
+  return units;
 }
 
 function meter(
@@ -253,19 +256,25 @@ function meter(
 const MARK_INDENT = 3;
 /** Further cells a mark's own lines hang beneath its text. */
 const MARK_LINE_INDENT = 2;
+/** Cells a compact mark's text starts after: the mark and one space. */
+const COMPACT_MARK_INDENT = 2;
 
+/** Each mark with its wrapped text and lines, one unit per item. */
 function marks(
   context: PaintContext,
   block: Extract<ApplicationDetailBlock, { kind: "marks" }>,
   layout: DetailLayout,
-): readonly string[] {
-  const hanging = MARK_INDENT + MARK_LINE_INDENT;
-  return block.items.flatMap((item) => {
+): readonly (readonly string[])[] {
+  const compact = block.compact === true;
+  const indent = compact ? COMPACT_MARK_INDENT : MARK_INDENT;
+  const hanging = compact ? indent : indent + MARK_LINE_INDENT;
+  const gap = " ".repeat(indent - 1);
+  return block.items.map((item) => {
     const mark = styleGlyph(context, item.mark, layout.surface, "muted");
     return [
-      ...wrapRuns(context, item.runs, layout.width, layout, "ink", MARK_INDENT)
+      ...wrapRuns(context, item.runs, layout.width, layout, "ink", indent)
         .map((line, index) =>
-          index === 0 ? `${mark}  ${line.trimStart()}` : line
+          index === 0 ? `${mark}${gap}${line.trimStart()}` : line
         ),
       ...(item.lines ?? []).flatMap((runs) =>
         wrapRuns(context, runs, layout.width - hanging, layout, "muted", 0)
@@ -423,23 +432,66 @@ function section(
   context: PaintContext,
   block: Extract<ApplicationDetailBlock, { kind: "section" }>,
   layout: DetailLayout,
-): readonly string[] {
-  const content = renderDetailBlocks(context, block.blocks, layout);
-  if (content.length === 0) return [];
+): readonly (readonly string[])[] {
+  const content = layoutDetailBlocks(context, block.blocks, layout);
+  if (content.lines.length === 0) return [];
   const title = [
     block.title,
     ...(block.count === undefined ? [] : [String(block.count)]),
     ...(block.caption === undefined ? [] : [block.caption]),
   ].join("  ");
   return [
-    ink(
-      context,
-      clip(context, title, layout.width),
-      { tone: "faint" },
-      layout.surface,
-    ),
-    ...content,
+    [
+      ink(
+        context,
+        clip(context, title, layout.width),
+        { tone: "faint" },
+        layout.surface,
+      ),
+    ],
+    ...unitsOf(content),
   ];
+}
+
+/** Lines grouped back into the units their continuations name. */
+function unitsOf(content: DetailBlockLines): readonly (readonly string[])[] {
+  const units: string[][] = [];
+  for (const [index, line] of content.lines.entries()) {
+    const current = units.at(-1);
+    if (current !== undefined && content.continued.has(index)) {
+      current.push(line);
+    } else units.push([line]);
+  }
+  return units;
+}
+
+/**
+ * A block's lines grouped into units a viewport keeps whole where it can:
+ * a mark with its wrapped text and lines, a fact with its values, a state
+ * or heading with its own wrapped lines; any other line stands alone.
+ */
+function renderBlockUnits(
+  context: PaintContext,
+  block: ApplicationDetailBlock,
+  layout: DetailLayout,
+): readonly (readonly string[])[] {
+  switch (block.kind) {
+    case "marks":
+      return marks(context, block, layout);
+    case "facts":
+      return facts(context, block, layout);
+    case "section":
+      return section(context, block, layout);
+    case "heading":
+    case "state":
+    case "meter":
+    case "pending": {
+      const lines = renderBlock(context, block, layout);
+      return lines.length === 0 ? [] : [lines];
+    }
+    default:
+      return renderBlock(context, block, layout).map((line) => [line]);
+  }
 }
 
 function renderBlock(
@@ -455,11 +507,11 @@ function renderBlock(
     case "text":
       return wrapRuns(context, block.runs, layout.width, layout, "muted");
     case "facts":
-      return facts(context, block, layout);
+    case "marks":
+    case "section":
+      return renderBlockUnits(context, block, layout).flat();
     case "meter":
       return meter(context, block, layout);
-    case "marks":
-      return marks(context, block, layout);
     case "rows":
       return rows(context, block, layout);
     case "hints":
@@ -476,8 +528,6 @@ function renderBlock(
           layout.surface,
         ),
       ];
-    case "section":
-      return section(context, block, layout);
   }
 }
 
@@ -501,6 +551,11 @@ export interface DetailBlockLines {
    * to the state above it begins no block of its own.
    */
   readonly starts: readonly number[];
+  /**
+   * Lines that continue the unit above them — a mark's wrapped text and
+   * lines, a fact's further values — so a viewport can end at a whole unit.
+   */
+  readonly continued: ReadonlySet<number>;
 }
 
 /** Render detail blocks and record where each begins. */
@@ -514,18 +569,24 @@ export function layoutDetailBlocks(
     : given;
   const lines: string[] = [];
   const starts: number[] = [];
+  const continued = new Set<number>();
   let previous: ApplicationDetailBlock["kind"] | undefined;
   for (const block of blocks) {
-    const rendered = renderBlock(context, block, layout);
-    if (rendered.length === 0) continue;
+    const units = renderBlockUnits(context, block, layout);
+    if (units.length === 0) continue;
     const hugs = (previous === "state" || previous === "meter") &&
       (block.kind === "text" || block.kind === "meter");
     if (previous !== undefined && !hugs) lines.push("");
     if (!hugs) starts.push(lines.length);
-    lines.push(...rendered);
+    for (const unit of units) {
+      for (const [index, line] of unit.entries()) {
+        if (index > 0) continued.add(lines.length);
+        lines.push(line);
+      }
+    }
     previous = block.kind;
   }
-  return { lines, starts };
+  return { lines, starts, continued };
 }
 
 /** One scrolled slice of detail lines. */
