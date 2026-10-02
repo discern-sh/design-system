@@ -8,10 +8,7 @@
  * @module
  */
 
-import { createCliBlock } from "../block-composition.ts";
-import renderMarkdownCli, {
-  renderMarkdownCliProjection,
-} from "../../components/editorial/markdown/markdown.cli.ts";
+import { renderMarkdownCliProjection } from "../../components/editorial/markdown/markdown.cli.ts";
 import type { KeyHint } from "../key-hints.ts";
 import { DEFAULT_TERMINAL_APPLICATION_COPY } from "./application/copy.ts";
 import { fragmentHeading } from "./application/markdown-reading.ts";
@@ -31,7 +28,10 @@ import type {
   ApplicationMessage,
   TerminalApplicationView,
 } from "./application/view.ts";
-import type { ApplicationPalette } from "./application/layer-view.ts";
+import type {
+  ApplicationPalette,
+  ApplicationPaletteItem,
+} from "./application/layer-view.ts";
 import type { TerminalApplicationCopy } from "./application/copy.ts";
 import {
   assertMarkdownBrowserState,
@@ -117,10 +117,13 @@ export const MARKDOWN_BROWSER_KEYMAP: readonly ApplicationKeyBinding<
   },
 ]);
 
-/** One-cell row markers: unread and read documents, actions, and exits. */
+/**
+ * One-cell row markers. A document carries none, so no row borrows a mark
+ * an application gives a state, such as idle or active; an action and an
+ * exit say what choosing them does.
+ */
 const MARKERS = {
-  unread: { unicode: "○", ascii: "o", tone: "muted" },
-  read: { unicode: "●", ascii: "*", tone: "accent" },
+  document: { unicode: " ", ascii: " " },
   action: { unicode: "↗", ascii: "/", tone: "accent" },
   exit: { unicode: "×", ascii: "x", tone: "faint" },
 } as const satisfies Readonly<Record<string, ApplicationGlyph>>;
@@ -290,9 +293,13 @@ export class MarkdownBrowserController<Action> {
             { text: "  ›  ", ascii: "  >  ", tone: "faint" },
             { text: document.label, role: "title" },
           ],
-          trailing: [{ text: document.path, tone: "faint" }],
-          // The document's title outranks its path.
-          yields: "trailing",
+          ...(this.#options.showPaths === true
+            ? {
+              trailing: [{ text: document.path, tone: "faint" as const }],
+              // The document's title outranks its path.
+              yields: "trailing" as const,
+            }
+            : {}),
         },
       body: document === undefined ? this.#contents() : {
         kind: "reading",
@@ -346,7 +353,7 @@ export class MarkdownBrowserController<Action> {
   #marker(choice: MarkdownBrowserChoice<Action>): ApplicationGlyph {
     if (choice.kind === "action") return MARKERS.action;
     if (choice.kind === "exit") return MARKERS.exit;
-    return this.#read.has(choice.id) ? MARKERS.read : MARKERS.unread;
+    return MARKERS.document;
   }
 
   /** The detail beside a contents row: what it is, then the document itself. */
@@ -358,26 +365,16 @@ export class MarkdownBrowserController<Action> {
     const blocks: ApplicationDetailBlock[] = [{
       kind: "heading",
       title: choice.label,
-      ...(choice.kind === "document"
+      ...(choice.kind === "document" && this.#options.showPaths === true
         ? { aside: [{ text: choice.path, tone: "faint" as const }] }
         : {}),
     }];
     if (choice.description !== undefined) {
       blocks.push({ kind: "text", runs: [{ text: choice.description }] });
     }
-    if (choice.kind === "document") {
-      const markdown = this.#markdownOf(choice.id);
-      blocks.push({
-        kind: "block",
-        content: createCliBlock(renderMarkdownCli, {
-          source: markdown.source,
-          ...(markdown.diagrams === undefined
-            ? {}
-            : { diagrams: markdown.diagrams }),
-          ...(markdown.charts === undefined ? {} : { charts: markdown.charts }),
-        }),
-      });
-    }
+    // The document reads as it will when opened, its headings keeping
+    // with their first lines.
+    if (choice.kind === "document") blocks.push(this.#markdownOf(choice.id));
     this.#previews.set(choice.id, blocks);
     return blocks;
   }
@@ -386,19 +383,21 @@ export class MarkdownBrowserController<Action> {
     const marker = this.#marker(choice);
     return {
       title: [
-        {
-          text: marker.unicode,
-          ascii: marker.ascii,
-          ...(marker.tone === undefined ? {} : { tone: marker.tone }),
-        },
-        { text: " " },
+        ...(choice.kind === "document" ? [] : [
+          {
+            text: marker.unicode,
+            ascii: marker.ascii,
+            ...(marker.tone === undefined ? {} : { tone: marker.tone }),
+          },
+          { text: " " },
+        ]),
         { text: choice.label, role: "title" },
       ],
       facts: [
         ...(choice.description === undefined
           ? []
           : [[{ text: choice.description }]]),
-        ...(choice.kind === "document"
+        ...(choice.kind === "document" && this.#options.showPaths === true
           ? [[{ text: choice.path, tone: "faint" as const }]]
           : []),
       ],
@@ -438,7 +437,13 @@ export class MarkdownBrowserController<Action> {
     };
   }
 
+  /**
+   * Search over every entry, a document once however many groups list it:
+   * its first listing stands for the rest. Paths match only where they show.
+   */
   #palette(): ApplicationPalette<MarkdownBrowserStep> {
+    const listed = new Set<string>();
+    const paths = this.#options.showPaths === true;
     return {
       kind: "palette",
       id: MARKDOWN_BROWSER_SEARCH,
@@ -446,16 +451,26 @@ export class MarkdownBrowserController<Action> {
       placeholder: this.#options.placeholder ?? this.copy.searchPlaceholder,
       sections: this.corpus.groups.map((group) => ({
         title: group.heading?.label ?? this.copy.contents,
-        items: group.choices.map((choice) => ({
-          id: choice.id,
-          label: choice.label,
-          ...(choice.description === undefined
-            ? {}
-            : { context: choice.description }),
-          ...(choice.kind === "document" ? { keywords: choice.path } : {}),
-          action: { kind: "open", id: choice.id },
-        })),
-      })),
+        items: group.choices.flatMap((
+          choice,
+        ): ApplicationPaletteItem<MarkdownBrowserStep>[] => {
+          if (choice.kind === "document") {
+            if (listed.has(choice.path)) return [];
+            listed.add(choice.path);
+          }
+          return [{
+            id: choice.id,
+            label: choice.label,
+            ...(choice.description === undefined
+              ? {}
+              : { context: choice.description }),
+            ...(choice.kind === "document" && paths
+              ? { keywords: choice.path }
+              : {}),
+            action: { kind: "open", id: choice.id },
+          }];
+        }),
+      })).filter((section) => section.items.length > 0),
     };
   }
 

@@ -308,6 +308,7 @@ Deno.test("Markdown playground senses light and dark ground before choosing the 
   const options = {
     label: "Documentation library",
     placeholder: "Search titles, descriptions, and paths",
+    showPaths: true,
     entries: markdownBrowserEntries,
     mouse: true,
   } as const;

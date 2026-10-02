@@ -343,6 +343,7 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
         result = await requestMarkdownBrowser({
           label: "Documentation library",
           placeholder: "Search titles, descriptions, and paths",
+          showPaths: true,
           entries: markdownBrowserEntries,
           mouse: true,
           resolveLink({ sourceDocumentId, destination }) {

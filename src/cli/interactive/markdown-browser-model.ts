@@ -164,6 +164,12 @@ export interface MarkdownBrowserOptions<Action> {
   readonly documentMeasure?: number;
   /** Report clicks and the wheel; off by default. */
   readonly mouse?: boolean;
+  /**
+   * Show each document's path beside its preview and its title, and let
+   * search match it; off by default, since readers seldom navigate a
+   * corpus by file.
+   */
+  readonly showPaths?: boolean;
   /** Resolve relative destinations among the admitted documents. */
   readonly resolveLink?: MarkdownBrowserLinkResolver;
   /** Replacements for any word the browser writes. */

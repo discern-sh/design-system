@@ -117,7 +117,7 @@ Deno.test("without colour or Unicode the browser stays navigable in plain ASCII"
   } as const;
   const contents = preview(40, 24, "contents", plain);
   assert(!contents.frame.includes("\u001b"));
-  assertStringIncludes(contents.text, "> o Keyboard Markdown");
+  assertStringIncludes(contents.text, ">   Keyboard Markdown");
   const linked = preview(40, 24, "keyboard-link", plain);
   assert(!linked.frame.includes("\u001b"));
   assertStringIncludes(linked.text, ">Read the reference");

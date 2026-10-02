@@ -77,10 +77,19 @@ Deno.test("the contents list every entry by group and preview the selection besi
   for (const title of ["Guides", "Reference", "Actions"]) {
     assertStringIncludes(text, title);
   }
-  assertStringIncludes(text, "○ Keyboard Markdown browser");
+  // A document carries no mark an application gives a state.
+  assertStringIncludes(text, "  Keyboard Markdown browser");
+  assert(!/[○●▲]/u.test(text), text);
   assertStringIncludes(text, "↗ Read the docs online");
   assertStringIncludes(text, "× Quit");
-  assertStringIncludes(text, "guides/keyboard-markdown-browser.md");
+  // Paths show only on request.
+  assert(!text.includes("guides/keyboard-markdown-browser.md"), text);
+  const paths = browse(
+    { ...markdownBrowserOptions, showPaths: true },
+    { columns: 100 },
+    40,
+  ).preview;
+  assertStringIncludes(paths.text, "guides/keyboard-markdown-browser.md");
   assertStringIncludes(text, "Search, focus, resize, and restoration");
   assertStringIncludes(text, "A deliberately long guide heading");
   assertEquals(preview.state.focusedControlId, "contents");
@@ -101,8 +110,7 @@ Deno.test("Enter opens a document at its top, and Back returns with it selected 
   assertStringIncludes(preview.text, "Esc Back");
   preview.key("backspace");
   assertEquals(preview.state.lists.contents?.selectedId, "note-1");
-  assertStringIncludes(preview.text, "● Reference note 1");
-  assertStringIncludes(preview.text, "○ Keyboard Markdown browser");
+  assertStringIncludes(preview.text, "  Reference note 1");
   preview.key("escape");
   assertEquals(closed(), {}, "Escape where the reader started closes");
 });
@@ -147,7 +155,7 @@ Deno.test("search ranks every entry, opens the choice, and closes on Escape or C
   const { preview } = browse();
   preview.key("/");
   assertEquals(preview.state.topLayerId, "search");
-  assertStringIncludes(preview.text, "Search titles, descriptions, and paths");
+  assertStringIncludes(preview.text, "Search titles and descriptions");
   preview.type("note 1");
   assertEquals(preview.state.layers.search?.highlightedId, "note-1");
   preview.key("enter");
@@ -160,6 +168,43 @@ Deno.test("search ranks every entry, opens the choice, and closes on Escape or C
   preview.key("/", "escape");
   assertEquals(preview.state.topLayerId, undefined, "an empty query closes");
   assertEquals(preview.state.focusedControlId, "document:note-1");
+});
+
+Deno.test("search lists a document once however many groups list it, and paths only on request", () => {
+  const document = (id: string) => ({
+    kind: "document" as const,
+    id,
+    label: "Shared page",
+    path: "guides/shared.md",
+    source: "# Shared page\n\nOne document listed twice.",
+  });
+  const options: MarkdownBrowserOptions<string> = {
+    label: "Manual",
+    entries: [
+      { kind: "group-heading", id: "start", label: "Start here" },
+      document("shared-start"),
+      { kind: "group-heading", id: "reference", label: "Reference" },
+      document("shared-reference"),
+    ],
+  };
+  const { preview } = browse(options);
+  preview.key("/");
+  // Rows above the footer, whose Enter hint names the highlight too.
+  const shown = (text: string) =>
+    text.split("\n").slice(0, -1).join("\n").split("Shared page").length - 1;
+  // The contents list it twice; search ranks it once.
+  assertEquals(preview.state.layers.search?.query, "");
+  assertEquals(shown(preview.text), 1, preview.text);
+  preview.type("shared");
+  assertEquals(shown(preview.text), 1, preview.text);
+  // Paths do not match unless they show.
+  preview.key("escape");
+  preview.type("guides");
+  assert(!preview.text.includes("Shared page"), preview.text);
+  const paths = browse({ ...options, showPaths: true }).preview;
+  paths.key("/");
+  paths.type("guides");
+  assertStringIncludes(paths.text, "Shared page");
 });
 
 Deno.test("an action returns its value with where the reader was", () => {
@@ -441,7 +486,7 @@ Deno.test("the reader carries Accent and degrades to plain ASCII", () => {
     hyperlinks: false,
     unicode: false,
   }, 40).preview;
-  assertStringIncludes(plain.text, "o Keyboard Markdown browser");
+  assertStringIncludes(plain.text, "  Keyboard Markdown browser");
   assertStringIncludes(plain.text, "/ Read the docs online");
   assertStringIncludes(plain.text, "x Quit");
   plain.key("enter", "tab");

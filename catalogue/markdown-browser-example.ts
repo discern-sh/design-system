@@ -155,7 +155,7 @@ export function resolveMarkdownBrowserExampleLink(
 /** Browser options shared by Catalogue frames and deterministic tests. */
 export const markdownBrowserOptions = {
   label: "Documentation library",
-  placeholder: "Search titles, descriptions, and paths",
+  placeholder: "Search titles and descriptions",
   entries: markdownBrowserEntries,
   resolveLink: resolveMarkdownBrowserExampleLink,
 } as const satisfies MarkdownBrowserOptions<string>;
