@@ -766,7 +766,14 @@ function paintList<A>(
   roomy: boolean,
   receded = false,
 ): ListPaint<A> {
-  const rows = listModelRows(list);
+  // Beneath a layer the list keeps the blank rows between its groups even
+  // where its density gave them up, showing fewer rows instead: a backdrop
+  // is read at a glance, and nothing here is kept once the layer closes.
+  const rows = listModelRows(
+    context.recede === true && list.density?.separators === false
+      ? { ...list, density: { ...list.density, separators: true } }
+      : list,
+  );
   const selected = model.view.body.kind === "empty" && model.primaryFocused
     ? -1
     : rowIndexForKey(rows.rows, list.selection);
@@ -1170,7 +1177,7 @@ function masterDetail<A>(
     itemId === undefined ? 0 : model.detailScroll[itemId] ?? 0,
     contentWidth,
     !short,
-    { keeps },
+    { keeps, markers: context.recede !== true },
   );
   const detailLines = beneathCover(viewport, starts, cover);
   // Without fills nothing tints the detail, so a faint rule parts it from

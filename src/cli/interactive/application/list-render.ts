@@ -148,11 +148,15 @@ export interface ListWindow {
   readonly below: number;
 }
 
-/** The slice that starts at `scroll` in `height` lines. */
+/**
+ * The slice that starts at `scroll` in `height` lines. Without `markers`,
+ * as beneath a layer, no row is held for the lower marker.
+ */
 export function listWindow<A>(
   rows: ListRows<A>,
   height: number,
   scroll: number,
+  markers = true,
 ): ListWindow {
   const total = rows.rows.length;
   const header = rows.headerOf[scroll] ?? -1;
@@ -162,7 +166,11 @@ export function listWindow<A>(
     : undefined;
   const available = Math.max(1, height - (sticky === undefined ? 0 : 1));
   const remaining = total - scroll;
-  const count = remaining > available ? Math.max(1, available - 1) : remaining;
+  const count = remaining <= available
+    ? remaining
+    : markers
+    ? Math.max(1, available - 1)
+    : available;
   const end = scroll + count;
   return {
     scroll,
@@ -189,11 +197,13 @@ export function fitListScroll<A>(
   previous: number,
   anchor?: number,
   reveal?: number,
+  markers = true,
 ): number {
   const total = rows.rows.length;
   let maxScroll = Math.max(0, total - height);
   while (
-    maxScroll < total - 1 && listWindow(rows, height, maxScroll).below > 0
+    maxScroll < total - 1 &&
+    listWindow(rows, height, maxScroll, markers).below > 0
   ) {
     maxScroll += 1;
   }
@@ -202,12 +212,13 @@ export function fitListScroll<A>(
   let scroll = clamp(previous);
   if (anchor !== undefined) {
     scroll = clamp(selected - anchor);
-    if (listWindow(rows, height, scroll).sticky !== undefined) {
+    if (listWindow(rows, height, scroll, markers).sticky !== undefined) {
       scroll = clamp(scroll + 1);
     }
   }
   const shows = (at: number) =>
-    selected >= at && selected < at + listWindow(rows, height, at).count;
+    selected >= at &&
+    selected < at + listWindow(rows, height, at, markers).count;
   const fit = (margin: number, from: number): number => {
     let next = from;
     const before = Math.min(margin, selected);
@@ -215,7 +226,7 @@ export function fitListScroll<A>(
     if (selected - before < next) next = clamp(selected - before);
     const needed = selected + after;
     for (let guard = 0; guard <= total; guard += 1) {
-      const window = listWindow(rows, height, next);
+      const window = listWindow(rows, height, next, markers);
       if (needed < next + window.count || next >= maxScroll) break;
       next = clamp(Math.max(next + 1, needed - window.count + 1));
     }
@@ -223,7 +234,7 @@ export function fitListScroll<A>(
       const limit = clamp(selected - before);
       while (
         next < limit &&
-        reveal >= next + listWindow(rows, height, next).count
+        reveal >= next + listWindow(rows, height, next, markers).count
       ) next += 1;
     }
     return next;
@@ -234,7 +245,8 @@ export function fitListScroll<A>(
   // a header while rows stay hidden shows one more row, unless the selection
   // would lose its line or its margin. An anchored selection keeps its line.
   const later = fitted + 1;
-  return anchor === undefined && endsOnHeader(rows, height, fitted) &&
+  return markers && anchor === undefined &&
+      endsOnHeader(rows, height, fitted) &&
       later <= maxScroll && shows(later) &&
       selected - Math.min(SCROLL_MARGIN, selected) >= later
     ? later
@@ -503,6 +515,9 @@ export function renderListViewport<A>(
       scroll: 0,
     };
   }
+  // Beneath a layer the list cannot move, so it draws no overflow markers
+  // and gives their rows to the rows they would count.
+  const markers = viewport.receded !== true;
   const scroll = fitListScroll(
     rows,
     height,
@@ -510,13 +525,14 @@ export function renderListViewport<A>(
     viewport.scroll,
     viewport.anchor,
     viewport.reveal,
+    markers,
   );
-  const window = listWindow(rows, height, scroll);
+  const window = listWindow(rows, height, scroll, markers);
   const lines: string[] = [];
   const keys: (ListRowKey | undefined)[] = [];
   let line: number | undefined;
   const marker = (direction: "up" | "down", count: number) =>
-    count > 0
+    count > 0 && markers
       ? `${
         ink(context, overflowMarker(context, direction, count), {
           tone: "faint",
@@ -541,7 +557,7 @@ export function renderListViewport<A>(
   if (first === viewport.selected) line = 0;
   // A header the window still ends on, because showing its first row would
   // move the selection, holds its row blank rather than stand over nothing.
-  const widowed = endsOnHeader(rows, height, scroll) &&
+  const widowed = markers && endsOnHeader(rows, height, scroll) &&
       scroll + window.count - 1 !== viewport.selected
     ? scroll + window.count - 1
     : undefined;
@@ -556,7 +572,7 @@ export function renderListViewport<A>(
     );
     keys.push(index === widowed ? undefined : rowKey(rows.rows[index]));
   }
-  if (window.below > 0) {
+  if (window.below > 0 && markers) {
     lines.push(
       fitLine(
         context,

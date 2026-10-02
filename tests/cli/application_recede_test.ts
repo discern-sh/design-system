@@ -1,4 +1,4 @@
-import { assert } from "@std/assert";
+import { assert, assertEquals } from "@std/assert";
 import { createCliBlock, renderMarkdownCli } from "../../src/cli/mod.ts";
 import type {
   ApplicationDetailBlock,
@@ -226,7 +226,7 @@ Deno.test("the base beneath a layer recedes in every body", async (t) => {
   }
 });
 
-Deno.test("a receded overflow marker keeps its count and gives up its key", () => {
+Deno.test("a receded backdrop draws no overflow markers and gives their rows to content", () => {
   const driver = new ApplicationDriver(
     {
       ...testView(["a", "b"]),
@@ -253,6 +253,46 @@ Deno.test("a receded overflow marker keeps its count and gives up its key", () =
     layers: [SHEET],
   });
   const rows = baseRows(driver);
-  assert(rows.some((row) => row.includes("more")), rows.join("\n"));
-  for (const row of rows) assert(!/PgUp|PgDn/u.test(row), row);
+  // The backdrop cannot scroll while the layer is open, so nothing names
+  // what it hides; the rows a marker would take show lines instead.
+  for (const row of rows) assert(!/more|PgUp|PgDn/u.test(row), row);
+  const lines = rows.filter((row) => /line \d+/u.test(row));
+  assert(lines.length > 0, rows.join("\n"));
+  // The detail's last row above the layer holds a line, not a marker.
+  assert(/line \d+/u.test(rows.at(-1) ?? ""), rows.join("\n"));
+});
+
+Deno.test("a receded list fills its rows, cuts a group partway, and keeps its gaps", () => {
+  const items = Array.from({ length: 12 }, (_, index) => ({
+    id: `i${index}`,
+    group: index < 4 ? "first" : index < 8 ? "second" : "third",
+  }));
+  const view: TerminalApplicationView<string> = {
+    ...testView(items, {
+      body: "list",
+      groups: [
+        { id: "first", title: "First" },
+        { id: "second", title: "Second" },
+        { id: "third", title: "Third" },
+      ],
+    }),
+    layers: [SHEET],
+  };
+  for (const rows of [12, 16, 20]) {
+    const driver = new ApplicationDriver(view, {
+      columns: 80,
+      rows,
+      colorDepth: "none",
+    });
+    const base = baseRows(driver);
+    const text = base.join("\n");
+    assert(!/more/u.test(text), `${rows}: a receded marker\n${text}`);
+    // The last row above the layer shows a row of the list.
+    assert((base.at(-1) ?? "").trim() !== "", `${rows}\n${text}`);
+    // Groups keep the blank row between them.
+    const second = base.findIndex((row) => row.includes("Second"));
+    if (second > 0) {
+      assertEquals((base[second - 1] ?? "x").trim(), "", `${rows}\n${text}`);
+    }
+  }
 });

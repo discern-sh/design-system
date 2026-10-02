@@ -715,6 +715,7 @@ function detailWindow(
   height: number,
   requested: number,
   padded: boolean,
+  markers = true,
 ): DetailWindow {
   // A single row has no room for padding; it shows a line.
   const topPadding = padded && height >= 2;
@@ -729,13 +730,13 @@ function detailWindow(
       below: false,
     };
   }
-  const marks = !topPadding && visible >= 2;
+  const marks = markers && !topPadding && visible >= 2;
   const covers = marks && visible >= 3;
   const viewport = (scroll: number) => {
     const up = scroll > 0 && marks ? 1 : 0;
     const first = scroll + (covers ? up : 0);
     let rows = visible - up;
-    const below = first + rows < count && rows >= 2;
+    const below = markers && first + rows < count && rows >= 2;
     if (below) rows -= 1;
     return { first, rows, below };
   };
@@ -750,7 +751,7 @@ function detailWindow(
     first: at.first,
     rows: at.rows,
     padded: topPadding,
-    above: scroll > 0 && (topPadding || marks),
+    above: markers && scroll > 0 && (topPadding || marks),
     below: at.below,
   };
 }
@@ -764,6 +765,11 @@ export interface DetailScrollOptions {
   readonly keeps?: ReadonlySet<number>;
   /** The cell after which markers end; defaults to the width. */
   readonly end?: number;
+  /**
+   * Draw the overflow markers; off beneath a layer, where the detail cannot
+   * scroll and their rows show content instead.
+   */
+  readonly markers?: boolean;
 }
 
 /**
@@ -800,7 +806,13 @@ export function scrollDetail(
   padded: boolean,
   options: DetailScrollOptions = {},
 ): DetailViewport {
-  const window = detailWindow(lines.length, height, requested, padded);
+  const window = detailWindow(
+    lines.length,
+    height,
+    requested,
+    padded,
+    options.markers ?? true,
+  );
   const at = { ...window, rows: wholeRows(window, lines, options.keeps) };
   const marker = (text: string) =>
     spread(
