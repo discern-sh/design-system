@@ -10,6 +10,7 @@ import {
   MARKDOWN_MAX_SOURCE_BYTES,
   MARKDOWN_PARSER_NODE_HANDLING,
   type MarkdownBlock,
+  markdownLeadingTitle,
   MarkdownParseError,
   parseMarkdown,
 } from "../src/components/editorial/markdown/markdown.model.ts";
@@ -161,6 +162,39 @@ Deno.test("headings use GitHub-compatible ids and deterministic duplicate suffix
       "i-i",
     ],
   );
+});
+
+Deno.test("a document's opening first-level heading splits from the source after it", () => {
+  const cases: readonly (readonly [string, string | undefined, string])[] = [
+    ["# Getting started\n\nInstall it.", "Getting started", "\n\nInstall it."],
+    ["\n\n# Spaced\n\nBody.", "Spaced", "\n\nBody."],
+    ["Setext title\n===\n\nBody.", "Setext title", "\n\nBody."],
+    ["# Tight\nBody on the next line.", "Tight", "\nBody on the next line."],
+    ["# The *named* `step`\r\n\r\nBody.", "The named step", "\r\n\r\nBody."],
+    ["# Only a title", "Only a title", ""],
+  ];
+  for (const [source, title, rest] of cases) {
+    assertEquals(
+      markdownLeadingTitle(source),
+      title === undefined ? undefined : { title, rest },
+      JSON.stringify(source),
+    );
+  }
+  for (
+    const source of [
+      "",
+      "Intro first.\n\n# Title",
+      "## Second level\n\nBody.",
+      "> # Quoted\n\nBody.",
+      "- # Listed",
+    ]
+  ) {
+    assertEquals(
+      markdownLeadingTitle(source),
+      undefined,
+      JSON.stringify(source),
+    );
+  }
 });
 
 Deno.test("all five official alert markers map to their documented Callout tones", () => {

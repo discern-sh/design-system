@@ -1527,3 +1527,44 @@ export function parseMarkdown(
     return fail("Markdown parser output could not be adapted safely", cause);
   }
 }
+
+/** A document's opening first-level heading and the source after it. */
+export interface MarkdownLeadingTitle {
+  /** The heading's visible text, as its anchor is derived from. */
+  readonly title: string;
+  /** The source after the heading. */
+  readonly rest: string;
+}
+
+/**
+ * A document's opening first-level heading, as its visible text and the
+ * source that follows it, or undefined when the document opens with
+ * anything else. Only the opening block is parsed, so the cost does not
+ * grow with the document.
+ */
+export function markdownLeadingTitle(
+  source: string,
+): MarkdownLeadingTitle | undefined {
+  const start = /^(?:[ \t]*\r?\n)*/u.exec(source)?.[0].length ?? 0;
+  const gap = /\r?\n[ \t]*\r?\n/u.exec(source.slice(start));
+  const opening = source.slice(
+    0,
+    gap === null ? source.length : start + gap.index,
+  );
+  if (opening.trim() === "") return undefined;
+  const root = fromMarkdown(opening, {
+    extensions: [gfm()],
+    mdastExtensions: [gfmFromMarkdown()],
+  });
+  const [first] = root.children;
+  const end = first?.position?.end.offset;
+  if (first?.type !== "heading" || first.depth !== 1 || end === undefined) {
+    return undefined;
+  }
+  const [heading] = parseMarkdown(opening.slice(0, end)).children;
+  if (heading?.kind !== "heading") return undefined;
+  return {
+    title: semanticInlineTextForHeading(heading.content),
+    rest: source.slice(end),
+  };
+}

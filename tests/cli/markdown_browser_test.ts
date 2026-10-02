@@ -26,6 +26,7 @@ import type {
 } from "../../src/cli/interactive/markdown-browser-view.ts";
 import { ApplicationPreview } from "../../catalogue/application-preview.ts";
 import { markdownBrowserOptions } from "../../catalogue/markdown-browser-example.ts";
+import { APPLICATION_REVIEW_SIZES } from "../../scripts/playground/application.ts";
 
 interface Browse {
   readonly preview: ApplicationPreview<MarkdownBrowserStep>;
@@ -100,6 +101,52 @@ Deno.test("a narrow contents screen describes the selection in its strip", () =>
   const { preview } = browse(markdownBrowserOptions, { columns: 60 });
   assertStringIncludes(preview.text, "Search, focus, resize, and restoration");
   assertEquals(preview.state.focusedControlId, "contents");
+});
+
+Deno.test("a preview shows a document's title once and its Markdown at the title's column", async (t) => {
+  const document = (id: string, label: string, heading: string) => ({
+    kind: "document" as const,
+    id,
+    label,
+    description: `Summary of ${id}`,
+    path: `${id}.md`,
+    source: `# ${heading}\n\nBody of ${id} begins here.\n\n## Later\n\nMore.`,
+  });
+  const options: MarkdownBrowserOptions<string> = {
+    label: "Library",
+    entries: [
+      // The same words in another case and spacing are the same title.
+      document("same", "Getting started", "Getting  Started"),
+      document("other", "Troubleshooting", "When something fails"),
+    ],
+  };
+  for (const { columns, rows: height } of APPLICATION_REVIEW_SIZES) {
+    await t.step(`${columns}x${height}`, () => {
+      const { preview } = browse(options, { columns }, height);
+      // Below the split the preview is the zoomed detail.
+      if (!preview.text.includes("Body of same")) preview.key("space");
+      // Once in the list or breadcrumb, once as the preview's title.
+      assertEquals(
+        preview.text.toLowerCase().split("getting started").length - 1,
+        2,
+        preview.text,
+      );
+      assertEquals(
+        preview.find("Body of same").column,
+        preview.find("Summary of same").column,
+        preview.text,
+      );
+      // A different opening title stays: it says something the label
+      // does not.
+      preview.key("down");
+      let seen = preview.text;
+      for (let line = 0; line < 8 && !seen.includes("Body of other"); line++) {
+        preview.key("shift-down");
+        seen += preview.text;
+      }
+      assertStringIncludes(seen, "When something fails");
+    });
+  }
 });
 
 Deno.test("Enter opens a document at its top, and Back returns with it selected and read", () => {

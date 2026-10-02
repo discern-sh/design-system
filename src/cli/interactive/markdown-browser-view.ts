@@ -9,6 +9,7 @@
  */
 
 import { renderMarkdownCliProjection } from "../../components/editorial/markdown/markdown.cli.ts";
+import { markdownLeadingTitle } from "../../components/editorial/markdown/markdown.model.ts";
 import type { KeyHint } from "../key-hints.ts";
 import { DEFAULT_TERMINAL_APPLICATION_COPY } from "./application/copy.ts";
 import { fragmentHeading } from "./application/markdown-reading.ts";
@@ -133,6 +134,13 @@ const APPLICATION_WORDS = new Set(
 );
 
 const CONTENTS: MarkdownBrowserPlace = Object.freeze({ kind: "contents" });
+
+/** Whether two titles say the same words, whatever their case and spacing. */
+function sameWords(left: string, right: string): boolean {
+  const words = (text: string) =>
+    text.trim().replace(/\s+/gu, " ").toLowerCase();
+  return words(left) === words(right);
+}
 
 /** Builds the browser's views and answers what a reader does in them. */
 export class MarkdownBrowserController<Action> {
@@ -362,21 +370,36 @@ export class MarkdownBrowserController<Action> {
   ): readonly ApplicationDetailBlock[] {
     const known = this.#previews.get(choice.id);
     if (known !== undefined) return known;
+    // The title and description stand together as the preview's head, so
+    // the description never reads as the document's first paragraph.
     const blocks: ApplicationDetailBlock[] = [{
       kind: "heading",
       title: choice.label,
+      ...(choice.description === undefined
+        ? {}
+        : { subtitle: choice.description }),
       ...(choice.kind === "document" && this.#options.showPaths === true
         ? { aside: [{ text: choice.path, tone: "faint" as const }] }
         : {}),
     }];
-    if (choice.description !== undefined) {
-      blocks.push({ kind: "text", runs: [{ text: choice.description }] });
-    }
     // The document reads as it will when opened, its headings keeping
     // with their first lines.
-    if (choice.kind === "document") blocks.push(this.#markdownOf(choice.id));
+    if (choice.kind === "document") blocks.push(this.#previewMarkdown(choice));
     this.#previews.set(choice.id, blocks);
     return blocks;
+  }
+
+  /**
+   * A document as its preview reads it: without its opening title when
+   * that title says what the preview's own title says, so it shows once.
+   */
+  #previewMarkdown(document: MarkdownBrowserDocument): ApplicationMarkdown {
+    const markdown = this.#markdownOf(document.id);
+    const leading = markdownLeadingTitle(markdown.source);
+    return leading !== undefined &&
+        sameWords(leading.title, document.label)
+      ? Object.freeze({ ...markdown, source: leading.rest })
+      : markdown;
   }
 
   #strip(choice: MarkdownBrowserChoice<Action>): ApplicationDetailStrip {
