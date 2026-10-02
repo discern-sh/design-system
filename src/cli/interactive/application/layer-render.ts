@@ -776,9 +776,16 @@ function settlePanel(
     const room = () =>
       box.height - 2 - panel.head.length - gapAfterHead - gapBeforeFoot -
       footRows;
-    // Blank rows give way before body rows: the title's gap goes once the
-    // body overflows, the foot's only when the body would keep under three.
-    if (room() < panel.body.length) gapAfterHead = 0;
+    // Blank rows give way before body rows. The title's gap goes when that
+    // lets the body fit or the body would keep under three rows — and, in
+    // a sheet or form, as soon as the body overflows, since a body that
+    // ends at a whole unit gives its spare row back to that gap. The
+    // foot's gap goes only when the body would keep under three.
+    if (
+      room() < panel.body.length &&
+      (panel.footOverflow || room() + 1 >= panel.body.length)
+    ) gapAfterHead = 0;
+    if (room() < Math.min(3, panel.body.length)) gapAfterHead = 0;
     if (room() < Math.min(3, panel.body.length)) gapBeforeFoot = 0;
     const available = Math.max(1, room());
     const body = panel.body;
@@ -810,6 +817,29 @@ function settlePanel(
     // first page shows at least two lines; otherwise that line would never
     // be on screen at any scroll.
     const covers = visible >= (panel.footOverflow ? 2 : 3);
+    /**
+     * Where a body of `budget` rows from `first` ends at a whole unit and
+     * not on a blank row, freeing no more rows than the foot's gap and the
+     * title's gap take back; undefined when no such end exists.
+     */
+    const wholeEnd = (first: number, budget: number): number | undefined => {
+      const floor = Math.max(
+        first + 1,
+        ...keptRows().map((index) => index + 1),
+      );
+      const absorbed = 1 +
+        (fitted.gapAfterHead === 0 && panel.head.length > 0 ? 1 : 0);
+      for (
+        let end = Math.min(body.length, first + budget);
+        end >= floor && first + budget - end <= absorbed;
+        end -= 1
+      ) {
+        if (body[end]?.continues !== true && !blankRow(body[end - 1])) {
+          return end;
+        }
+      }
+      return undefined;
+    };
     /** Body rows this frame must keep in view: the revealed and followed controls. */
     const keptRows = () =>
       [reveal, panel.follow].flatMap((control) =>
@@ -875,27 +905,31 @@ function settlePanel(
       ? viewport(scroll)
       : { up: 0, first: 0, rows: body.length, down: 0 };
     let gapBeforeFoot = fitted.gapBeforeFoot;
-    const last = body[at.first + at.rows - 1];
+    let gapAfterHead = fitted.gapAfterHead;
+    // A section title that still ends the viewport takes the title's gap
+    // for its first row, rather than give its own row to the marker.
     if (
-      overflows && panel.footOverflow && at.first + at.rows < body.length &&
-      panel.foot(1, { start: at.first, end: at.first + at.rows }, footRoom)[0]
-          ?.attached === true
+      overflows && gapAfterHead > 0 && body[at.first + at.rows - 1]?.heading &&
+      at.first + at.rows < body.length
     ) {
-      // The foot's overflow row follows the body directly, so the body
-      // ends at a whole unit and never on a blank row while rows stay
-      // hidden; the rows it leaves free fall beneath that row.
-      const floor = Math.max(
-        at.first + 1,
-        ...keptRows().map((index) => index + 1),
-      );
-      let end = at.first + at.rows;
-      if (body[end]?.continues === true) {
-        let start = end - 1;
-        while (start > at.first && body[start]?.continues === true) start -= 1;
-        if (start >= floor) end = start;
-      }
-      while (end > floor && blankRow(body[end - 1])) end -= 1;
-      at = { ...at, rows: end - at.first };
+      at = { ...at, rows: at.rows + 1 };
+      gapAfterHead = 0;
+    }
+    const last = body[at.first + at.rows - 1];
+    const ending = overflows && panel.footOverflow &&
+        at.first + at.rows < body.length &&
+        panel.foot(1, { start: at.first, end: at.first + at.rows }, footRoom)[0]
+            ?.attached === true
+      ? wholeEnd(at.first, at.rows + gapBeforeFoot)
+      : undefined;
+    if (ending !== undefined) {
+      // The foot's overflow row follows the body directly, so the body ends
+      // at a whole unit and never on a blank row while rows stay hidden; it
+      // may take the foot's gap for that, and a row it leaves free becomes
+      // the gap beneath the overflow row.
+      const budget = at.rows + gapBeforeFoot;
+      gapBeforeFoot = budget - ending > 0 ? 1 : 0;
+      at = { ...at, rows: ending - at.first };
     } else if (
       // A viewport that ends on a blank separator while rows stay hidden
       // takes the foot's gap for one more row, so two blank rows never
@@ -913,8 +947,10 @@ function settlePanel(
     return {
       fitted: {
         ...fitted,
+        gapAfterHead,
         gapBeforeFoot,
-        visible: fitted.visible + fitted.gapBeforeFoot - gapBeforeFoot,
+        visible: fitted.visible + fitted.gapBeforeFoot - gapBeforeFoot +
+          fitted.gapAfterHead - gapAfterHead,
       },
       scroll,
       at,
@@ -1973,7 +2009,7 @@ function menuPanel<A>(
     footOverflow: false,
     counts: "choices",
     follow: model.focus,
-    foot: () => {
+    foot: (hidden) => {
       const footnote = menu.footnote === undefined ||
           boxHeight < MENU_DESCRIPTION_ROWS
         ? []
@@ -2000,8 +2036,13 @@ function menuPanel<A>(
         : control === UNAVAILABLE_SECTION && menu.unavailable !== undefined
         ? describe(menu.unavailable.title, undefined)
         : [];
+      // While choices hide below, rows a shorter description leaves go to
+      // them; otherwise they stand above it, so the panel keeps its height
+      // as the highlight moves and never ends on empty rows.
       const padded: PanelRow[] = lines.map((text) => ({ text }));
-      while (padded.length < reserved) padded.push(BLANK);
+      if (hidden === 0) {
+        while (padded.length < reserved) padded.unshift(BLANK);
+      }
       return [...padded, ...(footnote.length > 0 ? [BLANK, ...footnote] : [])];
     },
   };

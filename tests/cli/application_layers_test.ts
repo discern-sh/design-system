@@ -1465,6 +1465,87 @@ Deno.test("a panel never holds blank rows while it hides body rows", async (t) =
   }
 });
 
+Deno.test("a menu or palette never ends on empty rows, and keeps its title's gap while it scrolls", async (t) => {
+  const layers: readonly (() => ApplicationLayer<string>)[] = [
+    () => demoActionsMenu(IMAGE),
+    () => demoPalette(DEMO_JOBS, false),
+    () => demoKeysReader(),
+    () => demoLogReader(IMAGE),
+  ];
+  for (const make of layers) {
+    const layer = make();
+    for (const { columns, rows } of APPLICATION_REVIEW_SIZES) {
+      await t.step(`${layer.id} at ${columns}x${rows}`, () => {
+        const driver = new ApplicationDriver(withLayers(layer), {
+          columns,
+          rows,
+          colorDepth: "none",
+        });
+        for (let step = 0; step < 12; step += 1) {
+          const panel = [
+            ...new Set(
+              driver.hits.flatMap((hit) =>
+                hit.target.kind === "layer" ? [hit.row] : []
+              ),
+            ),
+          ].sort((a, b) => a - b);
+          const lines = driver.text.split("\n");
+          const inner = (row: number | undefined) =>
+            (lines[row ?? -1] ?? "x").replace(/[│|╭╮╰╯+-]/gu, "").trim();
+          // While choices or lines hide below, the last row inside the
+          // frame holds something: the panel's bottom padding is its frame
+          // row, as its top padding is, and spare rows went to the choices.
+          const hides = panel.some((row) =>
+            /↓ \d+ more/u.test(lines[row] ?? "")
+          );
+          assert(
+            !hides || inner(panel.at(-2)) !== "",
+            `step ${step}: the panel ends on an empty row\n${driver.text}`,
+          );
+          driver.key("down");
+        }
+      });
+    }
+  }
+  // A scrolling palette keeps the blank row between its field and its
+  // first section, as between later sections.
+  const palette = new ApplicationDriver(
+    withLayers(demoPalette(DEMO_JOBS, false)),
+    { columns: 60, rows: 20, colorDepth: "none" },
+  );
+  const lines = palette.text.split("\n");
+  const field = lines.findIndex((line) => line.includes("›"));
+  assert(/↓ \d+ more/u.test(palette.text), palette.text);
+  assertEquals(
+    (lines[field + 1] ?? "x").replace(/[│|]/gu, "").trim(),
+    "",
+    palette.text,
+  );
+  // A reader whose body still scrolls without the gap under its title
+  // keeps it.
+  let checked = 0;
+  for (const { columns, rows } of APPLICATION_REVIEW_SIZES) {
+    const reader = new ApplicationDriver(withLayers(demoLogReader(IMAGE)), {
+      columns,
+      rows,
+      colorDepth: "none",
+    });
+    const text = reader.text.split("\n");
+    const title = text.findIndex((line) => line.includes("Image resize · log"));
+    const hidden = Number(reader.text.match(/↓ (\d+) more/u)?.[1] ?? 0);
+    if (title < 0 || hidden < 2) continue;
+    checked += 1;
+    // The head is the title and, when it does not fit beside it, its aside.
+    const head = (text[title + 1] ?? "").includes("runs today") ? 2 : 1;
+    assertEquals(
+      (text[title + head] ?? "x").replace(/[│|]/gu, "").trim(),
+      "",
+      `${columns}x${rows}\n${reader.text}`,
+    );
+  }
+  assert(checked > 0, "no reader scrolled far enough to check");
+});
+
 Deno.test("a layer's footer lists the caller's hints, and each must name a key the layer handles", () => {
   const run = demoRunSheet(IMAGE);
   const sheet: ApplicationSheet<string> = {
