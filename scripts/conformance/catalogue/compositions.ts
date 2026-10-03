@@ -11,6 +11,7 @@ import {
 } from "../../../catalogue/routes/compositions.ts";
 import { catalogueComponentPath } from "../../../catalogue/routes/components.ts";
 import { scanBrowserAccessibility } from "../../browser-conformance-support.ts";
+import { expectUrl } from "../../browser-url.ts";
 import { withViewport } from "../../viewport.ts";
 import { verifyInlineOverflowCueEdges } from "./overflow-cue.ts";
 import {
@@ -248,6 +249,14 @@ async function verifyGallery(page: Page, origin: string): Promise<void> {
   await search.locator(".discern-search-palette__input").fill("raw output");
   const result = catalogueSearchResult(
     page,
+    await expectUrl(
+      page,
+      {
+        pathname: compositionsRouteFamily.descriptor.path,
+        searchParams: { theme: "light" },
+      },
+      "Gallery search did not open from the light Compositions gallery",
+    ),
     compositionRecipePath("failure-triage"),
   );
   invariant(
@@ -266,12 +275,13 @@ async function verifyLegacyUpgrade(page: Page, origin: string): Promise<void> {
     page,
     `${origin}${compositionsRouteFamily.descriptor.path}?width=narrow#recipe-next-action`,
   );
-  await eventually(
-    () => new URL(page.url()).pathname === compositionRecipePath("next-action"),
+  const upgraded = await expectUrl(
+    page,
+    { pathname: compositionRecipePath("next-action") },
     "The former #recipe-* destination did not upgrade to its detail route",
   );
   invariant(
-    new URL(page.url()).searchParams.get("width") === "narrow",
+    upgraded.searchParams.get("width") === "narrow",
     "The former recipe destination lost responsive width state",
   );
 }
@@ -473,8 +483,9 @@ export async function verifyCompositionsCatalogue(
       const widths = detail.locator(".discern-catalogue-pattern__widths");
       await widths.locator('input[value="narrow"]').focus();
       await page.keyboard.press("ArrowRight");
-      await eventually(
-        () => new URL(page.url()).searchParams.get("width") === "standard",
+      await expectUrl(
+        page,
+        { searchParams: { width: "standard" } },
         `${recipe.title} width controls were not keyboard-complete`,
       );
       keyboardChecks += 1;
@@ -482,10 +493,14 @@ export async function verifyCompositionsCatalogue(
       await sourceCopyCheck(page, detail, recipe);
       copyChecks += recipe.sourceFiles?.length ?? 1;
       await page.reload({ waitUntil: "networkidle" });
-      invariant(
-        new URL(page.url()).searchParams.get("width") === "standard" &&
-          await page.locator('input[value="standard"]').isChecked(),
+      await expectUrl(
+        page,
+        { searchParams: { width: "standard" } },
         `${recipe.title} lost responsive width state on refresh`,
+      );
+      invariant(
+        await page.locator('input[value="standard"]').isChecked(),
+        `${recipe.title} lost its checked width control on refresh`,
       );
     }
 
@@ -502,12 +517,13 @@ export async function verifyCompositionsCatalogue(
     await loadCataloguePage(page, wideUrl.href);
     await witnessDetail.locator(".discern-catalogue-pattern__widths label")
       .filter({ hasText: "Fit" }).click();
-    await eventually(
-      () => new URL(page.url()).searchParams.get("width") === null,
+    const fitReset = await expectUrl(
+      page,
+      { searchParams: { width: null } },
       `${fitWitness.title} Fit reset did not clear the width parameter`,
     );
     invariant(
-      new URL(page.url()).searchParams.get("theme") === "light",
+      fitReset.searchParams.get("theme") === "light",
       `${fitWitness.title} Fit reset lost unrelated state`,
     );
     await verifyFitPreview(
@@ -519,13 +535,15 @@ export async function verifyCompositionsCatalogue(
 
     await witnessDetail.locator('input[value="fit"]').focus();
     await page.keyboard.press("ArrowRight");
-    await eventually(
-      () => new URL(page.url()).searchParams.get("width") === "narrow",
+    await expectUrl(
+      page,
+      { searchParams: { width: "narrow" } },
       `${fitWitness.title} Fit was not keyboard-adjacent to exact widths`,
     );
     await page.keyboard.press("ArrowLeft");
-    await eventually(
-      () => new URL(page.url()).searchParams.get("width") === null,
+    await expectUrl(
+      page,
+      { searchParams: { width: null } },
       `${fitWitness.title} keyboard reset to Fit kept the width parameter`,
     );
     fitChecks += 1;

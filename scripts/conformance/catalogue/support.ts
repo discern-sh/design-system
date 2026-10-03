@@ -87,12 +87,16 @@ export async function setCatalogueAppearanceInput(
   });
 }
 
-/** Select an exact search destination, including the current portable Appearance. */
-export function catalogueSearchResult(page: Page, href: string): Locator {
-  const destination = preserveCatalogueAppearanceHref(
-    new URL(page.url()),
-    href,
-  );
+/**
+ * Select an exact search destination carrying the portable Appearance of
+ * `current`, the settled page URL the search was opened from.
+ */
+export function catalogueSearchResult(
+  page: Page,
+  current: URL,
+  href: string,
+): Locator {
+  const destination = preserveCatalogueAppearanceHref(current, href);
   return page.getByRole("dialog", { name: "Search the Catalogue" }).locator(
     `.discern-search-palette__result[href=${JSON.stringify(destination)}]`,
   );

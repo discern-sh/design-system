@@ -12,6 +12,7 @@ import {
   catalogueComponentPath,
   catalogueRoutePaths,
 } from "../../../catalogue/routes.ts";
+import { expectUrl } from "../../browser-url.ts";
 import { withViewport } from "../../viewport.ts";
 import {
   CATALOGUE_NARROW_VIEWPORT as NARROW_VIEWPORT,
@@ -196,30 +197,47 @@ export async function verifyComponentDetailJourneys(
     );
     const selectedId = await exampleSelect.inputValue();
     await page.getByRole("radio", { name: "CLI", exact: true }).check();
-    invariant(
-      await exampleSelect.inputValue() === selectedId &&
-        new URL(page.url()).searchParams.get("example") === selectedId &&
-        new URL(page.url()).searchParams.get("theme") === "light" &&
-        new URL(page.url()).searchParams.get("accent") === "300" &&
-        new URL(page.url()).searchParams.get("field") === "0,1,1,1",
+    await expectUrl(
+      page,
+      {
+        searchParams: {
+          surface: "cli",
+          example: selectedId,
+          theme: "light",
+          accent: "300",
+          field: "0,1,1,1",
+        },
+      },
       "Web/CLI switching changed canonical example or Appearance identity",
+    );
+    invariant(
+      await exampleSelect.inputValue() === selectedId,
+      "Web/CLI switching changed the selected example",
     );
     await page.getByRole("radio", { name: "Web", exact: true }).check();
     await page.getByRole("radio", { name: /^All \d+$/ }).check();
+    await expectUrl(
+      page,
+      { searchParams: { surface: null, view: "all" } },
+      "View all examples did not enter URL state",
+    );
     const optionLabels = await exampleSelect.locator("option")
       .allTextContents();
     invariant(
-      new URL(page.url()).searchParams.get("view") === "all" &&
-        await page.locator("[data-discern-example-state]").count() ===
-          optionLabels.filter((label) => !label.includes("unavailable on Web"))
-            .length,
+      await page.locator("[data-discern-example-state]").count() ===
+        optionLabels.filter((label) => !label.includes("unavailable on Web"))
+          .length,
       "View all examples is not a deliberate ordered gallery",
     );
 
     await page.getByRole("radio", { name: "360px", exact: true }).check();
+    await expectUrl(
+      page,
+      { searchParams: { width: "narrow" } },
+      "Exact 360px inspection did not enter URL state",
+    );
     await eventually(
       async () =>
-        new URL(page.url()).searchParams.get("width") === "narrow" &&
         await page.locator('[data-discern-detail-measured="360"]').count() ===
           1,
       "Exact 360px inspection did not measure 360",
@@ -232,28 +250,34 @@ export async function verifyComponentDetailJourneys(
       `Exact width canvas measured ${String(exactCanvas?.width)}px`,
     );
     await page.getByRole("radio", { name: "Fit", exact: true }).check();
+    await expectUrl(
+      page,
+      { searchParams: { width: null } },
+      "Fit did not clear the exact width from URL state",
+    );
     await eventually(
-      async () => {
-        const measured = await page.locator("[data-discern-detail-measured]")
-          .getAttribute("data-discern-detail-measured");
-        return new URL(page.url()).searchParams.get("width") === null &&
-          Number(measured) > 400;
-      },
+      async () =>
+        Number(
+          await page.locator("[data-discern-detail-measured]")
+            .getAttribute("data-discern-detail-measured"),
+        ) > 400,
       "Fit did not return the specimen to its allocated canvas",
     );
     await page.getByRole("button", { name: "Expand page column" }).click();
+    await expectUrl(
+      page,
+      { searchParams: { expanded: "1" } },
+      "Expanded inspection did not enter URL state",
+    );
     await eventually(
       async () =>
-        new URL(page.url()).searchParams.get("expanded") === "1" &&
         await page.locator(".discern-catalogue-detail--expanded").count() === 1,
       "Expanded inspection did not widen the detail column",
     );
     await page.getByRole("button", { name: "Standard page column" }).click();
-    await eventually(
-      () =>
-        Promise.resolve(
-          new URL(page.url()).searchParams.get("expanded") === null,
-        ),
+    await expectUrl(
+      page,
+      { searchParams: { expanded: null } },
       "Expanded inspection did not release the detail column",
     );
     invariant(
@@ -443,11 +467,10 @@ export async function verifyStateFragmentRestoration(
     const url = new URL(catalogueRoutePaths.overview, origin);
     url.hash = fragment;
     await loadCataloguePage(page, url.href);
-    invariant(
-      new URL(page.url()).pathname === catalogueComponentPath(state.component),
-      `Legacy state link did not upgrade to ${
-        catalogueComponentPath(state.component)
-      }`,
+    await expectUrl(
+      page,
+      { pathname: catalogueComponentPath(state.component) },
+      "Legacy state link did not upgrade to its Component route",
     );
     const target = page.locator(`#${fragment}`);
     let placement = {

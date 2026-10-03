@@ -8,6 +8,7 @@ import {
   glyphsRouteFamily,
 } from "../../../catalogue/routes/glyphs.ts";
 import { scanBrowserAccessibility } from "../../browser-conformance-support.ts";
+import { expectUrl } from "../../browser-url.ts";
 import { withViewport } from "../../viewport.ts";
 import {
   CATALOGUE_NARROW_VIEWPORT,
@@ -211,8 +212,9 @@ async function verifyExplorer(page: Page, origin: string): Promise<{
         glyphAtlasData.canonical.length,
     "The explicit All collection did not enrol the canonical Atlas population",
   );
-  invariant(
-    new URL(page.url()).searchParams.get("collection") === "all",
+  await expectUrl(
+    page,
+    { searchParams: { collection: "all" } },
     "The All collection did not reach the URL",
   );
   invariant(
@@ -231,9 +233,13 @@ async function verifyExplorer(page: Page, origin: string): Promise<{
   );
   await page.getByRole("button", { name: "Ready to use", exact: true })
     .click();
+  await expectUrl(
+    page,
+    { searchParams: { collection: null } },
+    "Returning to the default did not clear the collection from the URL",
+  );
   await eventually(
     async () =>
-      new URL(page.url()).searchParams.get("collection") === null &&
       await page.locator("[data-discern-glyph-card]").count() ===
         publishedCount,
     "Returning to the default did not restore the published vocabulary",
@@ -281,37 +287,41 @@ async function verifyExplorer(page: Page, origin: string): Promise<{
   const category = page.getByLabel("Discern category");
   await category.focus();
   await category.selectOption("status");
-  await eventually(
-    () => new URL(page.url()).searchParams.get("category") === "status",
+  await expectUrl(
+    page,
+    { searchParams: { category: "status" } },
     "Keyboard category filtering did not reach the URL",
   );
   const recommendation = page.getByLabel("Recommendation");
   await page.locator(".discern-catalogue-glyphs__extra > summary").click();
   await recommendation.selectOption("recommended");
-  await eventually(
-    () =>
-      new URL(page.url()).searchParams.get("recommendation") ===
-        "recommended",
+  const recommended = await expectUrl(
+    page,
+    { searchParams: { recommendation: "recommended" } },
     "Recommendation filtering did not reach the URL",
   );
   invariant(
-    new URL(page.url()).searchParams.get("theme") === "light",
+    recommended.searchParams.get("theme") === "light",
     "Glyph filters dropped explicit Appearance state",
   );
   await page.goBack();
+  await expectUrl(
+    page,
+    { searchParams: { category: "status", recommendation: null } },
+    "Back navigation did not restore the previous Glyph filter URL",
+  );
   await eventually(
-    async () =>
-      new URL(page.url()).searchParams.get("category") === "status" &&
-      new URL(page.url()).searchParams.get("recommendation") === null &&
-      await recommendation.inputValue() === "",
+    async () => await recommendation.inputValue() === "",
     "Back navigation did not restore the previous Glyph filters",
   );
   await page.goForward();
+  await expectUrl(
+    page,
+    { searchParams: { recommendation: "recommended" } },
+    "Forward navigation did not restore the Glyph recommendation URL",
+  );
   await eventually(
-    async () =>
-      new URL(page.url()).searchParams.get("recommendation") ===
-        "recommended" &&
-      await recommendation.inputValue() === "recommended",
+    async () => await recommendation.inputValue() === "recommended",
     "Forward navigation did not restore the Glyph recommendation",
   );
   return { searchChecks: 3, filterHistoryChecks: 4, adoptionChecks: 6 };
@@ -487,9 +497,17 @@ export async function verifyGlyphsCatalogue(
       name: "Search the Catalogue",
     });
     await globalSearch.locator(".discern-search-palette__input").fill("✓");
+    const detailUrl = await expectUrl(
+      page,
+      {
+        pathname: catalogueGlyphPath(check),
+        searchParams: { theme: "light" },
+      },
+      "Global literal search did not open from the light Glyph detail",
+    );
     invariant(
-      await catalogueSearchResult(page, catalogueGlyphPath(check)).count() ===
-        1,
+      await catalogueSearchResult(page, detailUrl, catalogueGlyphPath(check))
+        .count() === 1,
       "Global literal search did not share the canonical Glyph destination",
     );
     searchChecks += 1;

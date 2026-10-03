@@ -5,6 +5,7 @@ import {
 } from "./metadata-copy.ts";
 import type { Page } from "playwright-core";
 import { catalogueRoutePaths } from "../../../catalogue/routes.ts";
+import { expectUrl, followFragment } from "../../browser-url.ts";
 import { withViewport } from "../../viewport.ts";
 import {
   CATALOGUE_NARROW_VIEWPORT as NARROW_VIEWPORT,
@@ -150,31 +151,42 @@ export async function verifyCompareJourneys(
       "Compare jump list does not cover its exact population",
     );
     await page.getByRole("button", { name: "Set all to CLI" }).click();
-    invariant(
-      new URL(page.url()).searchParams.get("surface") === "cli" &&
-        new URL(page.url()).searchParams.get("theme") === "dark" &&
-        new URL(page.url()).searchParams.get("accent") === "300" &&
-        new URL(page.url()).searchParams.get("field") === "1,1,1,1",
+    await expectUrl(
+      page,
+      {
+        searchParams: {
+          surface: "cli",
+          theme: "dark",
+          accent: "300",
+          field: "1,1,1,1",
+        },
+      },
       "Set all to CLI did not enter URL state without losing Appearance",
     );
     await compareItems.first().getByRole("button", {
       name: "Web",
       exact: true,
     }).click();
-    invariant(
-      new URL(page.url()).searchParams.has("surfaces"),
+    await expectUrl(
+      page,
+      (url) => url.searchParams.has("surfaces"),
       "Individual Compare surface override did not enter URL state",
     );
     await page.getByRole("button", {
       name: "Reset individual overrides",
     }).click();
-    invariant(
-      !new URL(page.url()).searchParams.has("surfaces"),
+    await expectUrl(
+      page,
+      { searchParams: { surfaces: null } },
       "Reset individual overrides left stale URL evidence",
     );
 
     const customSlugs = expectedComponents.slice(0, 2);
-    invariant(customSlugs.length === 2, "Custom Compare needs two Components");
+    const [, survivingSlug] = customSlugs;
+    invariant(
+      customSlugs.length === 2 && survivingSlug !== undefined,
+      "Custom Compare needs two Components",
+    );
     const customUrl = new URL(catalogueRoutePaths.compare, origin);
     customUrl.searchParams.set("components", customSlugs.join(","));
     await loadCataloguePage(page, customUrl.href);
@@ -186,10 +198,14 @@ export async function verifyCompareJourneys(
       "button",
       { name: "Remove" },
     ).click();
-    invariant(
-      await page.locator("[data-discern-compare-item]").count() === 1 &&
-        new URL(page.url()).searchParams.get("components") === customSlugs[1],
+    await expectUrl(
+      page,
+      { searchParams: { components: survivingSlug } },
       "Custom removal lost order-stable URL state",
+    );
+    invariant(
+      await page.locator("[data-discern-compare-item]").count() === 1,
+      "Custom removal did not leave exactly the surviving Component",
     );
 
     const overrideUrl = new URL(catalogueRoutePaths.compare, origin);
@@ -200,8 +216,12 @@ export async function verifyCompareJourneys(
       "rich-cells",
     );
     await table.getByRole("button", { name: "CLI", exact: true }).click();
-    const saved = page.url();
-    await loadCataloguePage(page, saved);
+    const saved = await expectUrl(
+      page,
+      { searchParams: { surfaces: "table:cli", examples: "table:rich-cells" } },
+      "Compare per-item example and surface did not enter URL state",
+    );
+    await loadCataloguePage(page, saved.href);
     invariant(
       await table.getByRole("combobox").inputValue() ===
           "rich-cells" &&
@@ -218,16 +238,22 @@ export async function verifyCompareJourneys(
       "An individual surface override staggered the comparison specimens",
     );
     await table.getByRole("button", { name: "Use global surface" }).click();
-    invariant(
-      !new URL(page.url()).searchParams.has("surfaces") &&
-        new URL(page.url()).searchParams.get("examples") === "table:rich-cells",
+    await expectUrl(
+      page,
+      { searchParams: { surfaces: null, examples: "table:rich-cells" } },
       "Per-item reset changed the selected example",
     );
     const jump = page.getByRole("navigation", { name: "Comparison jump list" })
       .getByRole("link", { name: "Table", exact: true });
-    await jump.focus();
-    await page.keyboard.press("Enter");
-    await page.waitForURL((url) => url.hash === "#compare-component-table");
+    await followFragment(
+      page,
+      "#compare-component-table",
+      async () => {
+        await jump.focus();
+        await page.keyboard.press("Enter");
+      },
+      "Keyboard jump did not reach the selected comparison item",
+    );
     await table.waitFor({ state: "visible" });
     await page.keyboard.press("Tab");
     invariant(

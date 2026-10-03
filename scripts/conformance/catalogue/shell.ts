@@ -10,6 +10,7 @@ import {
   legacyCatalogueAppearanceStorageKeys,
 } from "../../../catalogue/shell/appearance-state.ts";
 import { scanBrowserAccessibility } from "../../browser-conformance-support.ts";
+import { expectUrl } from "../../browser-url.ts";
 import { withViewport } from "../../viewport.ts";
 import {
   verifyDecisionCopyEnrollment,
@@ -378,7 +379,15 @@ async function verifySearch(
 
   await trigger.click();
   await input.fill("call to action");
-  const cta = catalogueSearchResult(page, catalogueComponentPath("cta-band"));
+  const cta = catalogueSearchResult(
+    page,
+    await expectUrl(
+      page,
+      { pathname: catalogueRoutePaths.overview },
+      "Global search did not open from the Catalogue overview",
+    ),
+    catalogueComponentPath("cta-band"),
+  );
   invariant(await cta.count() === 1, "Call to action did not find CTA band");
   invariant(
     (await cta.locator(".discern-catalogue-search-match").textContent())
@@ -387,8 +396,9 @@ async function verifySearch(
   );
   await cta.click();
   await page.locator('[data-discern-component="cta-band"] h1').waitFor();
-  invariant(
-    new URL(page.url()).pathname === catalogueComponentPath("cta-band"),
+  await expectUrl(
+    page,
+    { pathname: catalogueComponentPath("cta-band") },
     "Global search did not route directly to CTA band",
   );
   return { checks: 8, metadataRoles };
@@ -580,15 +590,23 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
       JSON.stringify(Object.fromEntries(hueColours))
     }`,
   );
-  const fieldBeforeHueShortcut = new URL(page.url()).searchParams.get("field");
+  const fieldBeforeHueShortcut = (await expectUrl(
+    page,
+    { searchParams: { accent: "20" } },
+    "The last numeric Accent hue did not reach the URL",
+  )).searchParams.get("field");
   await page.getByRole("combobox", { name: "Accent" }).selectOption(
     "violet",
   );
-  const afterNamedHue = new URL(page.url());
-  invariant(
-    afterNamedHue.searchParams.get("accent") === "300" &&
-      page.url().includes("appearance=") === false &&
-      afterNamedHue.searchParams.get("field") === fieldBeforeHueShortcut,
+  const afterNamedHue = await expectUrl(
+    page,
+    {
+      searchParams: {
+        accent: "300",
+        appearance: null,
+        field: fieldBeforeHueShortcut,
+      },
+    },
     "Named hue shortcut did not set numeric 300 while preserving axes",
   );
   checks += 2;
@@ -596,21 +614,28 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
   const palette = page.getByRole("combobox", { name: "Accent" });
   const fieldBeforePalette = afterNamedHue.searchParams.get("field");
   await palette.selectOption("none");
+  await expectUrl(
+    page,
+    { searchParams: { accent: "none" } },
+    "Monochrome did not reach the URL",
+  );
   invariant(
-    new URL(page.url()).searchParams.get("accent") === "none" &&
-      await page.getByRole("slider", { name: "Accent hue slider" }).count() ===
-        0,
+    await page.getByRole("slider", { name: "Accent hue slider" }).count() ===
+      0,
     "Monochrome did not retire the hue controls",
   );
   await palette.selectOption("custom");
-  const afterPalette = new URL(page.url());
-  invariant(
-    afterPalette.searchParams.get("accent") === "300" &&
-      afterPalette.searchParams.get("field") === fieldBeforePalette,
+  await expectUrl(
+    page,
+    { searchParams: { accent: "300", field: fieldBeforePalette } },
     "Accent → monochrome → Accent erased the remembered hue or axes",
   );
   await setCatalogueAppearanceInput(density, 1.3);
-  const afterAxis = new URL(page.url());
+  const afterAxis = await expectUrl(
+    page,
+    (url) => url.searchParams.get("field")?.split(",")[3] === "1.3",
+    "Moving the Density axis did not reach the URL",
+  );
   invariant(
     afterAxis.searchParams.get("accent") === "300",
     "Moving an axis erased the Accent hue",
@@ -632,12 +657,25 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
     stored?.includes("accent=300") === true && stored.includes("field="),
     `Orthogonal Appearance state did not persist canonically: ${stored}`,
   );
-  const exactBeforeNavigation = new URL(page.url());
+  const exactBeforeNavigation = await expectUrl(
+    page,
+    {
+      searchParams: {
+        accent: "300",
+        field: afterAxis.searchParams.get("field"),
+      },
+    },
+    "Reload did not keep the canonical Appearance URL",
+  );
   await page.locator('nav[aria-label="Catalogue"]').getByRole("link", {
     name: "Foundations",
     exact: true,
   }).click();
-  const navigated = new URL(page.url());
+  const navigated = await expectUrl(
+    page,
+    { pathname: foundationsPaths.index },
+    "Local navigation did not reach Foundations",
+  );
   for (const name of ["theme", "accent", "field"]) {
     invariant(
       navigated.searchParams.get(name) ===
@@ -646,9 +684,12 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
     );
   }
   await page.goBack({ waitUntil: "networkidle" });
-  invariant(
-    new URL(page.url()).searchParams.get("field") ===
-      exactBeforeNavigation.searchParams.get("field"),
+  await expectUrl(
+    page,
+    {
+      pathname: exactBeforeNavigation.pathname,
+      searchParams: { field: exactBeforeNavigation.searchParams.get("field") },
+    },
     "Back did not restore the exact field point",
   );
   checks += 3;
@@ -656,14 +697,11 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
   const legacyAccent = new URL(catalogueComponentPath("button"), origin);
   legacyAccent.searchParams.set("accent", "violet");
   await loadCataloguePage(page, legacyAccent.href);
-  await eventually(
-    () =>
-      Promise.resolve(
-        new URL(page.url()).searchParams.get("accent") === "300",
-      ),
+  const migratedAccent = await expectUrl(
+    page,
+    { searchParams: { accent: "300" } },
     "Legacy named Accent URL did not migrate",
   );
-  const migratedAccent = new URL(page.url());
   const systemField = await page.evaluate(() =>
     matchMedia("(prefers-color-scheme: dark)").matches ? "1,1,1,1" : "0,1,1,1"
   );
@@ -676,11 +714,16 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
   const legacyField = new URL(foundationsPaths.appearance, origin);
   legacyField.searchParams.set("field", "0.6,1.4,0.7,0.8,blue");
   await loadCataloguePage(page, legacyField.href);
-  invariant(
-    !new URL(page.url()).searchParams.has("appearance") &&
-      new URL(page.url()).searchParams.get("accent") === "255" &&
-      new URL(page.url()).searchParams.get("field") === "0.6,1.4,0.7,0.8",
-    `Legacy blue Field migration is incomplete: ${page.url()}`,
+  await expectUrl(
+    page,
+    {
+      searchParams: {
+        appearance: null,
+        accent: "255",
+        field: "0.6,1.4,0.7,0.8",
+      },
+    },
+    "Legacy blue Field migration is incomplete",
   );
   checks += 2;
 
@@ -986,9 +1029,9 @@ async function verifyShellWithoutStorage(
     await appearance.getByRole("combobox", { name: "Starting point" })
       .selectOption("tools");
     await isolated.emulateMedia({ colorScheme: "dark" });
-    await eventually(
-      () =>
-        new URL(isolated.url()).searchParams.get("field") === "1,1.1,1,0.65",
+    await expectUrl(
+      isolated,
+      { searchParams: { field: "1,1.1,1,0.65" } },
       "System theme or preset failed without storage",
     );
     await appearance.locator("summary").press("Escape");
@@ -1002,14 +1045,24 @@ async function verifyShellWithoutStorage(
     await isolated.waitForURL((url) =>
       url.pathname === catalogueComponentPath("button")
     );
-    invariant(
-      new URL(isolated.url()).searchParams.get("field") === "1,1.1,1,0.65",
+    await expectUrl(
+      isolated,
+      { searchParams: { field: "1,1.1,1,0.65" } },
       "Search lost Appearance without storage",
     );
     await isolated.goBack({ waitUntil: "networkidle" });
+    await expectUrl(
+      isolated,
+      (url) => url.pathname !== catalogueComponentPath("button"),
+      "Back did not leave the searched destination",
+    );
     await isolated.goForward({ waitUntil: "networkidle" });
-    invariant(
-      new URL(isolated.url()).searchParams.get("field") === "1,1.1,1,0.65",
+    await expectUrl(
+      isolated,
+      {
+        pathname: catalogueComponentPath("button"),
+        searchParams: { field: "1,1.1,1,0.65" },
+      },
       "Forward lost exact Appearance without storage",
     );
   } finally {
@@ -1055,9 +1108,9 @@ export async function verifyPolishedShell(
       await trigger.click();
       await appearance.getByRole("combobox", { name: "Starting point" })
         .selectOption("reading");
-      invariant(
-        new URL(page.url()).searchParams.get("field") === "1,0.8,0.8,1.3" &&
-          new URL(page.url()).searchParams.get("accent") === "245",
+      await expectUrl(
+        page,
+        { searchParams: { field: "1,0.8,0.8,1.3", accent: "245" } },
         "Reading preset changed theme/accent or lost coordinates",
       );
       await openCatalogueAppearanceAxes(page);
@@ -1065,8 +1118,9 @@ export async function verifyPolishedShell(
         name: "Density exact value",
       });
       await exact.fill("");
-      invariant(
-        new URL(page.url()).searchParams.get("field") === "1,0.8,0.8,1.3",
+      await expectUrl(
+        page,
+        { searchParams: { field: "1,0.8,0.8,1.3" } },
         "Empty exact input changed the field",
       );
       await exact.fill("99");
@@ -1078,8 +1132,9 @@ export async function verifyPolishedShell(
       );
       await exact.fill("0.875");
       await exact.press("Enter");
-      invariant(
-        new URL(page.url()).searchParams.get("field") === "1,0.8,0.8,0.875",
+      await expectUrl(
+        page,
+        { searchParams: { field: "1,0.8,0.8,0.875" } },
         "Exact entry did not commit a precise coordinate",
       );
       invariant(

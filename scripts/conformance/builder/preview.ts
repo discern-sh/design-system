@@ -7,8 +7,10 @@ import type {
 } from "../../../catalogue/builder/model.ts";
 import { BUILDER_STORAGE_KEYS } from "../../../catalogue/builder/persistence.ts";
 import { catalogueAppearanceStorageKey } from "../../../catalogue/shell/appearance-state.ts";
+import { expectUrl } from "../../browser-url.ts";
 import {
   ACTION_TIMEOUT,
+  BUILDER_PATH,
   BUILDER_READY,
   BUILDER_SHELL,
   CANVAS_PAGE,
@@ -354,7 +356,11 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
     (key) => localStorage.getItem(key),
     BUILDER_STORAGE_KEYS.document,
   );
-  const originalUrl = page.url();
+  const originalUrl = (await expectUrl(
+    page,
+    { pathname: BUILDER_PATH },
+    "The logical preview check did not start in the Builder",
+  )).href;
   const originalAppearanceStorage = await page.evaluate(
     (key) => localStorage.getItem(key),
     catalogueAppearanceStorageKey,
@@ -675,8 +681,12 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
       .evaluate((input) => input.closest("form")?.remove());
     invariant(
       await preview.locator("html").evaluate(() => location.href) ===
-          frameUrl &&
-        page.url().includes("/catalogue/builder/"),
+        frameUrl,
+      "Interact allowed a link to escape or replace the preview",
+    );
+    await expectUrl(
+      page,
+      { pathname: BUILDER_PATH },
       "Interact allowed a link to escape or replace the preview",
     );
     invariant(
@@ -781,7 +791,11 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
         parameters.get("previewAccent") === "300" &&
         parameters.get("previewField") === "1,1,1,1.6";
     });
-    const appearanceUrl = new URL(page.url());
+    const appearanceUrl = await expectUrl(
+      page,
+      { searchParams: { previewAccent: "300", previewField: "1,1,1,1.6" } },
+      "Preview Appearance did not reach the Builder URL",
+    );
     const appearanceBoundaryState = {
       workspaceTheme: await page.locator(BUILDER_SHELL).getAttribute(
         "data-discern-theme",

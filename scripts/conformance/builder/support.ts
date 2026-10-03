@@ -109,8 +109,10 @@ export async function attempt<Result>(
   }
 }
 
+export const BUILDER_PATH = "/catalogue/builder/";
+
 export function builderUrl(origin: string): string {
-  return new URL("/catalogue/builder/", origin).href;
+  return new URL(BUILDER_PATH, origin).href;
 }
 
 export async function loadBuilderPage(

@@ -12,6 +12,7 @@ import {
 import { projectTerminalLayoutRecipe } from "../../../catalogue/terminal-layout-inspector.tsx";
 import { resolveCatalogueTerminalPresentation } from "../../../catalogue/terminal-theme.ts";
 import { inspectTerminalLayout } from "../../../src/cli/projection.ts";
+import { expectUrl } from "../../browser-url.ts";
 import { withViewport } from "../../viewport.ts";
 import { verifyCliPreview } from "./cli-preview.ts";
 import {
@@ -461,7 +462,17 @@ export async function verifyTerminalCatalogue(
       "Replay omitted cancellation",
     );
     await page.getByRole("link", { name: "Markdown browser →" }).click();
+    await expectUrl(
+      page,
+      (url) => url.pathname !== replayUrl.pathname,
+      "The Markdown browser link did not leave the replay",
+    );
     await page.goBack();
+    await expectUrl(
+      page,
+      { pathname: replayUrl.pathname },
+      "Browser Back did not return to the replay",
+    );
     await eventually(
       async () =>
         await page.getByRole("combobox", { name: "Replay frame" })

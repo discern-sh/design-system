@@ -4,7 +4,11 @@ import {
   verifyDecisionCopyEnrollment,
 } from "./metadata-copy.ts";
 import type { Page } from "playwright-core";
-import { catalogueRoutePaths } from "../../../catalogue/routes.ts";
+import {
+  catalogueComponentPath,
+  catalogueRoutePaths,
+} from "../../../catalogue/routes.ts";
+import { expectUrl } from "../../browser-url.ts";
 import { withViewport } from "../../viewport.ts";
 import {
   CATALOGUE_WIDE_VIEWPORT as WIDE_VIEWPORT,
@@ -67,9 +71,9 @@ export async function verifyComponentDiscoveryJourneys(
     );
 
     await page.getByRole("link", { name: "Browse all components" }).click();
-    invariant(
-      new URL(page.url()).searchParams.get("all") === "1" &&
-        new URL(page.url()).searchParams.get("theme") === "dark",
+    await expectUrl(
+      page,
+      { searchParams: { all: "1", theme: "dark" } },
       "All Components did not enter URL state without losing Appearance",
     );
     await eventually(
@@ -89,15 +93,19 @@ export async function verifyComponentDiscoveryJourneys(
     );
     invariant(firstGroup, "Components needs a first canonical Group option");
     await groupSelect.selectOption(firstGroup);
-    invariant(
-      new URL(page.url()).searchParams.get("group") === firstGroup,
+    await expectUrl(
+      page,
+      { searchParams: { group: firstGroup } },
       "Group selection did not enter URL state",
     );
     await page.goBack();
+    await expectUrl(
+      page,
+      { searchParams: { all: "1", group: null } },
+      "Back did not restore the All Components URL",
+    );
     await eventually(
-      async () =>
-        new URL(page.url()).searchParams.get("all") === "1" &&
-        await groupSelect.inputValue() === "",
+      async () => await groupSelect.inputValue() === "",
       "Back did not restore All Components controls and results",
     );
     await page.goForward();
@@ -123,9 +131,9 @@ export async function verifyComponentDiscoveryJourneys(
       "Component explorer disagreed with the global call-to-action alias reason",
     );
     await query.fill("future-no-such-component");
-    invariant(
-      new URL(page.url()).searchParams.get("q") ===
-        "future-no-such-component",
+    await expectUrl(
+      page,
+      { searchParams: { q: "future-no-such-component" } },
       "Component query did not round-trip through the URL",
     );
     invariant(
@@ -202,13 +210,16 @@ async function verifyDiscoveryReturnJourney(
   );
   await inspect.click();
   await page.locator("[data-discern-component=command]").waitFor();
-  invariant(
-    new URL(page.url()).searchParams.get("surface") === "cli",
+  await expectUrl(
+    page,
+    { searchParams: { surface: "cli" } },
     "CLI discovery did not open a CLI detail",
   );
   await page.getByRole("radio", { name: /^All \d+$/ }).check();
-  invariant(
-    new URL(page.url()).searchParams.has("return"),
+  await expectUrl(
+    page,
+    (url) =>
+      url.searchParams.get("view") === "all" && url.searchParams.has("return"),
     "Detail controls dropped discovery context",
   );
   const next = page.locator('a[rel="next"]');
@@ -239,8 +250,11 @@ async function verifyDiscoveryReturnJourney(
   await verifyRestoredResult(page);
   await page.goForward();
   await page.locator(".discern-catalogue-detail").waitFor();
-  invariant(
-    new URL(page.url()).searchParams.has("return"),
+  await expectUrl(
+    page,
+    (url) =>
+      url.pathname === catalogueComponentPath("command") &&
+      url.searchParams.has("return"),
     "Forward lost the detail's return context",
   );
 }
@@ -253,11 +267,11 @@ async function verifyRestoredResult(page: Page): Promise<void> {
         .inputValue() === "command",
     "Return lost the query",
   );
-  const url = new URL(page.url());
-  invariant(
-    url.searchParams.get("availability") === "cli" &&
-      url.searchParams.get("group") === "workflow" &&
-      url.searchParams.get("theme") === "dark",
+  await expectUrl(
+    page,
+    {
+      searchParams: { availability: "cli", group: "workflow", theme: "dark" },
+    },
     "Return lost filters or Appearance",
   );
   await eventually(
@@ -390,9 +404,13 @@ export async function verifyDiscoveryControlStability(
         await verify(`choosing ${await radio.inputValue()}`);
       }
       await controls.getByRole("radio", { name: "Any", exact: true }).check();
+      await expectUrl(
+        page,
+        { searchParams: { all: "1", availability: null } },
+        "Choosing Any must broaden results without switching to collections",
+      );
       invariant(
-        new URL(page.url()).searchParams.get("all") === "1" &&
-          await page.locator("#component-results-title").count() === 1,
+        await page.locator("#component-results-title").count() === 1,
         "Choosing Any must broaden results without switching to collections",
       );
       await controls.locator("summary").click();

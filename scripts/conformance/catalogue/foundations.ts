@@ -10,6 +10,7 @@ import { publicTokens } from "../../../src/token-inventory.ts";
 import { serializeCatalogueAxes } from "../../../catalogue/shell/axes-state.ts";
 import { defaultAppearance } from "../../../src/tokens/appearance.ts";
 import { scanBrowserAccessibility } from "../../browser-conformance-support.ts";
+import { expectUrl } from "../../browser-url.ts";
 import { withViewport } from "../../viewport.ts";
 import { verifyInlineOverflowCueEdges } from "./overflow-cue.ts";
 import {
@@ -102,10 +103,9 @@ async function verifyTokenExplorer(
   });
   await typography.focus();
   await typography.press("Enter");
-  await eventually(
-    async () =>
-      new URL(await page.evaluate(() => globalThis.location.href)).searchParams
-        .get("category") === "typography",
+  await expectUrl(
+    page,
+    { searchParams: { category: "typography" } },
     "Keyboard category selection did not reach the URL",
   );
   const categoryCards = page.locator("[data-discern-token-category]");
@@ -139,10 +139,9 @@ async function verifyTokenExplorer(
     name: "Search Tokens",
   });
   await search.fill("0.85rem");
-  await eventually(
-    async () =>
-      new URL(await page.evaluate(() => globalThis.location.href)).searchParams
-        .get("q") === "0.85rem",
+  await expectUrl(
+    page,
+    { searchParams: { q: "0.85rem" } },
     "Token query did not reach the URL",
   );
   invariant(
@@ -333,6 +332,11 @@ async function verifyTerminalFoundations(
   await searchDialog.locator(".discern-search-palette__input").fill("spinner");
   const result = catalogueSearchResult(
     page,
+    await expectUrl(
+      page,
+      { searchParams: { theme: "dark" } },
+      "Dark theme did not reach the Terminal foundations URL",
+    ),
     catalogueTerminalFoundationPath("motifs"),
   );
   invariant(

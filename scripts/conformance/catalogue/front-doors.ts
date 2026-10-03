@@ -7,6 +7,7 @@ import {
 import type { CatalogueRouteFamilyId } from "../../../catalogue/routes.ts";
 import { componentExplorerHref } from "../../../catalogue/pages/components/explorer-state.ts";
 import { scanBrowserAccessibility } from "../../browser-conformance-support.ts";
+import { followFragment } from "../../browser-url.ts";
 import { withViewport } from "../../viewport.ts";
 import { verifyInlineOverflowCueEdges } from "./overflow-cue.ts";
 import { CATALOGUE_NARROW_VIEWPORT } from "./support.ts";
@@ -134,9 +135,13 @@ async function verifyLandingOrientation(
   }
 
   const skip = page.getByRole("link", { name: "Skip to content" });
-  await skip.focus();
-  await skip.press("Enter");
   if (
+    await followLandingFragment(
+      page,
+      "#main-content",
+      () => skip.press("Enter"),
+      failures,
+    ) &&
     !await page.locator("#main-content").evaluate((node) =>
       document.activeElement === node
     )
@@ -148,20 +153,49 @@ async function verifyLandingOrientation(
   for (let index = 0; index < await pageLinks.count(); index += 1) {
     const link = pageLinks.nth(index);
     const hash = await link.getAttribute("href");
-    await link.focus();
-    await link.press("Enter");
-    const state = await page.evaluate((href) => {
-      const target = href === null ? null : document.querySelector(href);
-      return {
-        hash: globalThis.location.hash,
-        focused: target !== null && document.activeElement === target,
-      };
-    }, hash);
-    if (hash === null || state.hash !== hash || !state.focused) {
+    if (hash === null) {
+      failures.push("landing/anchors: an On this page link has no fragment");
+      continue;
+    }
+    if (
+      !await followLandingFragment(
+        page,
+        hash,
+        () => link.press("Enter"),
+        failures,
+      )
+    ) continue;
+    if (
+      !await page.evaluate(
+        (href) => document.activeElement === document.querySelector(href),
+        hash,
+      )
+    ) {
       failures.push(
-        `landing/anchors: keyboard activation of ${hash} produced ${state.hash} and focused=${state.focused}`,
+        `landing/anchors: keyboard activation of ${hash} did not focus its target`,
       );
     }
+  }
+}
+
+/** Follow one landing fragment, recording rather than throwing a failure. */
+async function followLandingFragment(
+  page: Page,
+  hash: string,
+  action: () => Promise<void>,
+  failures: string[],
+): Promise<boolean> {
+  try {
+    await followFragment(
+      page,
+      hash,
+      action,
+      `landing/anchors: keyboard activation of ${hash} did not settle`,
+    );
+    return true;
+  } catch (error) {
+    failures.push(error instanceof Error ? error.message : String(error));
+    return false;
   }
 }
 

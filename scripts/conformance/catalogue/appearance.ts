@@ -18,6 +18,7 @@ import {
   appearanceProjection,
   defaultAppearance,
 } from "../../../src/tokens/tokens.ts";
+import { expectUrl } from "../../browser-url.ts";
 import { withViewport } from "../../viewport.ts";
 import { parseComputedAppearanceColor } from "../appearance-projection.ts";
 import {
@@ -542,12 +543,9 @@ async function verifySemanticMatrix(
         view: "all",
       });
       await loadCataloguePage(page, url.href);
-      await eventually(
-        () =>
-          Promise.resolve(
-            new URL(page.url()).searchParams.get("accent") ===
-              String(hueCase.hue),
-          ),
+      await expectUrl(
+        page,
+        { searchParams: { accent: String(hueCase.hue) } },
         hueCase.id + " did not canonicalise to numeric hue " + hueCase.hue,
       );
       equalValues(
@@ -756,16 +754,20 @@ async function verifyInteractiveAxesAndIdentity(
   await setCatalogueAppearanceInput(fieldAxis(page, "structure"), 1.4);
   await setCatalogueAppearanceInput(fieldAxis(page, "emphasis"), 1.35);
   await setCatalogueAppearanceInput(fieldAxis(page, "density"), 1.2);
+  const signedDarkField = fieldAt(0.75, {
+    structure: 1.4,
+    emphasis: 1.35,
+    density: 1.2,
+  });
+  await expectUrl(
+    page,
+    { searchParams: { field: signedDarkField } },
+    "Signed dark 0A posture lost its axes",
+  );
   const signedDark = await cliState(page);
   invariant(
-    signedDark.ground === "dark" && signedDark.hue === "335" &&
-      new URL(page.url()).searchParams.get("field") ===
-        fieldAt(0.75, {
-          structure: 1.4,
-          emphasis: 1.35,
-          density: 1.2,
-        }),
-    "Signed dark 0A posture lost its terminal pole, hue, or axes",
+    signedDark.ground === "dark" && signedDark.hue === "335",
+    "Signed dark 0A posture lost its terminal pole or hue",
   );
 
   return { axisChecks: 7, identityChecks: 5 };
