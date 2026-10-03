@@ -7,6 +7,7 @@ import { documentToTsx } from "../catalogue/builder/export.ts";
 import { emptyDocument, insertChild } from "../catalogue/builder/model.ts";
 import { GuardedBuilderStorage } from "../catalogue/builder/persistence.ts";
 import { armedSlotInsertionTarget } from "../catalogue/builder/tree/projection.ts";
+import { searchRecords } from "../catalogue/search/mod.ts";
 import {
   BUILDER_RECENT_LIMIT,
   builderPaletteDensities,
@@ -408,18 +409,56 @@ Deno.test("Recent and Favourites are bounded and recover from stale, corrupt, or
   );
 });
 
-Deno.test("shared search stays bounded across the complete Builder population", async () => {
+/**
+ * Code units the platform normalises while `run` runs. The search engine
+ * normalises every field it compares, so this counts its work per record
+ * and per comparison, whichever path asks.
+ */
+function normalisedUnits(run: () => unknown): number {
+  const prototype = String.prototype;
+  const normalize = prototype.normalize;
+  let units = 0;
+  prototype.normalize = function (this: string, form?: string): string {
+    units += this.length;
+    return normalize.call(this, form);
+  };
+  try {
+    run();
+  } finally {
+    prototype.normalize = normalize;
+  }
+  return units;
+}
+
+const SEARCH_GROWTH = 4;
+/** Work may grow this much faster than the population, for the result sort. */
+const SEARCH_LINEAR_SLACK = 1.125;
+
+Deno.test("shared search work grows in proportion to the Builder population", async () => {
   const { registry } = await discoveryModules();
-  const started = performance.now();
-  for (let index = 0; index < 50; index += 1) {
-    registry.discoverBuilderComponents(
-      index % 2 === 0 ? "call to action" : "procedural workflow",
-      undefined,
+  const population = registry.builderDiscoveryRecords;
+  const grown = Array.from(
+    { length: SEARCH_GROWTH },
+    (_, copy) =>
+      population.map((record) => ({ ...record, id: `${record.id}#${copy}` })),
+  ).flat();
+  // An intent alias, a phrase, and one letter that matches every record, so
+  // the result sort ranks the whole population.
+  for (const query of ["call to action", "procedural workflow", "a"]) {
+    const once = normalisedUnits(() => searchRecords(population, query));
+    assertEquals(
+      normalisedUnits(() =>
+        registry.discoverBuilderComponents(query, undefined)
+      ),
+      once,
+      `Builder discovery adds search work of its own for "${query}"`,
+    );
+    const growth = normalisedUnits(() => searchRecords(grown, query)) / once;
+    assert(
+      growth <= SEARCH_GROWTH * SEARCH_LINEAR_SLACK,
+      `"${query}" did ${
+        growth.toFixed(2)
+      }× the work on ${SEARCH_GROWTH}× the population`,
     );
   }
-  const elapsed = performance.now() - started;
-  assert(
-    elapsed < 500,
-    `50 complete-population searches took ${elapsed.toFixed(1)}ms`,
-  );
 });
