@@ -145,6 +145,36 @@ export const cliExamples: readonly CliExample<ActivityLogCliProps>[] =
   cliExampleImplementations;
 
 /**
+ * The wrapped rows of each streamed line the latest frame showed, at the
+ * content width it showed them. A live log repaints its tail on every tick,
+ * and fitting may render one tick's frame several times, so a line — however
+ * long — wraps once while it stays in the tail instead of once per paint.
+ * Only the latest frame's lines are kept.
+ */
+let shownTail: {
+  readonly width: number;
+  readonly rows: ReadonlyMap<string, readonly string[]>;
+} = { width: 0, rows: new Map() };
+
+function wrapTail(
+  lines: readonly string[],
+  width: number,
+): readonly string[] {
+  const shown = shownTail.width === width ? shownTail.rows : undefined;
+  const rows = new Map<string, readonly string[]>();
+  for (const line of lines) {
+    if (!rows.has(line)) {
+      rows.set(
+        line,
+        shown?.get(line) ?? wrapTextPreservingIndent(line, width),
+      );
+    }
+  }
+  shownTail = { width, rows };
+  return lines.flatMap((line) => rows.get(line) ?? []);
+}
+
+/**
  * Render one activity log frame: a headline naming the work, pinned
  * narration lines, a fixed-height streamed tail behind an indented muted rail
  * whose first row has an angled connector, its in-progress partial line, and
@@ -256,9 +286,7 @@ const renderActivityLogCli: CliRenderer<ActivityLogCliProps> = (
       ...theme.typography.muted,
       color: terminalThemeColor(theme, "--discern-color-ink-muted"),
     } as const;
-    const committed = props.tail.flatMap((line) =>
-      wrapTextPreservingIndent(line, contentWidth)
-    );
+    const committed = wrapTail(props.tail, contentWidth);
     const rows = props.partial === undefined
       ? committed
       : [...committed, truncateText(props.partial, contentWidth, ellipsis)];

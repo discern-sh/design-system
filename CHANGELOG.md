@@ -26,6 +26,7 @@ Terminal applications can pin a few entries above their titled groups — an ove
 ### Fixed
 
 - Wrapping, truncation, and measurement take time in proportion to their input. A word wider than its line — a long token, path, or streamed log line — was segmented again for every piece cut from it, so `wrapText` spent about a second on 20,000 unbroken characters and most of a minute on 80,000; every helper now lays its input out from one set of measured graphemes, and the output is unchanged byte for byte. Truncation stops measuring once a line is known not to fit, the path-or-joint choice no longer re-wraps the rest of the paragraph for every path in it, and the styled wrappers re-attribute a paragraph's runs in one forward pass however many it holds.
+- The Activity log wraps a streamed line once while it stays in the tail instead of on every repaint, so one long line of child output no longer stalls the live view.
 
 ## 0.38.0
 

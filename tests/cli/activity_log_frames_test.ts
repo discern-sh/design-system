@@ -14,6 +14,7 @@ import {
   assertStyledFrame,
   testTerminalCapabilities,
 } from "../../src/cli/interactive/testing.ts";
+import { segmentationWork } from "./segmentation_work.ts";
 
 const streaming: ActivityLogCliProps = {
   kind: "activity-log",
@@ -137,6 +138,41 @@ Deno.test("Activity log windows the last rows after width wrapping", () => {
     "◓ Working: Buil…\n└─│   indented\n  │   detail\n  │ three now\nCtrl+C stops.",
     capabilities,
   );
+});
+
+Deno.test("Activity log wraps a streamed line once while it stays in the tail", () => {
+  const wide = testTerminalCapabilities({ columns: 60 });
+  const narrow = testTerminalCapabilities({ columns: 30 });
+  const long = "agent/homepage-session-prototype-b2c3d4/".repeat(500);
+  const tail = { ...streaming, tail: ["one", long, "two"], tailRows: 4 };
+  const unrelated = { ...streaming, tail: ["unrelated"] };
+  // A frame of other lines at another width leaves no wrapped row to reuse.
+  const cold = (
+    props: ActivityLogCliProps,
+    capabilities: TerminalCapabilities,
+  ): string => {
+    renderActivityLogCli(unrelated, capabilities === wide ? narrow : wide);
+    return renderActivityLogCli(props, capabilities);
+  };
+
+  const nextTick = cold({ ...tail, phase: 2 }, wide);
+  renderActivityLogCli(tail, wide);
+  let repainted = "";
+  const work = segmentationWork(() => {
+    repainted = renderActivityLogCli({ ...tail, phase: 2 }, wide);
+  });
+  assertEquals(repainted, nextTick);
+  assert(
+    work.units < long.length / 10,
+    `a repaint segmented ${work.units} code units beside a ${long.length}-unit line`,
+  );
+
+  // A new width or a new tail between paints wraps afresh.
+  const narrowFrame = cold(tail, narrow);
+  renderActivityLogCli(tail, wide);
+  assertEquals(renderActivityLogCli(tail, narrow), narrowFrame);
+  renderActivityLogCli(unrelated, narrow);
+  assertEquals(renderActivityLogCli(tail, narrow), narrowFrame);
 });
 
 Deno.test("Activity log styles streamed detail as muted supporting text", () => {
