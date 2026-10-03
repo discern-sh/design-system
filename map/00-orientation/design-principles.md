@@ -66,7 +66,7 @@ This package serves public JSR consumers. Public classes, tokens, exports, the m
 
 **Why it matters.** JSR versions cannot be edited after the fact — a leaked private file, an undocumented export, or an unrecorded breaking change is permanent. Consumers pin against the manifest and the class contract; loosening either quietly breaks builds the maintainer never sees.
 
-**How it shows up.** [`release_test.ts`](../../tests/release_test.ts) enforces the publish allowlist, module-graph containment, symbol documentation coverage, and config/changelog identity coherence; `deno publish --dry-run` runs in CI; [`publish.yml`](../../.github/workflows/publish.yml) refuses a tag that disagrees with `deno.json`'s version; [`CHANGELOG.md`](../../CHANGELOG.md) records every contract change.
+**How it shows up.** [`release_test.ts`](../../tests/release_test.ts) enforces the publish allowlist, module-graph containment, symbol documentation coverage, and config/changelog identity coherence, and holds the newest release's notes to the public names an entry point exports — every `Type` or `Type.member` they cite exists, and every name a "Removed in" table lists is gone; `deno publish --dry-run` runs in CI; [`publish.yml`](../../.github/workflows/publish.yml) refuses a tag that disagrees with `deno.json`'s version; [`CHANGELOG.md`](../../CHANGELOG.md) records every contract change.
 
 ---
 

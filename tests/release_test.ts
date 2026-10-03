@@ -1064,23 +1064,45 @@ Deno.test("every entrypoint and public symbol is documented", async () => {
   assertEquals(problems, [], problems.join("\n"));
 });
 
+/** A type as `deno doc --json` reports it. */
+interface DocType {
+  readonly kind?: string;
+  readonly repr?: string;
+  readonly value?: unknown;
+}
+
+/** Declared members as `deno doc --json` reports them. */
+interface DocMembers {
+  readonly properties?: readonly DocMember[];
+  readonly methods?: readonly DocMember[];
+  readonly indexSignatures?: readonly unknown[];
+}
+
+/** One declared member as `deno doc --json` reports it. */
+interface DocMember {
+  readonly name?: string;
+  readonly accessibility?: string;
+}
+
+/** One declaration of an exported symbol as `deno doc --json` reports it. */
+interface DocDeclaration {
+  readonly kind?: string;
+  readonly def?: DocMembers & {
+    readonly members?: readonly DocMember[];
+    readonly extends?: string | readonly DocType[];
+    readonly tsType?: DocType;
+  };
+}
+
 /** Every symbol any entry point exports, by name. */
 async function exportedSymbols(): Promise<{
   readonly names: ReadonlySet<string>;
+  readonly declarations: ReadonlyMap<string, readonly DocDeclaration[]>;
   readonly nodes: Readonly<
     Record<string, {
       readonly symbols?: readonly {
         readonly name?: string;
-        readonly declarations?: readonly {
-          readonly kind?: string;
-          readonly def?: {
-            readonly properties?: readonly {
-              readonly accessibility?: string;
-            }[];
-            readonly methods?: readonly { readonly accessibility?: string }[];
-            readonly indexSignatures?: readonly unknown[];
-          };
-        }[];
+        readonly declarations?: readonly DocDeclaration[];
       }[];
     }>
   >;
@@ -1095,14 +1117,267 @@ async function exportedSymbols(): Promise<{
   const parsed = JSON.parse(new TextDecoder().decode(result.stdout)) as {
     readonly nodes: Awaited<ReturnType<typeof exportedSymbols>>["nodes"];
   };
-  const names = new Set<string>();
+  const declarations = new Map<string, DocDeclaration[]>();
   for (const node of Object.values(parsed.nodes)) {
     for (const symbol of node.symbols ?? []) {
-      if (symbol.name !== undefined) names.add(symbol.name);
+      if (symbol.name === undefined) continue;
+      declarations.set(symbol.name, [
+        ...(declarations.get(symbol.name) ?? []),
+        ...(symbol.declarations ?? []),
+      ]);
     }
   }
-  return { names, nodes: parsed.nodes };
+  return {
+    names: new Set(declarations.keys()),
+    declarations,
+    nodes: parsed.nodes,
+  };
 }
+
+/**
+ * The members an exported type declares, through the exported types it
+ * extends or combines. `open` marks a type whose members reach past what the
+ * entry points export — a base the package keeps private, a platform or
+ * utility type, an index signature, or a computed type — where a member the
+ * documentation does not list cannot be refuted.
+ */
+function declaredMembers(
+  name: string,
+  declarations: ReadonlyMap<string, readonly DocDeclaration[]>,
+): { readonly names: ReadonlySet<string>; readonly open: boolean } {
+  const names = new Set<string>();
+  const seen = new Set<string>();
+  let open = false;
+  const addMembers = (
+    members: DocMembers & { members?: readonly DocMember[] },
+  ) => {
+    if ((members.indexSignatures ?? []).length > 0) open = true;
+    for (
+      const member of [
+        ...(members.properties ?? []),
+        ...(members.methods ?? []),
+        ...(members.members ?? []),
+      ]
+    ) {
+      if (
+        member.name !== undefined && member.accessibility !== "private" &&
+        member.accessibility !== "protected"
+      ) names.add(member.name);
+    }
+  };
+  const visitName = (target: string): void => {
+    if (seen.has(target)) return;
+    seen.add(target);
+    const found = declarations.get(target);
+    if (found === undefined) {
+      open = true;
+      return;
+    }
+    for (const { kind, def } of found) {
+      if (def === undefined) open = true;
+      else if (kind === "interface" || kind === "class" || kind === "enum") {
+        addMembers(def);
+        if (typeof def.extends === "string") visitName(def.extends);
+        else for (const base of def.extends ?? []) visitType(base);
+      } else if (kind === "typeAlias") visitType(def.tsType);
+      else open = true;
+    }
+  };
+  const visitType = (type: DocType | undefined): void => {
+    switch (type?.kind) {
+      case "typeRef": {
+        const reference = type.value as { readonly typeName?: string };
+        visitName(reference.typeName ?? type.repr ?? "");
+        return;
+      }
+      case "union":
+      case "intersection":
+        for (const part of type.value as readonly DocType[]) visitType(part);
+        return;
+      case "typeLiteral":
+        addMembers(type.value as DocMembers);
+        return;
+      case "literal":
+        return;
+      default:
+        open = true;
+    }
+  };
+  visitName(name);
+  return { names, open };
+}
+
+/** The newest release in the changelog: its version and its notes. */
+function newestRelease(
+  changelog: string,
+): { readonly version: string; readonly notes: string } {
+  const heading = /^## (\d+\.\d+\.\d+\S*)$/mu.exec(changelog);
+  assert(heading?.[1], "the changelog has no release heading");
+  const start = heading.index + heading[0].length;
+  const end = changelog.slice(start).search(/^## /mu);
+  return {
+    version: heading[1],
+    notes: changelog.slice(start, end === -1 ? undefined : start + end),
+  };
+}
+
+/** A public name a release note cites: `Type`, or `Type.member`, maybe `: value`. */
+interface ReleaseCitation {
+  readonly span: string;
+  readonly type: string;
+  readonly member?: string;
+}
+
+/**
+ * A code span naming a public type's member, such as `Type.member`,
+ * `Type.member: false`, `Type.member.nested`, or `Type.method()`.
+ */
+const CITED_MEMBER =
+  /^([A-Z][a-z][A-Za-z0-9]*)\.([A-Za-z_$][\w$]*)(?:[.:(].*)?$/u;
+
+/**
+ * A code span naming a public type alone, maybe with `: value`. Two or more
+ * words, so a Component's or a key's one-word name is prose, not a citation.
+ */
+const CITED_TYPE = /^([A-Z][a-z0-9]+(?:[A-Z][a-z0-9]*)+)(?::.*)?$/u;
+
+/**
+ * The public names release notes cite in code spans. A table whose first
+ * header reads "Removed in" lists names that are gone in its first column;
+ * every other cited name is one the release ships.
+ */
+function releaseCitations(notes: string): {
+  readonly shipped: readonly ReleaseCitation[];
+  readonly removed: readonly ReleaseCitation[];
+} {
+  const shipped: ReleaseCitation[] = [];
+  const removed: ReleaseCitation[] = [];
+  const cite = (text: string, into: ReleaseCitation[]) => {
+    for (const [, span = ""] of text.matchAll(/`([^`\n]+)`/gu)) {
+      const name = CITED_MEMBER.exec(span) ?? CITED_TYPE.exec(span);
+      if (name?.[1] === undefined) continue;
+      into.push({
+        span,
+        type: name[1],
+        ...(name[2] === undefined ? {} : { member: name[2] }),
+      });
+    }
+  };
+  let table: "none" | "removal" | "other" = "none";
+  for (const line of notes.split("\n")) {
+    if (!line.startsWith("|")) {
+      table = "none";
+      cite(line, shipped);
+      continue;
+    }
+    const [first = "", ...rest] = line.split("|").slice(1, -1);
+    if (table === "none") {
+      table = /^\s*Removed in\b/u.test(first) ? "removal" : "other";
+    }
+    cite(first, table === "removal" ? removed : shipped);
+    for (const cell of rest) cite(cell, shipped);
+  }
+  return { shipped, removed };
+}
+
+Deno.test("release citations tell shipped names from removed ones", () => {
+  const { shipped, removed } = releaseCitations([
+    '- `Widget.size: "wide"`, `Widget.size.cells`, `Widget.measure()`, and',
+    "  `WidgetKind` ship; `size`, `Widget`, `README.md`, and `PgUp PgDn` are words.",
+    "",
+    "| Removed in 1.0.0 | Use instead |",
+    "| ---------------- | ----------- |",
+    "| `OldWidget`, `OldWidget.size` | `Widget.size` |",
+    "",
+    "| Name | Note |",
+    "| ---- | ---- |",
+    "| `LaterWidget` | kept |",
+  ].join("\n"));
+  const named = ({ type, member }: ReleaseCitation) =>
+    member === undefined ? type : `${type}.${member}`;
+  assertEquals(shipped.map(named), [
+    "Widget.size",
+    "Widget.size",
+    "Widget.measure",
+    "WidgetKind",
+    "Widget.size",
+    "LaterWidget",
+  ]);
+  assertEquals(removed.map(named), ["OldWidget", "OldWidget.size"]);
+
+  const declarations = new Map<string, readonly DocDeclaration[]>([
+    ["BaseWidget", [{
+      kind: "interface",
+      def: { properties: [{ name: "id" }] },
+    }]],
+    ["Widget", [{
+      kind: "interface",
+      def: {
+        properties: [{ name: "size" }],
+        extends: [{ kind: "typeRef", value: { typeName: "BaseWidget" } }],
+      },
+    }]],
+    ["AnyWidget", [{
+      kind: "typeAlias",
+      def: {
+        tsType: {
+          kind: "union",
+          value: [{ kind: "typeRef", value: { typeName: "Widget" } }, {
+            kind: "literal",
+          }],
+        },
+      },
+    }]],
+    ["LooseWidget", [{
+      kind: "typeAlias",
+      def: { tsType: { kind: "typeRef", value: { typeName: "Omit" } } },
+    }]],
+  ]);
+  assertEquals(declaredMembers("AnyWidget", declarations), {
+    names: new Set(["size", "id"]),
+    open: false,
+  });
+  assertEquals(declaredMembers("LooseWidget", declarations).open, true);
+});
+
+Deno.test("the newest release cites only names the package exports", async () => {
+  // Release notes outlive the code they describe: a field renamed before
+  // release, or a removal that never happened, would ship as permanent
+  // documentation of an API no consumer can use.
+  const { notes } = newestRelease(
+    await Deno.readTextFile(join(PACKAGE_ROOT, "CHANGELOG.md")),
+  );
+  const { names, declarations } = await exportedSymbols();
+  const { shipped, removed } = releaseCitations(notes);
+  const problems: string[] = [];
+  for (const { span, type, member } of shipped) {
+    if (!names.has(type)) {
+      if (!(type in globalThis)) {
+        problems.push(`\`${span}\`: no entry point exports ${type}`);
+      }
+      continue;
+    }
+    if (member === undefined) continue;
+    const members = declaredMembers(type, declarations);
+    if (!members.open && !members.names.has(member)) {
+      problems.push(`\`${span}\`: ${type} declares no ${member}`);
+    }
+  }
+  for (const { span, type, member } of removed) {
+    const remains = member === undefined ? names.has(type) : names.has(type) &&
+      declaredMembers(type, declarations).names.has(member);
+    if (remains) {
+      problems.push(`\`${span}\`: listed as removed, but it is still public`);
+    }
+  }
+  assertEquals(
+    problems,
+    [],
+    `the newest release notes cite names consumers cannot use:\n${
+      problems.join("\n")
+    }`,
+  );
+});
 
 Deno.test("public signatures name only types some entry point exports", async () => {
   // A public signature that names an unexported type leaves consumers unable
@@ -1184,11 +1459,11 @@ Deno.test("release identity stays coherent across config and changelog", async (
     config.version,
     "the generated packageVersion lags deno.json; run deno task codegen",
   );
-  const changelog = await Deno.readTextFile(join(PACKAGE_ROOT, "CHANGELOG.md"));
-  const heading = changelog.match(/^## (\d+\.\d+\.\d+\S*)/m);
-  assert(heading, "the changelog has no release heading");
+  const { version } = newestRelease(
+    await Deno.readTextFile(join(PACKAGE_ROOT, "CHANGELOG.md")),
+  );
   assertEquals(
-    heading[1],
+    version,
     config.version,
     "deno.json version and the newest changelog heading disagree",
   );
