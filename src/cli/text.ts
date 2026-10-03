@@ -13,6 +13,7 @@ import { stripAnsi, type TerminalTextStyle } from "./ansi.ts";
 import type { TerminalCapabilities } from "./capabilities.ts";
 import { terminalGlyph } from "./terminal-glyphs.ts";
 import { eastAsianWidthKind } from "../unicode/east-asian-width.ts";
+import { tallyLayoutStep } from "./layout-steps.ts";
 import {
   emitStyledLine,
   parseStyledSource,
@@ -471,6 +472,7 @@ function extendLine(
   piece: Piece,
   columns: number,
 ): OpenLine | undefined {
+  tallyLayoutStep("lineExtensions");
   const width = line.width + spaceCells(line.last, piece.first) + piece.width;
   return width <= columns ? { width, last: piece.last } : undefined;
 }

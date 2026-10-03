@@ -14,7 +14,7 @@ import {
   assertStyledFrame,
   testTerminalCapabilities,
 } from "../../src/cli/interactive/testing.ts";
-import { segmentationWork } from "./segmentation_work.ts";
+import { layoutWork } from "./layout_work.ts";
 
 const streaming: ActivityLogCliProps = {
   kind: "activity-log",
@@ -158,7 +158,7 @@ Deno.test("Activity log wraps a streamed line once while it stays in the tail", 
   const nextTick = cold({ ...tail, phase: 2 }, wide);
   renderActivityLogCli(tail, wide);
   let repainted = "";
-  const work = segmentationWork(() => {
+  const work = layoutWork(() => {
     repainted = renderActivityLogCli({ ...tail, phase: 2 }, wide);
   });
   assertEquals(repainted, nextTick);

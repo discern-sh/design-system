@@ -11,6 +11,7 @@
 import type { TerminalTextStyle } from "./ansi.ts";
 import type { TerminalCapabilities } from "./capabilities.ts";
 import { inspectSafeAsciiUrlReference } from "../url-reference.ts";
+import { tallyLayoutStep } from "./layout-steps.ts";
 
 const ESCAPE = String.fromCharCode(27);
 const BELL = String.fromCharCode(7);
@@ -336,6 +337,7 @@ export function styledSegmentReader(
       segment !== undefined && firstOffset + segment.text.length <= start;
       segment = segments[first]
     ) {
+      tallyLayoutStep("runVisits");
       firstOffset += segment.text.length;
       first += 1;
     }
@@ -344,6 +346,7 @@ export function styledSegmentReader(
     for (let index = first; index < segments.length; index += 1) {
       const segment = segments[index];
       if (segment === undefined || segmentStart >= end) break;
+      tallyLayoutStep("runVisits");
       const text = segment.text.slice(
         Math.max(0, start - segmentStart),
         Math.min(segment.text.length, end - segmentStart),

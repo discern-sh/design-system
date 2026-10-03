@@ -3,10 +3,7 @@ import { styleText } from "../../src/cli/ansi.ts";
 import { testTerminalCapabilities } from "../../src/cli/interactive/testing.ts";
 import * as text from "../../src/cli/text.ts";
 import { deriveTerminalTheme } from "../../src/cli/theme.ts";
-import {
-  type SegmentationWork,
-  segmentationWork,
-} from "./segmentation_work.ts";
+import { type LayoutWork, layoutWork } from "./layout_work.ts";
 import * as reference from "./text_layout_oracle.ts";
 
 const SIZE = 2_000;
@@ -85,29 +82,29 @@ const PROBES: Readonly<
     ),
 };
 
-/** How `run`'s segmentation work grows when its input grows fourfold. */
+/** How `run`'s layout work grows when its input grows fourfold. */
 function growth(
   run: (input: string) => unknown,
   shape: (size: number) => string,
 ): {
-  readonly small: SegmentationWork;
-  readonly large: SegmentationWork;
+  readonly small: LayoutWork;
+  readonly large: LayoutWork;
   /** The fastest-growing measure's growth, and the most linear work allows. */
   readonly worst: number;
   readonly allowed: number;
 } {
   const smallInput = shape(SIZE);
   const largeInput = shape(SIZE * GROWTH);
-  const small = segmentationWork(() => run(smallInput));
-  const large = segmentationWork(() => run(largeInput));
-  const ratio = (measure: keyof SegmentationWork): number =>
+  const small = layoutWork(() => run(smallInput));
+  const large = layoutWork(() => run(largeInput));
+  const ratio = (measure: keyof LayoutWork): number =>
     large[measure] === 0 ? 0 : large[measure] / Math.max(1, small[measure]);
-  const inputGrowth = largeInput.length / smallInput.length;
+  const measures = Object.keys(large) as (keyof LayoutWork)[];
   return {
     small,
     large,
-    worst: Math.max(ratio("calls"), ratio("units"), ratio("graphemes")),
-    allowed: inputGrowth * LINEAR_SLACK,
+    worst: Math.max(...measures.map(ratio)),
+    allowed: (largeInput.length / smallInput.length) * LINEAR_SLACK,
   };
 }
 
@@ -135,9 +132,9 @@ Deno.test("text export work grows linearly with its input, never per line it pro
         worst <= allowed,
         `${name} over ${shapeName}: ${GROWTH}× the input took ${
           worst.toFixed(2)
-        }× the segmentation work (${JSON.stringify(small)} → ${
+        }× the layout work (${JSON.stringify(small)} → ${
           JSON.stringify(large)
-        }); re-segmenting what remains after each line or piece is quadratic`,
+        }); segmenting, laying out, or reading again what it already passed is quadratic`,
       );
     }
   }

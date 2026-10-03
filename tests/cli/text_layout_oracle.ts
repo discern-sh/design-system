@@ -8,7 +8,10 @@
  *
  * Grapheme width, ANSI stripping, and styled-sequence parsing and emission
  * are shared authorities imported as they are; run slicing is copied here,
- * because the linear wrap re-attributes styling through its own reader.
+ * because the linear wrap re-attributes styling through its own reader. It
+ * tallies the layout steps the package tallies — a piece tried on an open
+ * line, a styled run read — so `text_work_test.ts` can show each measure
+ * seeing the quadratic work this algorithm does.
  *
  * @module
  */
@@ -23,6 +26,7 @@ import {
   type StyledSegment,
   underlayStyledSegments,
 } from "../../src/cli/styled-sequences.ts";
+import { tallyLayoutStep } from "../../src/cli/layout-steps.ts";
 import {
   graphemeWidth,
   type TerminalAlignment,
@@ -60,6 +64,7 @@ function sliceStyledSegments(
   const sliced: StyledSegment[] = [];
   let offset = 0;
   for (const segment of segments) {
+    tallyLayoutStep("runVisits");
     const segmentStart = offset;
     offset += segment.text.length;
     if (offset <= start) continue;
@@ -214,6 +219,7 @@ function placePiece(
   piece: string,
   columns: number,
 ): string {
+  if (current !== "") tallyLayoutStep("lineExtensions");
   const joined = current === "" ? piece : `${current} ${piece}`;
   if (lineWidth(joined) <= columns) return joined;
   if (current !== "") lines.push(current);
