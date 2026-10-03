@@ -47,3 +47,7 @@ export * from "./theme.ts";
 export * from "./triangles.ts";
 export * from "../generated/cli-registry.ts";
 export * from "../generated/cli-renderers.ts";
+export type {
+  HeadingCliOverflowPolicy,
+  HeadingCliTreatment,
+} from "../components/display/heading/heading.cli.ts";
