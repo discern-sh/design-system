@@ -310,28 +310,60 @@ export function parseStyledSource(value: string): readonly StyledSegment[] {
   return mergeStyledSegments(segments);
 }
 
+/**
+ * Slice runs to code-unit ranges of their concatenated plain text, reading
+ * forward: each range starts at or after the previous one's start, and the
+ * reader resumes from the run holding that start rather than from the first
+ * run, so re-attributing a paragraph line by line visits each run a bounded
+ * number of times however many runs it has. A range that starts before the
+ * previous one throws a `RangeError`.
+ */
+export function styledSegmentReader(
+  segments: readonly StyledSegment[],
+): (start: number, end: number) => readonly StyledSegment[] {
+  let first = 0;
+  let firstOffset = 0;
+  let previousStart = -Infinity;
+  return (start, end) => {
+    if (start < previousStart) {
+      throw new RangeError(
+        `styled runs are read forward; a range at ${start} follows one at ${previousStart}`,
+      );
+    }
+    previousStart = start;
+    for (
+      let segment = segments[first];
+      segment !== undefined && firstOffset + segment.text.length <= start;
+      segment = segments[first]
+    ) {
+      firstOffset += segment.text.length;
+      first += 1;
+    }
+    const sliced: StyledSegment[] = [];
+    let segmentStart = firstOffset;
+    for (let index = first; index < segments.length; index += 1) {
+      const segment = segments[index];
+      if (segment === undefined || segmentStart >= end) break;
+      const text = segment.text.slice(
+        Math.max(0, start - segmentStart),
+        Math.min(segment.text.length, end - segmentStart),
+      );
+      if (text !== "") {
+        sliced.push({ text, codes: segment.codes, link: segment.link });
+      }
+      segmentStart += segment.text.length;
+    }
+    return sliced;
+  };
+}
+
 /** Slice runs to a code-unit range of their concatenated plain text. */
 export function sliceStyledSegments(
   segments: readonly StyledSegment[],
   start: number,
   end: number,
 ): readonly StyledSegment[] {
-  const sliced: StyledSegment[] = [];
-  let offset = 0;
-  for (const segment of segments) {
-    const segmentStart = offset;
-    offset += segment.text.length;
-    if (offset <= start) continue;
-    if (segmentStart >= end) break;
-    const text = segment.text.slice(
-      Math.max(0, start - segmentStart),
-      Math.min(segment.text.length, end - segmentStart),
-    );
-    if (text !== "") {
-      sliced.push({ text, codes: segment.codes, link: segment.link });
-    }
-  }
-  return sliced;
+  return styledSegmentReader(segments)(start, end);
 }
 
 /**

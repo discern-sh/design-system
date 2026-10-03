@@ -1,4 +1,4 @@
-import { assertEquals, assertThrows } from "@std/assert";
+import { assert, assertEquals, assertThrows } from "@std/assert";
 import {
   renderStyledSpans,
   stripAnsi,
@@ -13,6 +13,7 @@ import {
   wrapStyledText,
   wrapText,
 } from "../../src/cli/text.ts";
+import { styledSegmentReader } from "../../src/cli/styled-sequences.ts";
 import type { TerminalColor } from "../../src/cli/theme.ts";
 import { testTerminalCapabilities } from "../../src/cli/interactive/testing.ts";
 
@@ -334,4 +335,35 @@ Deno.test("styled wrapping rejects foreign, malformed, and unterminated sequence
     assertThrows(() => wrapStyledText(value, 10), TypeError);
   }
   assertThrows(() => wrapStyledText("x", 0), TypeError);
+});
+
+Deno.test("a styled-run reader resumes where it left off and refuses to move back", () => {
+  const segments = Array.from({ length: 400 }, (_, index) => ({
+    text: `w${index} `,
+    codes: index % 2 === 0 ? [1] : [],
+    link: undefined,
+  }));
+  let reads = 0;
+  const counted = new Proxy(segments, {
+    get(target, property, receiver) {
+      if (typeof property === "string" && /^\d+$/u.test(property)) reads += 1;
+      return Reflect.get(target, property, receiver);
+    },
+  });
+  const read = styledSegmentReader(counted);
+  const plain = segments.map((segment) => segment.text).join("");
+  let start = 0;
+  let rebuilt = "";
+  for (const token of plain.split(" ").filter((token) => token !== "")) {
+    start = plain.indexOf(token, start);
+    rebuilt += read(start, start + token.length).map((part) => part.text)
+      .join("");
+    start += token.length;
+  }
+  assertEquals(rebuilt, plain.replaceAll(" ", ""));
+  assert(
+    reads <= segments.length * 4,
+    `reading ${segments.length} runs in order touched them ${reads} times`,
+  );
+  assertThrows(() => read(0, 1), RangeError, "read forward");
 });

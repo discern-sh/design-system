@@ -14,6 +14,7 @@ import {
   sliceStyledSegments,
   styleCodes,
   type StyledSegment,
+  styledSegmentReader,
   underlayStyledSegments,
 } from "./styled-sequences.ts";
 
@@ -403,7 +404,7 @@ function splitStyledParagraphs(
 
 function attributeLine(
   line: string,
-  segments: readonly StyledSegment[],
+  read: (start: number, end: number) => readonly StyledSegment[],
   plain: string,
   cursor: { index: number },
 ): readonly StyledSegment[] {
@@ -411,8 +412,7 @@ function attributeLine(
   let index = 0;
   while (index < line.length) {
     if (line[index] === " ") {
-      const source =
-        sliceStyledSegments(segments, cursor.index, cursor.index + 1)[0];
+      const source = read(cursor.index, cursor.index + 1)[0];
       if (source === undefined || !isWhitespace(plain[cursor.index])) {
         throw projectionMisalignment();
       }
@@ -426,13 +426,7 @@ function attributeLine(
     const token = line.slice(index, end);
     while (isWhitespace(plain[cursor.index])) cursor.index += 1;
     if (!plain.startsWith(token, cursor.index)) throw projectionMisalignment();
-    attributed.push(
-      ...sliceStyledSegments(
-        segments,
-        cursor.index,
-        cursor.index + token.length,
-      ),
-    );
+    attributed.push(...read(cursor.index, cursor.index + token.length));
     cursor.index += token.length;
     index = end;
   }
@@ -466,9 +460,10 @@ export function wrapStyledText(
   assertColumns("wrap", columns, 1);
   return splitStyledParagraphs(parseStyledSource(value)).flatMap((segments) => {
     const plain = segments.map((segment) => segment.text).join("");
+    const read = styledSegmentReader(segments);
     const cursor = { index: 0 };
     const lines = wrapParagraph(plain, columns).map((line) =>
-      emitStyledLine(attributeLine(line, segments, plain, cursor))
+      emitStyledLine(attributeLine(line, read, plain, cursor))
     );
     while (isWhitespace(plain[cursor.index])) cursor.index += 1;
     if (cursor.index !== plain.length) throw projectionMisalignment();
