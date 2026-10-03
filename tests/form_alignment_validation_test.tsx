@@ -3,6 +3,7 @@ import { toFileUrl } from "@std/path";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { Page } from "playwright-core";
 import { launchBrowser } from "../scripts/browser.ts";
+import { expectUrl } from "../scripts/browser-url.ts";
 import { Button } from "../src/components/core/button/button.tsx";
 import { Checkbox } from "../src/components/forms/checkbox/checkbox.tsx";
 import {
@@ -269,7 +270,11 @@ Deno.test("validation keeps values, focus, and geometry through failure, correct
     // Native constraint validation blocks the submit, marks the control,
     // moves focus to it, and preserves every entered value.
     await page.getByRole("button", { name: "Save profile" }).click();
-    assertEquals(page.url().startsWith("https://example.test/"), false);
+    await expectUrl(
+      page,
+      (url) => url.href === "about:blank",
+      "An invalid submission left the form",
+    );
     assert(await email.evaluate((node) => node.matches(":user-invalid")));
     assertEquals(
       await email.evaluate((node) => getComputedStyle(node).borderTopColor),
@@ -322,11 +327,12 @@ Deno.test("validation keeps values, focus, and geometry through failure, correct
       "https://example.test/submit**",
       (route) => route.fulfill({ body: "Saved" }),
     );
-    await Promise.all([
-      page.waitForURL("https://example.test/submit**"),
-      page.getByRole("button", { name: "Save profile" }).click(),
-    ]);
-    const submitted = new URL(page.url()).searchParams;
+    await page.getByRole("button", { name: "Save profile" }).click();
+    const submitted = (await expectUrl(
+      page,
+      (url) => url.href.startsWith("https://example.test/submit?"),
+      "The corrected submission did not reach its destination",
+    )).searchParams;
     assertEquals(submitted.get("email"), "casey@example.test");
     assertEquals(submitted.get("city"), "Lisbon");
   } finally {

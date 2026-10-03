@@ -4,6 +4,7 @@ import { assert, assertEquals, assertThrows } from "@std/assert";
 import { toFileUrl } from "@std/path";
 import { renderToStaticMarkup } from "react-dom/server";
 import { launchBrowser } from "../scripts/browser.ts";
+import { expectUrl } from "../scripts/browser-url.ts";
 import { SegmentedControl } from "../src/components/forms/segmented-control/segmented-control.tsx";
 import renderSegmentedControlCli, {
   cliExamples,
@@ -137,11 +138,12 @@ Deno.test("SegmentedControl native static HTML selects, resets, and submits with
       "https://example.test/submit**",
       (route) => route.fulfill({ body: "Saved" }),
     );
-    await Promise.all([
-      page.waitForURL("https://example.test/submit**"),
-      page.getByRole("button", { name: "Save" }).click(),
-    ]);
-    const submitted = new URL(page.url()).searchParams;
+    await page.getByRole("button", { name: "Save" }).click();
+    const submitted = (await expectUrl(
+      page,
+      (url) => url.href.startsWith("https://example.test/submit?"),
+      "The Segmented control form did not submit",
+    )).searchParams;
     assertEquals([...submitted], [["schedule", "daily"], [
       "external",
       "weekly",
