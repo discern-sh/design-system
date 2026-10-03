@@ -6,7 +6,7 @@ Each release is cut from a green run of the full release gate — formatting, li
 
 ## 0.39.0
 
-Terminal applications can pin a few entries above their titled groups — an overview, a way to every command — so the first thing a person sees can be what the application offers rather than a key they have yet to learn, and a palette opened from such an entry can start on the command it promised. The release is additive: views that set none of the new fields render and behave exactly as before, except that a strip fact too wide for its room now keeps its name without its trailing faint runs instead of dropping whole.
+Terminal applications can pin a few entries above their titled groups — an overview, a way to every command — so the first thing a person sees can be what the application offers rather than a key they have yet to learn, and a palette opened from such an entry can start on the command it promised. Views that set none of the new fields render and behave as before, except where the list and detail now keep more of what a reader needs: a `rows` block's text runs on into trailing cells it leaves empty, a group header's or fold row's `aside` keeps the list's right pad, a strip fact too wide for its room keeps its name without its trailing faint runs instead of dropping whole, and a selection a filter hides survives a view update.
 
 ### Terminal applications
 
