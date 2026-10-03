@@ -16,6 +16,9 @@ export const FOCUSABLE_SELECTOR =
   "summary, audio[controls], video[controls], iframe, object, embed, " +
   "[tabindex], [contenteditable]";
 
+/** How long a browser check waits for state an action produces to settle. */
+export const BROWSER_STATE_TIMEOUT_MS = 2_000;
+
 type AxeResults = Awaited<ReturnType<AxeBuilder["analyze"]>>;
 
 /** Browser font posture used by component conformance matrices. */

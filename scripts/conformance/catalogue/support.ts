@@ -1,6 +1,9 @@
 import type { Locator, Page } from "playwright-core";
 import { preserveCatalogueAppearanceHref } from "../../../catalogue/shell/appearance-state.ts";
-import { loadReadyBrowserPage } from "../../browser-conformance-support.ts";
+import {
+  BROWSER_STATE_TIMEOUT_MS,
+  loadReadyBrowserPage,
+} from "../../browser-conformance-support.ts";
 
 export const CATALOGUE_WIDE_VIEWPORT = { width: 1440, height: 1000 } as const;
 export const CATALOGUE_TERMINAL_VIEWPORT = {
@@ -18,7 +21,7 @@ export async function eventually(
   predicate: () => boolean | Promise<boolean>,
   failure: string,
 ): Promise<void> {
-  const deadline = Date.now() + 2_000;
+  const deadline = Date.now() + BROWSER_STATE_TIMEOUT_MS;
   while (Date.now() < deadline) {
     if (await predicate()) return;
     await new Promise((resolve) => setTimeout(resolve, 25));
