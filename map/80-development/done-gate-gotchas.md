@@ -179,3 +179,11 @@ expects the node_modules/ directory to be up to date. Did you forget to run
 **Cause.** The disclosure buttons draw their caret with a `::before` pseudo-element whose `content` is a real glyph. Accessible-name computation includes generated content, so the computed name is `▸ Axes default · …`; an anchored regex never matches, while an unanchored one does.
 
 **Fix.** Match names by substring or an unanchored regex for controls that carry a `::before` or `::after` glyph, and keep the shared helpers in [`scripts/conformance/catalogue/support.ts`](../../scripts/conformance/catalogue/support.ts) as the one place that spells those lookups. Do not move the caret into the DOM to satisfy a locator; the snapshot is the truth to test against.
+
+### A keyboard journey loses an Enter only on a slow runner
+
+**Symptom.** A browser test that presses Enter on one fragment link after another passes locally and fails in CI. A URL wait reports the previous fragment, such as `expected hash #fn-1 … observed …#opening`, or Back lands two entries early. It fails only with the article runtime loaded.
+
+**Cause.** The [article-navigation](../../assets/behaviors/article-navigation.js) behavior moves focus from its `hashchange` listener, which runs as a task after the navigation commits. Playwright's `press` focuses its target and sends the key as separate steps. On a loaded runner the pending task can run between them and refocus the previous fragment's target. The Enter then lands on a heading or note and creates no history entry.
+
+**Fix.** Run each fragment navigation through `followFragment` in [`scripts/browser-url.ts`](../../scripts/browser-url.ts) before the next key press. It waits for the URL and for every `hashchange` the navigation queued. To reproduce locally, run the test under `taskpolicy -b` on macOS, which moves it onto background QoS.
