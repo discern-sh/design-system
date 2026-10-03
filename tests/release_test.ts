@@ -340,6 +340,12 @@ Deno.test("the published chart graph is neutral, local, and permission-free", as
   );
 });
 
+/** Whether a `deno info --json` graph resolves React or the React adapter. */
+function reachesReactGraph(graph: string): boolean {
+  return graph.includes("npm:react") || graph.includes("/src/react.ts") ||
+    graph.includes("react-dom");
+}
+
 Deno.test("React remains exclusive to the declared React adapter graph", async () => {
   for (const [exportName, entry] of Object.entries(config.exports)) {
     const { code, output } = await run(PACKAGE_ROOT, [
@@ -350,8 +356,7 @@ Deno.test("React remains exclusive to the declared React adapter graph", async (
       entry,
     ]);
     assertEquals(code, 0, `deno info failed for ${entry}:\n${output}`);
-    const reachesReact = output.includes("npm:react") ||
-      output.includes("/src/react.ts") || output.includes("react-dom");
+    const reachesReact = reachesReactGraph(output);
     if (exportName === "./react") {
       assert(reachesReact, "./react no longer reaches its peer adapter");
     } else {
@@ -1018,31 +1023,12 @@ console.log(JSON.stringify({
 });
 
 Deno.test("every entrypoint and public symbol is documented", async () => {
-  const result = await new Deno.Command(Deno.execPath(), {
-    args: ["doc", "--json", ...Object.values(config.exports)],
-    cwd: PACKAGE_ROOT,
-    stdout: "piped",
-    stderr: "piped",
-  }).output();
-  assertEquals(
-    result.code,
-    0,
-    `deno doc failed:\n${new TextDecoder().decode(result.stderr)}`,
+  const nodes = await documentModules(
+    PACKAGE_ROOT,
+    Object.values(config.exports),
   );
-  const parsed = JSON.parse(new TextDecoder().decode(result.stdout)) as {
-    readonly nodes: Readonly<
-      Record<string, {
-        readonly module_doc?: unknown;
-        readonly symbols?: readonly {
-          readonly name?: string;
-          readonly jsDoc?: unknown;
-          readonly declarations?: readonly { readonly jsDoc?: unknown }[];
-        }[];
-      }>
-    >;
-  };
   const problems: string[] = [];
-  for (const [entry, node] of Object.entries(parsed.nodes)) {
+  for (const [entry, node] of Object.entries(nodes)) {
     const path = relative(PACKAGE_ROOT, fromFileUrl(entry));
     if (!node.module_doc) problems.push(`${path}: missing module doc`);
     for (const symbol of node.symbols ?? []) {
@@ -1084,41 +1070,94 @@ interface DocMember {
   readonly accessibility?: string;
 }
 
-/** One declaration of an exported symbol as `deno doc --json` reports it. */
+/** A source position as `deno doc --json` reports it. */
+interface DocLocation {
+  readonly filename: string;
+  readonly line: number;
+  readonly col: number;
+}
+
+/** One declaration of a symbol as `deno doc --json` reports it. */
 interface DocDeclaration {
   readonly kind?: string;
+  readonly jsDoc?: unknown;
+  readonly location?: DocLocation;
   readonly def?: DocMembers & {
     readonly members?: readonly DocMember[];
     readonly extends?: string | readonly DocType[];
     readonly tsType?: DocType;
+    /** Set on a function that has a body: alone, or as overloads' implementation. */
+    readonly hasBody?: boolean;
+    /** Where a re-exported name's declaration stands. */
+    readonly target?: DocLocation;
   };
+}
+
+/** One module's symbols as `deno doc --json` reports them. */
+interface DocModule {
+  readonly module_doc?: unknown;
+  readonly symbols?: readonly {
+    readonly name?: string;
+    readonly jsDoc?: unknown;
+    readonly declarations?: readonly DocDeclaration[];
+  }[];
+}
+
+/** Run a `deno` subcommand in `cwd` and return what it writes to stdout. */
+async function denoStdout(
+  cwd: string,
+  args: readonly string[],
+): Promise<string> {
+  const result = await new Deno.Command(Deno.execPath(), {
+    args: [...args],
+    cwd,
+    stdout: "piped",
+    stderr: "piped",
+  }).output();
+  assertEquals(
+    result.code,
+    0,
+    `deno ${args.slice(0, 2).join(" ")} failed:\n${
+      new TextDecoder().decode(result.stderr)
+    }`,
+  );
+  return new TextDecoder().decode(result.stdout);
+}
+
+/** Run a `deno` subcommand in `cwd` and parse the JSON it writes to stdout. */
+async function denoJson<T>(cwd: string, args: readonly string[]): Promise<T> {
+  return JSON.parse(await denoStdout(cwd, args)) as T;
+}
+
+/** `deno doc --json` for `modules`, keyed by module URL. */
+async function documentModules(
+  cwd: string,
+  modules: readonly string[],
+  { includePrivate = false }: { readonly includePrivate?: boolean } = {},
+): Promise<Readonly<Record<string, DocModule>>> {
+  const { nodes } = await denoJson<{
+    readonly nodes: Readonly<Record<string, DocModule>>;
+  }>(cwd, [
+    "doc",
+    "--json",
+    ...(includePrivate ? ["--private"] : []),
+    ...modules,
+  ]);
+  return nodes;
 }
 
 /** Every symbol any entry point exports, by name. */
 async function exportedSymbols(): Promise<{
   readonly names: ReadonlySet<string>;
   readonly declarations: ReadonlyMap<string, readonly DocDeclaration[]>;
-  readonly nodes: Readonly<
-    Record<string, {
-      readonly symbols?: readonly {
-        readonly name?: string;
-        readonly declarations?: readonly DocDeclaration[];
-      }[];
-    }>
-  >;
+  readonly nodes: Readonly<Record<string, DocModule>>;
 }> {
-  const result = await new Deno.Command(Deno.execPath(), {
-    args: ["doc", "--json", ...Object.values(config.exports)],
-    cwd: PACKAGE_ROOT,
-    stdout: "piped",
-    stderr: "piped",
-  }).output();
-  assertEquals(result.code, 0, new TextDecoder().decode(result.stderr));
-  const parsed = JSON.parse(new TextDecoder().decode(result.stdout)) as {
-    readonly nodes: Awaited<ReturnType<typeof exportedSymbols>>["nodes"];
-  };
+  const nodes = await documentModules(
+    PACKAGE_ROOT,
+    Object.values(config.exports),
+  );
   const declarations = new Map<string, DocDeclaration[]>();
-  for (const node of Object.values(parsed.nodes)) {
+  for (const node of Object.values(nodes)) {
     for (const symbol of node.symbols ?? []) {
       if (symbol.name === undefined) continue;
       declarations.set(symbol.name, [
@@ -1130,7 +1169,7 @@ async function exportedSymbols(): Promise<{
   return {
     names: new Set(declarations.keys()),
     declarations,
-    nodes: parsed.nodes,
+    nodes,
   };
 }
 
@@ -1379,27 +1418,383 @@ Deno.test("the newest release cites only names the package exports", async () =>
   );
 });
 
+/** A named type in a signature, as `deno doc --json` resolves it. */
+interface DocTypeReference {
+  readonly typeName?: string;
+  readonly resolution?: {
+    readonly kind?: string;
+    readonly specifier?: string;
+    readonly name?: string;
+  };
+}
+
+/** One entry point: the symbols it exports and whether its graph reaches React. */
+interface SignatureEntry {
+  readonly name: string;
+  readonly reachesReact: boolean;
+  readonly module: DocModule;
+}
+
+/** What the signature walk reads: the entry points and every module they reach. */
+interface SignatureDocs {
+  readonly entries: readonly SignatureEntry[];
+  /** Every package module the entry points reach, unexported declarations included. */
+  readonly modules: Readonly<Record<string, DocModule>>;
+}
+
+/** Document each of `exports` and every package module their graphs reach. */
+async function signatureDocs(
+  cwd: string,
+  exports: Readonly<Record<string, string>>,
+): Promise<SignatureDocs> {
+  const graphs = await Promise.all(
+    Object.entries(exports).map(async ([name, path]) => {
+      const text = await denoStdout(cwd, ["info", "--json", path]);
+      const graph = JSON.parse(text) as {
+        readonly roots: readonly string[];
+        readonly modules: readonly { readonly specifier: string }[];
+      };
+      const [root] = graph.roots;
+      assert(root !== undefined, `deno info named no root for ${path}`);
+      return { name, root, graph, reachesReact: reachesReactGraph(text) };
+    }),
+  );
+  const packageModules = new Set(
+    graphs.flatMap(({ graph }) => graph.modules.map((m) => m.specifier))
+      .filter((specifier) =>
+        specifier.startsWith("file:") && !specifier.includes("/node_modules/")
+      ),
+  );
+  const [exported, modules] = await Promise.all([
+    documentModules(cwd, graphs.map(({ root }) => root)),
+    documentModules(cwd, [...packageModules], { includePrivate: true }),
+  ]);
+  return {
+    entries: graphs.map(({ name, root, reachesReact }) => {
+      const module = exported[root];
+      assert(module !== undefined, `deno doc did not document ${name}`);
+      return { name, reachesReact, module };
+    }),
+    modules,
+  };
+}
+
+/** Whether a function, method, or constructor entry carries its body. */
+function carriesBody(item: unknown): boolean {
+  const entry = item as {
+    readonly hasBody?: boolean;
+    readonly functionDef?: { readonly hasBody?: boolean };
+    readonly def?: { readonly hasBody?: boolean };
+  };
+  return entry.hasBody === true || entry.functionDef?.hasBody === true ||
+    entry.def?.hasBody === true;
+}
+
+/**
+ * Drop the implementation signature of an overloaded function, method, or
+ * constructor: callers see only its overloads.
+ */
+function withoutImplementations<T>(items: readonly T[]): readonly T[] {
+  const key = (item: T): string => {
+    const entry = item as { readonly kind?: unknown; readonly name?: unknown };
+    return `${String(entry.kind)}:${String(entry.name)}`;
+  };
+  const overloaded = new Set(
+    items.filter((item) => {
+      const entry = item as {
+        readonly functionDef?: unknown;
+        readonly params?: unknown;
+        readonly def?: { readonly params?: unknown };
+      };
+      const callable = entry.functionDef !== undefined ||
+        entry.params !== undefined || entry.def?.params !== undefined;
+      return callable && !carriesBody(item);
+    }).map(key),
+  );
+  return items.filter((item) =>
+    !(carriesBody(item) && overloaded.has(key(item)))
+  );
+}
+
+/** Visit every named type a documented signature mentions, past private members. */
+function eachNamedType(
+  node: unknown,
+  visit: (reference: DocTypeReference) => void,
+): void {
+  if (Array.isArray(node)) {
+    for (const item of withoutImplementations(node)) eachNamedType(item, visit);
+    return;
+  }
+  if (typeof node !== "object" || node === null) return;
+  const entry = node as Readonly<Record<string, unknown>>;
+  if (
+    entry.accessibility === "private" ||
+    (typeof entry.name === "string" && entry.name.startsWith("#"))
+  ) return;
+  if (entry.kind === "typeRef") visit(entry.value as DocTypeReference);
+  for (const [key, value] of Object.entries(entry)) {
+    if (key !== "jsDoc" && key !== "location") eachNamedType(value, visit);
+  }
+}
+
+/**
+ * Package-owned types an exported signature names that its consumers cannot
+ * import: types no entry point exports, and, for an entry point whose graph
+ * stays clear of React, types only an entry point that reaches React exports.
+ * Props, options, members, parameters, and return types all count. The walk
+ * follows each signature through the unexported types it names, whose members
+ * are as public as the signature itself, and stops at exported types, which it
+ * walks as signatures of their own. `unresolved` names references the walk
+ * could not follow, so a change in the documentation's shape cannot quietly
+ * blind it.
+ */
+function unreachableSignatureTypes(docs: SignatureDocs): {
+  readonly references: ReadonlySet<string>;
+  readonly unresolved: readonly string[];
+} {
+  const at = ({ filename, line, col }: DocLocation): string =>
+    `${filename}:${line}:${col}`;
+  const byName = new Map<string, ReadonlyMap<string, DocDeclaration[]>>();
+  /** Each declaration, by where it stands, under the name it is declared as. */
+  const declaredAt = new Map<
+    string,
+    { readonly name: string; readonly declarations: readonly DocDeclaration[] }
+  >();
+  for (const [url, module] of Object.entries(docs.modules)) {
+    const names = new Map<string, DocDeclaration[]>();
+    for (const { name, declarations = [] } of module.symbols ?? []) {
+      if (name === undefined) continue;
+      names.set(name, [...(names.get(name) ?? []), ...declarations]);
+    }
+    byName.set(url, names);
+    for (const [name, declarations] of names) {
+      const own = declarations.filter((declaration) =>
+        declaration.kind !== "reference" &&
+        declaration.location?.filename === url
+      );
+      for (const { location } of own) {
+        if (location !== undefined) {
+          declaredAt.set(at(location), { name, declarations: own });
+        }
+      }
+    }
+  }
+  const exporters = new Map<string, SignatureEntry[]>();
+  for (const entry of docs.entries) {
+    for (const { declarations = [] } of entry.module.symbols ?? []) {
+      for (const declaration of declarations) {
+        const where = declaration.kind === "reference"
+          ? declaration.def?.target
+          : declaration.location;
+        if (where === undefined) continue;
+        exporters.set(at(where), [...(exporters.get(at(where)) ?? []), entry]);
+      }
+    }
+  }
+  type Target = {
+    readonly id: string;
+    readonly name: string;
+    readonly declarations: readonly DocDeclaration[];
+    readonly exporters: readonly SignatureEntry[];
+  };
+  const symbolIn = (url: string, name: string): Target | undefined => {
+    const locations = (byName.get(url)?.get(name) ?? []).flatMap((
+      declaration,
+    ) => {
+      const where = declaration.kind === "reference"
+        ? declaration.def?.target
+        : declaration.location;
+      return where === undefined ? [] : [at(where)];
+    });
+    const declared = locations.flatMap((where) => {
+      const found = declaredAt.get(where);
+      return found === undefined ? [] : [found];
+    });
+    const [first] = declared;
+    if (first === undefined || declared.length !== locations.length) {
+      return undefined;
+    }
+    return {
+      id: locations.join(" "),
+      name: first.name,
+      declarations: [...new Set(declared.flatMap((d) => d.declarations))],
+      exporters: [
+        ...new Set(locations.flatMap((where) => exporters.get(where) ?? [])),
+      ],
+    };
+  };
+  const references = new Set<string>();
+  const unresolved = new Set<string>();
+  for (const entry of docs.entries) {
+    for (
+      const { name: root, declarations = [] } of entry.module.symbols ?? []
+    ) {
+      const seen = new Set<string>();
+      const pending = [...withoutImplementations(declarations)];
+      for (
+        let declaration = pending.pop();
+        declaration !== undefined;
+        declaration = pending.pop()
+      ) {
+        const from = declaration.location?.filename;
+        if (from === undefined) continue;
+        eachNamedType(declaration.def, ({ typeName = "", resolution }) => {
+          let target: Target | undefined;
+          if (resolution?.kind === "local") {
+            target = symbolIn(from, typeName.split(".")[0] ?? "");
+          } else if (
+            resolution?.kind === "import" &&
+            /^\.{0,2}\//u.test(resolution.specifier ?? "")
+          ) {
+            target = symbolIn(
+              new URL(resolution.specifier ?? "", from).href,
+              resolution.name ?? "",
+            );
+          } else return; // a global, a type parameter, or another package
+          if (target === undefined) {
+            unresolved.add(`${root} -> ${typeName} in ${from}`);
+            return;
+          }
+          if (seen.has(target.id)) return;
+          seen.add(target.id);
+          const importable = target.exporters.filter((exporter) =>
+            entry.reachesReact || !exporter.reachesReact
+          );
+          if (importable.length > 0) return;
+          const only = target.exporters.map((exporter) => exporter.name);
+          references.add(
+            only.length === 0
+              ? `${root} -> ${target.name}`
+              : `${root} -> ${target.name} (only ${
+                only.join(", ")
+              } exports it)`,
+          );
+          pending.push(...withoutImplementations(target.declarations));
+        });
+      }
+    }
+  }
+  return { references, unresolved: [...unresolved].sort() };
+}
+
+Deno.test("the signature walk follows unexported types and the React boundary", async () => {
+  // A planted package: Props names an unexported Options whose members name
+  // a type no entry point exports — the shape `deno doc --lint` cannot see.
+  const fixture = await Deno.makeTempDir();
+  try {
+    const files: Readonly<Record<string, string>> = {
+      "mod.ts": [
+        "/** Fixture entry. @module */",
+        'export type { Props } from "./widget.ts";',
+        'export { Box, pick } from "./widget.ts";',
+        'export type { Shown } from "./shown.ts";',
+      ].join("\n"),
+      "adapter.ts": [
+        "/** Fixture adapter. @module */",
+        'export type { Tone } from "./tone.ts";',
+      ].join("\n"),
+      "shown.ts":
+        "/** Shown. */\nexport interface Shown { readonly id: string }",
+      "tone.ts": '/** Tone. */\nexport type Tone = "quiet" | "loud";',
+      "widget.ts": [
+        'import type { Shown } from "./shown.ts";',
+        'import type { Tone } from "./tone.ts";',
+        "/** Reachable only through Props. */",
+        'export type Treatment = "plain" | "rich";',
+        "interface Options {",
+        "  readonly treatment?: Treatment;",
+        "  readonly shown?: Shown;",
+        "  readonly tone?: Tone;",
+        "  readonly labels?: Readonly<Record<string, string>>;",
+        "}",
+        "/** Props. */",
+        "export type Props = Options & { readonly text: string };",
+        "type Hidden = { readonly secret: string };",
+        "/** Box. */",
+        "export class Box<T> {",
+        "  private hidden?: Hidden;",
+        "  /** Value. */",
+        "  value?: T;",
+        "}",
+        "/** Pick. */",
+        "export function pick(value: string): string;",
+        "export function pick(value: string | Hidden): string {",
+        '  return typeof value === "string" ? value : value.secret;',
+        "}",
+      ].join("\n"),
+    };
+    for (const [path, source] of Object.entries(files)) {
+      await Deno.writeTextFile(join(fixture, path), `${source}\n`);
+    }
+    const docs = await signatureDocs(fixture, {
+      ".": "./mod.ts",
+      "./adapter": "./adapter.ts",
+    });
+    const planted = unreachableSignatureTypes(docs);
+    assertEquals(planted.unresolved, []);
+    assertEquals(
+      [...planted.references].sort(),
+      ["Props -> Options", "Props -> Treatment"],
+    );
+    const behindReact = unreachableSignatureTypes({
+      ...docs,
+      entries: docs.entries.map((entry) => ({
+        ...entry,
+        reachesReact: entry.name === "./adapter",
+      })),
+    });
+    assertEquals([...behindReact.references].sort(), [
+      "Props -> Options",
+      "Props -> Tone (only ./adapter exports it)",
+      "Props -> Treatment",
+    ]);
+  } finally {
+    await Deno.remove(fixture, { recursive: true });
+  }
+});
+
 Deno.test("public signatures name only types some entry point exports", async () => {
   // A public signature that names an unexported type leaves consumers unable
-  // to name it. The baseline holds references that predate this guard; it
-  // may only shrink, so a new signature can never add one.
+  // to name it. `deno doc --lint` reports the references a public declaration
+  // makes itself, including `typeof` queries and inherited classes; the
+  // signature walk adds those an unexported type makes on its behalf, and
+  // those a React-free entry point's consumers could import only through
+  // React. The baseline holds references that predate each check; it may only
+  // shrink, so a new signature can never add one.
   const { names } = await exportedSymbols();
   const { output } = await run(PACKAGE_ROOT, [
     "doc",
     "--lint",
     ...Object.values(config.exports),
   ]);
-  const found = new Set(
-    [
-      ...output.matchAll(
-        /public type '([^']+)' references private type '([^']+)'/gu,
-      ),
-    ].flatMap((match) =>
-      match[2] !== undefined && !names.has(match[2])
-        ? [`${match[1]} -> ${match[2]}`]
-        : []
+  const linted = [
+    ...output.matchAll(
+      /public type '([^']+)' references private type '([^']+)'/gu,
     ),
+  ].flatMap((match) =>
+    match[2] !== undefined && !names.has(match[2])
+      ? [`${match[1]} -> ${match[2]}`]
+      : []
   );
+  const walked = unreachableSignatureTypes(
+    await signatureDocs(PACKAGE_ROOT, config.exports),
+  );
+  assertEquals(
+    walked.unresolved,
+    [],
+    "the signature walk cannot follow these references",
+  );
+  // The lint names a member's reference `Type["member"] -> Private`; the walk
+  // names the same reference `Type -> Private`, so it adds only new pairs.
+  const lintedPairs = new Set(
+    linted.map((reference) => reference.replace(/\[[^\]]*\](?= -> )/u, "")),
+  );
+  const found = new Set([
+    ...linted,
+    ...[...walked.references].filter((reference) =>
+      !lintedPairs.has(reference)
+    ),
+  ]);
   const baseline = new Set(
     JSON.parse(
       await Deno.readTextFile(
