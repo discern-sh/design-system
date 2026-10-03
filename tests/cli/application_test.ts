@@ -13,6 +13,7 @@ import {
 import {
   createTerminalApplicationModel,
   InteractionCancelled,
+  nestTerminalApplication,
   runTerminalApplication,
   TERMINAL_LONE_ESCAPE_DELAY_MS,
   type TerminalApplicationCommand,
@@ -303,6 +304,66 @@ Deno.test("foreground work prints its handoff after restoration and resumes the 
   assertEquals(io.rawTransitions, [true, false, true, false]);
   assertEquals(state.lists.items?.selectedId, "c");
   assertEquals(io.resizeListenerCount, 0);
+});
+
+Deno.test("a foreground operation's run resolves with the command that follows it", async () => {
+  // An exit ends the session with its epilogue once the screen is back.
+  const exiting = new FakeTerminalIO(["\r"]);
+  await runTerminalApplication({
+    view: testView(),
+    ...quit,
+    onAction: (action) =>
+      action === "quit" ? exitOn(action) : {
+        kind: "foreground",
+        handoff: [{ text: "Waiting for the item" }],
+        run: () => Promise.resolve({ kind: "exit", epilogue: ["Left"] }),
+      },
+  }, { io: exiting });
+  const output = exiting.output();
+  assert(output.endsWith("Left\n"), JSON.stringify(output.slice(-40)));
+  assertEquals(exiting.rawTransitions, [true, false, true, false]);
+
+  // A nested application opens on the restored screen and closes back to
+  // the place the handoff left; keys typed meanwhile reach it in order.
+  const io = new FakeTerminalIO(["\x1b[B\r", "q", "q"]);
+  const closed: (string | undefined)[] = [];
+  const state = await runTerminalApplication({
+    view: testView(["a", "b"]),
+    ...quit,
+    onAction: (action) =>
+      action === "quit" ? exitOn(action) : {
+        kind: "foreground",
+        run: () =>
+          nestTerminalApplication<string>({
+            view: {
+              ...testView(["n1"], { body: "list" }),
+              header: { leading: [{ text: "Opened", role: "title" }] },
+            },
+            ...quit,
+            onAction: () => ({ kind: "exit" }),
+          }, (nested) => closed.push(nested.lists.items?.selectedId)),
+      },
+  }, { io });
+  assertStringIncludes(io.output(), "Opened");
+  assertEquals(closed, ["n1"]);
+  assertEquals(state.lists.items?.selectedId, "b");
+
+  // Anything but a command fails the session after restoration.
+  const failing = new FakeTerminalIO(["\r"]);
+  await assertRejects(
+    () =>
+      runTerminalApplication({
+        view: testView(),
+        ...quit,
+        onAction: () => ({
+          kind: "foreground",
+          run: () => ({ kind: "handled" }) as never,
+        }),
+      }, { io: failing }),
+    TypeError,
+    "foreground runs return",
+  );
+  assertEquals(failing.rawTransitions.at(-1), false);
 });
 
 Deno.test("an exit command prints its epilogue after the screen is released", async () => {

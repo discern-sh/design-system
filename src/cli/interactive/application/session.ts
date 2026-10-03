@@ -69,7 +69,7 @@ export function assertCommand(
     const kinds = [...COMMAND_KINDS];
     const last = kinds.pop() ?? "";
     throw new TypeError(
-      `application actions return a ${
+      `application actions and foreground runs return a ${
         kinds.join(", ")
       }, or ${last} command, or nothing`,
     );
@@ -147,6 +147,11 @@ export interface RunningSession {
   interrupt(): LoopCommand | void;
   /** Apply what waited in the mailbox, then due timers. */
   drain(): LoopCommand | void;
+  /**
+   * Return from a foreground operation: catch up, then take the command its
+   * run resolved with, as an action's.
+   */
+  returned(command: unknown): LoopCommand | void;
   /** Return from a nested application: catch up, then run `then`. */
   resume(then: (() => void) | undefined): LoopCommand | void;
   render(
@@ -540,6 +545,12 @@ export class ApplicationSession<A> implements RunningSession {
       this.#queue.push({ kind: "settled", ...entry });
     }
     return this.#dispatch() ?? this.apply({ kind: "time" });
+  }
+
+  returned(command: unknown): LoopCommand | void {
+    const waiting = this.drain();
+    const next = this.#take(assertCommand(command), undefined);
+    return waiting ?? next;
   }
 
   resume(then: (() => void) | undefined): LoopCommand | void {

@@ -83,8 +83,17 @@ export type TerminalApplicationCommand =
      * runs; it wraps to the terminal as an epilogue line does.
      */
     readonly handoff?: readonly ApplicationRun[];
-    /** Runs after every terminal mode restores and before ownership resumes. */
-    readonly run: () => void | Promise<void>;
+    /**
+     * Runs after every terminal mode restores and before ownership resumes.
+     * It may resolve with the command that follows it, which the
+     * application takes once the screen is back as it takes an action's:
+     * `exit` ends the session, a nested application opens, a background
+     * command starts, and another foreground command hands over again.
+     */
+    readonly run: () =>
+      | void
+      | TerminalApplicationCommand
+      | Promise<void | TerminalApplicationCommand>;
   }
   | {
     readonly kind: "background";
@@ -376,6 +385,8 @@ export async function runTerminalApplication<A>(
   let failure: { error: unknown } | undefined;
   let signalRestored = false;
   let timer: { readonly at: number; readonly cancel: () => void } | undefined;
+  /** What the last foreground operation resolved with, until the screen is back. */
+  let afterForeground: unknown;
   /** Input read but not yet applied; it survives a foreground handoff. */
   const pendingEvents: TerminalInputEvent[] = [];
   let mouseObserved = false;
@@ -575,8 +586,11 @@ export async function runTerminalApplication<A>(
           try {
             if (front().started) {
               // Back from a foreground operation: what arrived meanwhile —
-              // the newest view and reports — applies before the first paint.
-              const waiting = follow(front().drain());
+              // the newest view and reports — applies before the first paint,
+              // then the command the operation resolved with.
+              const resolved = afterForeground;
+              afterForeground = undefined;
+              const waiting = follow(front().returned(resolved));
               if (waiting !== undefined) return waiting;
               paint();
             } else {
@@ -688,7 +702,7 @@ export async function runTerminalApplication<A>(
         break;
       }
       if (command.handoff !== undefined) printReleased(io, [command.handoff]);
-      await command.run();
+      afterForeground = await command.run();
     }
   } catch (error) {
     failure = { error };
