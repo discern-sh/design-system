@@ -172,3 +172,41 @@ Deno.test("a scrolled list never ends on a group's header while rows hide below 
     }
   }
 });
+
+Deno.test("a whole text block moves below the fold rather than stopping mid-way", () => {
+  const passage =
+    "The first words of a passage that wraps across several lines of a narrow detail column and ends here.";
+  const shown = (whole: boolean, rows: number) => {
+    const view = testView(["a"]);
+    if (view.body.kind !== "master-detail") throw new Error("master-detail");
+    const blocks: ApplicationDetailBlock[] = [
+      ...Array.from({ length: 6 }, (_, line) => ({
+        kind: "text" as const,
+        runs: [{ text: `Line ${line + 1}` }],
+      })),
+      { kind: "text", runs: [{ text: passage }], ...(whole ? { whole } : {}) },
+    ];
+    const text = new ApplicationDriver({
+      ...view,
+      body: {
+        ...view.body,
+        detail: { ...view.body.detail, content: { a: blocks } },
+      },
+    }, { columns: 80, rows, colorDepth: "none" }).text;
+    return {
+      first: text.includes("The first words"),
+      last: text.includes("ends here."),
+    };
+  };
+  let split = false;
+  for (let rows = 12; rows <= 24; rows += 1) {
+    const lines = shown(false, rows);
+    split ||= lines.first && !lines.last;
+    const whole = shown(true, rows);
+    assert(
+      whole.first === whole.last,
+      `at 80x${rows} the whole passage stops mid-way`,
+    );
+  }
+  assert(split, "some height folds inside the passage without whole");
+});

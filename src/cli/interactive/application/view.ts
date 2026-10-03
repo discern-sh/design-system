@@ -249,6 +249,13 @@ export interface ApplicationStateBlock {
 export interface ApplicationTextBlock {
   readonly kind: "text";
   readonly runs: readonly ApplicationRun[];
+  /**
+   * Keep the wrapped lines together: a detail viewport that would end
+   * inside them ends before them instead, where it can, so a short passage
+   * such as a tip moves whole below the fold rather than stopping mid-way.
+   * One taller than the viewport still scrolls by lines.
+   */
+  readonly whole?: boolean;
 }
 
 /** Labelled values in a label column that grows to the longest label. */
@@ -307,9 +314,12 @@ export interface ApplicationRowsBlock {
   /**
    * Lay the block out by its content: each trailing column as wide as its
    * widest cell, up to its declared width, and gone when no row fills it,
-   * and the longest text kept whole before a column with a priority drops,
-   * as named entries with short values beside them want. Otherwise every
-   * column keeps its width and twelve text cells are kept.
+   * and every row's text kept whole, as named entries with short values
+   * beside them want. A row whose text needs more room than the aligned
+   * columns leave it moves its filled cells right over the empty cells
+   * after them, and a column with a priority drops only while some row's
+   * text can't stay whole even so. Otherwise every column keeps its width
+   * and twelve text cells are kept.
    */
   readonly fit?: boolean;
   readonly items: readonly ApplicationDetailRow[];
@@ -382,7 +392,11 @@ export interface ApplicationDetailRow {
 /** The compact summary a narrow screen shows above the footer. */
 export interface ApplicationDetailStrip {
   readonly title: readonly ApplicationRun[];
-  /** Whole facts, each kept or dropped as one. */
+  /**
+   * Facts in order. One too wide for the room left first drops whole
+   * trailing faint runs, such as a value after a name, and is otherwise
+   * kept or dropped as one, so a later, shorter fact still shows.
+   */
   readonly facts: readonly (readonly ApplicationRun[])[];
 }
 

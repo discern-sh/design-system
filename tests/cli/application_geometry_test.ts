@@ -777,9 +777,15 @@ Deno.test("a row's text runs on into the trailing cells it leaves empty, and the
     "Keyboard shortcuts                 ?",
     "Session activity      nothing yet   ",
   ]);
+  // A row whose label needs the room moves its value right, over the key
+  // cell it leaves empty, before the value's column drops.
   assertEquals(at(30), [
     "Keyboard shortcuts           ?",
-    "Session activity              ",
+    "Session activity   nothing yet",
+  ]);
+  assertEquals(at(28), [
+    "Keyboard shortcuts         ?",
+    "Session activity            ",
   ]);
 });
 
@@ -1003,6 +1009,40 @@ Deno.test("a one-line strip shows a fact that fits and never cuts a word of its 
   const shown = stripAnsi(title ?? "");
   assertStringIncludes(shown, "Image resize");
   assert(!shown.includes("Fail"), shown);
+});
+
+Deno.test("a strip fact keeps its name when its faint value can't fit, and other tones stay whole", () => {
+  const context = paintContext(
+    { colorDepth: "truecolor", unicode: true, columns: 40 },
+    {},
+    { phase: 0 },
+  );
+  const facts = (width: number) =>
+    stripAnsi(
+      renderStrip(
+        context,
+        {
+          title: [{ text: "Overview", role: "title" }],
+          facts: [
+            [{ text: "Updates" }, { text: " (never checked)", tone: "faint" }],
+            [{ text: "12 files  " }, { text: "+212", tone: "success" }],
+            [{ text: "Scripts" }],
+          ],
+        },
+        [],
+        width,
+        2,
+        undefined,
+        false,
+      )[1] ?? "",
+    ).trim();
+  assertEquals(
+    facts(60),
+    "Updates (never checked) · 12 files  +212 · Scripts",
+  );
+  assertEquals(facts(30), "Updates (never checked)");
+  // A diff's tones say which way it went, so it shows whole or not at all.
+  assertEquals(facts(24), "Updates · Scripts");
 });
 
 Deno.test("zoom counts exactly the items Up and Down walk, at every height", () => {

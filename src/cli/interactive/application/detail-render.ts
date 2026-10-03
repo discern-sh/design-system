@@ -34,7 +34,9 @@ import { fitCell } from "./list-render.ts";
 import { projectMarkdownReading } from "./markdown-reading.ts";
 import type {
   ApplicationDetailBlock,
+  ApplicationDetailRow,
   ApplicationDetailStrip,
+  ApplicationListColumn,
   ApplicationMarkdown,
   ApplicationRun,
 } from "./view.ts";
@@ -304,10 +306,13 @@ const ROW_MIN_TEXT = 12;
  * Aligned rows: a lead cell, text that takes the remaining width and
  * truncates, and trailing columns that drop lowest priority first while the
  * text would keep fewer than twelve cells. A `fit` block sizes each column
- * to its widest cell, up to its width, and keeps its longest text whole
- * instead. A row's text runs on into the trailing cells it leaves empty, up
- * to the first it fills, so a long label with nothing beside it keeps its
- * words while the cells other rows fill stay aligned.
+ * to its widest cell, up to its width, and keeps every row's text whole
+ * instead: a row whose text needs more room than the aligned columns leave
+ * it moves its filled cells right, over the empty cells after them, and a
+ * column drops only while some row's text can't stay whole even so. A row's
+ * text runs on into the trailing cells it leaves empty, up to the first it
+ * fills, so a long label with nothing beside it keeps its words while the
+ * cells other rows fill stay aligned.
  */
 function rows(
   context: PaintContext,
@@ -330,12 +335,28 @@ function rows(
       ? []
       : [{ ...column, width: Math.min(column.width, widest) }];
   });
-  const trailing = () =>
-    shown.reduce((total, column) => total + column.width + gap, 0);
-  const minText = fit
-    ? Math.max(0, ...block.items.map((item) => runsWidth(context, item.text)))
-    : ROW_MIN_TEXT;
-  while (layout.width - leadCells - trailing() < minText) {
+  const cellsWidth = (columns: readonly ApplicationListColumn[]) =>
+    columns.reduce((total, column) => total + column.width + gap, 0);
+  /** The columns a row fills, first to last, and the empty ones around them. */
+  const spanOf = (item: ApplicationDetailRow) => {
+    const fills = (column: ApplicationListColumn) =>
+      (item.cells?.[column.id] ?? []).some((run) => run.text !== "");
+    const first = shown.findIndex(fills);
+    const last = shown.findLastIndex(fills);
+    return first < 0 ? { before: shown, filled: [], after: [] } : {
+      before: shown.slice(0, first),
+      filled: shown.slice(first, last + 1),
+      after: shown.slice(last + 1),
+    };
+  };
+  const keepsText = (item: ApplicationDetailRow) =>
+    layout.width - leadCells - cellsWidth(spanOf(item).filled) >=
+      runsWidth(context, item.text);
+  while (
+    fit
+      ? !block.items.every(keepsText)
+      : layout.width - leadCells - cellsWidth(shown) < ROW_MIN_TEXT
+  ) {
     let drop = -1;
     for (const [index, column] of shown.entries()) {
       if (column.priority === undefined) continue;
@@ -347,18 +368,17 @@ function rows(
     if (drop < 0) break;
     shown = shown.filter((_, index) => index !== drop);
   }
-  const textWidth = Math.max(1, layout.width - leadCells - trailing());
+  const textWidth = Math.max(1, layout.width - leadCells - cellsWidth(shown));
   return block.items.map((item) => {
     const leadText = lead === undefined
       ? ""
       : `${fitCell(context, item.lead ?? [], lead, layout.surface)} `;
-    const filled = shown.findIndex((column) =>
-      (item.cells?.[column.id] ?? []).some((run) => run.text !== "")
-    );
-    const kept = filled < 0 ? [] : shown.slice(filled);
-    const runOn = shown.slice(0, filled < 0 ? shown.length : filled)
-      .reduce((total, column) => total + column.width + gap, 0);
-    const width = textWidth + runOn;
+    const { before, filled, after } = spanOf(item);
+    const aligned = textWidth + cellsWidth(before);
+    // Moved right, the filled cells end at the block's edge.
+    const moved = fit && runsWidth(context, item.text) > aligned;
+    const kept = moved ? filled : [...filled, ...after];
+    const width = moved ? aligned + cellsWidth(after) : aligned;
     const text = padText(
       fitProse(
         context,
@@ -560,8 +580,8 @@ function markdown(
 /**
  * A block's lines grouped into units a viewport keeps whole where it can:
  * a mark with its wrapped text and lines, a fact with its values, a state
- * or heading with its own wrapped lines, a Markdown heading with its rule;
- * any other line stands alone. Headings and section titles keep with the
+ * or heading with its own wrapped lines, a `whole` text block, a Markdown
+ * heading with its rule; any other line stands alone. Headings and section titles keep with the
  * line beneath them.
  */
 function renderBlockUnits(
@@ -586,6 +606,14 @@ function renderBlockUnits(
       if (lines.length === 0) return [];
       return [block.kind === "heading" ? { lines, keep: true } : { lines }];
     }
+    case "text":
+      if (block.whole === true) {
+        const lines = renderBlock(context, block, layout);
+        return lines.length === 0 ? [] : [{ lines }];
+      }
+      return renderBlock(context, block, layout).map((line) => ({
+        lines: [line],
+      }));
     default:
       return renderBlock(context, block, layout).map((line) => ({
         lines: [line],
@@ -1007,8 +1035,9 @@ export function scrollToShow(
 
 /**
  * The strip a narrow screen shows above the footer: the item's title line
- * with the Space key against the end, then whole facts joined by a
- * separator; on a short screen, one line of facts and the key.
+ * with the Space key against the end, then facts joined by a separator,
+ * each whole or without its trailing faint runs; on a short screen, one
+ * line of facts and the key.
  */
 export function renderStrip(
   context: PaintContext,
@@ -1035,15 +1064,22 @@ export function renderStrip(
     surface,
   );
   // Whole facts in order, skipping any that would not fit so a later,
-  // shorter one still shows.
+  // shorter one still shows. A fact too wide for the room left first drops
+  // whole trailing faint runs, such as a value after a name, so its name
+  // still shows; other tones carry meaning and stay with their fact.
   const factsLine = (limit: number) => {
     const kept: string[] = [];
     let used = 0;
-    for (const fact of strip?.facts ?? []) {
-      const width = runsWidth(context, fact) + (kept.length === 0 ? 0 : 3);
-      if (used + width > limit) continue;
+    for (const whole of strip?.facts ?? []) {
+      const fact = [...whole];
+      const joint = kept.length === 0 ? 0 : 3;
+      const fits = () => used + joint + runsWidth(context, fact) <= limit;
+      while (fact.length > 1 && !fits() && fact.at(-1)?.tone === "faint") {
+        fact.pop();
+      }
+      if (!fits()) continue;
       kept.push(styleRuns(context, fact, surface, "muted"));
-      used += width;
+      used += joint + runsWidth(context, fact);
     }
     return kept.join(separator);
   };
