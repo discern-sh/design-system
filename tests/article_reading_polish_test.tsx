@@ -2,6 +2,7 @@ import { assert, assertEquals, assertStringIncludes } from "@std/assert";
 import { renderToStaticMarkup } from "react-dom/server";
 import { toFileUrl } from "@std/path";
 import { launchBrowser } from "../scripts/browser.ts";
+import { followFragment } from "../scripts/browser-url.ts";
 import { emitDesignSystemRuntime } from "../src/runtime.ts";
 import {
   AnchorHeading,
@@ -269,8 +270,12 @@ Deno.test("static article journeys preserve native fallback and selected history
           const target = page.locator(link.href);
           assertEquals(await target.count(), 1, link.href);
           const candidate = page.locator('a[href^="#"]').nth(index);
-          await candidate.focus();
-          await candidate.press("Enter");
+          await followFragment(
+            page,
+            link.href,
+            () => candidate.press("Enter"),
+            `${link.label} did not navigate to ${link.href}`,
+          );
           assert(
             await target.evaluate((element) =>
               document.activeElement === element
@@ -285,17 +290,35 @@ Deno.test("static article journeys preserve native fallback and selected history
             `${link.href} should honor its scroll container: ${top}`,
           );
         }
-        await page.locator("#fnref-1-2").press("Enter");
-        await page.locator('a[href="#fnref-1-2"]').press("Enter");
-        await page.goBack();
-        assertEquals(new URL(page.url()).hash, "#fn-1");
+        await followFragment(
+          page,
+          "#fn-1",
+          () => page.locator("#fnref-1-2").press("Enter"),
+          "The second reference did not open its note",
+        );
+        await followFragment(
+          page,
+          "#fnref-1-2",
+          () => page.locator('a[href="#fnref-1-2"]').press("Enter"),
+          "The note did not return to its second reference",
+        );
+        await followFragment(
+          page,
+          "#fn-1",
+          () => page.goBack(),
+          "Back did not reopen the note",
+        );
         assert(
           await page.locator("#fn-1").evaluate((element) =>
             document.activeElement === element
           ),
         );
-        await page.goForward();
-        assertEquals(new URL(page.url()).hash, "#fnref-1-2");
+        await followFragment(
+          page,
+          "#fnref-1-2",
+          () => page.goForward(),
+          "Forward did not return to the second reference",
+        );
         if (enhanced) {
           await page.waitForFunction(
             () => document.activeElement?.id === "fnref-1-2",
