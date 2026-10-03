@@ -348,6 +348,45 @@ Deno.test("a foreground operation's run resolves with the command that follows i
   assertEquals(closed, ["n1"]);
   assertEquals(state.lists.items?.selectedId, "b");
 
+  // Another foreground command hands the terminal over again, and a
+  // background command it resolves with starts beside the restored screen.
+  const chained = new FakeTerminalIO(["\r", "q"]);
+  const ran: string[] = [];
+  await runTerminalApplication({
+    view: testView(),
+    ...quit,
+    onAction: (action) =>
+      action === "quit" ? exitOn(action) : {
+        kind: "foreground",
+        handoff: [{ text: "First handoff" }],
+        run: () => {
+          ran.push("first");
+          return {
+            kind: "foreground",
+            handoff: [{ text: "Second handoff" }],
+            run: () => {
+              ran.push("second");
+              return {
+                kind: "background",
+                id: "after",
+                run: () => {
+                  ran.push("background");
+                  return Promise.resolve();
+                },
+              };
+            },
+          };
+        },
+      },
+  }, { io: chained });
+  assertEquals(ran, ["first", "second", "background"]);
+  const handoffs = chained.output();
+  assert(
+    handoffs.indexOf("Second handoff") > handoffs.indexOf("First handoff"),
+    "the second handoff follows the first",
+  );
+  assertEquals(chained.rawTransitions.at(-1), false);
+
   // Anything but a command fails the session after restoration.
   const failing = new FakeTerminalIO(["\r"]);
   await assertRejects(
