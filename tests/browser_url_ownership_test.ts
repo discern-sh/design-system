@@ -6,6 +6,128 @@ import {
   followFragment,
   urlMatches,
 } from "../scripts/browser-url.ts";
+import {
+  trackedTypeScriptSources,
+  type TypeScriptSource,
+} from "./support/tracked-typescript.ts";
+
+const URL_AUTHORITY = "scripts/browser-url.ts";
+
+/**
+ * Unwaited page URL reads that no pending navigation can change, named by the
+ * function that owns them. Add one only with a reason a reviewer can verify.
+ */
+const SETTLED_URL_READS: readonly {
+  readonly path: string;
+  readonly owner: string;
+  readonly reason: string;
+}[] = [{
+  path: "scripts/conformance/builder/support.ts",
+  owner: "resetBuilderStorage",
+  reason:
+    "Uses only the document origin. A same-document URL write never changes it, and the gate awaits every cross-document navigation before the next phase starts.",
+}];
+
+/** A request or response carries a fixed URL; only page and frame URLs move. */
+const EXCHANGE_RECEIVER = /(?:\brequest\(\s*\)|\b(?:request|response))\s*$/u;
+
+interface PageUrlRead {
+  readonly path: string;
+  readonly line: number;
+  readonly owner: string | undefined;
+}
+
+/** Every page or frame URL read, with its enclosing named function. */
+function pageUrlReads(sources: readonly TypeScriptSource[]): PageUrlRead[] {
+  return sources.flatMap(({ path, source }) =>
+    [...source.matchAll(/\.url\(\s*\)/gu)].flatMap((match) => {
+      const before = source.slice(0, match.index);
+      if (EXCHANGE_RECEIVER.test(before)) return [];
+      const owners = [...before.matchAll(/\bfunction\s+([\w$]+)/gu)];
+      return [{
+        path,
+        line: before.split("\n").length,
+        owner: owners.at(-1)?.[1],
+      }];
+    })
+  );
+}
+
+function unwaitedUrlReads(
+  sources: readonly TypeScriptSource[],
+): readonly string[] {
+  return pageUrlReads(sources).flatMap((read) =>
+    read.path === URL_AUTHORITY ||
+      SETTLED_URL_READS.some(({ path, owner }) =>
+        path === read.path && owner === read.owner
+      )
+      ? []
+      : [`${read.path}:${read.line}`]
+  );
+}
+
+Deno.test("page URL reads wait for the state their action produces", async () => {
+  const sources = await trackedTypeScriptSources();
+  assertEquals(
+    unwaitedUrlReads(sources),
+    [],
+    "Read the page URL through expectUrl from scripts/browser-url.ts, which waits for the expected state; Playwright can resolve a navigating action before the URL changes",
+  );
+  const reads = pageUrlReads(sources);
+  assertEquals(
+    SETTLED_URL_READS.filter(({ path, owner }) =>
+      !reads.some((read) => read.path === path && read.owner === owner)
+    ),
+    [],
+    "Remove settled URL allowances whose read no longer exists",
+  );
+});
+
+Deno.test("a planted raw page URL read fails the guard", () => {
+  const read = ".url" + "()";
+  const planted: TypeScriptSource[] = [
+    {
+      path: "tests/future_history_test.ts",
+      source: `
+        await page.goBack();
+        assertEquals(new URL(page${read}).hash, "#note");
+      `,
+    },
+    {
+      path: "scripts/conformance/future/popup.ts",
+      source: `
+        async function followPopup(context) {
+          const popup = await context.waitForEvent("page");
+          return (await popup.waitForLoadState(), popup)${read};
+        }
+      `,
+    },
+    {
+      path: "scripts/conformance/builder/workspace.ts",
+      source: `
+        export async function resetBuilderStorage(page) {
+          return page${read};
+        }
+      `,
+    },
+    {
+      path: "scripts/conformance/builder/support.ts",
+      source: `
+        export async function resetBuilderStorage(page) {
+          return page${read};
+        }
+        page.route("**", (route) => route.request()${read});
+        page.on("response", (response) => response
+          ${read});
+      `,
+    },
+  ];
+  assertEquals(unwaitedUrlReads(planted), [
+    "tests/future_history_test.ts:3",
+    "scripts/conformance/future/popup.ts:4",
+    "scripts/conformance/builder/workspace.ts:3",
+  ]);
+});
 
 Deno.test("URL expectations name exact parameters, absences, and fragments", () => {
   const url = new URL("https://catalogue.test/components/?theme=dark#notes");
