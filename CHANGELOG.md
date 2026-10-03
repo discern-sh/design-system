@@ -23,6 +23,10 @@ Terminal applications can pin a few entries above their titled groups — an ove
 - A group header's or fold row's `aside` stops at the list's right pad, cut after a whole word, as an item row's columns do, instead of running to the list's edge against the detail beside it.
 - `ApplicationLayerAnchor` now documents what `detail` does below the wide tier: the layer takes its own place there — the top for a palette, the whole body for a reader, the bottom for the rest. Behaviour is unchanged; a palette that names `anchor: "detail"` sits in the detail column beside a wide list.
 
+### Fixed
+
+- Wrapping, truncation, and measurement take time in proportion to their input. A word wider than its line — a long token, path, or streamed log line — was segmented again for every piece cut from it, so `wrapText` spent about a second on 20,000 unbroken characters and most of a minute on 80,000; every helper now lays its input out from one set of measured graphemes, and the output is unchanged byte for byte. Truncation stops measuring once a line is known not to fit, the path-or-joint choice no longer re-wraps the rest of the paragraph for every path in it, and the styled wrappers re-attribute a paragraph's runs in one forward pass however many it holds.
+
 ## 0.38.0
 
 Terminal applications are rebuilt around a grouped list, a detail that follows its selection, and modal layers that own focus and keep the safe choice one key away. They paint only the rows that change inside synchronized updates, animate what is running, run background work beside the live screen, and open one application inside another — which is how the Markdown browser now runs, on its own screen or inside a running application. Beneath them, terminal surfaces, one glyph table, key hints, and a colour policy that keeps weight without colour are new foundations every terminal consumer can use. The application API is replaced outright, with no adapter.
