@@ -19,7 +19,7 @@ const meta = {
     "Load the emitted discern.js beside discern.css, inside a data-discern-root. Static and live React hosts share this behavior; no hydration is required.",
     "Without the selected script the button stays inert and visibly unavailable. Keep source text selectable for manual copy. Clipboard access requires a secure context and browser permission.",
     "A polite live region announces success only after the write succeeds, or failure with manual-copy guidance. Consumer preventDefault and disabled state cancel activation.",
-    "The copied and failed states are carried by data attributes that paint success and danger edges, so colour is reinforced by the announced text rather than colour alone.",
+    "The copied and failed states are carried by data attributes that paint success and danger tones beside the announced text and their own glyphs, so colour is never the only cue; failure shows failedIcon, or no icon, never the copy action's glyph.",
   ],
 } satisfies ComponentMeta;
 

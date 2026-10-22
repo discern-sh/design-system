@@ -54,7 +54,7 @@
       padding: var(--discern-space-4) var(--discern-space-5);
       overflow-y: auto;
       border-inline-end: 1px solid var(--discern-color-border);
-      background: var(--discern-color-canvas);
+      background: var(--discern-color-surface);
       translate: -103% 0;
     }
     [data-discern-docs-drawer] .discern-docs-layout__navigation {
@@ -83,11 +83,15 @@
       position: sticky;
       inset-block-start: var(--discern-docs-layout-sticky-offset);
       flex: none;
-      inline-size: var(--discern-docs-layout-navigation-size);
       max-block-size: calc(100dvh - var(--discern-docs-layout-sticky-offset));
       padding-block: var(--discern-space-8) var(--discern-space-4);
       overflow-y: auto;
       scrollbar-width: thin;
+    }
+    .discern-docs-layout__navigation {
+      margin-inline-start: calc(-1 * var(--discern-space-3));
+      inline-size: calc(var(--discern-docs-layout-navigation-size) +
+        var(--discern-space-3));
     }
   }
   @container discern-docs-layout (min-width: 76rem) {

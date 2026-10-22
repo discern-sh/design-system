@@ -12,6 +12,7 @@ import type {
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { IconButton } from "../../core/icon-button/icon-button.tsx";
+import { FeedbackMark } from "../../feedback/feedback-marks.tsx";
 
 interface SearchPaletteCommonProps {
   /** Accessible name of the dialog and its search field. */
@@ -189,7 +190,7 @@ export const SearchPalette: DiscernComponent<
         <IconButton
           className="discern-search-palette__close"
           size="sm"
-          icon="×"
+          icon={<FeedbackMark name="dismiss" />}
           label={closeAriaLabel ?? `${closeLabel} ${label.toLowerCase()}`}
           {...(controlled
             ? { onClick: () => onOpenChange(false) }

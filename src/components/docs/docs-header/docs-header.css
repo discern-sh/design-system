@@ -20,7 +20,7 @@
   }
   .discern-docs-header__brand {
     display: inline-flex;
-    gap: var(--discern-space-3);
+    gap: var(--discern-space-2);
     align-items: center;
     color: var(--discern-color-ink);
     font-weight: var(--discern-font-weight-strong);
@@ -41,6 +41,9 @@
     display: inline-flex;
     gap: var(--discern-space-2);
     align-items: center;
+  }
+  .discern-docs-header__actions:is(:empty, :has(> [hidden])):not(:has(> :not([hidden]))) {
+    display: none;
   }
   .discern-docs-header__shortcut {
     display: inline-flex;

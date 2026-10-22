@@ -5,7 +5,7 @@
     align-items: baseline;
   }
   .discern-anchor-heading > :is(h1, h2, h3, h4, h5, h6) {
-    flex: 1;
+    flex: 0 1 auto;
     min-inline-size: 0;
     overflow-wrap: anywhere;
     scroll-margin-block-start: var(--discern-space-4);

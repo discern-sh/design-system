@@ -5,27 +5,28 @@
     gap: calc(var(--discern-space-1) * 1.5);
     min-block-size: 1.5rem;
     padding: var(--discern-space-1) var(--discern-space-2);
-    border: 1px solid var(--discern-color-border);
+    border: 1px solid var(--discern-color-neutral-edge);
     border-radius: var(--discern-radius-sm);
-    background: transparent;
-    color: var(--discern-color-ink-muted);
+    background: var(--discern-color-surface);
+    box-shadow: var(--discern-shadow-control);
+    color: var(--discern-color-ink);
     font-size: var(--discern-font-size-xs);
     font-weight: var(--discern-font-weight-medium);
     line-height: var(--discern-leading-tight);
     cursor: pointer;
   }
-  .discern-copy-button:is(:hover, :focus-visible) {
-    background: var(--discern-color-accent-100);
-    color: var(--discern-color-ink);
+  .discern-copy-button:hover {
+    background: color-mix(in oklab, var(--discern-color-accent-100) 80%,
+      var(--discern-color-surface));
   }
   .discern-copy-button:active:not(:disabled) {
     background: var(--discern-color-accent-200);
     transform: translateY(calc(var(--discern-space-1) / 4));
   }
-  .discern-copy-button:disabled,
-  .discern-copy-button[inert] {
+  .discern-copy-button:is(:disabled, [inert]) {
     border-color: var(--discern-color-border);
     background: var(--discern-color-surface-sunken);
+    box-shadow: none;
     color: var(--discern-color-ink-muted);
     cursor: not-allowed;
   }
@@ -34,13 +35,17 @@
     align-items: center;
   }
   .discern-copy-button[data-discern-copied] {
-    border-color: var(--discern-color-success);
+    border-color: color-mix(in oklab, var(--discern-color-success) 50%,
+      transparent);
     background: var(--discern-color-success-soft);
+    box-shadow: none;
     color: var(--discern-color-success-deep);
   }
   .discern-copy-button[data-discern-copy-failed] {
-    border-color: var(--discern-color-danger);
+    border-color: color-mix(in oklab, var(--discern-color-danger) 42%,
+      transparent);
     background: var(--discern-color-danger-soft);
+    box-shadow: none;
     color: var(--discern-color-danger);
   }
 }

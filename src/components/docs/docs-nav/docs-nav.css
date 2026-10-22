@@ -27,24 +27,29 @@
   }
   .discern-docs-nav ul a {
     display: block;
-    padding: var(--discern-space-2) var(--discern-space-3);
+    padding: calc(var(--discern-space-1) * 1.75) var(--discern-space-3)
+      calc(var(--discern-space-1) * 1.75) calc(var(--discern-space-1) * 2.5);
+    border-block: 1px solid transparent;
+    border-inline-start: 0.125rem solid transparent;
     border-radius: var(--discern-radius-sm);
+    background-clip: padding-box;
     color: inherit;
     line-height: var(--discern-leading-snug);
     text-decoration: none;
   }
   .discern-docs-nav ul a:is(:hover, :focus-visible) {
-    background: var(--discern-color-accent-100);
+    background-color: var(--discern-color-accent-100);
     color: var(--discern-color-ink);
   }
   .discern-docs-nav ul a:focus-visible {
     outline-offset: -0.125rem;
   }
   .discern-docs-nav ul a:is(:active, [aria-current]) {
-    background: var(--discern-color-accent-200);
+    background-color: var(--discern-color-accent-200);
     color: var(--discern-color-ink);
   }
   .discern-docs-nav ul a[aria-current] {
+    border-inline-start-color: var(--discern-color-accent-600);
     font-weight: var(--discern-font-weight-medium);
   }
 }

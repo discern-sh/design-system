@@ -13,9 +13,14 @@ export interface CopyButtonProps
   /** Failure guidance shown until the next attempt. */
   readonly failedLabel?: ReactNode;
   readonly icon?: ReactNode;
+  /** Shown with `copiedLabel`; without it, `icon` stays through success. */
   readonly copiedIcon?: ReactNode;
+  /** Shown with `failedLabel`; without it, failure shows no icon, so the action's own glyph never contradicts the guidance. */
+  readonly failedIcon?: ReactNode;
   readonly copiedForMs?: number;
 }
+
+type CopyFeedbackState = "idle" | "copied" | "failed";
 
 /** Static clipboard markup activated by the selected runtime in an opted-in root. */
 export const CopyButton: DiscernComponent<
@@ -29,6 +34,7 @@ export const CopyButton: DiscernComponent<
     failedLabel = "Copy failed — select text manually",
     icon,
     copiedIcon,
+    failedIcon,
     copiedForMs = 2000,
     className,
     disabled = false,
@@ -36,7 +42,20 @@ export const CopyButton: DiscernComponent<
   },
   ref,
 ) {
-  const alternateIcon = copiedIcon !== undefined && copiedIcon !== icon;
+  // One node per distinct supplied icon, tagged with every state it shows in.
+  const icons: [ReactNode, CopyFeedbackState[]][] = [];
+  for (
+    const [state, node] of [
+      ["idle", icon],
+      ["copied", copiedIcon ?? icon],
+      ["failed", failedIcon],
+    ] as const
+  ) {
+    if (node === undefined) continue;
+    const shared = icons.find(([existing]) => existing === node);
+    if (shared) shared[1].push(state);
+    else icons.push([node, [state]]);
+  }
   return (
     <button
       type="button"
@@ -50,27 +69,17 @@ export const CopyButton: DiscernComponent<
         ? Math.max(0, copiedForMs)
         : 2000}
     >
-      {icon !== undefined && (
+      {icons.map(([node, states]) => (
         <span
+          key={states[0]}
           className="discern-copy-button__icon"
           aria-hidden="true"
-          data-discern-copy-feedback={alternateIcon
-            ? "idle failed"
-            : "idle copied failed"}
+          data-discern-copy-feedback={states.join(" ")}
+          hidden={!states.includes("idle")}
         >
-          {icon}
+          {node}
         </span>
-      )}
-      {alternateIcon && (
-        <span
-          className="discern-copy-button__icon"
-          aria-hidden="true"
-          data-discern-copy-feedback="copied"
-          hidden
-        >
-          {copiedIcon}
-        </span>
-      )}
+      ))}
       <span aria-live="polite" aria-atomic="true">
         {([
           ["idle", label],

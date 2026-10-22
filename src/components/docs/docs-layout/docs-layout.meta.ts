@@ -25,7 +25,7 @@ const meta = {
     "Closed at a narrow allocation the navigation is inert and off-canvas; crossing the breakpoint while open closes it without moving focus, and at wider allocations the navigation is never inert.",
     "Without the selected script the navigation stays in normal flow above the document and the toggle and veil stay hidden; the off-canvas position applies only beneath data-discern-docs-drawer-enhanced, which the behaviour stamps on the layout and a consumer's head bootstrap may stamp early to avoid a layout shift.",
     "The toggle names its two states through data-discern-open-label and data-discern-close-label and reports them through aria-expanded; the behaviour re-initialises idempotently, activates later DOM additions, and releases on discern:docs-drawer:teardown.",
-    "Set --discern-docs-layout-sticky-offset from the height of the consumer's sticky header; the default matches Docs header's minimum block size. Set the header's --discern-docs-header-max to this layout's maximum plus its two gutters so the bar's edges meet the columns'.",
+    "Set --discern-docs-layout-sticky-offset from the height of the consumer's sticky header; the default matches Docs header's minimum block size. Set the header's --discern-docs-header-max to this layout's maximum plus its two gutters so the bar's edges meet the columns'; at two columns and wider the navigation column hangs --discern-space-3 into the start gutter, so a Docs nav's item text sits on that edge beneath the header brand.",
   ],
 } satisfies ComponentMeta;
 

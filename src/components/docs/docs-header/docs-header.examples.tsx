@@ -1,5 +1,8 @@
+import { useState } from "react";
 import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { Button } from "../../core/button/button.tsx";
+import { ThemeToggle } from "../../core/theme-toggle/theme-toggle.tsx";
+import type { ThemeToggleTheme } from "../../core/theme-toggle/theme-toggle.types.ts";
 import { Kbd } from "../kbd/kbd.tsx";
 import { SearchGlyph } from "../search-palette/search-palette.examples.tsx";
 import meta, { componentExampleVocabulary } from "./docs-header.meta.ts";
@@ -28,14 +31,13 @@ export function SearchTrigger() {
 }
 
 function DocumentationHeaderExample() {
+  const [theme, setTheme] = useState<ThemeToggleTheme>("light");
   return (
     <DocsHeader
       style={{ position: "static" }}
       brand={<a href="#top">Lorem manual</a>}
       actions={
-        <Button href="#components" variant="ghost" size="sm">
-          Dolor
-        </Button>
+        <ThemeToggle variant="quiet" theme={theme} onThemeChange={setTheme} />
       }
     >
       <SearchTrigger />

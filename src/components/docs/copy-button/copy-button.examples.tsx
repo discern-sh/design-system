@@ -10,6 +10,7 @@ function CopyActionExample() {
       value="lorem ipsum dolor sit amet"
       icon={getGlyph("copy").unicode}
       copiedIcon={getGlyph("status-complete").unicode}
+      failedIcon={getGlyph("status-error").unicode}
     />
   );
 }
@@ -31,7 +32,7 @@ export const reviewPostures = defineComponentReviewPostures(
     sequence: [
       {
         action: "pointer-down",
-        target: { role: "button", name: "Copy" },
+        target: { selector: ".discern-copy-button" },
       },
       {
         checkpoint: {
@@ -41,7 +42,7 @@ export const reviewPostures = defineComponentReviewPostures(
       },
       {
         action: "pointer-up",
-        target: { role: "button", name: "Copy" },
+        target: { selector: ".discern-copy-button" },
       },
     ],
   }] as const,

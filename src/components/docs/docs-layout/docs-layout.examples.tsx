@@ -98,6 +98,7 @@ function DocumentationShellExample() {
           <IconButton
             icon={<MenuGlyph />}
             label="Open navigation"
+            size="sm"
             hidden
             data-discern-docs-drawer-toggle=""
             data-discern-open-label="Open navigation"

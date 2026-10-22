@@ -19,8 +19,8 @@
     text-align: end;
   }
   .discern-pager__link:hover {
-    border-color: var(--discern-color-border-strong);
-    background: var(--discern-color-accent-100);
+    background: color-mix(in oklab, var(--discern-color-accent-100) 50%,
+      transparent);
   }
   .discern-pager__link:active {
     background: var(--discern-color-accent-200);
