@@ -2,7 +2,7 @@
   .discern-marketing-intro {
     --discern-marketing-intro-title-size: clamp(2rem, 4cqi, 2.75rem);
     --discern-marketing-intro-title-leading: var(--discern-leading-tight);
-    --discern-marketing-intro-title-tracking: -0.055em;
+    --discern-marketing-intro-title-tracking: -0.025em;
     container: discern-marketing-intro / inline-size;
     inline-size: 100%;
     max-inline-size: 47rem;
@@ -13,8 +13,7 @@
   .discern-marketing-intro--editorial {
     --discern-marketing-intro-title-size:
       clamp(var(--discern-font-size-display-md), calc(1rem + 5cqi), calc(var(--discern-font-size-display-lg) * 2));
-    --discern-marketing-intro-title-leading: var(--discern-leading-tight);
-    --discern-marketing-intro-title-tracking: -0.035em;
+    --discern-marketing-intro-title-tracking: -0.03em;
   }
   .discern-marketing-intro--center {
     margin-inline: auto;
@@ -26,8 +25,6 @@
   }
   .discern-marketing-intro__eyebrow {
     margin-block-end: var(--discern-space-4);
-    color: var(--discern-marketing-accent-ink,
-      var(--discern-color-accent-600));
   }
   .discern-marketing-intro__title {
     font-family: var(--discern-font-marketing);
@@ -47,8 +44,9 @@
     color: var(--discern-color-ink-muted);
     font-size: var(--discern-font-size-lg);
     line-height: var(--discern-leading-body);
+    text-wrap: pretty;
   }
-  .discern-marketing-intro--contrast .discern-marketing-intro__description {
+  .discern-marketing-intro--contrast :is(.discern-marketing-intro__eyebrow, .discern-marketing-intro__description) {
     color: color-mix(in oklab, var(--discern-color-inverse-ink) 76%,
       transparent);
   }

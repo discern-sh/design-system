@@ -3,6 +3,13 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import type { MarketingFrame } from "../frame.ts";
+import { MarketingIntro } from "../marketing-intro/marketing-intro.tsx";
+import { getGlyph } from "../../../glyphs/mod.ts";
+import { Icon } from "../../core/icon/icon.tsx";
+import {
+  marketingActionsClassName,
+  MarketingSection,
+} from "../marketing-section/marketing-section.tsx";
 
 /** One point entry rendered by the Split feature component. */
 export interface SplitFeaturePoint {
@@ -44,8 +51,10 @@ export const SplitFeature: DiscernComponent<HTMLElement, SplitFeatureProps> =
     ref,
   ) {
     return (
-      <section
+      <MarketingSection
         ref={ref}
+        surface={surface}
+        frame={frame}
         className={classNames(
           "discern-split-feature",
           frame === "wide" && "discern-split-feature--frame-wide",
@@ -57,27 +66,19 @@ export const SplitFeature: DiscernComponent<HTMLElement, SplitFeatureProps> =
       >
         <div className="discern-split-feature__inner">
           <div className="discern-split-feature__content">
-            {eyebrow
-              ? <div className="discern-split-feature__eyebrow">{eyebrow}</div>
-              : null}
-            <h2>{title}</h2>
-            {description
-              ? (
-                <div className="discern-split-feature__description">
-                  {description}
-                </div>
-              )
-              : null}
+            <MarketingIntro
+              className="discern-split-feature__intro"
+              eyebrow={eyebrow}
+              title={title}
+              description={description}
+            />
             {points.length
               ? (
                 <ul className="discern-split-feature__points">
                   {points.map((point, index) => (
                     <li key={index}>
-                      <span
-                        className="discern-split-feature__check"
-                        aria-hidden="true"
-                      >
-                        ✓
+                      <span className="discern-split-feature__check">
+                        <Icon>{getGlyph("status-complete").unicode}</Icon>
                       </span>
                       <span>
                         <strong>{point.title}</strong>
@@ -91,11 +92,19 @@ export const SplitFeature: DiscernComponent<HTMLElement, SplitFeatureProps> =
               )
               : null}
             {actions
-              ? <div className="discern-split-feature__actions">{actions}</div>
+              ? (
+                <div
+                  className={marketingActionsClassName(
+                    "discern-split-feature__actions",
+                  )}
+                >
+                  {actions}
+                </div>
+              )
               : null}
           </div>
           <div className="discern-split-feature__media">{media}</div>
         </div>
-      </section>
+      </MarketingSection>
     );
   });

@@ -3,6 +3,11 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { buildDesignSystem } from "../scripts/build.ts";
 import { componentRegistry } from "../src/generated/component-registry.ts";
 import { designTokens } from "../src/tokens/tokens.ts";
+import { appearanceColorRoleLaws } from "../src/tokens/appearance.ts";
+import {
+  cssDeclarations,
+  cssQualifiedRuleBlocks,
+} from "../scripts/css-syntax.ts";
 
 const PAGE_WIDTH_TOKENS = ["--discern-page-max", "--discern-page-max-wide"];
 
@@ -76,4 +81,127 @@ Deno.test("every Marketing block framed at the page measure offers the campaign 
     );
     assertStringIncludes(markup, `discern-${meta.slug}--frame-wide`);
   }
+});
+
+function composesSection(dependencies: readonly string[]): boolean {
+  return dependencies.includes("marketing-section");
+}
+
+Deno.test("every Marketing frame control reaches the frame that lays the block out", async () => {
+  const { core, render } = await builderModules();
+  const framed = componentRegistry.filter(({ meta }) =>
+    meta.group === "Marketing" &&
+    core.registryCoreBySlug.get(meta.slug)?.controls.some(({ name }) =>
+      name === "frame"
+    )
+  );
+  assert(
+    framed.some(({ dependencies }) => composesSection(dependencies)),
+    "no framed Marketing block composes Marketing section",
+  );
+  for (const { meta, css, dependencies } of framed) {
+    const node = core.instantiateComponent(meta.slug);
+    const markup = renderToStaticMarkup(
+      <>
+        {render.renderBuilderChild({
+          ...node,
+          props: { ...node.props, frame: { kind: "string", value: "wide" } },
+        })}
+      </>,
+    );
+    const ownFrame = css.includes("var(--discern-page-max-wide)");
+    if (ownFrame) {
+      assertStringIncludes(markup, `discern-${meta.slug}--frame-wide`);
+    } else {
+      assert(
+        composesSection(dependencies),
+        `${meta.slug} offers a frame without laying itself out against one`,
+      );
+      assertStringIncludes(markup, "discern-marketing-section--frame-wide");
+    }
+  }
+});
+
+function uppercaseOrDashedRules(css: string): readonly string[] {
+  return [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .filter(([, , body]) =>
+      /text-transform\s*:\s*uppercase/.test(body ?? "") ||
+      /\bdashed\b/.test(body ?? "") ||
+      /font-weight\s*:\s*\d/.test(body ?? "")
+    )
+    .map(([, selector]) => (selector ?? "").trim());
+}
+
+Deno.test("Marketing stylesheets leave uppercase to Kicker, dashed edges to declared states, and weights to Tokens", () => {
+  assertEquals(
+    uppercaseOrDashedRules(
+      ".discern-fresh-eyebrow { letter-spacing: 0.1em; text-transform: uppercase; } .discern-fresh-rule { border-top: 1px dashed red; } .discern-fresh-title { font-weight: 650; }",
+    ),
+    [".discern-fresh-eyebrow", ".discern-fresh-rule", ".discern-fresh-title"],
+    "the fresh hand-rolled fixture escaped the detector",
+  );
+  const marketing = componentRegistry.filter(({ meta }) =>
+    meta.group === "Marketing"
+  );
+  assert(marketing.length > 0);
+  assertEquals(
+    marketing.flatMap(({ meta, css }) =>
+      uppercaseOrDashedRules(css).map((selector) => `${meta.slug}::${selector}`)
+    ),
+    [],
+    "a Marketing block hand-rolls an uppercase label, a dashed ornament, or a numeric weight",
+  );
+});
+
+/** Roles of the scope's ladders that a page theme would otherwise leak inside it. */
+const CONTRAST_LADDER =
+  /^--discern-color-(?:accent-(?:\d+|ink)|ink(?:-muted|-faint)?|canvas|surface(?:-sunken)?|border(?:-strong)?|neutral-edge|action(?:-edge|-shadow)?|on-action)$/u;
+
+function contrastLadderGaps(css: string): readonly string[] {
+  const scope = cssQualifiedRuleBlocks(css).rules.find(({ selector }) =>
+    selector.trim() === ".discern-marketing-contrast"
+  );
+  if (scope === undefined) return ["the contrast scope rule"];
+  const declared = new Map(
+    cssDeclarations(scope.block).map(({ name, value }) => [name, value]),
+  );
+  return appearanceColorRoleLaws
+    .map(({ name }) => name)
+    .filter((name) => CONTRAST_LADDER.test(name))
+    .filter((name) => {
+      const value = declared.get(name);
+      if (value === undefined) return true;
+      const references = [...value.matchAll(/var\(\s*(--[-a-z0-9]+)/gu)]
+        .map((match) => match[1]);
+      const stable = references.length > 0 &&
+        references.every((reference) =>
+          /^--discern-color-inverse-(?:ink|surface)$/u.test(reference ?? "") ||
+          (reference !== name && declared.has(reference ?? ""))
+        );
+      const opaqueWash = !/^--discern-color-(?:accent-[1-3]00|surface-sunken)$/u
+        .test(name) || !/\btransparent\b/u.test(value);
+      return !(stable && opaqueWash);
+    });
+}
+
+Deno.test("the Marketing contrast scope remaps every ladder role from the stable inverse pigments", () => {
+  assertEquals(
+    contrastLadderGaps(
+      `.discern-marketing-contrast {
+        --discern-color-accent-100: color-mix(in oklab, var(--discern-color-inverse-ink) 8%, transparent);
+        --discern-color-accent-200: var(--discern-color-accent-200);
+      }`,
+    ).filter((name) => /accent-[12]00$/u.test(name)),
+    ["--discern-color-accent-100", "--discern-color-accent-200"],
+    "the translucent and self-referencing fixture escaped the detector",
+  );
+  const section = componentRegistry.find(({ meta }) =>
+    meta.slug === "marketing-section"
+  );
+  assert(section, "Marketing section is absent from the registry");
+  assertEquals(
+    contrastLadderGaps(section.css),
+    [],
+    "a ladder role keeps its page value inside the contrast scope",
+  );
 });

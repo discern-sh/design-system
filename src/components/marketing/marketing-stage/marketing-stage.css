@@ -9,12 +9,7 @@
     align-items: center;
     min-block-size: 2.75rem;
     color: var(--discern-color-ink-muted);
-    font-family: var(--discern-font-ui);
-    font-size: var(--discern-font-size-xs);
-    font-weight: var(--discern-font-weight-strong);
-    letter-spacing: 0.08em;
-    line-height: var(--discern-leading-snug);
-    text-transform: uppercase;
+    font: var(--discern-font-label);
   }
   .discern-marketing-stage__body {
     position: relative;

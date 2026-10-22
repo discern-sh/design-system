@@ -3,6 +3,8 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import type { MarketingFrame } from "../frame.ts";
+import { MarketingIntro } from "../marketing-intro/marketing-intro.tsx";
+import { MarketingSection } from "../marketing-section/marketing-section.tsx";
 
 /** One comparison row entry rendered by the Comparison table component. */
 export interface ComparisonRow {
@@ -21,6 +23,7 @@ export interface ComparisonTableProps
   readonly firstLabel: string;
   readonly secondLabel: string;
   readonly rows: readonly ComparisonRow[];
+  /** Recommendation badge; text badges also name the highlighted cells when rows stack. */
   readonly secondBadge?: ReactNode;
   /** Lay content out at the editorial page measure or the wider campaign frame. */
   readonly frame?: MarketingFrame;
@@ -46,9 +49,17 @@ export const ComparisonTable: DiscernComponent<
   },
   ref,
 ) {
+  // Stacked rows hide the header, so the recommendation's words travel with
+  // each highlighted cell's label instead of resting on its tint alone.
+  const highlightLabel =
+    typeof secondBadge === "string" || typeof secondBadge === "number"
+      ? `${secondLabel} · ${secondBadge}`
+      : secondLabel;
   return (
-    <section
+    <MarketingSection
       ref={ref}
+      surface="sunken"
+      frame={frame}
       className={classNames(
         "discern-comparison-table",
         frame === "wide" && "discern-comparison-table--frame-wide",
@@ -57,23 +68,13 @@ export const ComparisonTable: DiscernComponent<
       {...props}
     >
       <div className="discern-comparison-table__inner">
-        <header className="discern-comparison-table__header">
-          {eyebrow
-            ? (
-              <div className="discern-comparison-table__eyebrow">
-                {eyebrow}
-              </div>
-            )
-            : null}
-          <h2>{title}</h2>
-          {description
-            ? (
-              <div className="discern-comparison-table__description">
-                {description}
-              </div>
-            )
-            : null}
-        </header>
+        <MarketingIntro
+          className="discern-comparison-table__header"
+          eyebrow={eyebrow}
+          title={title}
+          description={description}
+          align="center"
+        />
         <div className="discern-comparison-table__frame">
           <table>
             <thead>
@@ -101,7 +102,7 @@ export const ComparisonTable: DiscernComponent<
                   <th scope="row">{row.feature}</th>
                   <td data-label={firstLabel}>{row.first}</td>
                   <td
-                    data-label={secondLabel}
+                    data-label={highlightLabel}
                     className="discern-comparison-table__highlight"
                   >
                     {row.second}
@@ -112,6 +113,6 @@ export const ComparisonTable: DiscernComponent<
           </table>
         </div>
       </div>
-    </section>
+    </MarketingSection>
   );
 });

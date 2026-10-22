@@ -4,6 +4,11 @@ import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import type { CtaBandAlign, CtaBandTone } from "./cta-band.types.ts";
 import type { MarketingFrame } from "../frame.ts";
+import { MarketingIntro } from "../marketing-intro/marketing-intro.tsx";
+import {
+  marketingActionsClassName,
+  marketingContrastClassName,
+} from "../marketing-section/marketing-section.tsx";
 
 export type { CtaBandAlign, CtaBandTone } from "./cta-band.types.ts";
 
@@ -55,21 +60,29 @@ export const CtaBand: DiscernComponent<HTMLElement, CtaBandProps> = forwardRef<
       )}
       {...props}
     >
-      <div className="discern-cta-band__inner">
+      <div
+        className={tone === "contrast"
+          ? marketingContrastClassName("discern-cta-band__inner")
+          : "discern-cta-band__inner"}
+      >
         <div className="discern-cta-band__content">
-          {eyebrow
-            ? <div className="discern-cta-band__eyebrow">{eyebrow}</div>
-            : null}
-          <h2>{title}</h2>
-          {description
+          <MarketingIntro
+            className="discern-cta-band__intro"
+            eyebrow={eyebrow}
+            title={title}
+            description={description}
+            align={align === "center" && !visual ? "center" : "start"}
+          />
+          {actions
             ? (
-              <div className="discern-cta-band__description">
-                {description}
+              <div
+                className={marketingActionsClassName(
+                  "discern-cta-band__actions",
+                )}
+              >
+                {actions}
               </div>
             )
-            : null}
-          {actions
-            ? <div className="discern-cta-band__actions">{actions}</div>
             : null}
           {note ? <div className="discern-cta-band__note">{note}</div> : null}
         </div>

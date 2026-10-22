@@ -28,13 +28,15 @@
   .discern-marketing-section--inherit {
     color: inherit;
   }
-  .discern-marketing-section--contrast {
-    --discern-color-canvas: var(--discern-color-inverse-surface);
+  .discern-marketing-contrast {
+    --discern-color-canvas: color-mix(in oklab,
+      var(--discern-color-inverse-ink) 14%,
+      var(--discern-color-inverse-surface));
     --discern-color-surface: color-mix(in oklab,
-      var(--discern-color-inverse-ink) 7%,
+      var(--discern-color-inverse-ink) 20%,
       var(--discern-color-inverse-surface));
     --discern-color-surface-sunken: color-mix(in oklab,
-      var(--discern-color-inverse-ink) 3%,
+      var(--discern-color-inverse-ink) 8%,
       var(--discern-color-inverse-surface));
     --discern-color-ink: var(--discern-color-inverse-ink);
     --discern-color-ink-muted: color-mix(in oklab,
@@ -42,14 +44,53 @@
     --discern-color-ink-faint: color-mix(in oklab,
       var(--discern-color-inverse-ink) 62%, transparent);
     --discern-color-border: color-mix(in oklab,
-      var(--discern-color-inverse-ink) 18%, transparent);
+      var(--discern-color-inverse-ink) 16%, transparent);
     --discern-color-border-strong: color-mix(in oklab,
       var(--discern-color-inverse-ink) 30%, transparent);
-    --discern-marketing-accent-ink: var(--discern-color-inverse-ink);
+    --discern-color-neutral-edge: var(--discern-color-border-strong);
+    --discern-color-accent-100: color-mix(in oklab,
+      var(--discern-color-inverse-ink) 27%,
+      var(--discern-color-inverse-surface));
+    --discern-color-accent-200: color-mix(in oklab,
+      var(--discern-color-inverse-ink) 34%,
+      var(--discern-color-inverse-surface));
+    --discern-color-accent-300: color-mix(in oklab,
+      var(--discern-color-inverse-ink) 42%,
+      var(--discern-color-inverse-surface));
+    --discern-color-accent-400: color-mix(in oklab,
+      var(--discern-color-inverse-ink) 58%,
+      var(--discern-color-inverse-surface));
+    --discern-color-accent-500: color-mix(in oklab,
+      var(--discern-color-inverse-ink) 72%,
+      var(--discern-color-inverse-surface));
+    --discern-color-accent-600: var(--discern-color-inverse-ink);
+    --discern-color-accent-700: var(--discern-color-inverse-ink);
+    --discern-color-accent-800: var(--discern-color-inverse-ink);
+    --discern-color-accent-ink: var(--discern-color-inverse-ink);
+    --discern-color-action: var(--discern-color-inverse-ink);
+    --discern-color-action-edge: var(--discern-color-inverse-ink);
+    --discern-color-action-shadow: color-mix(in oklab,
+      var(--discern-color-inverse-ink) 68%, transparent);
+    --discern-color-on-action: var(--discern-color-inverse-surface);
     background: var(--discern-color-canvas);
+    background-clip: padding-box;
+    color: var(--discern-color-ink);
   }
-  .discern-marketing-section--contrast :focus-visible {
+  .discern-marketing-contrast :focus-visible {
     outline-color: var(--discern-color-inverse-ink);
+  }
+  .discern-marketing-section--contrast {
+    border-block: 1px solid var(--discern-color-border);
+  }
+  .discern-marketing-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--discern-space-3);
+    inline-size: fit-content;
+    max-inline-size: 100%;
+  }
+  .discern-marketing-actions > * {
+    flex: 1 1 auto;
   }
   .discern-marketing-section__inner {
     width: min(100% - 2 * var(--discern-space-6),

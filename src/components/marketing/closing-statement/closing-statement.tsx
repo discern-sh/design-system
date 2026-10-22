@@ -3,7 +3,10 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { MarketingIntro } from "../marketing-intro/marketing-intro.tsx";
-import { MarketingSection } from "../marketing-section/marketing-section.tsx";
+import {
+  marketingActionsClassName,
+  MarketingSection,
+} from "../marketing-section/marketing-section.tsx";
 import type { MarketingSectionSurface } from "../marketing-section/marketing-section.tsx";
 
 /** Props for the {@linkcode ClosingStatement} component. */
@@ -69,7 +72,13 @@ export const ClosingStatement: DiscernComponent<
           scale="editorial"
           tone={surface === "contrast" ? "contrast" : "default"}
         />
-        <div className="discern-closing-statement__actions">{actions}</div>
+        <div
+          className={marketingActionsClassName(
+            "discern-closing-statement__actions",
+          )}
+        >
+          {actions}
+        </div>
         {reassurance
           ? (
             <div className="discern-closing-statement__reassurance">

@@ -9,41 +9,22 @@
     --discern-cta-band-max: var(--discern-page-max-wide);
   }
   .discern-cta-band__inner {
-    position: relative;
-    isolation: isolate;
-    overflow: hidden;
     width: min(100%, var(--discern-cta-band-max));
     margin-inline: auto;
-    padding: clamp(var(--discern-space-12), 8cqi,
+    padding: clamp(var(--discern-space-8), 8cqi,
       calc(var(--discern-space-24) + var(--discern-space-2)));
-    border: 1px solid var(--discern-color-accent-300);
+    border: 1px solid var(--discern-color-border);
     border-radius: var(--discern-radius-lg);
-    background:
-      radial-gradient(circle at 100% 0%, color-mix(in oklab,
-      var(--discern-color-accent-400) 42%, transparent), transparent 38%),
-      var(--discern-color-accent-100);
-    box-shadow: var(--discern-shadow-window);
+    box-shadow: var(--discern-shadow-card);
+  }
+  .discern-cta-band--accent .discern-cta-band__inner {
+    background: linear-gradient(color-mix(in oklab,
+      var(--discern-color-accent-100) 40%, transparent) 0 0)
+      var(--discern-color-surface);
   }
   .discern-cta-band--sunken .discern-cta-band__inner {
-    border-color: var(--discern-color-border);
     background: var(--discern-color-surface-sunken);
-  }
-  .discern-cta-band--contrast .discern-cta-band__inner {
-    border-color: var(--discern-color-action-edge);
-    background: var(--discern-color-action);
-    color: var(--discern-color-on-action);
-  }
-  .discern-cta-band__inner::after {
-    position: absolute;
-    z-index: -1;
-    right: calc(-1 * var(--discern-space-16));
-    bottom: calc(-1 * (var(--discern-space-24) + var(--discern-space-4)));
-    inline-size: 18rem;
-    block-size: 18rem;
-    border: 1px dashed var(--discern-color-border-strong);
-    border-radius: 50%;
-    content: "";
-    opacity: 0.12;
+    box-shadow: none;
   }
   .discern-cta-band__content {
     display: grid;
@@ -52,56 +33,16 @@
     margin-inline: auto;
     text-align: center;
   }
-  .discern-cta-band__eyebrow,
-  .discern-cta-band__note {
-    font-family: var(--discern-font-ui);
-  }
-
-  .discern-cta-band__eyebrow {
-    margin-block-end: var(--discern-space-4);
-    color: var(--discern-color-accent-700);
-    font-size: var(--discern-font-size-xs);
-    font-weight: var(--discern-font-weight-strong);
-  }
-  .discern-cta-band--contrast .discern-cta-band__eyebrow {
-    color: var(--discern-color-on-action);
-  }
-  .discern-cta-band__content h2 {
-    font-family: var(--discern-font-marketing);
-    font-weight: var(--discern-font-weight-marketing);
-    letter-spacing: -0.055em;
-    max-width: 14ch;
-    margin-inline: auto;
-  }
-  .discern-cta-band--contrast .discern-cta-band__content h2 {
-    color: inherit;
-  }
-  .discern-cta-band__description {
-    max-width: var(--discern-measure);
-    color: var(--discern-color-ink-muted);
-    font-size: var(--discern-font-size-lg);
-  }
-  .discern-cta-band--contrast .discern-cta-band__description,
-  .discern-cta-band--contrast .discern-cta-band__note {
-    color: color-mix(in oklab, var(--discern-color-on-action) 76%,
-      transparent);
-  }
-  .discern-cta-band--contrast .discern-cta-band__inner::after {
-    border-color: var(--discern-color-action-edge);
-  }
-  .discern-cta-band__description > :last-child {
+  .discern-cta-band__intro {
     margin-block-end: 0;
   }
   .discern-cta-band__actions {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: var(--discern-space-3);
     margin-block-start: var(--discern-space-8);
   }
   .discern-cta-band__note {
     margin-block-start: var(--discern-space-4);
     color: var(--discern-color-ink-muted);
+    font-family: var(--discern-font-ui);
     font-size: var(--discern-font-size-sm);
   }
   :is(.discern-cta-band--split, .discern-cta-band--with-visual) .discern-cta-band__inner {
@@ -114,12 +55,6 @@
     justify-items: start;
     margin: 0;
     text-align: start;
-  }
-  :is(.discern-cta-band--split, .discern-cta-band--with-visual) .discern-cta-band__content h2 {
-    margin-inline: 0;
-  }
-  :is(.discern-cta-band--split, .discern-cta-band--with-visual) .discern-cta-band__actions {
-    justify-content: flex-start;
   }
   .discern-cta-band__visual {
     position: relative;

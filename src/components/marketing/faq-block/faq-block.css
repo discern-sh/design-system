@@ -1,12 +1,6 @@
 @layer discern.components {
   .discern-faq-block {
-    --discern-faq-block-max: var(--discern-page-max);
     container: discern-faq-block / inline-size;
-    padding-block: var(--discern-section-space);
-    background: var(--discern-color-surface-sunken);
-  }
-  .discern-faq-block--frame-wide {
-    --discern-faq-block-max: var(--discern-page-max-wide);
   }
   .discern-faq-block__inner {
     display: grid;
@@ -14,34 +8,14 @@
     gap: clamp(var(--discern-space-12), 8cqi,
       calc(var(--discern-space-24) + var(--discern-space-4)));
     align-items: start;
-    width: min(100% - 2 * var(--discern-space-6), var(--discern-faq-block-max));
-    margin-inline: auto;
   }
   .discern-faq-block__header {
     position: sticky;
     top: calc(var(--discern-space-24) + var(--discern-space-4));
   }
-  .discern-faq-block__eyebrow,
-  .discern-faq-block summary {
-    font-family: var(--discern-font-ui);
+  .discern-faq-block__intro {
+    margin-block-end: 0;
   }
-
-  .discern-faq-block__eyebrow {
-    margin-block-end: var(--discern-space-3);
-    color: var(--discern-color-accent-700);
-    font-size: var(--discern-font-size-xs);
-    font-weight: var(--discern-font-weight-strong);
-  }
-  .discern-faq-block__header h2 {
-    font-family: var(--discern-font-marketing);
-    font-weight: var(--discern-font-weight-marketing);
-    letter-spacing: -0.055em;
-    max-width: 12ch;
-  }
-  .discern-faq-block__description {
-    color: var(--discern-color-ink-muted);
-  }
-  .discern-faq-block__description > :last-child,
   .discern-faq-block__answer > :last-child {
     margin-block-end: 0;
   }
@@ -49,44 +23,60 @@
     margin-block-start: var(--discern-space-6);
   }
   .discern-faq-block__items {
-    border-block-start: 1px solid var(--discern-color-border-strong);
+    border-block-start: 1px solid var(--discern-color-border);
   }
   .discern-faq-block details {
-    border-block-end: 1px solid var(--discern-color-border-strong);
+    border-block-end: 1px solid var(--discern-color-border);
+    interpolate-size: allow-keywords;
+  }
+  .discern-faq-block details::details-content {
+    block-size: 0;
+    margin: calc(-1 * var(--discern-space-1));
+    padding: var(--discern-space-1);
+    overflow: clip;
+    transition: block-size var(--discern-duration-medium)
+      var(--discern-ease-out), content-visibility
+      var(--discern-duration-medium) allow-discrete;
+  }
+  .discern-faq-block details[open]::details-content {
+    block-size: auto;
   }
   .discern-faq-block summary {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--discern-space-6);
-    min-height: 5rem;
+    min-height: 4.5rem;
     padding-block: var(--discern-space-5);
     color: var(--discern-color-ink);
     cursor: pointer;
-    font-size: var(--discern-font-size-lg);
-    font-weight: var(--discern-font-weight-strong);
+    font-family: var(--discern-font-ui);
+    font-size: var(--discern-font-size-md);
+    font-weight: var(--discern-font-weight-medium);
     list-style: none;
   }
   .discern-faq-block summary::-webkit-details-marker {
     display: none;
   }
-  .discern-faq-block summary:focus-visible {
-    outline: 0.125rem solid var(--discern-color-accent-500);
-    outline-offset: var(--discern-space-1);
-  }
   .discern-faq-block__toggle {
     position: relative;
     flex: none;
-    inline-size: 1.25rem;
-    block-size: 1.25rem;
+    inline-size: 1rem;
+    block-size: 1rem;
   }
   .discern-faq-block__toggle::before,
   .discern-faq-block__toggle::after {
     position: absolute;
     inset: 50% 0 auto;
-    border-block-start: 1px solid var(--discern-color-border-strong);
+    border-block-start: 1px solid var(--discern-color-ink-faint);
     content: "";
-    transition: rotate var(--discern-duration-fast) var(--discern-ease-out);
+    transition-property: border-color, rotate;
+    transition-duration: var(--discern-duration-fast);
+    transition-timing-function: var(--discern-ease-out);
+  }
+  .discern-faq-block summary:hover .discern-faq-block__toggle::before,
+  .discern-faq-block summary:hover .discern-faq-block__toggle::after {
+    border-color: var(--discern-color-ink);
   }
   .discern-faq-block__toggle::after {
     rotate: 90deg;
@@ -98,6 +88,11 @@
     max-width: var(--discern-measure);
     padding: 0 var(--discern-space-10) var(--discern-space-6) 0;
     color: var(--discern-color-ink-muted);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .discern-faq-block details::details-content {
+      transition: none;
+    }
   }
   @container discern-faq-block (max-width: 47.5rem) {
     .discern-faq-block__inner {

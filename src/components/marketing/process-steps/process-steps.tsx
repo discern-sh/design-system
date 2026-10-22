@@ -3,6 +3,14 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import type { MarketingFrame } from "../frame.ts";
+import { getGlyph } from "../../../glyphs/mod.ts";
+import { Kicker } from "../../display/kicker/kicker.tsx";
+import { FeedbackMark } from "../../feedback/feedback-marks.tsx";
+import { MarketingIntro } from "../marketing-intro/marketing-intro.tsx";
+import { MarketingSection } from "../marketing-section/marketing-section.tsx";
+import type { ProcessStepStatus } from "./process-steps.types.ts";
+
+export type { ProcessStepStatus } from "./process-steps.types.ts";
 
 /** One process step entry rendered by the Process steps component. */
 export interface ProcessStep {
@@ -10,6 +18,14 @@ export interface ProcessStep {
   readonly description: ReactNode;
   readonly eyebrow?: ReactNode;
   readonly detail?: ReactNode;
+  /** Optional progress state; pair it with detail wording that names the state. */
+  readonly status?: ProcessStepStatus;
+}
+
+function stepMarker(index: number, status: ProcessStepStatus | undefined) {
+  if (status === "complete") return getGlyph("status-complete").unicode;
+  if (status === "error") return <FeedbackMark name="warning" />;
+  return String(index + 1).padStart(2, "0");
 }
 
 /** Props for the {@linkcode ProcessSteps} component. */
@@ -40,8 +56,9 @@ export const ProcessSteps: DiscernComponent<HTMLElement, ProcessStepsProps> =
     ref,
   ) {
     return (
-      <section
+      <MarketingSection
         ref={ref}
+        frame={frame}
         className={classNames(
           "discern-process-steps",
           frame === "wide" && "discern-process-steps--frame-wide",
@@ -52,16 +69,11 @@ export const ProcessSteps: DiscernComponent<HTMLElement, ProcessStepsProps> =
       >
         <div className="discern-process-steps__inner">
           <header className="discern-process-steps__header">
-            <div>
-              {eyebrow
-                ? (
-                  <div className="discern-process-steps__eyebrow">
-                    {eyebrow}
-                  </div>
-                )
-                : null}
-              <h2>{title}</h2>
-            </div>
+            <MarketingIntro
+              className="discern-process-steps__intro"
+              eyebrow={eyebrow}
+              title={title}
+            />
             {description
               ? (
                 <div className="discern-process-steps__description">
@@ -72,16 +84,30 @@ export const ProcessSteps: DiscernComponent<HTMLElement, ProcessStepsProps> =
           </header>
           <ol className="discern-process-steps__list">
             {steps.map((step, index) => (
-              <li key={index}>
+              <li
+                key={index}
+                className={classNames(
+                  "discern-process-steps__step",
+                  step.status && `discern-process-steps__step--${step.status}`,
+                )}
+                aria-current={step.status === "active" ? "step" : undefined}
+              >
                 <div className="discern-process-steps__marker">
-                  <span>{String(index + 1).padStart(2, "0")}</span>
+                  <span
+                    aria-hidden={step.status === "complete" ||
+                        step.status === "error"
+                      ? true
+                      : undefined}
+                  >
+                    {stepMarker(index, step.status)}
+                  </span>
                 </div>
                 <div className="discern-process-steps__content">
                   {step.eyebrow
                     ? (
-                      <div className="discern-process-steps__step-eyebrow">
+                      <Kicker className="discern-process-steps__step-eyebrow">
                         {step.eyebrow}
-                      </div>
+                      </Kicker>
                     )
                     : null}
                   <h3>{step.title}</h3>
@@ -100,6 +126,6 @@ export const ProcessSteps: DiscernComponent<HTMLElement, ProcessStepsProps> =
             ))}
           </ol>
         </div>
-      </section>
+      </MarketingSection>
     );
   });

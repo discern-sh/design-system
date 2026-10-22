@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import type { CSSProperties, HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import { Brand } from "../../core/brand/brand.tsx";
 import { useInitialFragmentTarget } from "../../use-initial-fragment-target.ts";
 import type { MarketingFrame } from "../frame.ts";
 
@@ -93,21 +94,14 @@ export const SiteFooter: DiscernComponent<HTMLElement, SiteFooterProps> =
               )}
               href="/"
             >
-              {brandMark
-                ? (
-                  <span
-                    className={classNames(
-                      "discern-site-footer__mark",
-                      "discern-site-footer__mark--" + brandMarkTreatment,
-                      "discern-site-footer__mark--" + resolvedMarkShape,
-                    )}
-                    aria-hidden="true"
-                  >
-                    {brandMark}
-                  </span>
-                )
-                : null}
-              <span>{brand}</span>
+              <Brand
+                name={brand}
+                mark={brandMark ? brandMark : undefined}
+                size="lg"
+                typeface={brandTypeface}
+                markTreatment={brandMarkTreatment}
+                markShape={resolvedMarkShape}
+              />
             </a>
             {description
               ? (

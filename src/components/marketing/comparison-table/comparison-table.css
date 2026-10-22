@@ -1,46 +1,6 @@
 @layer discern.components {
   .discern-comparison-table {
-    --discern-comparison-table-max: var(--discern-page-max);
     container: discern-comparison-table / inline-size;
-    padding-block: var(--discern-section-space);
-    background: var(--discern-color-surface-sunken);
-  }
-  .discern-comparison-table--frame-wide {
-    --discern-comparison-table-max: var(--discern-page-max-wide);
-  }
-  .discern-comparison-table__inner {
-    width: min(100% - 2 * var(--discern-space-6),
-      var(--discern-comparison-table-max));
-    margin-inline: auto;
-  }
-  .discern-comparison-table__header {
-    max-width: 46rem;
-    margin: 0 auto var(--discern-space-10);
-    text-align: center;
-  }
-  .discern-comparison-table__header h2 {
-    font-family: var(--discern-font-marketing);
-    font-weight: var(--discern-font-weight-marketing);
-    letter-spacing: -0.055em;
-  }
-  .discern-comparison-table__eyebrow,
-  .discern-comparison-table thead th,
-  .discern-comparison-table tbody th {
-    font-family: var(--discern-font-ui);
-  }
-
-  .discern-comparison-table__eyebrow {
-    margin-block-end: var(--discern-space-3);
-    color: var(--discern-color-accent-700);
-    font-size: var(--discern-font-size-xs);
-    font-weight: var(--discern-font-weight-strong);
-  }
-  .discern-comparison-table__description {
-    color: var(--discern-color-ink-muted);
-    font-size: var(--discern-font-size-lg);
-  }
-  .discern-comparison-table__description > :last-child {
-    margin-block-end: 0;
   }
   .discern-comparison-table__frame {
     overflow: hidden;
@@ -53,33 +13,34 @@
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed;
+    font-family: var(--discern-font-ui);
+    font-size: var(--discern-font-size-sm);
   }
   .discern-comparison-table :is(th, td) {
-    padding: var(--discern-space-5) var(--discern-space-6);
+    padding: var(--discern-space-4) var(--discern-space-6);
     border-block-end: 1px solid var(--discern-color-border);
     text-align: start;
     vertical-align: middle;
   }
-  .discern-comparison-table tr:last-child :is(th, td) {
+  .discern-comparison-table tbody tr:last-child :is(th, td) {
     border-block-end: 0;
   }
   .discern-comparison-table thead th {
-    color: var(--discern-color-ink-faint);
-    font-size: var(--discern-font-size-xs);
-    font-weight: var(--discern-font-weight-strong);
+    border-block-end-color: var(--discern-color-border-strong);
+    color: var(--discern-color-ink-muted);
+    font: var(--discern-font-label);
   }
   .discern-comparison-table tbody th {
     color: var(--discern-color-ink);
-    font-size: var(--discern-font-size-sm);
-    font-weight: var(--discern-font-weight-strong);
+    font-weight: var(--discern-font-weight-medium);
   }
   .discern-comparison-table tbody td {
     color: var(--discern-color-ink-muted);
-    font-size: var(--discern-font-size-sm);
   }
-  .discern-comparison-table__highlight {
+  .discern-comparison-table .discern-comparison-table__highlight {
     background: color-mix(in oklab, var(--discern-color-accent-100) 72%,
       var(--discern-color-surface));
+    color: var(--discern-color-ink);
   }
   .discern-comparison-table__badge {
     display: inline-block;
@@ -88,7 +49,7 @@
     border-radius: var(--discern-radius-pill);
     background: var(--discern-color-accent-200);
     color: var(--discern-color-accent-800);
-    font-size: var(--discern-font-size-xs);
+    font: var(--discern-font-label);
   }
   @container discern-comparison-table (max-width: 42.5rem) {
     .discern-comparison-table__frame {
@@ -116,20 +77,21 @@
       border-radius: var(--discern-radius-md);
       background: var(--discern-color-surface);
     }
-    .discern-comparison-table :is(th, td) {
-      border-block-end: 1px solid var(--discern-color-border) !important;
+    .discern-comparison-table tbody tr:last-child :is(th, td) {
+      border-block-end: 1px solid var(--discern-color-border);
     }
     .discern-comparison-table td::before {
       display: block;
       margin-block-end: var(--discern-space-1);
-      color: var(--discern-color-ink-faint);
+      color: var(--discern-color-ink-muted);
       content: attr(data-label);
-      font-family: var(--discern-font-ui);
-      font-size: var(--discern-font-size-xs);
-      font-weight: var(--discern-font-weight-strong);
+      font: var(--discern-font-label);
     }
-    .discern-comparison-table tr td:last-child {
-      border-block-end: 0 !important;
+    .discern-comparison-table .discern-comparison-table__highlight::before {
+      color: var(--discern-color-ink);
+    }
+    .discern-comparison-table tbody tr > td:last-child {
+      border-block-end: 0;
     }
   }
 }

@@ -3,6 +3,8 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import type { MarketingFrame } from "../frame.ts";
+import { MarketingIntro } from "../marketing-intro/marketing-intro.tsx";
+import { MarketingSection } from "../marketing-section/marketing-section.tsx";
 
 /** One faq item entry rendered by the FAQ block component. */
 export interface FaqItem {
@@ -40,8 +42,10 @@ export const FaqBlock: DiscernComponent<HTMLElement, FaqBlockProps> =
     ref,
   ) {
     return (
-      <section
+      <MarketingSection
         ref={ref}
+        surface="sunken"
+        frame={frame}
         className={classNames(
           "discern-faq-block",
           frame === "wide" && "discern-faq-block--frame-wide",
@@ -50,22 +54,17 @@ export const FaqBlock: DiscernComponent<HTMLElement, FaqBlockProps> =
         {...props}
       >
         <div className="discern-faq-block__inner">
-          <header className="discern-faq-block__header">
-            {eyebrow
-              ? <div className="discern-faq-block__eyebrow">{eyebrow}</div>
-              : null}
-            <h2>{title}</h2>
-            {description
-              ? (
-                <div className="discern-faq-block__description">
-                  {description}
-                </div>
-              )
-              : null}
+          <div className="discern-faq-block__header">
+            <MarketingIntro
+              className="discern-faq-block__intro"
+              eyebrow={eyebrow}
+              title={title}
+              description={description}
+            />
             {aside
               ? <div className="discern-faq-block__aside">{aside}</div>
               : null}
-          </header>
+          </div>
           <div className="discern-faq-block__items">
             {items.map((item, index) => (
               <details key={index} open={openFirst && index === 0}>
@@ -81,6 +80,6 @@ export const FaqBlock: DiscernComponent<HTMLElement, FaqBlockProps> =
             ))}
           </div>
         </div>
-      </section>
+      </MarketingSection>
     );
   });

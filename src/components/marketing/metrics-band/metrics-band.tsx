@@ -4,6 +4,8 @@ import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import type { MetricsBandTone } from "./metrics-band.types.ts";
 import type { MarketingFrame } from "../frame.ts";
+import { MarketingIntro } from "../marketing-intro/marketing-intro.tsx";
+import { MarketingSection } from "../marketing-section/marketing-section.tsx";
 
 export type { MetricsBandTone } from "./metrics-band.types.ts";
 
@@ -40,8 +42,11 @@ export const MetricsBand: DiscernComponent<HTMLElement, MetricsBandProps> =
     ref,
   ) {
     return (
-      <section
+      <MarketingSection
         ref={ref}
+        surface={tone === "accent" ? "canvas" : tone}
+        spacing="compact"
+        frame={frame}
         className={classNames(
           "discern-metrics-band",
           frame === "wide" && "discern-metrics-band--frame-wide",
@@ -53,16 +58,11 @@ export const MetricsBand: DiscernComponent<HTMLElement, MetricsBandProps> =
         <div className="discern-metrics-band__inner">
           {eyebrow || title
             ? (
-              <header className="discern-metrics-band__header">
-                {eyebrow
-                  ? (
-                    <div className="discern-metrics-band__eyebrow">
-                      {eyebrow}
-                    </div>
-                  )
-                  : null}
-                {title ? <h2>{title}</h2> : null}
-              </header>
+              <MarketingIntro
+                className="discern-metrics-band__header"
+                eyebrow={eyebrow}
+                title={title}
+              />
             )
             : null}
           <dl className="discern-metrics-band__list">
@@ -83,6 +83,6 @@ export const MetricsBand: DiscernComponent<HTMLElement, MetricsBandProps> =
             ))}
           </dl>
         </div>
-      </section>
+      </MarketingSection>
     );
   });

@@ -21,28 +21,9 @@
   .discern-case-study--reverse .discern-case-study__story {
     order: 2;
   }
-  .discern-case-study__eyebrow,
-  .discern-case-study__stats dd {
-    font-family: var(--discern-font-ui);
+  .discern-case-study__intro {
+    margin-block-end: 0;
   }
-
-  .discern-case-study__eyebrow {
-    margin-block-end: var(--discern-space-3);
-    color: var(--discern-color-accent-700);
-    font-size: var(--discern-font-size-xs);
-    font-weight: var(--discern-font-weight-strong);
-  }
-  .discern-case-study__story h2 {
-    font-family: var(--discern-font-marketing);
-    font-weight: var(--discern-font-weight-marketing);
-    letter-spacing: -0.055em;
-    max-width: 14ch;
-  }
-  .discern-case-study__summary {
-    color: var(--discern-color-ink-muted);
-    font-size: var(--discern-font-size-lg);
-  }
-  .discern-case-study__summary > :last-child,
   .discern-case-study__body > :last-child {
     margin-block-end: 0;
   }
@@ -83,15 +64,18 @@
   }
   .discern-case-study__stats dd {
     margin: 0;
-    color: var(--discern-color-accent-600);
+    color: var(--discern-color-ink);
+    font-family: var(--discern-font-marketing);
     font-size: var(--discern-font-size-display-md);
-    font-weight: var(--discern-font-weight-strong);
+    font-variant-numeric: tabular-nums lining-nums;
+    font-weight: var(--discern-font-weight-marketing);
+    letter-spacing: -0.025em;
     line-height: 1;
   }
   .discern-case-study__stats dt {
     margin-block-start: var(--discern-space-2);
-    color: var(--discern-color-ink-faint);
-    font-size: var(--discern-font-size-xs);
+    color: var(--discern-color-ink-muted);
+    font: var(--discern-font-label);
   }
   @container discern-case-study (max-width: 51.25rem) {
     .discern-case-study__inner {

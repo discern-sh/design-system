@@ -41,6 +41,7 @@ const steps = [
     title: "Connect",
     description: <p>Start with the tools and context already in place.</p>,
     detail: "Complete",
+    status: "complete",
   },
   {
     title: "Shape",
@@ -51,6 +52,7 @@ const steps = [
       </p>
     ),
     detail: "In progress",
+    status: "active",
   },
   {
     title: "Build",
@@ -96,9 +98,9 @@ function ErrorProcessStepsState() {
         <p>The highlighted correction keeps the sequence legible.</p>
       }
       steps={[
-        { ...steps[0], detail: "Complete" },
-        { ...steps[1], detail: "Shape needs attention" },
-        { ...steps[2], detail: "Waiting" },
+        steps[0],
+        { ...steps[1], detail: "Shape needs attention", status: "error" },
+        steps[2],
       ]}
     />
   );

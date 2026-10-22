@@ -1,6 +1,7 @@
 import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import meta, { componentExampleVocabulary } from "./marketing-section.meta.ts";
 import { MarketingSection } from "./marketing-section.tsx";
+import { Button } from "../../core/button/button.tsx";
 
 function StandardSectionState() {
   return (
@@ -43,6 +44,19 @@ function SpaciousContrastState() {
             </p>
           </article>
         ))}
+      </div>
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "var(--discern-space-3)",
+          marginTop: "var(--discern-space-8)",
+        }}
+      >
+        <Button href="#contrast-primary">Primary action</Button>
+        <Button href="#contrast-secondary" variant="secondary">
+          Secondary action
+        </Button>
       </div>
     </MarketingSection>
   );

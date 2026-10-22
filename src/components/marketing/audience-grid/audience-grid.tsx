@@ -3,6 +3,9 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import type { MarketingFrame } from "../frame.ts";
+import { Kicker } from "../../display/kicker/kicker.tsx";
+import { MarketingIntro } from "../marketing-intro/marketing-intro.tsx";
+import { MarketingSection } from "../marketing-section/marketing-section.tsx";
 
 /** One item entry rendered by the Audience grid component. */
 export interface AudienceGridItem {
@@ -42,8 +45,9 @@ export const AudienceGrid: DiscernComponent<HTMLElement, AudienceGridProps> =
     ref,
   ) {
     return (
-      <section
+      <MarketingSection
         ref={ref}
+        frame={frame}
         className={classNames(
           "discern-audience-grid",
           frame === "wide" && "discern-audience-grid--frame-wide",
@@ -53,16 +57,11 @@ export const AudienceGrid: DiscernComponent<HTMLElement, AudienceGridProps> =
       >
         <div className="discern-audience-grid__inner">
           <header className="discern-audience-grid__header">
-            <div>
-              {eyebrow
-                ? (
-                  <div className="discern-audience-grid__eyebrow">
-                    {eyebrow}
-                  </div>
-                )
-                : null}
-              <h2>{title}</h2>
-            </div>
+            <MarketingIntro
+              className="discern-audience-grid__intro"
+              eyebrow={eyebrow}
+              title={title}
+            />
             {description
               ? (
                 <div className="discern-audience-grid__description">
@@ -100,9 +99,9 @@ export const AudienceGrid: DiscernComponent<HTMLElement, AudienceGridProps> =
                 </div>
                 {item.eyebrow
                   ? (
-                    <div className="discern-audience-grid__item-eyebrow">
+                    <Kicker className="discern-audience-grid__item-eyebrow">
                       {item.eyebrow}
-                    </div>
+                    </Kicker>
                   )
                   : null}
                 <h3>{item.title}</h3>
@@ -120,7 +119,12 @@ export const AudienceGrid: DiscernComponent<HTMLElement, AudienceGridProps> =
                   ? (
                     <a className="discern-audience-grid__link" href={item.href}>
                       {item.linkLabel}
-                      <span aria-hidden="true">→</span>
+                      <span
+                        className="discern-audience-grid__arrow"
+                        aria-hidden="true"
+                      >
+                        →
+                      </span>
                     </a>
                   )
                   : null}
@@ -128,6 +132,6 @@ export const AudienceGrid: DiscernComponent<HTMLElement, AudienceGridProps> =
             ))}
           </div>
         </div>
-      </section>
+      </MarketingSection>
     );
   });

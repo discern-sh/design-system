@@ -2,7 +2,11 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
-import { MarketingSection } from "../marketing-section/marketing-section.tsx";
+import { Kicker } from "../../display/kicker/kicker.tsx";
+import {
+  marketingActionsClassName,
+  MarketingSection,
+} from "../marketing-section/marketing-section.tsx";
 import type { MarketingSectionSurface } from "../marketing-section/marketing-section.tsx";
 import { MarketingStage } from "../marketing-stage/marketing-stage.tsx";
 import type { MarketingStageTreatment } from "../marketing-stage/marketing-stage.tsx";
@@ -74,9 +78,9 @@ export const EditorialHero: DiscernComponent<HTMLElement, EditorialHeroProps> =
           <header className="discern-editorial-hero__header">
             {eyebrow
               ? (
-                <div className="discern-editorial-hero__eyebrow">
+                <Kicker className="discern-editorial-hero__eyebrow">
                   {eyebrow}
-                </div>
+                </Kicker>
               )
               : null}
             <Heading className="discern-editorial-hero__title">
@@ -94,7 +98,11 @@ export const EditorialHero: DiscernComponent<HTMLElement, EditorialHeroProps> =
                 : null}
               {actions
                 ? (
-                  <div className="discern-editorial-hero__actions">
+                  <div
+                    className={marketingActionsClassName(
+                      "discern-editorial-hero__actions",
+                    )}
+                  >
                     {actions}
                   </div>
                 )

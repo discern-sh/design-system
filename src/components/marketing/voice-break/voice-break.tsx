@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import { Kicker } from "../../display/kicker/kicker.tsx";
 import { MarketingSection } from "../marketing-section/marketing-section.tsx";
 import type { MarketingSectionSurface } from "../marketing-section/marketing-section.tsx";
 
@@ -50,7 +51,11 @@ export const VoiceBreak: DiscernComponent<HTMLElement, VoiceBreakProps> =
         <figure className="discern-voice-break__figure">
           <div className="discern-voice-break__statement">
             {eyebrow
-              ? <div className="discern-voice-break__eyebrow">{eyebrow}</div>
+              ? (
+                <Kicker className="discern-voice-break__eyebrow">
+                  {eyebrow}
+                </Kicker>
+              )
               : null}
             <blockquote className="discern-voice-break__quote">
               <span className="discern-voice-break__mark" aria-hidden="true">

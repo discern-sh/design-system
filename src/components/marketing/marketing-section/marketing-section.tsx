@@ -15,6 +15,29 @@ export type {
 } from "./marketing-section.types.ts";
 export type { MarketingFrame } from "../frame.ts";
 
+/**
+ * Compose the Marketing contrast scope with any further classes. The scope
+ * remaps canvas, surface, ink, edge, and action roles together for a stable
+ * light-on-dark chapter, so a block that paints its own dark panel composes it
+ * here and carries this stylesheet with it.
+ */
+export function marketingContrastClassName(
+  ...names: readonly (string | false | null | undefined)[]
+): string {
+  return classNames("discern-marketing-contrast", ...names);
+}
+
+/**
+ * Compose the shared Marketing action row with any further classes. The row
+ * keeps its actions on one line while they fit and gives every action the
+ * full row once they wrap, so stacked actions share one width.
+ */
+export function marketingActionsClassName(
+  ...names: readonly (string | false | null | undefined)[]
+): string {
+  return classNames("discern-marketing-actions", ...names);
+}
+
 /** Props for the {@linkcode MarketingSection} component. */
 export interface MarketingSectionProps extends HTMLAttributes<HTMLElement> {
   /** Semantic surface or an explicit request to inherit the surrounding one. */
@@ -49,6 +72,7 @@ export const MarketingSection: DiscernComponent<
         `discern-marketing-section--${surface}`,
         `discern-marketing-section--space-${spacing}`,
         `discern-marketing-section--frame-${frame}`,
+        surface === "contrast" && marketingContrastClassName(),
         className,
       )}
       {...props}

@@ -18,6 +18,7 @@ const meta = {
   ],
   accessibility: [
     "Steps are an ordered list, so sequence remains explicit without the visual connectors.",
+    "An active step carries aria-current; complete and error markers change shape, and the step's detail wording names the state.",
   ],
 } satisfies ComponentMeta;
 

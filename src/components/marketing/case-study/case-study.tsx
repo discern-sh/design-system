@@ -3,6 +3,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import type { MarketingFrame } from "../frame.ts";
+import { MarketingIntro } from "../marketing-intro/marketing-intro.tsx";
 
 /** One stat entry rendered by the Case study component. */
 export interface CaseStudyStat {
@@ -56,11 +57,12 @@ export const CaseStudy: DiscernComponent<HTMLElement, CaseStudyProps> =
       >
         <div className="discern-case-study__inner">
           <div className="discern-case-study__story">
-            {eyebrow
-              ? <div className="discern-case-study__eyebrow">{eyebrow}</div>
-              : null}
-            <h2>{title}</h2>
-            <div className="discern-case-study__summary">{summary}</div>
+            <MarketingIntro
+              className="discern-case-study__intro"
+              eyebrow={eyebrow}
+              title={title}
+              description={summary}
+            />
             {body
               ? <div className="discern-case-study__body">{body}</div>
               : null}

@@ -1,17 +1,6 @@
 @layer discern.components {
   .discern-audience-grid {
-    --discern-audience-grid-max: var(--discern-page-max);
     container: discern-audience-grid / inline-size;
-    padding-block: var(--discern-section-space);
-    background: var(--discern-color-canvas);
-  }
-  .discern-audience-grid--frame-wide {
-    --discern-audience-grid-max: var(--discern-page-max-wide);
-  }
-  .discern-audience-grid__inner {
-    width: min(100% - 2 * var(--discern-space-6),
-      var(--discern-audience-grid-max));
-    margin-inline: auto;
   }
   .discern-audience-grid__header {
     display: grid;
@@ -22,27 +11,8 @@
     padding-block-end: var(--discern-space-6);
     border-block-end: 1px solid var(--discern-color-border);
   }
-  .discern-audience-grid__eyebrow,
-  .discern-audience-grid__item-eyebrow,
-  .discern-audience-grid__item h3,
-  .discern-audience-grid__meta,
-  .discern-audience-grid__link {
-    font-family: var(--discern-font-ui);
-  }
-
-  .discern-audience-grid__eyebrow,
-  .discern-audience-grid__item-eyebrow {
-    margin-block-end: var(--discern-space-3);
-    color: var(--discern-color-accent-700);
-    font-size: var(--discern-font-size-xs);
-    font-weight: var(--discern-font-weight-strong);
-  }
-  .discern-audience-grid__header h2 {
-    font-family: var(--discern-font-marketing);
-    font-weight: var(--discern-font-weight-marketing);
-    letter-spacing: -0.055em;
-    max-width: 15ch;
-    margin: 0;
+  .discern-audience-grid__intro {
+    margin-block-end: 0;
   }
   .discern-audience-grid__description,
   .discern-audience-grid__copy {
@@ -69,17 +39,18 @@
     box-shadow: var(--discern-shadow-card);
   }
   .discern-audience-grid__item--featured {
-    border-color: var(--discern-color-accent-400);
-    background:
-      linear-gradient(150deg, var(--discern-color-accent-100), transparent 72%),
+    border-color: var(--discern-color-border-strong);
+    background: linear-gradient(color-mix(in oklab,
+      var(--discern-color-material-highlight) 50%, transparent) 0 0)
       var(--discern-color-surface);
+    box-shadow: var(--discern-shadow-window);
   }
   .discern-audience-grid__topline {
     display: flex;
     align-items: center;
     justify-content: space-between;
     min-height: 2rem;
-    margin-block-end: auto;
+    margin-block-end: var(--discern-space-6);
     color: var(--discern-color-ink-faint);
   }
   .discern-audience-grid__icon {
@@ -94,12 +65,24 @@
     block-size: 100%;
   }
   .discern-audience-grid__index {
-    font-size: var(--discern-font-size-xs);
+    font: var(--discern-font-label);
+    font-variant-numeric: tabular-nums;
+  }
+  .discern-audience-grid__item-eyebrow {
+    margin-block-end: var(--discern-space-3);
   }
   .discern-audience-grid__item h3 {
-    margin: var(--discern-space-6) 0 var(--discern-space-4);
+    margin: 0 0 var(--discern-space-3);
+    font-family: var(--discern-font-marketing);
     font-size: var(--discern-font-size-display-sm);
-    font-weight: var(--discern-font-weight-strong);
+    font-weight: var(--discern-font-weight-marketing);
+  }
+  .discern-audience-grid__copy {
+    flex-grow: 1;
+  }
+  .discern-audience-grid__meta,
+  .discern-audience-grid__link {
+    font-family: var(--discern-font-ui);
   }
   .discern-audience-grid__meta {
     margin-block-start: var(--discern-space-5);
@@ -108,11 +91,24 @@
   }
   .discern-audience-grid__link {
     align-self: flex-start;
+    min-block-size: 1.5rem;
     margin-block-start: var(--discern-space-6);
-    color: var(--discern-color-accent-700);
+    color: var(--discern-color-ink);
     font-size: var(--discern-font-size-sm);
-    font-weight: var(--discern-font-weight-strong);
-    text-underline-offset: 0.25em;
+    font-weight: var(--discern-font-weight-medium);
+    text-decoration-color: var(--discern-color-border-strong);
+    text-underline-offset: 0.3em;
+  }
+  .discern-audience-grid__link:hover {
+    text-decoration-color: currentColor;
+  }
+  .discern-audience-grid__arrow {
+    display: inline-block;
+    margin-inline-start: calc(var(--discern-space-1) * 1.5);
+    transition: translate var(--discern-duration-fast) var(--discern-ease-out);
+  }
+  .discern-audience-grid__link:hover .discern-audience-grid__arrow {
+    translate: calc(var(--discern-space-1) / 2) 0;
   }
   @container discern-audience-grid (max-width: 53.75rem) {
     .discern-audience-grid__header {

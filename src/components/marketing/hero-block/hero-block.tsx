@@ -4,12 +4,15 @@ import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import type { HeroBlockLayout, HeroBlockSurface } from "./hero-block.types.ts";
 import type { MarketingFrame } from "../frame.ts";
+import { Kicker } from "../../display/kicker/kicker.tsx";
+import { marketingActionsClassName } from "../marketing-section/marketing-section.tsx";
 
 export type { HeroBlockLayout, HeroBlockSurface } from "./hero-block.types.ts";
 
 /** Props for the {@linkcode HeroBlock} component. */
 export interface HeroBlockProps
   extends Omit<HTMLAttributes<HTMLElement>, "title"> {
+  /** Text renders as a Kicker; a node such as a Badge renders as given. */
   readonly eyebrow?: ReactNode;
   readonly title: ReactNode;
   readonly headingLevel?: 1 | 2;
@@ -69,7 +72,13 @@ export const HeroBlock: DiscernComponent<HTMLElement, HeroBlockProps> =
         <div className="discern-hero-block__inner">
           <div className="discern-hero-block__content">
             {eyebrow
-              ? <div className="discern-hero-block__eyebrow">{eyebrow}</div>
+              ? typeof eyebrow === "string" || typeof eyebrow === "number"
+                ? (
+                  <Kicker className="discern-hero-block__eyebrow">
+                    {eyebrow}
+                  </Kicker>
+                )
+                : <div className="discern-hero-block__eyebrow">{eyebrow}</div>
               : null}
             <Heading className="discern-hero-block__title">{title}</Heading>
             {description
@@ -80,7 +89,15 @@ export const HeroBlock: DiscernComponent<HTMLElement, HeroBlockProps> =
               )
               : null}
             {actions
-              ? <div className="discern-hero-block__actions">{actions}</div>
+              ? (
+                <div
+                  className={marketingActionsClassName(
+                    "discern-hero-block__actions",
+                  )}
+                >
+                  {actions}
+                </div>
+              )
               : null}
             {meta
               ? <div className="discern-hero-block__meta">{meta}</div>

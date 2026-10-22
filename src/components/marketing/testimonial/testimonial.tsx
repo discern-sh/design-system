@@ -4,6 +4,7 @@ import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import type { TestimonialLayout } from "./testimonial.types.ts";
 import type { MarketingFrame } from "../frame.ts";
+import { Kicker } from "../../display/kicker/kicker.tsx";
 
 export type { TestimonialLayout } from "./testimonial.types.ts";
 
@@ -16,6 +17,7 @@ export interface TestimonialProps extends HTMLAttributes<HTMLElement> {
   readonly avatar?: ReactNode;
   readonly metric?: ReactNode;
   readonly metricLabel?: ReactNode;
+  /** Decorative opening mark hung in the margin before the quotation's first line. */
   readonly mark?: ReactNode;
   readonly layout?: TestimonialLayout;
   /** Lay content out at the editorial page measure or the wider campaign frame. */
@@ -53,14 +55,20 @@ export const Testimonial: DiscernComponent<HTMLElement, TestimonialProps> =
         {...props}
       >
         <figure className="discern-testimonial__frame">
-          <div className="discern-testimonial__mark" aria-hidden="true">
-            {mark}
-          </div>
           <div className="discern-testimonial__main">
             {eyebrow
-              ? <div className="discern-testimonial__eyebrow">{eyebrow}</div>
+              ? (
+                <Kicker className="discern-testimonial__eyebrow">
+                  {eyebrow}
+                </Kicker>
+              )
               : null}
-            <blockquote>{quote}</blockquote>
+            <blockquote>
+              <span className="discern-testimonial__mark" aria-hidden="true">
+                {mark}
+              </span>
+              {quote}
+            </blockquote>
             <figcaption>
               {avatar
                 ? (

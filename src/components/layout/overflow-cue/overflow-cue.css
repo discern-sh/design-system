@@ -6,7 +6,6 @@
   }
   .discern-overflow-cue__viewport,
   .discern-overflow-cue [data-discern-overflow-cue-target] {
-    box-sizing: border-box;
     min-inline-size: 0;
     min-block-size: 0;
     overflow: auto;
@@ -18,13 +17,13 @@
     max-block-size: inherit;
   }
   .discern-overflow-cue [data-discern-overflow-cue-target]:focus-visible {
-    outline: 0.125rem solid var(--discern-color-accent-600);
-    outline-offset: calc(-1 * var(--discern-space-1));
+    outline-offset: -0.125rem;
   }
   .discern-overflow-cue__edge {
     position: absolute;
     opacity: 0;
     pointer-events: none;
+    transition: opacity var(--discern-duration-fast) var(--discern-ease-out);
     background: linear-gradient(
       var(--discern-overflow-cue-angle),
       color-mix(
@@ -40,12 +39,6 @@
   }
   .discern-overflow-cue__edge--block-end {
     --discern-overflow-cue-angle: to top;
-  }
-  .discern-overflow-cue__edge--inline-start {
-    --discern-overflow-cue-angle: to right;
-  }
-  .discern-overflow-cue__edge--inline-end {
-    --discern-overflow-cue-angle: to left;
   }
   .discern-overflow-cue[data-discern-overflow-cue-block-start="true"] > .discern-overflow-cue__edge--block-start,
   .discern-overflow-cue[data-discern-overflow-cue-block-end="true"] > .discern-overflow-cue__edge--block-end,

@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import { Brand } from "../../core/brand/brand.tsx";
 import type { MarketingFrame } from "../frame.ts";
 import { useInitialFragmentTarget } from "../../use-initial-fragment-target.ts";
 
@@ -98,21 +99,14 @@ export const SiteHeader: DiscernComponent<HTMLElement, SiteHeaderProps> =
             )}
             href={homeHref}
           >
-            {brandMark
-              ? (
-                <span
-                  className={classNames(
-                    "discern-site-header__mark",
-                    "discern-site-header__mark--" + brandMarkTreatment,
-                    "discern-site-header__mark--" + resolvedMarkShape,
-                  )}
-                  aria-hidden="true"
-                >
-                  {brandMark}
-                </span>
-              )
-              : null}
-            <span>{brand}</span>
+            <Brand
+              name={brand}
+              mark={brandMark ? brandMark : undefined}
+              size="lg"
+              typeface={brandTypeface}
+              markTreatment={brandMarkTreatment}
+              markShape={resolvedMarkShape}
+            />
           </a>
           {navItems.length
             ? (

@@ -15,11 +15,11 @@ const meta = {
   },
   purposes: ["marketing-site"],
   useWhen: [
-    "A public page needs persistent brand, section navigation, and a primary action; use the campaign variant for a wider translucent launch-page masthead.",
+    "A public page needs persistent brand, section navigation, and a primary action; use the campaign variant for a wider launch-page masthead.",
   ],
   accessibility: [
     "Navigation has a configurable accessible label.",
-    "A navigation item marked current renders aria-current: page for the exact destination and true for the section containing it; a solid accent rule and a quiet dotted one keep the two distinct without relying on colour.",
+    "A navigation item marked current renders aria-current: page for the exact destination and true for the section containing it; a firm rule and a thin quiet one keep the two distinct without relying on colour.",
     "At narrow widths links remain available in a horizontally scrollable row in both variants.",
   ],
 } satisfies ComponentMeta;

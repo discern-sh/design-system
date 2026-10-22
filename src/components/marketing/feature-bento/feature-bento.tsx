@@ -7,6 +7,9 @@ import {
   type FeatureBentoSize,
 } from "./feature-bento-layout.ts";
 import type { MarketingFrame } from "../frame.ts";
+import { Kicker } from "../../display/kicker/kicker.tsx";
+import { MarketingIntro } from "../marketing-intro/marketing-intro.tsx";
+import { MarketingSection } from "../marketing-section/marketing-section.tsx";
 
 export type { FeatureBentoSize } from "./feature-bento-layout.ts";
 
@@ -72,8 +75,10 @@ export const FeatureBento: DiscernComponent<HTMLElement, FeatureBentoProps> =
     };
 
     return (
-      <section
+      <MarketingSection
         ref={ref}
+        surface="sunken"
+        frame={frame}
         className={classNames(
           "discern-feature-bento",
           frame === "wide" && "discern-feature-bento--frame-wide",
@@ -82,19 +87,13 @@ export const FeatureBento: DiscernComponent<HTMLElement, FeatureBentoProps> =
         {...props}
       >
         <div className="discern-feature-bento__inner">
-          <header className="discern-feature-bento__header">
-            {eyebrow
-              ? <div className="discern-feature-bento__eyebrow">{eyebrow}</div>
-              : null}
-            <h2>{title}</h2>
-            {description
-              ? (
-                <div className="discern-feature-bento__description">
-                  {description}
-                </div>
-              )
-              : null}
-          </header>
+          <MarketingIntro
+            className="discern-feature-bento__header"
+            eyebrow={eyebrow}
+            title={title}
+            description={description}
+            align="center"
+          />
           <div className="discern-feature-bento__grid" style={gridStyle}>
             {items.map((item, index) => {
               const placement = layout.placements[index];
@@ -136,9 +135,9 @@ export const FeatureBento: DiscernComponent<HTMLElement, FeatureBentoProps> =
                       : null}
                     {item.eyebrow
                       ? (
-                        <div className="discern-feature-bento__item-eyebrow">
+                        <Kicker className="discern-feature-bento__item-eyebrow">
                           {item.eyebrow}
-                        </div>
+                        </Kicker>
                       )
                       : null}
                     <h3>{item.title}</h3>
@@ -156,6 +155,6 @@ export const FeatureBento: DiscernComponent<HTMLElement, FeatureBentoProps> =
             })}
           </div>
         </div>
-      </section>
+      </MarketingSection>
     );
   });
