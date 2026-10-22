@@ -80,4 +80,7 @@
       background: var(--discern-color-accent-100);
     }
   }
+  .discern-branch-choice__choice:has(a:active) {
+    background: var(--discern-color-accent-200);
+  }
 }

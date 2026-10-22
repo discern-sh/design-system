@@ -3,6 +3,8 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { CopyButton } from "../../docs/copy-button/copy-button.tsx";
+import { breakAfterSeparators } from "../path-reference/path-reference.breaks.tsx";
+import { WORKFLOW_COPY_ICONS } from "../workflow-marks.tsx";
 
 /** Props for the {@linkcode AgentHandoff} component. */
 export interface AgentHandoffProps
@@ -42,6 +44,7 @@ export const AgentHandoff: DiscernComponent<
       <header className="discern-agent-handoff__header">
         <div className="discern-agent-handoff__title">{title}</div>
         <CopyButton
+          {...WORKFLOW_COPY_ICONS}
           value={children}
           label={copyLabel}
           copiedLabel={copiedLabel}
@@ -54,7 +57,9 @@ export const AgentHandoff: DiscernComponent<
           </div>
         )
         : null}
-      <pre className="discern-agent-handoff__prompt">{children}</pre>
+      <pre className="discern-agent-handoff__prompt">
+        {breakAfterSeparators(children)}
+      </pre>
     </div>
   );
 });

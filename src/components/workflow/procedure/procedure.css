@@ -7,7 +7,10 @@
     margin-block-end: var(--discern-space-8);
     color: var(--discern-color-ink);
   }
-  .discern-procedure * {
+  .discern-procedure > *,
+  .discern-procedure__header > *,
+  .discern-procedure__step,
+  .discern-procedure__completion > * {
     min-inline-size: 0;
   }
   .discern-procedure__header {

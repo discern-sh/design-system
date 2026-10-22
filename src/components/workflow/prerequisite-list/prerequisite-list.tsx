@@ -2,7 +2,7 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
-import { TERMINAL_GLYPHS } from "../../../cli/terminal-glyphs.ts";
+import { WorkflowMark, type WorkflowMarkName } from "../workflow-marks.tsx";
 import type { PrerequisiteState } from "./prerequisite-list.types.ts";
 
 export type { PrerequisiteState } from "./prerequisite-list.types.ts";
@@ -27,10 +27,10 @@ const stateLabels: Readonly<Record<PrerequisiteState, string>> = {
   unresolved: "Unresolved",
 };
 
-const stateMarkers: Readonly<Record<PrerequisiteState, string>> = {
-  required: "•",
-  satisfied: TERMINAL_GLYPHS.done.unicode,
-  unresolved: TERMINAL_GLYPHS.attention.unicode,
+const stateMarkers: Readonly<Record<PrerequisiteState, WorkflowMarkName>> = {
+  required: "idle",
+  satisfied: "done",
+  unresolved: "attention",
 };
 
 /** Requirements named before a procedure begins, with every state carried in visible text and shape. */
@@ -60,7 +60,7 @@ export const PrerequisiteList: DiscernComponent<
                 className="discern-prerequisite-list__marker"
                 aria-hidden="true"
               >
-                {stateMarkers[item.state]}
+                <WorkflowMark name={stateMarkers[item.state]} />
               </span>
               <span className="discern-prerequisite-list__body">
                 <span className="discern-prerequisite-list__requirement">

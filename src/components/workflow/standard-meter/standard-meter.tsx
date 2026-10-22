@@ -3,6 +3,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { Meter, type MeterTone } from "../../feedback/meter/meter.tsx";
+import { getGlyph, type GlyphName } from "../../../glyphs/mod.ts";
 import type {
   StandardDirection,
   StandardTrend,
@@ -25,6 +26,24 @@ export interface StandardMeterProps
   readonly trend?: StandardTrend;
   readonly formatValue?: (value: number) => string;
 }
+
+const trendLabels: Readonly<Record<StandardTrend, string>> = {
+  improving: "Improving",
+  drifting: "Drifting",
+  flat: "Flat",
+};
+
+/** The value moves the way its direction of virtue says, so arrows follow it. */
+const trendMarks: Readonly<
+  Record<StandardDirection, Readonly<Record<StandardTrend, GlyphName>>>
+> = {
+  floor: { improving: "arrow-up", drifting: "arrow-down", flat: "arrow-right" },
+  ceiling: {
+    improving: "arrow-down",
+    drifting: "arrow-up",
+    flat: "arrow-right",
+  },
+};
 
 function defaultFormat(value: number): string {
   return String(value);
@@ -78,7 +97,13 @@ export const StandardMeter: DiscernComponent<
               className="discern-standard-meter__trend"
               data-discern-state={trend}
             >
-              {trend}
+              <span
+                className="discern-standard-meter__trend-mark"
+                aria-hidden="true"
+              >
+                {getGlyph(trendMarks[direction][trend]).unicode}
+              </span>
+              {trendLabels[trend]}
             </span>
           )
           : null}

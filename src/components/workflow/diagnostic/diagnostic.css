@@ -1,6 +1,5 @@
 @layer discern.components {
   .discern-diagnostic {
-    container: discern-diagnostic / inline-size;
     display: grid;
     gap: var(--discern-space-4);
     max-inline-size: 100%;
@@ -11,6 +10,7 @@
     background: var(--discern-color-surface);
     color: var(--discern-color-ink);
     font-family: var(--discern-font-ui);
+    --discern-raw-output-radius: var(--discern-radius-sm);
   }
   .discern-diagnostic__header {
     display: flex;
@@ -19,24 +19,7 @@
     align-items: baseline;
   }
   .discern-diagnostic__severity {
-    display: inline-flex;
     flex: none;
-    gap: calc(var(--discern-space-1) * 1.5);
-    align-items: baseline;
-    padding: calc(var(--discern-space-1) * 0.5) var(--discern-space-3);
-    border: 1px solid var(--discern-color-danger);
-    border-radius: var(--discern-radius-pill);
-    background: var(--discern-color-danger-soft);
-    color: var(--discern-color-danger);
-    font: var(--discern-font-label);
-  }
-  .discern-diagnostic__mark {
-    font-weight: var(--discern-font-weight-strong);
-  }
-  .discern-diagnostic__severity[data-discern-state="attention"] {
-    border-color: var(--discern-color-warning);
-    background: var(--discern-color-warning-soft);
-    color: var(--discern-color-warning-deep);
   }
   .discern-diagnostic__title {
     min-inline-size: 0;
@@ -88,5 +71,8 @@
     display: grid;
     gap: var(--discern-space-4);
     min-inline-size: 0;
+  }
+  .discern-diagnostic .discern-command {
+    border-radius: var(--discern-radius-sm);
   }
 }

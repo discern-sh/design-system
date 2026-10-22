@@ -19,19 +19,20 @@
     display: grid;
     grid-template-columns: 1.25rem minmax(0, 1fr) max-content;
     gap: var(--discern-space-2);
-    align-items: center;
+    align-content: center;
+    align-items: baseline;
     min-inline-size: 0;
     max-inline-size: 100%;
     min-block-size: 2rem;
   }
   .discern-artifact-tree__kind {
-    display: grid;
-    place-items: center;
     color: var(--discern-color-ink-faint);
+    text-align: center;
   }
   .discern-artifact-tree__kind > svg {
     inline-size: 1rem;
     block-size: 1rem;
+    vertical-align: -0.25em;
   }
   .discern-artifact-tree__node[data-discern-kind="directory"] > .discern-artifact-tree__row > .discern-artifact-tree__kind {
     color: var(--discern-color-accent-600);
@@ -69,12 +70,7 @@
   }
   @container discern-artifact-tree (max-width: 32rem) {
     .discern-artifact-tree__row {
-      grid-template-columns: 1rem minmax(0, 1fr);
-    }
-    .discern-artifact-tree__annotation {
-      grid-column: 2;
-      justify-self: start;
-      margin-block-end: var(--discern-space-2);
+      grid-template-columns: 1rem minmax(0, 1fr) auto;
     }
     .discern-artifact-tree__children {
       margin-inline-start: calc(var(--discern-space-4) * 0.5);

@@ -4,6 +4,7 @@ import type { DiscernComponent } from "../../component-type.ts";
 import { outputExtent } from "./raw-output.types.ts";
 import { classNames } from "../../class-names.ts";
 import { renderCodeRuns } from "../../code-runs.tsx";
+import { getGlyph } from "../../../glyphs/mod.ts";
 import {
   type CodeDialect,
   projectCodeRuns,
@@ -44,37 +45,41 @@ export const RawOutput: DiscernComponent<HTMLDetailsElement, RawOutputProps> =
       >
         <summary className="discern-raw-output__summary">
           <span className="discern-raw-output__marker" aria-hidden="true">
-            ›
+            {getGlyph("disclosure-right").unicode}
           </span>
-          <span className="discern-raw-output__subject">{label}</span>{" "}
-          <span className="discern-raw-output__extent">
-            {extent ??
-              (typeof children === "string"
-                ? outputExtent(children)
-                : undefined)}
-          </span>{" "}
-          {outcome !== undefined && (
-            <span className="discern-raw-output__outcome">{outcome}</span>
-          )}
+          <span className="discern-raw-output__heading">
+            <span className="discern-raw-output__subject">{label}</span>{" "}
+            <span className="discern-raw-output__extent">
+              {extent ??
+                (typeof children === "string"
+                  ? outputExtent(children)
+                  : undefined)}
+            </span>{" "}
+            {outcome !== undefined && (
+              <span className="discern-raw-output__outcome">{outcome}</span>
+            )}
+          </span>
           <span
             className="discern-raw-output__state"
             aria-hidden="true"
           />
         </summary>
-        <pre
-          className="discern-raw-output__content"
-          role="group"
-          aria-label={typeof label === "string"
-            ? `Scrollable raw output: ${label}`
-            : "Scrollable raw output"}
-          tabIndex={0}
-        >
-          <code>
-            {typeof children === "string" && dialect !== undefined
-              ? renderCodeRuns(projectCodeRuns(children, dialect))
-              : children}
-          </code>
-        </pre>
+        <div className="discern-raw-output__well">
+          <pre
+            className="discern-raw-output__content"
+            role="group"
+            aria-label={typeof label === "string"
+              ? `Scrollable raw output: ${label}`
+              : "Scrollable raw output"}
+            tabIndex={0}
+          >
+            <code>
+              {typeof children === "string" && dialect !== undefined
+                ? renderCodeRuns(projectCodeRuns(children, dialect))
+                : children}
+            </code>
+          </pre>
+        </div>
       </details>
     );
   });

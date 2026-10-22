@@ -2,7 +2,7 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
-import { TERMINAL_GLYPHS } from "../../../cli/terminal-glyphs.ts";
+import { WorkflowMark } from "../workflow-marks.tsx";
 
 /** Props for the {@linkcode RetryNotice} component. */
 export interface RetryNoticeProps
@@ -43,9 +43,7 @@ export const RetryNotice: DiscernComponent<
       <div className="discern-retry-notice__layout">
         <strong className="discern-retry-notice__label">
           <span className="discern-retry-notice__mark" aria-hidden="true">
-            {safeToRetry
-              ? TERMINAL_GLYPHS.done.unicode
-              : TERMINAL_GLYPHS.attention.unicode}
+            <WorkflowMark name={safeToRetry ? "done" : "attention"} />
           </span>
           <span className="discern-retry-notice__state">
             {safeToRetry ? "Safe to retry" : "Do not retry"}

@@ -1,17 +1,25 @@
 @layer discern.components {
   .discern-rule {
     container: discern-rule / inline-size;
+    position: relative;
     min-inline-size: 0;
     max-inline-size: 100%;
-    padding: var(--discern-space-5);
+    padding: var(--discern-space-5) var(--discern-space-5)
+      var(--discern-space-5) var(--discern-space-6);
     border: 1px solid var(--discern-color-border);
-    border-inline-start: 0.1875rem solid var(--discern-color-accent-500);
     border-radius: var(--discern-radius-md);
-    border-start-start-radius: 0;
-    border-end-start-radius: 0;
     background: var(--discern-color-surface);
     color: var(--discern-color-ink);
     font-family: var(--discern-font-ui);
+  }
+  .discern-rule::before {
+    position: absolute;
+    inset-block: var(--discern-space-4);
+    inset-inline-start: var(--discern-space-2);
+    inline-size: 0.1875rem;
+    border-radius: var(--discern-radius-pill);
+    background: var(--discern-color-accent-500);
+    content: "";
   }
   .discern-rule__layout {
     display: grid;

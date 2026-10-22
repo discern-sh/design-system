@@ -1,5 +1,6 @@
 @layer discern.components {
   .discern-command {
+    container: discern-command / inline-size;
     overflow: hidden;
     min-inline-size: 0;
     inline-size: 100%;
@@ -33,8 +34,8 @@
   }
   .discern-command__context-label {
     flex: none;
-    color: var(--discern-color-ink-faint);
-    font-weight: var(--discern-font-weight-medium);
+    color: var(--discern-color-ink-muted);
+    font: var(--discern-font-label);
   }
   .discern-command__context code {
     min-inline-size: 0;
@@ -52,29 +53,28 @@
   }
   .discern-command__text {
     min-inline-size: 0;
-    margin: 0;
+    margin: calc(var(--discern-space-1) * -1) calc(var(--discern-space-2) * -1);
+    padding: var(--discern-space-1) var(--discern-space-2);
+    border-radius: var(--discern-radius-sm);
     overflow-x: auto;
     font-family: var(--discern-font-mono);
     font-size: var(--discern-font-size-sm);
     font-weight: var(--discern-font-weight-strong);
     line-height: var(--discern-leading-body);
     white-space: pre;
-    mask: linear-gradient(to right, var(--discern-color-ink)
-      calc(100% - var(--discern-space-6)), transparent) 100% 0 /
-      calc(100% + var(--discern-space-6)) 100% no-repeat;
-  }
-  .discern-command__text:focus-visible {
-    mask: none;
   }
   @supports (animation-timeline: scroll()) {
-    .discern-command__text {
+    .discern-command__text:not(:focus-visible) {
+      mask: linear-gradient(to right, var(--discern-color-ink)
+        calc(100% - var(--discern-space-6)), transparent) 0 0 /
+        calc(100% + var(--discern-space-6)) 100% no-repeat;
       animation: discern-command-overflow linear both;
       animation-timeline: scroll(self inline);
     }
   }
   @keyframes discern-command-overflow {
-    to {
-      mask-position: 0 0;
+    from {
+      mask-position: 100% 0;
     }
   }
   .discern-command__text code {
@@ -91,6 +91,7 @@
   }
   .discern-command__details > .discern-expected-result {
     border-radius: var(--discern-radius-sm);
+    background: var(--discern-color-inset);
   }
   .discern-command__explanation {
     color: var(--discern-color-ink-muted);
@@ -110,5 +111,13 @@
   .discern-command__failure-note > strong {
     color: var(--discern-color-warning-deep);
     font: var(--discern-font-label);
+  }
+  @container discern-command (max-width: 30rem) {
+    .discern-command__execution {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .discern-command__copy {
+      justify-self: start;
+    }
   }
 }

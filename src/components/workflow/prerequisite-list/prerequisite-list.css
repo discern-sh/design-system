@@ -32,16 +32,18 @@
     padding-block: var(--discern-space-2);
   }
   .discern-prerequisite-list__marker {
-    display: grid;
-    place-items: center;
     inline-size: var(--discern-space-5);
-    block-size: var(--discern-space-5);
-    border: 1px solid var(--discern-color-border-strong);
-    border-radius: 50%;
     color: var(--discern-color-ink-faint);
-    font: var(--discern-font-label);
+    font-size: var(--discern-font-size-sm);
+    line-height: var(--discern-leading-body);
+    text-align: center;
   }
-  .discern-prerequisite-list__item[data-discern-state="satisfied"] .discern-prerequisite-list__marker {
+  .discern-prerequisite-list__marker > svg {
+    inline-size: 1.125em;
+    block-size: 1.125em;
+    vertical-align: -0.1875em;
+  }
+  [data-discern-state="satisfied"] > .discern-prerequisite-list__marker {
     color: var(--discern-color-success-deep);
   }
   .discern-prerequisite-list__body {
@@ -62,7 +64,7 @@
   .discern-prerequisite-list__detail {
     font-weight: var(--discern-font-weight-body);
   }
-  [data-discern-state="unresolved"] > :where(.discern-prerequisite-list__marker, .discern-prerequisite-list__state) {
+  [data-discern-state="unresolved"] > .discern-prerequisite-list__marker {
     color: var(--discern-color-warning-deep);
   }
   @container discern-prerequisite-list (max-width: 38.75rem) {

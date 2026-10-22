@@ -5,7 +5,7 @@
     padding: var(--discern-space-3) var(--discern-space-4);
     border: 1px solid var(--discern-color-border);
     border-radius: var(--discern-radius-md);
-    background: var(--discern-color-inset);
+    background: var(--discern-color-surface-sunken);
     color: var(--discern-color-ink);
   }
   .discern-expected-result__label {
@@ -13,28 +13,27 @@
     font: var(--discern-font-label);
   }
   .discern-expected-result__output {
-    margin: 0;
+    margin: calc(var(--discern-space-1) * -1) calc(var(--discern-space-2) * -1);
+    padding: var(--discern-space-1) var(--discern-space-2);
+    border-radius: var(--discern-radius-sm);
     overflow-x: auto;
     font-family: var(--discern-font-mono);
     font-size: var(--discern-font-size-xs);
     line-height: var(--discern-leading-body);
     white-space: pre;
-    mask: linear-gradient(to right, var(--discern-color-ink)
-      calc(100% - var(--discern-space-6)), transparent) 100% 0 /
-      calc(100% + var(--discern-space-6)) 100% no-repeat;
-  }
-  .discern-expected-result__output:focus-visible {
-    mask: none;
   }
   @supports (animation-timeline: scroll()) {
-    .discern-expected-result__output {
+    .discern-expected-result__output:not(:focus-visible) {
+      mask: linear-gradient(to right, var(--discern-color-ink)
+        calc(100% - var(--discern-space-6)), transparent) 0 0 /
+        calc(100% + var(--discern-space-6)) 100% no-repeat;
       animation: discern-expected-result-overflow linear both;
       animation-timeline: scroll(self inline);
     }
   }
   @keyframes discern-expected-result-overflow {
-    to {
-      mask-position: 0 0;
+    from {
+      mask-position: 100% 0;
     }
   }
   .discern-expected-result__output code {

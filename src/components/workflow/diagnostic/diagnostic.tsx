@@ -2,7 +2,8 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
-import { TERMINAL_GLYPHS } from "../../../cli/terminal-glyphs.ts";
+import type { BadgeTone } from "../../display/badge/badge.types.ts";
+import { Badge } from "../../display/badge/badge.tsx";
 import { Command } from "../command/command.tsx";
 import { PathReference } from "../path-reference/path-reference.tsx";
 import { RawOutput } from "../raw-output/raw-output.tsx";
@@ -34,9 +35,9 @@ const severityLabels: Readonly<Record<DiagnosticSeverity, string>> = {
   attention: "Attention",
 };
 
-const severityMarks: Readonly<Record<DiagnosticSeverity, string>> = {
-  failure: TERMINAL_GLYPHS.failed.unicode,
-  attention: TERMINAL_GLYPHS.attention.unicode,
+const severityTones: Readonly<Record<DiagnosticSeverity, BadgeTone>> = {
+  failure: "danger",
+  attention: "warning",
 };
 
 /** Structured failure account that locates, proves, reproduces, and corrects one problem. */
@@ -73,15 +74,14 @@ export const Diagnostic: DiscernComponent<HTMLElement, DiagnosticProps> =
         {...props}
       >
         <header className="discern-diagnostic__header">
-          <span
+          <Badge
+            tone={severityTones[severity]}
+            dot
             className="discern-diagnostic__severity"
             data-discern-state={severity}
           >
-            <span className="discern-diagnostic__mark" aria-hidden="true">
-              {severityMarks[severity]}
-            </span>
             {severityLabels[severity]}
-          </span>
+          </Badge>
           <strong className="discern-diagnostic__title">{title}</strong>
         </header>
         <div className="discern-diagnostic__impact">

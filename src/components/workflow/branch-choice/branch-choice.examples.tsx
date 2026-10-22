@@ -1,5 +1,6 @@
 import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
 import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
 import { BranchChoice } from "./branch-choice.tsx";
 import meta, { componentExampleVocabulary } from "./branch-choice.meta.ts";
 
@@ -105,6 +106,32 @@ export const catalogueExamples = defineCatalogueExamples(
     { id: "default", Example: ProcedureForkState },
     { id: "next-action", Example: NextActionState },
   ],
+);
+
+const firstRoute = {
+  selector: "[data-example-procedure-fork] a[href='#verification']",
+} as const;
+
+export const reviewPostures = defineComponentReviewPostures(
+  meta,
+  componentExampleVocabulary,
+  [{
+    id: "press-branch-choice",
+    label: "Route card pointer contact",
+    example: "default",
+    category: "interaction",
+    sequence: [
+      { action: "pointer-down", target: firstRoute },
+      {
+        checkpoint: {
+          id: "branch-choice-pressed",
+          label: "Route pointer held",
+        },
+      },
+      { action: "pointer-up", target: firstRoute },
+    ],
+    capture: { selectors: ["[data-example-procedure-fork]"] },
+  }] as const,
 );
 
 export default function BranchChoiceExamples() {

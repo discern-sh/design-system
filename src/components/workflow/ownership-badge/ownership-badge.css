@@ -2,6 +2,9 @@
   .discern-ownership-badge {
     white-space: nowrap;
   }
+  .discern-ownership-badge[data-discern-ownership="tool-owned"] .discern-badge__dot {
+    background: currentColor;
+  }
   .discern-ownership-badge[data-discern-ownership="project-owned"] {
     --discern-badge-bg: var(--discern-color-accent-100);
     --discern-badge-text: var(--discern-color-accent-800);

@@ -4,11 +4,13 @@ import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { RawOutput } from "../raw-output/raw-output.tsx";
 import { CopyButton } from "../../docs/copy-button/copy-button.tsx";
+import type { BadgeTone } from "../../display/badge/badge.types.ts";
+import { Badge } from "../../display/badge/badge.tsx";
+import { WORKFLOW_COPY_ICONS } from "../workflow-marks.tsx";
 import {
   RESULT_SUMMARY_STATE_LABELS,
   type ResultSummaryState,
 } from "./result-summary.types.ts";
-import { RESULT_SUMMARY_STATE_MARKS } from "./result-summary.marks.ts";
 
 /** One supporting count in a {@linkcode ResultSummary}. */
 export interface ResultSummaryCount {
@@ -28,6 +30,17 @@ export interface ResultSummaryProps
   readonly copyLabel?: ReactNode;
   readonly copiedLabel?: ReactNode;
 }
+
+const stateWitnesses: Readonly<
+  Record<ResultSummaryState, { tone: BadgeTone; dot: boolean }>
+> = {
+  passed: { tone: "success", dot: true },
+  failed: { tone: "danger", dot: true },
+  blocked: { tone: "warning", dot: true },
+  changed: { tone: "accent", dot: true },
+  declared: { tone: "neutral", dot: false },
+  unchanged: { tone: "neutral", dot: false },
+};
 
 /** One result fact stated in text, with supporting figures and an optional next action. */
 export const ResultSummary: DiscernComponent<
@@ -50,6 +63,7 @@ export const ResultSummary: DiscernComponent<
 ) {
   const hasReadings = (counts !== undefined && counts.length > 0) ||
     duration !== undefined;
+  const { tone, dot } = stateWitnesses[state];
   return (
     <article
       ref={ref}
@@ -57,15 +71,14 @@ export const ResultSummary: DiscernComponent<
       {...props}
     >
       <header className="discern-result-summary__header">
-        <span
+        <Badge
+          tone={tone}
+          dot={dot}
           className="discern-result-summary__state"
           data-discern-state={state}
         >
-          <span className="discern-result-summary__mark" aria-hidden="true">
-            {RESULT_SUMMARY_STATE_MARKS[state].unicode}
-          </span>
           {RESULT_SUMMARY_STATE_LABELS[state]}
-        </span>
+        </Badge>
         <div className="discern-result-summary__fact">{fact}</div>
       </header>
       {nextAction !== undefined
@@ -106,6 +119,7 @@ export const ResultSummary: DiscernComponent<
               {machineReadable}
             </RawOutput>
             <CopyButton
+              {...WORKFLOW_COPY_ICONS}
               value={machineReadable}
               label={copyLabel}
               copiedLabel={copiedLabel}

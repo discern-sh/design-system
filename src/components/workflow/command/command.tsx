@@ -4,6 +4,7 @@ import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { CopyButton } from "../../docs/copy-button/copy-button.tsx";
 import { breakAfterSeparators } from "../path-reference/path-reference.breaks.tsx";
+import { WORKFLOW_COPY_ICONS } from "../workflow-marks.tsx";
 import {
   ExpectedResult,
   type ExpectedResultVariant,
@@ -87,6 +88,7 @@ export const Command: DiscernComponent<HTMLElement, CommandProps> = forwardRef<
           <code>{command}</code>
         </pre>
         <CopyButton
+          {...WORKFLOW_COPY_ICONS}
           className="discern-command__copy"
           value={command}
           label={copyLabel}

@@ -11,7 +11,7 @@
       auto-fit,
       minmax(min(100%, 12rem), 1fr)
     );
-    gap: var(--discern-space-4);
+    gap: var(--discern-space-6) var(--discern-space-4);
     margin: 0;
   }
   .discern-task-metadata__fact {

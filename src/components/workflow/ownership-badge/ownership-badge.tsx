@@ -21,7 +21,11 @@ const ownershipLabels: Record<ArtifactOwnership, string> = {
   "tool-owned": "Tool-owned",
 };
 
-/** Inline ownership label that always names the relationship in text. */
+/**
+ * Inline ownership label that always names the relationship in text. Tool
+ * relationships also lead with a dot: hollow for generated output, filled for
+ * a tool-owned file.
+ */
 export const OwnershipBadge: DiscernComponent<
   HTMLSpanElement,
   OwnershipBadgeProps
@@ -33,6 +37,7 @@ export const OwnershipBadge: DiscernComponent<
     <Badge
       ref={ref}
       tone="neutral"
+      dot={ownership === "generated" || ownership === "tool-owned"}
       className={classNames("discern-ownership-badge", className)}
       data-discern-ownership={ownership}
       {...props}

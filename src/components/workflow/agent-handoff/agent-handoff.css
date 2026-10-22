@@ -41,7 +41,7 @@
     padding: var(--discern-space-4);
     border: 1px solid var(--discern-color-border);
     border-radius: var(--discern-radius-sm);
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
     white-space: pre-wrap;
     background: var(--discern-color-inset);
     font-family: var(--discern-font-body);

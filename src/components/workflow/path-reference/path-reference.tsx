@@ -3,6 +3,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { CopyButton } from "../../docs/copy-button/copy-button.tsx";
+import { WORKFLOW_COPY_ICONS } from "../workflow-marks.tsx";
 import { breakAfterSeparators } from "./path-reference.breaks.tsx";
 
 /** Props for the {@linkcode PathReference} component. */
@@ -67,6 +68,7 @@ export const PathReference: DiscernComponent<
       {copyable
         ? (
           <CopyButton
+            {...WORKFLOW_COPY_ICONS}
             className="discern-path-reference__copy"
             value={path}
             label={copyLabel}

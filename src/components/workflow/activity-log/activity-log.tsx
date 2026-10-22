@@ -2,8 +2,7 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
-import { TERMINAL_GLYPHS } from "../../../cli/terminal-glyphs.ts";
-import { TRIANGLES } from "../../../cli/triangles.ts";
+import { WorkflowMark, type WorkflowMarkName } from "../workflow-marks.tsx";
 import {
   type ActivityLogLineTone as ActivityLogLineToneVocabulary,
   type ActivityLogStatus,
@@ -34,19 +33,19 @@ export interface ActivityLogProps extends HTMLAttributes<HTMLElement> {
   readonly hint?: ReactNode;
 }
 
-const stableMarkers: Record<ActivityLogLineTone, string> = {
-  success: TERMINAL_GLYPHS.done.unicode,
-  note: TRIANGLES.filledSmall.right.unicode,
-  warning: TERMINAL_GLYPHS.attention.unicode,
-  failure: TERMINAL_GLYPHS.failed.unicode,
+const stableMarkers: Readonly<Record<ActivityLogLineTone, WorkflowMarkName>> = {
+  success: "done",
+  note: "note",
+  warning: "attention",
+  failure: "failed",
 };
 
-const statusMarkers: Record<ActivityLogStatus, string> = {
-  active: TERMINAL_GLYPHS.active.unicode,
-  waiting: "◷",
-  blocked: TERMINAL_GLYPHS.attention.unicode,
-  complete: TERMINAL_GLYPHS.done.unicode,
-  cancelled: TERMINAL_GLYPHS.idle.unicode,
+const statusMarkers: Readonly<Record<ActivityLogStatus, WorkflowMarkName>> = {
+  active: "active",
+  waiting: "waiting",
+  blocked: "attention",
+  complete: "done",
+  cancelled: "idle",
 };
 
 /**
@@ -80,7 +79,7 @@ export const ActivityLog: DiscernComponent<HTMLElement, ActivityLogProps> =
             className="discern-activity-log__marker"
             aria-hidden="true"
           >
-            {statusMarkers[status]}
+            <WorkflowMark name={statusMarkers[status]} />
           </span>
           <span className="discern-activity-log__status">
             {activityStatusLabels[status]}
@@ -106,7 +105,7 @@ export const ActivityLog: DiscernComponent<HTMLElement, ActivityLogProps> =
                     role="img"
                     aria-label={line.tone}
                   >
-                    {stableMarkers[line.tone]}
+                    <WorkflowMark name={stableMarkers[line.tone]} />
                   </span>
                   <span className="discern-activity-log__stable-text">
                     {line.text}

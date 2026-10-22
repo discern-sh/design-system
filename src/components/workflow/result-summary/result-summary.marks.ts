@@ -1,6 +1,6 @@
 /**
- * State marks shared by the web and terminal Result summary renderers, so a
- * result reads with the same glyph on every surface.
+ * State marks the terminal Result summary renderer leads each state with.
+ * The browser renderer draws the matching Workflow marks instead.
  *
  * @module
  */
