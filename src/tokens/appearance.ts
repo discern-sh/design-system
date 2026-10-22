@@ -878,7 +878,7 @@ const accent700Expression = readableInk(boundedScaledCurve(
   1,
 ));
 const borderStrongExpression = scaledCurve(
-  [0.3, 0.34, 0.4, 0.35, 0.32],
+  [0.24, 0.28, 0.33, 0.3, 0.27],
   "structure",
 );
 const accent800Expression = readableInk(boundedScaledCurve(
@@ -1098,7 +1098,7 @@ export const appearanceColorRoleLaws: readonly AppearanceColorRoleLaw[] = Object
         "--discern-color-border",
         "Structural hairline ink.",
         "active-ink",
-        scaledCurve([0.12, 0.16, 0.2, 0.16, 0.14], "structure"),
+        scaledCurve([0.1, 0.13, 0.16, 0.14, 0.12], "structure"),
         undefined,
       ),
       role(
@@ -1326,12 +1326,23 @@ export interface AppearanceShadowRoleLaw {
 }
 
 /**
- * Elevation laws retained as Shape Theme Tokens. Every tier opens with the
- * same crisp 1px contact edge and adds softer ambient layers as it rises.
+ * Shadow laws retained as Shape Theme Tokens: a control contact edge, then
+ * the card, window and pop elevation tiers. Every role opens with the same
+ * crisp 1px contact edge and adds softer ambient layers as it rises.
  */
 export const appearanceShadowRoleLaws: readonly AppearanceShadowRoleLaw[] =
   Object.freeze(
     [
+      {
+        name: "--discern-shadow-control",
+        description:
+          "Contact edge for a raised control part such as a secondary action, a selected segment or a switch thumb: a crisp 1px edge and a tight blur. It is not an elevation tier.",
+        layers: [
+          { geometry: "0 1px 0", weight: 1.5 },
+          { geometry: "0 1px 2px", weight: 1 },
+        ],
+        expression: scaledCurve([0.04, 0.06, 0.08, 0.11, 0.11], "structure"),
+      },
       {
         name: "--discern-shadow-card",
         description:

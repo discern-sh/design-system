@@ -8,8 +8,7 @@
     inline-size: var(--discern-control-size-md);
     block-size: var(--discern-control-size-md);
     padding: 0;
-    border: 1px solid color-mix(in oklab, var(--discern-color-border) 0%,
-      transparent);
+    border: 1px solid transparent;
     border-radius: var(--discern-radius-md);
     background: transparent;
     color: var(--discern-color-ink-muted);
@@ -26,8 +25,7 @@
   .discern-icon-button--outline {
     border-color: var(--discern-color-neutral-edge);
     background: var(--discern-color-surface);
-    box-shadow: 0 1px 0 color-mix(in oklab, var(--discern-shadow-pigment) 6%,
-      transparent);
+    box-shadow: var(--discern-shadow-control);
   }
   .discern-icon-button--outline:hover:not(:disabled) {
     background: color-mix(in oklab, var(--discern-color-accent-100) 80%,

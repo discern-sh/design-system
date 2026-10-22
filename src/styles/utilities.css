@@ -85,6 +85,12 @@
   [data-discern-emphasis="literal"] {
     color: var(--discern-code-literal, var(--discern-color-accent-700));
   }
+  @keyframes discern-enter {
+    from {
+      opacity: 0;
+      transform: translateY(0.25rem) scale(0.98);
+    }
+  }
   @keyframes discern-reveal-in {
     from {
       opacity: 0;

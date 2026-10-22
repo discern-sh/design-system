@@ -15,6 +15,9 @@ Deno.test("untokenised structure counts planted ink and ignores role-driven edge
       outline: none;
       box-shadow: var(--discern-shadow-card);
       box-shadow: 0 2px 0 color-mix(in oklab, var(--discern-shadow-color) 20%, transparent);
+      box-shadow: 0 1px 2px color-mix(in oklab, var(--discern-shadow-pigment) 8%, transparent);
+      border-color: transparent;
+      border: 1px solid transparent;
     }
   `,
     "future.css",

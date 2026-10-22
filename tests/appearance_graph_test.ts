@@ -368,15 +368,16 @@ Deno.test("surface hierarchy stays ordered across darkness and structure", () =>
           lightness("--discern-color-surface-sunken"),
         `raised must be lighter than sunken at darkness ${darkness}, structure ${structure}`,
       );
-      const strengths = appearanceShadowRoleLaws.map(({ expression }) =>
-        evaluateAppearanceExpression(expression, { darkness, structure })
+      const strengths = appearanceShadowRoleLaws.map(({ expression, layers }) =>
+        evaluateAppearanceExpression(expression, { darkness, structure }) *
+        layers.reduce((total, { weight }) => total + weight, 0)
       );
       assert(
         strengths.every((strength, index) =>
           index === 0 ||
           (structure === 0 ? strength === 0 : strength > strengths[index - 1]!)
         ),
-        `card < window < pop at darkness ${darkness}`,
+        `control < card < window < pop at darkness ${darkness}`,
       );
     }
   }

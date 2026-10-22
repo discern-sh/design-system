@@ -45,15 +45,13 @@
     --discern-button-fill-hover: color-mix(in oklab, var(--discern-color-accent-100) 80%, var(--discern-color-surface));
     --discern-color-button-edge: var(--discern-color-neutral-edge);
     --discern-button-text: var(--discern-color-ink);
-    --discern-shadow-button: 0 1px 0 color-mix(in oklab,
-      var(--discern-shadow-pigment) 6%, transparent);
-    --discern-shadow-button-pressed: 0 0 0 transparent;
+    --discern-shadow-button: var(--discern-shadow-control);
+    --discern-shadow-button-pressed: none;
   }
   .discern-button--ghost {
     --discern-button-fill: transparent;
     --discern-button-fill-hover: var(--discern-color-accent-100);
-    --discern-color-button-edge: color-mix(in oklab,
-      var(--discern-color-border) 0%, transparent);
+    --discern-color-button-edge: transparent;
     --discern-shadow-button: none;
     --discern-shadow-button-pressed: none;
     --discern-button-text: var(--discern-color-accent-600);

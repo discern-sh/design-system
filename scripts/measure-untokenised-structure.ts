@@ -28,7 +28,9 @@ function carriesOnlyRoleProperties(value: string): boolean {
 
 function paintsNoEdge(value: string): boolean {
   const normalized = value.trim().toLowerCase().replace(/\s*!important$/u, "");
-  return normalized === "none" ||
+  return normalized === "none" || normalized === "transparent" ||
+    /^[\d.]+(?:px|rem|em)?\s+(?:solid|dashed|dotted|double)\s+transparent$/u
+      .test(normalized) ||
     /^(?:0+(?:\.0+)?(?:px|rem|em)?)(?:\s+(?:none|hidden|solid|dashed|dotted|double|transparent))*$/u
       .test(normalized);
 }
@@ -42,7 +44,8 @@ function isUntokenisedEdge(declaration: CssDeclaration): boolean {
     return !carriesOnlyRoleProperties(declaration.value);
   }
   if (borderColor.test(declaration.property)) {
-    return !carriesOnlyRoleProperties(declaration.value);
+    return !paintsNoEdge(declaration.value) &&
+      !carriesOnlyRoleProperties(declaration.value);
   }
   if (borderShorthand.test(declaration.property)) {
     return !paintsNoEdge(declaration.value) &&

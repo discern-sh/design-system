@@ -33,6 +33,10 @@
     text-wrap: pretty;
   }
 
+  :where([data-discern-root]) :where(h1, h2, h3) {
+    text-wrap: balance;
+  }
+
   :where([data-discern-root]) h1 {
     font-size: var(--discern-font-size-display-lg);
   }
@@ -41,6 +45,7 @@
   }
   :where([data-discern-root]) h3 {
     font-size: var(--discern-font-size-display-sm);
+    line-height: var(--discern-leading-snug);
   }
   :where([data-discern-root]) :where(h4, h5, h6) {
     font-size: var(--discern-font-size-card-title);
@@ -54,6 +59,17 @@
   }
   :where([data-discern-root]) :where(button, input, select, textarea) {
     font: inherit;
+    font-family: var(--discern-font-ui);
+  }
+  :where([data-discern-root]) :where(b, strong) {
+    font-weight: var(--discern-font-weight-strong);
+  }
+  :where([data-discern-root]) :where(sub, sup) {
+    line-height: 0;
+  }
+  :where([data-discern-root]) :where(pre) {
+    scrollbar-width: thin;
+    scrollbar-color: var(--discern-color-border-strong) transparent;
   }
 
   :where([data-discern-root]) :where(a, button, summary) {
@@ -66,6 +82,11 @@
   :where([data-discern-root]) :where(a, button, summary, [tabindex]):focus-visible {
     outline: 2px solid var(--discern-color-accent-500);
     outline-offset: 2px;
+  }
+
+  :where([data-discern-root]) :where(input, select, textarea):focus-visible {
+    outline: 2px solid var(--discern-color-accent-500);
+    outline-offset: 0;
   }
 
   :where([data-discern-root]) :where([role="group"], [role="region"])[tabindex="0"]:focus-visible {

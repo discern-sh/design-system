@@ -152,7 +152,7 @@ export const baseTokens: readonly DesignToken[] = [
   ),
   token(
     "--discern-font-size-sm",
-    "0.95rem",
+    "0.9rem",
     "Typography",
     "Secondary interface copy.",
   ),
@@ -211,6 +211,12 @@ export const baseTokens: readonly DesignToken[] = [
     "700",
     "Typography",
     "Display heading weight.",
+  ),
+  token(
+    "--discern-font-label",
+    "var(--discern-font-weight-medium) var(--discern-font-size-xs)/var(--discern-leading-snug) var(--discern-font-ui)",
+    "Typography",
+    "Font shorthand for metadata labels, captions and table headers: the medium weight at the interface floor in the UI face. Pair it with muted ink and sentence case.",
   ),
   token(
     "--discern-leading-tight",
