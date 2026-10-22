@@ -1,4 +1,4 @@
-Paper and ink, one hard shadow, and a witness beyond colour for every state: the interface system behind discern.sh, for the browser and the terminal alike.
+Paper and ink, one crisp contact edge, and a witness beyond colour for every state: the interface system behind discern.sh, for the browser and the terminal alike.
 
 ## Content fundamentals
 
@@ -28,8 +28,8 @@ Monochrome by default. Every role is paper or ink at an alpha, evaluated from on
 Four faces, each with one job. Fonts are in `fonts/`; every stack ends in real system fallbacks.
 
 - Display, `display`: Iowan Old Style first, Crimson Pro behind it. Editorial headings only: `display-lg` for h1, `display-md` for h2, `display-sm` for h3, `display-xl` for a hero. Weight 700, leading 1.08, tracking -0.014em, `text-wrap: pretty`.
-- Reading, `body`: Inter at `body` (1.05rem, leading 1.58) inside a `discern-measure` of 62ch; `lead` opens a page; `body-strong` is weight 650, never bold 700 in prose.
-- Interface, `ui`: Inter with its interface alternates bound to the face in the package (liga, calt, dlig, tnum, zero, ss03, salt). `card-title` for component and card titles and h4 through h6, `label` for field labels in primary ink at the strong weight, `control` for buttons and tabs at weight 600, `ui` for hints, cells, and navigation, `ui-xs` for metadata, `kicker` uppercase and tracked 0.11em above a heading.
+- Reading, `body`: Inter at `body` (1.05rem, leading 1.58) inside a `discern-measure` of 62ch; `lead` opens a page; `body-strong` is weight 600, never bold 700 in prose.
+- Interface, `ui`: Inter with its interface alternates bound to the face in the package, without tabular figures (they widen the hyphen); digits that align opt into `font-variant-numeric: tabular-nums`. `card-title` for component and card titles and h4 through h6 at the strong weight (600); `control` for buttons, tabs, and chips at the medium weight (500); `label` for field labels in primary ink at the medium weight; `ui` for hints, cells, and navigation; `ui-xs` and the `discern-font-label` shorthand for metadata, captions, and table headers in muted ink and sentence case; `kicker` uppercase and tracked 0.08em, the only uppercase label.
 - Marketing, `marketing`: Inter at weight 600 (`discern-font-weight-marketing`) for campaign headlines. It is independent of the editorial serif so a consumer can rebrand a hero without touching reading pages.
 - Code, `mono`: JetBrains Mono for source, commands, paths, and terminal output, and for the `discern` wordmark. Do not use it to make something feel technical.
 - Headings never use the interface face and interface text never uses the display face; a component that needs a different role selects it explicitly.
@@ -43,20 +43,21 @@ Four faces, each with one job. Fonts are in `fonts/`; every stack ends in real s
 
 ## Shape, edges, and elevation
 
-- Radii: `discern-radius-xs` (4px) for fine controls and checkboxes, `discern-radius-sm` (6px) for inputs, `discern-radius-md` (8px) for buttons and cards, `discern-radius-lg` (12px) for windows and dialogs, `discern-radius-pill` for badges and tags. Corners are never larger than 12px except pills.
-- Edges before shadows. Every surface has a 1px `discern-color-border`; secondary buttons and nested cards are flat and bordered.
-- Shadows are hard offsets with no blur, ever. Three tiers describe containment, not lift: `discern-shadow-card` (2px 2px, the quietest, standalone raised cards only), `discern-shadow-window` (4px 5px, framed presentation surfaces), `discern-shadow-pop` (6px 6px, overlays: dialogs, hover cards, tooltips, the search palette). Nothing lifts on hover; there is no fourth tier.
-- The primary Button carries its own hard 2px drop in `discern-color-action-shadow` (`discern-shadow-button`); pressing travels the button down 2px and collapses the drop to nothing.
+- Radii: `discern-radius-xs` (4px) for fine controls and checkboxes, `discern-radius-sm` (6px) for insets, nested chips, and keycaps, `discern-radius-md` (8px) for buttons, inputs, selects, cards, and panels, `discern-radius-lg` (12px) for windows and dialogs, `discern-radius-pill` for badges and tags. Corners are never larger than 12px except pills.
+- Edges before shadows. Every surface, frame, divider, and inset has a 1px `discern-color-border` hairline; `discern-color-border-strong` is for control boundaries and edges that carry meaning. Nested cards and in-flow reading blocks are flat.
+- Shadows are layered: every tier opens with the same crisp 1px contact edge and adds softer ambient blur as it rises, mixed from `discern-shadow-pigment`, which stays dark in both themes. `discern-shadow-control` is the contact edge alone for a secondary action, a selected segment, or a switch thumb; `discern-shadow-card` is for standalone raised cards only; `discern-shadow-window` for framed presentation surfaces; `discern-shadow-pop` for overlays — dialogs, hover cards, toasts, the search palette. Nothing lifts on hover, and the control edge is not a fourth tier.
+- `discern-color-surface-floating` carries overlays and raised cards, a step lighter than the surface in dark; `discern-color-inset` is a well inside a raised surface — a track, tail, or hint row — that always sits below it.
+- The primary Button carries an inset highlight, a crisp 1px lip in `discern-color-action-shadow`, and the card ambient layer; pressing travels it down 1px and collapses the lip.
 - Material presence is optional and static: Card `texture="shaded"` and `texture="dots"`, Icon relief at large sizes, and one Light backdrop per composition at most. All of it follows `discern-structure`; none of it carries meaning.
 - Textures: the `discern-grain-wash` utility lays `assets/Textures/grain.png` over an accent wash for a hero. `discern-dot-grid` and `discern-hatch` draw with `discern-color-ink` at 16% and `discern-color-stripe`.
 
 ## States
 
-- Focus is a 2px solid `discern-color-accent-500` outline offset 2px on everything focusable; buttons use `discern-space-1` offset. In forced-colours mode it becomes `CanvasText`.
-- Disabled keeps readable ink on `discern-color-surface-sunken` with a dashed edge; never opacity, never an accessible-name suffix. Unavailable anchors drop `href` and leave the tab order.
-- Busy adds a loading ring in the icon slot, sets `aria-busy`, disables native activation, and keeps the label; the ring is still under reduced motion.
-- Selection (`::selection`) is `discern-color-accent-200` with `discern-color-ink`. Hover on a primary button mixes 88% action with on-action; secondary hover washes 55% `discern-color-accent-100` into the surface.
-- Semantic feedback (Banner, Callout, Toast, Badge, Result summary) leads with its tone's glyph or word, then its `-soft` wash, then `-deep` text; the wash alone is never the message.
+- Focus is one 2px solid `discern-color-accent-500` outline from the foundation: offset 2px on links, buttons, and other focusables, flush on text fields. In forced-colours mode it becomes `CanvasText`.
+- Disabled keeps readable muted ink on `discern-color-surface-sunken` behind a solid hairline; never opacity, never an accessible-name suffix. Unavailable anchors drop `href` and leave the tab order.
+- Busy keeps its variant's paint and label, adds a loading ring in the icon slot, sets `aria-busy`, and disables native activation; the ring is still under reduced motion.
+- Selection (`::selection`) is `discern-color-accent-200` with `discern-color-ink`. One fill ladder runs through every control: hover washes `discern-color-accent-100`, selected and current take `discern-color-accent-200` (with an inline-start rail where hover could imitate them), and press steps to `discern-color-accent-200`. Hover on a primary button mixes 86% action with on-action. Segmented controls keep transient states neutral, below their raised selection.
+- Semantic feedback (Banner, Callout, Toast, Badge, Result summary) leads with its tone's mark or word, then its `-soft` wash, then `-deep` text; the wash alone is never the message. The browser draws one stroke-matched mark set — a circled i, a spark, a circled check, a warning triangle, and a danger octagon — and only dismissal draws a cross.
 
 ## Motion
 
@@ -74,7 +75,7 @@ Four faces, each with one job. Fonts are in `fonts/`; every stack ends in real s
 ## Iconography
 
 - No bundled icon set. Icon is a vendor-neutral wrapper: supply an inline SVG with `viewBox="0 0 24 24"`, `fill="none"`, `stroke="currentColor"`, `stroke-width="2"`, round caps and joins, as the package's own example icons do (spark, arrow, check, close, info, moon). Icons inherit the text colour of their slot and take `1em` unless sized.
-- Status and structure use Unicode glyphs from the package's curated vocabulary, each with an ASCII fallback for terminals: ✓ done, × close or failed, → next, ☾ and ☀ for the theme toggle, and the ◮ family (◮ ⧩ ◭ ⧨) as the brand motif.
+- In the terminal, status and structure use Unicode glyphs from the package's curated vocabulary, each with an ASCII fallback: ✓ done, ✕ failed, → next, ☾ and ☀ for the theme toggle, and the ◮ family (◮ ⧩ ◭ ⧨) as the brand motif. In the browser, tone and lifecycle marks are drawn SVG on one 16-unit grid, the theme toggle draws a matched sun and moon, and a dismiss control draws its own cross.
 - The mark ◮ (U+25EE, up-pointing triangle with right half black) is type, not artwork. There is no logo file; set it in the current face inside Logo or Brand, and it recolours with `color`.
 - Supplied multicolour artwork is shown in light and masked to `discern-color-brand-artwork-ink` in dark when the component offers a monochrome treatment.
 

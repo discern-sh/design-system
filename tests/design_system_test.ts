@@ -2265,9 +2265,9 @@ Deno.test("diagnostics require a correction and derive their default role from s
     }),
   );
   assertMatch(failure, /^<article role="alert"/);
-  assertStringIncludes(
+  assertMatch(
     failure,
-    'data-discern-state="failure"><span class="discern-diagnostic__mark" aria-hidden="true">✕</span>Failure<',
+    /<span class="discern-badge discern-badge--danger discern-diagnostic__severity" data-discern-state="failure"><span class="discern-badge__mark" aria-hidden="true"><svg\b[^>]*>.*?<\/svg><\/span>Failure</,
   );
   assertStringIncludes(failure, "Suggested correction");
   assertStringIncludes(failure, "Handle the missing case, then retry.");
@@ -2281,9 +2281,9 @@ Deno.test("diagnostics require a correction and derive their default role from s
     }),
   );
   assertMatch(attention, /^<article role="status"/);
-  assertStringIncludes(
+  assertMatch(
     attention,
-    'data-discern-state="attention"><span class="discern-diagnostic__mark" aria-hidden="true">!</span>Attention<',
+    /<span class="discern-badge discern-badge--warning discern-diagnostic__severity" data-discern-state="attention"><span class="discern-badge__mark" aria-hidden="true"><svg\b[^>]*>.*?<\/svg><\/span>Attention</,
   );
 
   const explicitRole = renderToStaticMarkup(
@@ -2442,7 +2442,10 @@ Deno.test("brand-bearing page chrome keeps plain, tiled, mono, and adaptive mark
   const brand = await Deno.readTextFile(
     join(COMPONENT_ROOT, "core", "brand", "brand.css"),
   );
-  assertStringIncludes(brand, ".discern-brand--mono .discern-brand__name");
+  assertStringIncludes(
+    brand,
+    ".discern-brand--mono :is(.discern-brand__name, .discern-brand__mark)",
+  );
   assertMatch(
     brand,
     /\.discern-brand__mark\.discern-logo--plain\s*\{[^}]*font-size:\s*1\.15em;/s,
@@ -2610,10 +2613,11 @@ Deno.test("monospace is reserved for brand names and code-bearing surfaces", asy
   const allowed = [
     "src/components/agents/fleet/fleet.css::.discern-fleet__branch",
     "src/components/agents/verification-report/verification-report.css::.discern-verification-report__meta dd code",
-    "src/components/core/brand/brand.css::.discern-brand--mono .discern-brand__name",
+    "src/components/core/brand/brand.css::.discern-brand--mono :is(.discern-brand__name, .discern-brand__mark)",
     "src/components/display/diffstat/diffstat.css::.discern-diffstat__added, .discern-diffstat__removed",
+    "src/components/display/heading/heading.css::.discern-heading code",
+    "src/components/display/table/table.css::.discern-table :where(th, td) code",
     "src/components/display/terminal/terminal.css::.discern-terminal__body",
-    "src/components/editorial/chart/chart.css::.discern-chart__label--mono",
     "src/components/editorial/code-block/code-block.css::.discern-code-block",
     "src/components/editorial/code-listing/code-listing.css::.discern-code-listing__body",
     "src/components/editorial/diagram/diagram.css::.discern-diagram__text--quiet-annotation",
@@ -3047,19 +3051,10 @@ Deno.test("Result summary states enroll browser labels, examples, and CSS treatm
       "result-summary.css",
     ),
   );
-  const baseStateRule = /\.discern-result-summary__state\s*\{(?<body>[^}]*)\}/s
-    .exec(css)
-    ?.groups?.body;
-  assert(baseStateRule !== undefined, "missing base Result summary state rule");
-  assertStringIncludes(
-    baseStateRule,
-    "border: 1px solid var(--discern-color-border-strong);",
+  assert(
+    !/\.discern-result-summary__state\s*\{/u.test(css),
+    "Result summary states wear the system Badge pill instead of restating a second pill recipe",
   );
-  assertStringIncludes(
-    baseStateRule,
-    "background: var(--discern-color-surface-sunken);",
-  );
-  assertStringIncludes(baseStateRule, "color: var(--discern-color-ink);");
   const declaredRule = /data-discern-state="declared"\]\s*\{(?<body>[^}]*)\}/s
     .exec(css)
     ?.groups?.body;
@@ -3070,17 +3065,20 @@ Deno.test("Result summary states enroll browser labels, examples, and CSS treatm
     "declared Result summary treatment must remain a distinct neutral fact",
   );
   for (
-    const [state, role] of [
+    const [state, tone] of [
       ["passed", "success"],
       ["failed", "danger"],
       ["blocked", "warning"],
+      ["changed", "accent"],
+      ["declared", "neutral"],
+      ["unchanged", "neutral"],
     ] as const
   ) {
     assertMatch(
-      css,
+      html,
       new RegExp(
-        `data-discern-state="${state}"\\]\\s*\\{[^}]*border-color:\\s*var\\(--discern-color-${role}\\);`,
-        "su",
+        `class="discern-badge discern-badge--${tone} discern-result-summary__state" data-discern-state="${state}"`,
+        "u",
       ),
     );
   }

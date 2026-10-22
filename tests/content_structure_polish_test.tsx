@@ -174,7 +174,8 @@ Deno.test("content structures preserve full labels and current state within loca
           name: "Read correspondence",
           exact: true,
         }).boundingBox();
-        const tags = await page.locator(".discern-example-row").boundingBox();
+        const tags = await page.locator(".discern-card .discern-cluster")
+          .first().boundingBox();
         const title = await page.getByRole("heading", {
           name: "Regional research correspondence",
           exact: true,

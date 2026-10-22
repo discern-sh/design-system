@@ -32,7 +32,8 @@ import {
 } from "./tokens.ts";
 
 const ROOT = new URL("../../", import.meta.url);
-const TAGLINE = "Paper, ink, one hard shadow, and a witness beyond colour.";
+const TAGLINE =
+  "Paper, ink, one crisp contact edge, and a witness beyond colour.";
 const TEXTURE = { source: "assets/textures/grain.png", name: "grain.png" };
 
 interface Options {

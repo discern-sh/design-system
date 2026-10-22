@@ -225,3 +225,46 @@ Deno.test("a future hard-shadow primary action auto-enrols in the shadow guard",
 Deno.test("canonical Web status and tone elements retain a non-colour witness", async () => {
   assertEquals(await missingWitnessHits(), []);
 });
+
+// Text crosses render at the fallback font's weight and size, so one close
+// action would look different in two overlays; FeedbackMark draws it once.
+const textCross =
+  /icon=\{?\s*["'`](?:×|✕|\\u00d7|\\u2715)["'`]|>\s*(?:×|✕)\s*</giu;
+
+function textCrossViolations(source: string, file: string): readonly string[] {
+  return [...source.matchAll(textCross)].map((match) =>
+    `${file}:${lineAt(source, match.index ?? 0)}: ${match[0]}`
+  );
+}
+
+async function* walkFiles(directory: string): AsyncGenerator<string> {
+  for await (const entry of Deno.readDir(directory)) {
+    const path = join(directory, entry.name);
+    if (entry.isDirectory) yield* walkFiles(path);
+    else if (entry.isFile) yield path;
+  }
+}
+
+Deno.test("Web Components draw dismissal with the shared mark, never a text cross", async () => {
+  const violations: string[] = [];
+  for await (const file of walkFiles(COMPONENT_ROOT)) {
+    if (!file.endsWith(".tsx") || file.endsWith(".examples.tsx")) continue;
+    violations.push(
+      ...textCrossViolations(
+        await Deno.readTextFile(file),
+        relative(PACKAGE_ROOT, file),
+      ),
+    );
+  }
+  assertEquals(violations, []);
+});
+
+Deno.test("a future close control cannot reintroduce a text cross", () => {
+  assertEquals(
+    textCrossViolations(
+      '<IconButton label="Close" icon="×" />\n<button>✕</button>\n<p>2×1</p>',
+      "future.tsx",
+    ),
+    ['future.tsx:1: icon="×"', "future.tsx:2: >✕<"],
+  );
+});
