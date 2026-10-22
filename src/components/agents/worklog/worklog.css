@@ -19,13 +19,12 @@
   .discern-worklog__entry:not(:last-child)::after {
     position: absolute;
     z-index: 0;
-    inset-block-start: calc(var(--discern-space-2) + var(--discern-space-6));
-    inset-block-end: calc(var(--discern-space-2) * -1);
+    inset-block: calc(var(--discern-space-2) + var(--discern-space-3))
+      calc((var(--discern-space-2) + var(--discern-space-3)) * -1);
     inset-inline-start: calc(
       var(--discern-space-3) - var(--discern-space-1) * 0.125
     );
-    inline-size: 1px;
-    background: var(--discern-color-border);
+    border-inline-start: 1px solid var(--discern-color-border);
     content: "";
   }
   .discern-worklog__marker {
@@ -60,11 +59,25 @@
     font-weight: var(--discern-font-weight-medium);
   }
   .discern-worklog__entry[data-discern-routine="continuation"] .discern-worklog__marker {
-    border-color: transparent;
-    background:
-      radial-gradient(circle, currentColor 0 0.1875rem, transparent 0.21875rem),
-      linear-gradient(var(--discern-color-border) 0 0) 50% / 1px 100% no-repeat;
+    border-style: none;
+    background: none;
     font-size: 0;
+    &::before {
+      position: absolute;
+      inset: 0;
+      margin: auto;
+      inline-size: 0;
+      block-size: 0;
+      border-style: solid;
+      border-width: 0.1875rem;
+      border-radius: 50%;
+      content: "";
+    }
+  }
+  .discern-worklog__glyph {
+    display: grid;
+    inline-size: 1em;
+    block-size: 1em;
   }
   .discern-worklog__body {
     display: flex;

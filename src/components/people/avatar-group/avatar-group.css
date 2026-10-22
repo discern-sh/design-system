@@ -1,6 +1,6 @@
 @layer discern.components {
   .discern-avatar-group {
-    --discern-avatar-ring: var(--discern-color-canvas);
+    --discern-avatar-ring: var(--discern-color-surface);
     isolation: isolate;
     display: inline-flex;
     align-items: center;

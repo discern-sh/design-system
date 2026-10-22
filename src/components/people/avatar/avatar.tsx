@@ -77,6 +77,7 @@ export const Avatar: DiscernComponent<HTMLSpanElement, AvatarProps> =
               src={src}
               alt=""
               loading="lazy"
+              data-discern-initials={monogram}
             />
           )
           : null}

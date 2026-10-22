@@ -21,10 +21,12 @@ export const Byline: DiscernComponent<HTMLElement, BylineProps> = forwardRef<
       className={classNames("discern-byline", className)}
       {...props}
     >
-      {lede !== undefined && lede !== null
-        ? <span className="discern-byline__lede">{lede}</span>
-        : null}
-      <span className="discern-byline__authors">{authors}</span>
+      <span className="discern-byline__authors">
+        {lede !== undefined && lede !== null
+          ? <span className="discern-byline__lede">{lede}</span>
+          : null}
+        {authors}
+      </span>
       {children !== undefined && children !== null
         ? <span className="discern-byline__meta">{children}</span>
         : null}

@@ -1,25 +1,35 @@
 @layer discern.components {
   .discern-mention {
-    display: inline-flex;
-    align-items: flex-start;
-    gap: var(--discern-space-1);
-    max-inline-size: 100%;
-    min-block-size: 1.5rem;
-    padding: calc(var(--discern-space-1) / 2) var(--discern-space-2);
+    padding: calc(var(--discern-space-1) * 0.25)
+      calc(var(--discern-space-2) - var(--discern-space-1) * 0.25);
+    border: 1px solid transparent;
     border-radius: 0.875em;
-    background: var(--discern-color-accent-100);
-    color: var(--discern-color-accent-700);
+    background: var(--discern-color-inset);
+    color: var(--discern-color-ink);
     font-family: var(--discern-font-ui);
     font-size: max(0.94em, var(--discern-font-size-xs));
     font-weight: var(--discern-font-weight-medium);
     line-height: 1.45;
+    overflow-wrap: anywhere;
     text-decoration: none;
-    vertical-align: baseline;
+    white-space: nowrap;
+  }
+  .discern-mention__name {
+    white-space: normal;
+  }
+  a.discern-mention {
+    background: var(--discern-color-accent-100);
+    color: var(--discern-color-accent-700);
+    transition-property: background-color, color;
+    transition-duration: var(--discern-duration-fast);
+    transition-timing-function: var(--discern-ease-out);
   }
   a.discern-mention .discern-mention__name {
     text-decoration: underline;
     text-decoration-color: color-mix(in oklab, currentColor 35%, transparent);
     text-underline-offset: 0.16em;
+    transition: text-decoration-color var(--discern-duration-fast)
+      var(--discern-ease-out);
   }
   a.discern-mention:hover {
     background: var(--discern-color-accent-200);
@@ -31,17 +41,18 @@
   a.discern-mention:active {
     background: var(--discern-color-accent-300);
   }
+  a.discern-mention:focus-visible {
+    outline-offset: 0;
+  }
   .discern-mention__sigil {
+    margin-inline-end: var(--discern-space-1);
     color: color-mix(in oklab, currentColor 55%, transparent);
     font-weight: var(--discern-font-weight-body);
   }
-  .discern-mention__name {
-    min-inline-size: 0;
-    overflow-wrap: anywhere;
-  }
   .discern-mention .discern-mention__avatar.discern-avatar {
     --discern-avatar-size: 1.35em;
-    margin-inline-start: calc(var(--discern-space-1) * -1.5);
+    margin-inline: calc(var(--discern-space-1) * -1.5) var(--discern-space-1);
     box-shadow: none;
+    vertical-align: middle;
   }
 }

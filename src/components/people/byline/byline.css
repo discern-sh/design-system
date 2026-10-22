@@ -1,32 +1,27 @@
 @layer discern.components {
   .discern-byline {
-    overflow-wrap: anywhere;
     display: flex;
-    column-gap: var(--discern-space-3);
-    row-gap: var(--discern-space-2);
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--discern-space-1) var(--discern-space-3);
+    min-inline-size: 0;
+    max-inline-size: 100%;
     color: var(--discern-color-ink-muted);
     font-family: var(--discern-font-ui);
     font-size: var(--discern-font-size-xs);
     font-style: normal;
-    line-height: 1.4;
-  }
-  .discern-byline,
-  .discern-byline__authors,
-  .discern-byline__meta {
-    min-inline-size: 0;
-    max-inline-size: 100%;
-    flex-wrap: wrap;
-    align-items: baseline;
-  }
-  .discern-byline__lede {
-    margin-inline-end: calc(var(--discern-space-1) * -1);
+    line-height: 1.6;
+    overflow-wrap: anywhere;
   }
   .discern-byline__authors {
-    display: inline-flex;
-    gap: var(--discern-space-2);
+    min-inline-size: 0;
+  }
+  .discern-byline__authors > * + * {
+    margin-inline-start: var(--discern-space-1);
   }
   .discern-byline__meta {
     display: inline-flex;
+    flex-wrap: wrap;
   }
   .discern-byline__meta > * + *::before {
     content: "·" / "";

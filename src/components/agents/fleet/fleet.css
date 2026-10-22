@@ -40,6 +40,7 @@
   .discern-fleet__meta {
     color: var(--discern-color-ink-muted);
     font-size: var(--discern-font-size-xs);
+    font-variant-numeric: tabular-nums;
   }
   .discern-fleet__branch {
     grid-area: branch;
@@ -61,7 +62,6 @@
   .discern-fleet__drift {
     grid-area: drift;
     justify-self: end;
-    font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
   .discern-fleet__meta {
@@ -76,8 +76,13 @@
     font-size: var(--discern-font-size-sm);
     overflow-wrap: anywhere;
   }
+  .discern-fleet__next > strong {
+    margin-inline-end: var(--discern-space-1);
+    color: var(--discern-color-ink-muted);
+    font: var(--discern-font-label);
+  }
   .discern-fleet__row[data-discern-status="blocked"] .discern-fleet__state strong {
-    color: var(--discern-color-danger);
+    color: var(--discern-color-warning-deep);
     font-weight: var(--discern-font-weight-strong);
   }
   .discern-fleet__row[data-discern-status="done"] .discern-fleet__state strong {

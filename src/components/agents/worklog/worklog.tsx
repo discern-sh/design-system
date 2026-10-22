@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import type { OlHTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import { FeedbackMark } from "../../feedback/feedback-marks.tsx";
 import { worklogPositions, type WorklogStatus } from "./worklog.types.ts";
 
 export type { WorklogStatus } from "./worklog.types.ts";
@@ -22,11 +23,15 @@ export interface WorklogProps extends OlHTMLAttributes<HTMLOListElement> {
   readonly entries: readonly WorklogEntry[];
 }
 
-const markers: Record<WorklogStatus, string> = {
+const markers: Record<WorklogStatus, ReactNode> = {
   done: "✓",
   active: "❯",
   queued: "·",
-  failed: "✕",
+  failed: (
+    <span className="discern-worklog__glyph">
+      <FeedbackMark name="danger" />
+    </span>
+  ),
   skipped: "–",
 };
 

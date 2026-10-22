@@ -87,7 +87,7 @@ export const Fleet: DiscernComponent<HTMLUListElement, FleetProps> = forwardRef<
           {drift(row.ahead, row.behind)}
           {row.nextAction !== undefined && (
             <span className="discern-fleet__next">
-              <strong>Next:</strong> {row.nextAction}
+              <strong>Next action</strong> {row.nextAction}
             </span>
           )}
           {row.meta !== undefined && row.meta !== null

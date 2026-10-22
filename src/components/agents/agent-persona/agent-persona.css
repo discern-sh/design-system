@@ -45,7 +45,9 @@
     font-size: var(--discern-font-size-xs);
     font-weight: var(--discern-font-weight-body);
     line-height: 1.35;
-    text-transform: capitalize;
+  }
+  .discern-agent-persona__status::first-letter {
+    text-transform: uppercase;
   }
   .discern-agent-persona--sm {
     gap: var(--discern-space-2);

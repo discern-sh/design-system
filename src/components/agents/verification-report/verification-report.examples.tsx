@@ -114,5 +114,23 @@ export const reviewPostures = defineComponentReviewPostures(
         },
       ],
     },
+    ...([
+      ["hover", "hovered", "Hover feedback"],
+      ["focus", "focused", "Focus visible"],
+    ] as const).map(([action, state, label]) => ({
+      id: `${action}-summary`,
+      label: `Evidence disclosure ${action}`,
+      example: "failure",
+      category: "interaction" as const,
+      sequence: [
+        {
+          action,
+          target: {
+            selector: ".discern-verification-report__evidence > summary",
+          },
+        },
+        { checkpoint: { id: `evidence-summary-${state}`, label } },
+      ],
+    })),
   ],
 );

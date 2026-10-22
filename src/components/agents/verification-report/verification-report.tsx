@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import { FeedbackMark } from "../../feedback/feedback-marks.tsx";
 import {
   verificationExtent,
   type VerificationReportCheckState,
@@ -43,11 +44,19 @@ export interface VerificationReportProps
   readonly evidenceOpen?: boolean;
 }
 
-const checkGlyphs: Record<VerificationReportCheckState, string> = {
-  pass: "✓",
-  fail: "✕",
+const checkMarks: Record<VerificationReportCheckState, ReactNode> = {
+  pass: <FeedbackMark name="success" />,
+  fail: <FeedbackMark name="danger" />,
   skip: "–",
 };
+
+function glyph(state: VerificationReportCheckState) {
+  return (
+    <span className="discern-verification-report__glyph" aria-hidden="true">
+      {checkMarks[state]}
+    </span>
+  );
+}
 
 /** Outcome and next action followed by native disclosure of complete verification evidence. */
 export const VerificationReport: DiscernComponent<
@@ -84,6 +93,7 @@ export const VerificationReport: DiscernComponent<
                 className="discern-verification-report__stamp"
                 data-discern-state={stamp}
               >
+                {glyph(stamp)}
                 {stampLabel ?? (stamp === "pass" ? "Pass" : "Fail")}
               </span>
             )
@@ -110,9 +120,12 @@ export const VerificationReport: DiscernComponent<
             <summary>
               Evidence{" "}
               <span className="discern-verification-report__extent">
-                {checks?.length
+                {(checks?.length
                   ? verificationExtent(checks)
-                  : `${meta?.length ?? 0} metadata fields`}
+                  : `${meta?.length ?? 0} metadata fields`).split(" · ").map((
+                    clause,
+                    index,
+                  ) => <span key={index}>{clause}</span>)}
               </span>
             </summary>
             {meta !== undefined && meta.length > 0
@@ -133,26 +146,19 @@ export const VerificationReport: DiscernComponent<
                   {checks.map((check, index) => (
                     <div data-discern-state={check.state} key={index}>
                       <dt>{check.label}</dt>
-                      <dd>
-                        {check.value !== undefined && check.value !== null
-                          ? (
-                            <span className="discern-verification-report__value">
-                              {check.value}
-                            </span>
-                          )
-                          : null}
-                        <span className="discern-verification-report__verdict">
-                          <span
-                            className="discern-verification-report__glyph"
-                            aria-hidden="true"
-                          >
-                            {checkGlyphs[check.state]}
-                          </span>
-                          <span className="discern-verification-report__check-state">
-                            {check.stateLabel === undefined
-                              ? check.state
-                              : `${check.stateLabel} (${check.state})`}
-                          </span>
+                      {check.value !== undefined && check.value !== null
+                        ? (
+                          <dd className="discern-verification-report__value">
+                            {check.value}
+                          </dd>
+                        )
+                        : null}
+                      <dd className="discern-verification-report__verdict">
+                        {glyph(check.state)}
+                        <span className="discern-verification-report__check-state">
+                          {check.stateLabel === undefined
+                            ? check.state
+                            : `${check.stateLabel} (${check.state})`}
                         </span>
                       </dd>
                     </div>
