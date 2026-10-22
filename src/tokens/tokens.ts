@@ -195,8 +195,14 @@ export const baseTokens: readonly DesignToken[] = [
     "Normal body weight.",
   ),
   token(
+    "--discern-font-weight-medium",
+    "500",
+    "Typography",
+    "Interface control, tab, and label weight: firmer than prose, quieter than strong emphasis.",
+  ),
+  token(
     "--discern-font-weight-strong",
-    "650",
+    "600",
     "Typography",
     "Strong body and UI weight.",
   ),

@@ -945,10 +945,7 @@ const actionShadowExpression = rounded(bounded(
   ),
   0.86,
 ));
-const neutralEdgeExpression = polaritySelection(
-  inkExpression,
-  borderStrongExpression,
-);
+const neutralEdgeExpression = borderStrongExpression;
 const neutralShadowExpression = polaritySelection(inkExpression, one);
 const avatarHighlightExpression = polaritySelection(
   one,
@@ -1266,7 +1263,7 @@ export const appearanceColorRoleLaws: readonly AppearanceColorRoleLaw[] = Object
       ),
       role(
         "--discern-color-neutral-edge",
-        "Polarity-responsive edge for a neutral control.",
+        "Edge for a neutral control: the emphasised structural rung at both poles, never full ink.",
         "active-ink",
         neutralEdgeExpression,
         undefined,
