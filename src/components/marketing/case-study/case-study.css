@@ -48,7 +48,7 @@
     min-height: 21rem;
     overflow: hidden;
     border-block-end: 1px solid var(--discern-color-border);
-    background: var(--discern-color-surface-sunken);
+    background: var(--discern-color-inset);
   }
   .discern-case-study__stats {
     display: grid;

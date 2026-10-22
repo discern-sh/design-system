@@ -20,7 +20,6 @@
     text-align: center;
   }
   .discern-marketing-intro--contrast {
-    --discern-marketing-accent-ink: var(--discern-color-inverse-ink);
     color: var(--discern-color-inverse-ink);
   }
   .discern-marketing-intro__eyebrow {

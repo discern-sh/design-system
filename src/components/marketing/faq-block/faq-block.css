@@ -47,7 +47,9 @@
     justify-content: space-between;
     gap: var(--discern-space-6);
     min-height: 4.5rem;
-    padding-block: var(--discern-space-5);
+    margin-inline: calc(-1 * var(--discern-space-2));
+    padding: var(--discern-space-5) var(--discern-space-2);
+    border-radius: var(--discern-radius-sm);
     color: var(--discern-color-ink);
     cursor: pointer;
     font-family: var(--discern-font-ui);

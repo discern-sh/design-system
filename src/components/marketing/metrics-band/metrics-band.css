@@ -3,9 +3,6 @@
     container: discern-metrics-band / inline-size;
     border-block: 1px solid var(--discern-color-border);
   }
-  .discern-metrics-band--accent {
-    background: var(--discern-color-accent-100);
-  }
   .discern-metrics-band__inner {
     display: grid;
     grid-template-columns: minmax(12rem, 0.65fr) minmax(0, 1.35fr);
@@ -47,8 +44,8 @@
   .discern-metrics-band__list dt {
     order: -1;
     margin-block-start: var(--discern-space-3);
-    font-size: var(--discern-font-size-sm);
-    font-weight: var(--discern-font-weight-medium);
+    color: var(--discern-color-ink-muted);
+    font: var(--discern-font-label);
   }
   .discern-metrics-band__detail {
     margin-block-start: var(--discern-space-1);

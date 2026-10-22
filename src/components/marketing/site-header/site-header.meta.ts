@@ -19,8 +19,8 @@ const meta = {
   ],
   accessibility: [
     "Navigation has a configurable accessible label.",
-    "A navigation item marked current renders aria-current: page for the exact destination and true for the section containing it; a firm rule and a thin quiet one keep the two distinct without relying on colour.",
-    "At narrow widths links remain available in a horizontally scrollable row in both variants.",
+    "A navigation item marked current renders aria-current: page for the exact destination and true for the section containing it; a firm bar under the exact page and a faint hairline under its section keep the two distinct without relying on colour.",
+    "At narrow widths links remain available in a horizontally scrollable row in both variants; the links stay the focus route, and a decorative fade marks the end that still holds links.",
   ],
 } satisfies ComponentMeta;
 

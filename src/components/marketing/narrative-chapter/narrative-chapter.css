@@ -20,7 +20,7 @@
   .discern-narrative-chapter__body {
     color: var(--discern-color-ink-muted);
     font-size: var(--discern-font-size-md);
-    line-height: 1.72;
+    line-height: var(--discern-leading-code);
   }
   .discern-narrative-chapter__body > :first-child {
     margin-block-start: 0;

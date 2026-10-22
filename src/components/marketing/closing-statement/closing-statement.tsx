@@ -5,6 +5,7 @@ import { classNames } from "../../class-names.ts";
 import { MarketingIntro } from "../marketing-intro/marketing-intro.tsx";
 import {
   marketingActionsClassName,
+  marketingNoteClassName,
   MarketingSection,
 } from "../marketing-section/marketing-section.tsx";
 import type { MarketingSectionSurface } from "../marketing-section/marketing-section.tsx";
@@ -81,7 +82,11 @@ export const ClosingStatement: DiscernComponent<
         </div>
         {reassurance
           ? (
-            <div className="discern-closing-statement__reassurance">
+            <div
+              className={marketingNoteClassName(
+                "discern-closing-statement__reassurance",
+              )}
+            >
               {reassurance}
             </div>
           )

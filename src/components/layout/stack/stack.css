@@ -4,7 +4,8 @@
     flex-direction: column;
     gap: var(--discern-stack-gap, var(--discern-space-4));
   }
-  .discern-stack > * {
+  /* :nth-child(n) outranks a child Component's own class margin. */
+  .discern-stack > :nth-child(n) {
     margin-block: 0;
   }
   .discern-stack--start {

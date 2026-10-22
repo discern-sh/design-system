@@ -6,7 +6,12 @@ export default function ComparisonTableExamples() {
   return (
     <ComparisonTable
       eyebrow="Compare approaches"
-      title="Make the trade-off visible."
+      title={
+        <>
+          Make the <span style={{ whiteSpace: "nowrap" }}>trade-off</span>{" "}
+          visible.
+        </>
+      }
       description={
         <p>
           A good comparison clarifies the decision without turning every row

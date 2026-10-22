@@ -43,7 +43,6 @@
     background: linear-gradient(color-mix(in oklab,
       var(--discern-color-material-highlight) 50%, transparent) 0 0)
       var(--discern-color-surface);
-    box-shadow: var(--discern-shadow-window);
   }
   .discern-audience-grid__topline {
     display: flex;
@@ -51,7 +50,7 @@
     justify-content: space-between;
     min-height: 2rem;
     margin-block-end: var(--discern-space-6);
-    color: var(--discern-color-ink-faint);
+    color: var(--discern-color-ink-muted);
   }
   .discern-audience-grid__icon {
     display: grid;
@@ -98,6 +97,9 @@
     font-weight: var(--discern-font-weight-medium);
     text-decoration-color: var(--discern-color-border-strong);
     text-underline-offset: 0.3em;
+    transition-property: text-decoration-color;
+    transition-duration: var(--discern-duration-fast);
+    transition-timing-function: var(--discern-ease-out);
   }
   .discern-audience-grid__link:hover {
     text-decoration-color: currentColor;

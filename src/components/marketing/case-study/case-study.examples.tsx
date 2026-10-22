@@ -30,12 +30,12 @@ export default function CaseStudyExamples() {
             display: "grid",
             minHeight: "21rem",
             placeItems: "center",
-            padding: "2rem",
-            background:
-              "radial-gradient(circle, var(--discern-color-accent-200), transparent 60%)",
+            padding: "var(--discern-space-8)",
+            color: "var(--discern-color-ink-muted)",
+            font: "var(--discern-font-label)",
           }}
         >
-          <strong>Example evidence or photography</strong>
+          Example evidence or photography
         </div>
       }
       action={

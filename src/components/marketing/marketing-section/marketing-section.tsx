@@ -28,6 +28,18 @@ export function marketingContrastClassName(
 }
 
 /**
+ * Compose the shared Marketing accent ground with any further classes. The
+ * ground tempers the subtlest accent wash against the canvas, so a tinted
+ * hero, band, or notice stays a quiet field beneath the surfaces raised on it
+ * under every Accent and in both themes.
+ */
+export function marketingAccentClassName(
+  ...names: readonly (string | false | null | undefined)[]
+): string {
+  return classNames("discern-marketing-accent", ...names);
+}
+
+/**
  * Compose the shared Marketing action row with any further classes. The row
  * keeps its actions on one line while they fit and gives every action the
  * full row once they wrap, so stacked actions share one width.
@@ -36,6 +48,16 @@ export function marketingActionsClassName(
   ...names: readonly (string | false | null | undefined)[]
 ): string {
   return classNames("discern-marketing-actions", ...names);
+}
+
+/**
+ * Compose the shared Marketing note with any further classes: the one
+ * small-print treatment for reassurance and metadata beneath an action row.
+ */
+export function marketingNoteClassName(
+  ...names: readonly (string | false | null | undefined)[]
+): string {
+  return classNames("discern-marketing-note", ...names);
 }
 
 /** Props for the {@linkcode MarketingSection} component. */
@@ -73,6 +95,7 @@ export const MarketingSection: DiscernComponent<
         `discern-marketing-section--space-${spacing}`,
         `discern-marketing-section--frame-${frame}`,
         surface === "contrast" && marketingContrastClassName(),
+        surface === "accent" && marketingAccentClassName(),
         className,
       )}
       {...props}

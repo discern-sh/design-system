@@ -17,5 +17,6 @@ export type MarketingSectionSurface =
   | "canvas"
   | "surface"
   | "sunken"
+  | "accent"
   | "contrast"
   | "inherit";

@@ -23,7 +23,13 @@
     background: var(--discern-color-surface);
   }
   .discern-marketing-section--sunken {
-    background: var(--discern-color-surface-sunken);
+    background: linear-gradient(var(--discern-color-surface-sunken) 0 0)
+      var(--discern-color-canvas);
+  }
+  .discern-marketing-accent {
+    background: linear-gradient(color-mix(in oklab,
+      var(--discern-color-accent-100) 45%, var(--discern-color-canvas)) 0 0)
+      var(--discern-color-canvas);
   }
   .discern-marketing-section--inherit {
     color: inherit;
@@ -72,6 +78,16 @@
     --discern-color-action-shadow: color-mix(in oklab,
       var(--discern-color-inverse-ink) 68%, transparent);
     --discern-color-on-action: var(--discern-color-inverse-surface);
+    --discern-color-success-soft: color-mix(in oklab,
+      var(--discern-color-success) 18%, var(--discern-color-accent-100));
+    --discern-color-success-deep: color-mix(in oklab,
+      var(--discern-color-success) 40%, var(--discern-color-inverse-ink));
+    --discern-color-warning-soft: color-mix(in oklab,
+      var(--discern-color-warning) 18%, var(--discern-color-accent-100));
+    --discern-color-warning-deep: color-mix(in oklab,
+      var(--discern-color-warning) 40%, var(--discern-color-inverse-ink));
+    --discern-color-danger-soft: color-mix(in oklab,
+      var(--discern-color-danger) 18%, var(--discern-color-accent-100));
     background: var(--discern-color-canvas);
     background-clip: padding-box;
     color: var(--discern-color-ink);
@@ -91,6 +107,19 @@
   }
   .discern-marketing-actions > * {
     flex: 1 1 auto;
+  }
+  .discern-marketing-note {
+    color: var(--discern-color-ink-muted);
+    font-family: var(--discern-font-ui);
+    font-size: var(--discern-font-size-sm);
+    line-height: var(--discern-leading-body);
+    text-wrap: pretty;
+  }
+  .discern-marketing-note > :first-child {
+    margin-block-start: 0;
+  }
+  .discern-marketing-note > :last-child {
+    margin-block-end: 0;
   }
   .discern-marketing-section__inner {
     width: min(100% - 2 * var(--discern-space-6),

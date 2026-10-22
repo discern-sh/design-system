@@ -3,6 +3,9 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { Brand } from "../../core/brand/brand.tsx";
+import { OverflowCue } from "../../layout/overflow-cue/overflow-cue.tsx";
+import { overflowCueMarkupAttributes } from "../../../internal/overflow-cue-state.js";
+import { marketingAccentClassName } from "../marketing-section/marketing-section.tsx";
 import type { MarketingFrame } from "../frame.ts";
 import { useInitialFragmentTarget } from "../../use-initial-fragment-target.ts";
 
@@ -22,6 +25,8 @@ export interface SiteHeaderNavItem {
 }
 
 const NAV_CURRENT = { page: "page", section: "true" } as const;
+
+const navScrollTarget = { [overflowCueMarkupAttributes.target]: "" };
 
 /** Visual treatments available to a Site header. */
 export type SiteHeaderVariant = "standard" | "campaign";
@@ -89,7 +94,15 @@ export const SiteHeader: DiscernComponent<HTMLElement, SiteHeaderProps> =
         data-discern-floating-surface="surface"
       >
         {notice
-          ? <div className="discern-site-header__notice">{notice}</div>
+          ? (
+            <div
+              className={marketingAccentClassName(
+                "discern-site-header__notice",
+              )}
+            >
+              {notice}
+            </div>
+          )
           : null}
         <div className="discern-site-header__inner">
           <a
@@ -110,19 +123,29 @@ export const SiteHeader: DiscernComponent<HTMLElement, SiteHeaderProps> =
           </a>
           {navItems.length
             ? (
-              <nav className="discern-site-header__nav" aria-label={navLabel}>
-                {navItems.map((item) => (
-                  <a
-                    href={item.href}
-                    key={item.href}
-                    aria-current={item.current === undefined
-                      ? undefined
-                      : NAV_CURRENT[item.current]}
-                  >
-                    {item.label}
-                  </a>
-                ))}
-              </nav>
+              <OverflowCue
+                axis="inline"
+                scrollContainer="descendant"
+                className="discern-site-header__nav-cue"
+              >
+                <nav
+                  className="discern-site-header__nav"
+                  aria-label={navLabel}
+                  {...navScrollTarget}
+                >
+                  {navItems.map((item) => (
+                    <a
+                      href={item.href}
+                      key={item.href}
+                      aria-current={item.current === undefined
+                        ? undefined
+                        : NAV_CURRENT[item.current]}
+                    >
+                      {item.label}
+                    </a>
+                  ))}
+                </nav>
+              </OverflowCue>
             )
             : null}
           {actions

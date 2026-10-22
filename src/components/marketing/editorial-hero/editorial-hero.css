@@ -36,8 +36,7 @@
     text-wrap: balance;
   }
   .discern-editorial-hero__title em {
-    color: var(--discern-marketing-accent-ink,
-      var(--discern-color-accent-700));
+    color: var(--discern-color-accent-700);
     font-weight: inherit;
   }
   .discern-editorial-hero__lower {
@@ -68,10 +67,6 @@
   }
   .discern-editorial-hero__meta {
     margin-block-start: var(--discern-space-6);
-    color: var(--discern-color-ink-faint);
-    font-size: var(--discern-font-size-sm);
-    line-height: var(--discern-leading-body);
-    text-wrap: pretty;
   }
   .discern-editorial-hero__visual {
     align-self: stretch;

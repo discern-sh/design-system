@@ -37,7 +37,8 @@
     padding: clamp(var(--discern-space-5), 4cqi, var(--discern-space-10));
     border: 1px solid var(--discern-color-border);
     border-radius: var(--discern-radius-lg);
-    background: var(--discern-color-surface-sunken);
+    background: linear-gradient(var(--discern-color-surface-sunken) 0 0)
+      var(--discern-color-canvas);
   }
   .discern-marketing-stage--inset .discern-marketing-stage__label {
     min-block-size: auto;

@@ -166,6 +166,9 @@
     .discern-process-steps--horizontal .discern-process-steps__list:has(> :nth-child(5):last-child) {
       grid-template-columns: 1fr;
     }
+    .discern-process-steps--horizontal .discern-process-steps__list li {
+      padding-inline-end: 0;
+    }
     .discern-process-steps--horizontal .discern-process-steps__list li::before {
       content: none;
     }

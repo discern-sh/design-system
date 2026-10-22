@@ -155,7 +155,7 @@ Deno.test("Marketing stylesheets leave uppercase to Kicker, dashed edges to decl
 
 /** Roles of the scope's ladders that a page theme would otherwise leak inside it. */
 const CONTRAST_LADDER =
-  /^--discern-color-(?:accent-(?:\d+|ink)|ink(?:-muted|-faint)?|canvas|surface(?:-sunken)?|border(?:-strong)?|neutral-edge|action(?:-edge|-shadow)?|on-action)$/u;
+  /^--discern-color-(?:accent-(?:\d+|ink)|ink(?:-muted|-faint)?|canvas|surface(?:-sunken)?|border(?:-strong)?|neutral-edge|action(?:-edge|-shadow)?|on-action|(?:success|warning|danger)-(?:soft|deep))$/u;
 
 function contrastLadderGaps(css: string): readonly string[] {
   const scope = cssQualifiedRuleBlocks(css).rules.find(({ selector }) =>
@@ -173,13 +173,18 @@ function contrastLadderGaps(css: string): readonly string[] {
       if (value === undefined) return true;
       const references = [...value.matchAll(/var\(\s*(--[-a-z0-9]+)/gu)]
         .map((match) => match[1]);
+      // A soft or deep tone keeps its own hue, which the scope leaves alone.
+      const hue = /^--discern-color-(success|warning|danger)-/u.exec(name)?.[1];
       const stable = references.length > 0 &&
         references.every((reference) =>
           /^--discern-color-inverse-(?:ink|surface)$/u.test(reference ?? "") ||
+          (hue !== undefined && reference === `--discern-color-${hue}` &&
+            !declared.has(reference)) ||
           (reference !== name && declared.has(reference ?? ""))
         );
-      const opaqueWash = !/^--discern-color-(?:accent-[1-3]00|surface-sunken)$/u
-        .test(name) || !/\btransparent\b/u.test(value);
+      const opaqueWash =
+        !/^--discern-color-(?:accent-[1-3]00|surface-sunken|(?:success|warning|danger)-soft)$/u
+          .test(name) || !/\btransparent\b/u.test(value);
       return !(stable && opaqueWash);
     });
 }
@@ -190,10 +195,19 @@ Deno.test("the Marketing contrast scope remaps every ladder role from the stable
       `.discern-marketing-contrast {
         --discern-color-accent-100: color-mix(in oklab, var(--discern-color-inverse-ink) 8%, transparent);
         --discern-color-accent-200: var(--discern-color-accent-200);
+        --discern-color-success-soft: color-mix(in oklab, var(--discern-color-success) 8%, transparent);
       }`,
-    ).filter((name) => /accent-[12]00$/u.test(name)),
-    ["--discern-color-accent-100", "--discern-color-accent-200"],
-    "the translucent and self-referencing fixture escaped the detector",
+    ).filter((name) => /accent-[12]00$|-(?:soft|deep)$/u.test(name)),
+    [
+      "--discern-color-accent-100",
+      "--discern-color-accent-200",
+      "--discern-color-success-soft",
+      "--discern-color-success-deep",
+      "--discern-color-warning-soft",
+      "--discern-color-warning-deep",
+      "--discern-color-danger-soft",
+    ],
+    "the translucent, self-referencing and missing-tone fixture escaped the detector",
   );
   const section = componentRegistry.find(({ meta }) =>
     meta.slug === "marketing-section"
@@ -204,4 +218,58 @@ Deno.test("the Marketing contrast scope remaps every ladder role from the stable
     [],
     "a ladder role keeps its page value inside the contrast scope",
   );
+});
+
+/** The declarations that make one hanging opening quote mark a family. */
+const QUOTE_MARK_RECIPE = ["color", "font-size", "line-height"] as const;
+
+function quoteMarkRecipe(
+  css: string,
+  selector: string,
+): Readonly<Record<string, string | undefined>> {
+  const rule = cssQualifiedRuleBlocks(css).rules.find((candidate) =>
+    candidate.selector.trim() === selector
+  );
+  const declared = new Map(
+    cssDeclarations(rule?.block ?? "").map(({ name, value }) => [name, value]),
+  );
+  return Object.fromEntries(
+    QUOTE_MARK_RECIPE.map((name) => [name, declared.get(name)]),
+  );
+}
+
+Deno.test("Testimonial and Voice break hang Pull quote's opening mark", () => {
+  const css = (slug: string) => {
+    const entry = componentRegistry.find(({ meta }) => meta.slug === slug);
+    assert(entry, `${slug} is absent from the registry`);
+    return entry.css;
+  };
+  const reference = quoteMarkRecipe(
+    css("pull-quote"),
+    ".discern-pull-quote__mark",
+  );
+  assert(
+    QUOTE_MARK_RECIPE.every((name) => reference[name] !== undefined),
+    "Pull quote no longer states the hanging mark recipe",
+  );
+  for (
+    const [slug, selector] of [
+      ["testimonial", ".discern-testimonial__mark"],
+      ["voice-break", ".discern-voice-break__mark"],
+    ] as const
+  ) {
+    assertEquals(
+      quoteMarkRecipe(css(slug), selector),
+      reference,
+      `${slug} draws its own opening mark`,
+    );
+    assert(
+      !/opacity/u.test(
+        cssQualifiedRuleBlocks(css(slug)).rules.find((rule) =>
+          rule.selector.trim() === selector
+        )?.block ?? "",
+      ),
+      `${slug} fades its mark with opacity, so its ink depends on the ground`,
+    );
+  }
 });

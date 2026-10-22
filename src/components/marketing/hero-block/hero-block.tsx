@@ -5,7 +5,11 @@ import { classNames } from "../../class-names.ts";
 import type { HeroBlockLayout, HeroBlockSurface } from "./hero-block.types.ts";
 import type { MarketingFrame } from "../frame.ts";
 import { Kicker } from "../../display/kicker/kicker.tsx";
-import { marketingActionsClassName } from "../marketing-section/marketing-section.tsx";
+import {
+  marketingAccentClassName,
+  marketingActionsClassName,
+  marketingNoteClassName,
+} from "../marketing-section/marketing-section.tsx";
 
 export type { HeroBlockLayout, HeroBlockSurface } from "./hero-block.types.ts";
 
@@ -56,6 +60,7 @@ export const HeroBlock: DiscernComponent<HTMLElement, HeroBlockProps> =
           "discern-hero-block",
           `discern-hero-block--${layout}`,
           `discern-hero-block--${surface}`,
+          surface === "accent" && marketingAccentClassName(),
           frame === "wide" && "discern-hero-block--frame-wide",
           !visual && "discern-hero-block--without-visual",
           className,
@@ -100,7 +105,13 @@ export const HeroBlock: DiscernComponent<HTMLElement, HeroBlockProps> =
               )
               : null}
             {meta
-              ? <div className="discern-hero-block__meta">{meta}</div>
+              ? (
+                <div
+                  className={marketingNoteClassName("discern-hero-block__meta")}
+                >
+                  {meta}
+                </div>
+              )
               : null}
           </div>
           {visual

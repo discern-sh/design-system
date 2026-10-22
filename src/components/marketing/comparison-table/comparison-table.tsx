@@ -3,6 +3,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import type { MarketingFrame } from "../frame.ts";
+import { Badge } from "../../display/badge/badge.tsx";
 import { MarketingIntro } from "../marketing-intro/marketing-intro.tsx";
 import { MarketingSection } from "../marketing-section/marketing-section.tsx";
 
@@ -23,7 +24,10 @@ export interface ComparisonTableProps
   readonly firstLabel: string;
   readonly secondLabel: string;
   readonly rows: readonly ComparisonRow[];
-  /** Recommendation badge; text badges also name the highlighted cells when rows stack. */
+  /**
+   * Recommendation badge: text renders as an accent Badge and also names the
+   * highlighted cells when rows stack; a node such as a Badge renders as given.
+   */
   readonly secondBadge?: ReactNode;
   /** Lay content out at the editorial page measure or the wider campaign frame. */
   readonly frame?: MarketingFrame;
@@ -51,10 +55,11 @@ export const ComparisonTable: DiscernComponent<
 ) {
   // Stacked rows hide the header, so the recommendation's words travel with
   // each highlighted cell's label instead of resting on its tint alone.
-  const highlightLabel =
-    typeof secondBadge === "string" || typeof secondBadge === "number"
-      ? `${secondLabel} · ${secondBadge}`
-      : secondLabel;
+  const textBadge = typeof secondBadge === "string" ||
+    typeof secondBadge === "number";
+  const highlightLabel = textBadge
+    ? `${secondLabel} · ${secondBadge}`
+    : secondLabel;
   return (
     <MarketingSection
       ref={ref}
@@ -87,11 +92,17 @@ export const ComparisonTable: DiscernComponent<
                 >
                   <span>{secondLabel}</span>
                   {secondBadge
-                    ? (
-                      <span className="discern-comparison-table__badge">
-                        {secondBadge}
-                      </span>
-                    )
+                    ? textBadge
+                      ? (
+                        <Badge className="discern-comparison-table__badge">
+                          {secondBadge}
+                        </Badge>
+                      )
+                      : (
+                        <span className="discern-comparison-table__badge">
+                          {secondBadge}
+                        </span>
+                      )
                     : null}
                 </th>
               </tr>

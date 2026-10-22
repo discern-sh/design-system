@@ -43,18 +43,19 @@ import {
     const { root, target, edges } = entry;
     const rootBounds = root.getBoundingClientRect();
     const targetBounds = target.getBoundingClientRect();
+    // Each fade covers the scrollport edge to edge on its cross axis, inside
+    // the target's borders and clear of any classic scrollbar.
+    const portLeft = targetBounds.left + target.clientLeft;
+    const portTop = targetBounds.top + target.clientTop;
     const [top, right, bottom, left] = [
-      targetBounds.top - rootBounds.top,
-      rootBounds.right - targetBounds.right,
-      rootBounds.bottom - targetBounds.bottom,
-      targetBounds.left - rootBounds.left,
+      portTop - rootBounds.top,
+      rootBounds.right - portLeft - target.clientWidth,
+      rootBounds.bottom - portTop - target.clientHeight,
+      portLeft - rootBounds.left,
     ].map((value) => Math.max(0, value));
-    const gap = "var(--discern-space-2)";
     const size = "var(--discern-space-5)";
-    const blockEdge =
-      `right:calc(${right}px + ${gap});left:calc(${left}px + ${gap});height:${size};`;
-    const inlineEdge =
-      `top:calc(${top}px + ${gap});bottom:calc(${bottom}px + ${gap});width:${size};`;
+    const blockEdge = `right:${right}px;left:${left}px;height:${size};`;
+    const inlineEdge = `top:${top}px;bottom:${bottom}px;width:${size};`;
     edges[0].style.cssText = `${blockEdge}top:${top}px`;
     edges[1].style.cssText = `${blockEdge}bottom:${bottom}px`;
     const [start, end, startAngle, endAngle] = direction === "rtl"

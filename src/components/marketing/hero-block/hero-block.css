@@ -6,16 +6,16 @@
     isolation: isolate;
     overflow: hidden;
     border-block-end: 1px solid var(--discern-color-border);
-    background: var(--discern-color-canvas);
   }
   .discern-hero-block--frame-wide {
     --discern-hero-block-max: var(--discern-page-max-wide);
   }
-  .discern-hero-block--sunken {
-    background: var(--discern-color-surface-sunken);
+  .discern-hero-block--canvas {
+    background: var(--discern-color-canvas);
   }
-  .discern-hero-block--accent {
-    background: var(--discern-color-accent-100);
+  .discern-hero-block--sunken {
+    background: linear-gradient(var(--discern-color-surface-sunken) 0 0)
+      var(--discern-color-canvas);
   }
   .discern-hero-block--atmospheric {
     border-block-end: 0;
@@ -44,7 +44,8 @@
     align-items: center;
     width: min(100% - 2 * var(--discern-space-6),
       var(--discern-hero-block-max));
-    min-height: min(47.5rem, calc(100svh - 4.25rem));
+    min-height: min(47.5rem,
+      calc(100svh - var(--discern-site-header-height, 4.25rem)));
     margin-inline: auto;
     padding-block: clamp(var(--discern-space-20), 10cqi,
       calc(var(--discern-space-24) + var(--discern-space-10)));
@@ -68,7 +69,7 @@
     font-weight: var(--discern-font-weight-marketing);
     letter-spacing: -0.025em;
     min-inline-size: 0;
-    max-width: 16ch;
+    max-width: 18ch;
     font-size: clamp(var(--discern-font-size-display-md), calc(1rem + 4cqi),
       var(--discern-font-size-display-lg));
     text-wrap: balance;
@@ -86,11 +87,6 @@
   .discern-hero-block__actions {
     margin-block-start: var(--discern-space-2);
   }
-  .discern-hero-block__meta {
-    color: var(--discern-color-ink-faint);
-    font-family: var(--discern-font-ui);
-    font-size: var(--discern-font-size-xs);
-  }
   .discern-hero-block__visual {
     min-width: 0;
   }
@@ -103,7 +99,7 @@
     justify-items: center;
   }
   :is(.discern-hero-block--centered, .discern-hero-block--without-visual) .discern-hero-block__title {
-    max-width: 15ch;
+    max-width: 20ch;
   }
   .discern-hero-block--showcase .discern-hero-block__inner {
     grid-template-columns: minmax(0, 1fr);
@@ -124,21 +120,11 @@
     max-inline-size: 70rem;
     margin-inline: auto;
   }
-  .discern-hero-block--showcase .discern-hero-block__eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--discern-space-2);
-    border: 1px solid var(--discern-color-border);
-    border-radius: var(--discern-radius-pill);
-    padding: var(--discern-space-1) var(--discern-space-3);
-    background: var(--discern-color-surface);
-  }
   .discern-hero-block--showcase .discern-hero-block__title {
     max-inline-size: 64rem;
     font-size: clamp(var(--discern-font-size-display-lg), calc(1rem + 7cqi),
       calc(var(--discern-font-size-display-lg) * 2.5));
     line-height: var(--discern-leading-tight);
-    letter-spacing: -0.04em;
   }
   .discern-hero-block--showcase .discern-hero-block__title em {
     color: var(--discern-color-accent-700);
@@ -157,7 +143,6 @@
     display: grid;
     gap: var(--discern-space-2);
     max-inline-size: 58rem;
-    color: var(--discern-color-ink-muted);
   }
   .discern-hero-block--showcase .discern-hero-block__meta code {
     color: var(--discern-color-ink);
@@ -181,9 +166,8 @@
     justify-items: start;
   }
   .discern-hero-block--statement .discern-hero-block__title {
-    max-inline-size: 17ch;
+    max-inline-size: 18ch;
     font-size: clamp(2.5rem, 6.3cqi, 4.75rem);
-    letter-spacing: -0.035em;
     line-height: 1.04;
     text-wrap: pretty;
   }
@@ -217,12 +201,15 @@
     .discern-hero-block--showcase .discern-hero-block__description {
       font-size: 1.08rem;
     }
-    .discern-hero-block--showcase .discern-hero-block__actions {
-      display: grid;
-      width: 100%;
+  }
+  @container discern-hero-block (min-width: 43rem) {
+    .discern-hero-block--showcase .discern-hero-block__title {
+      letter-spacing: -0.04em;
     }
-    .discern-hero-block--showcase .discern-hero-block__actions > * {
-      inline-size: 100%;
+  }
+  @container discern-hero-block (min-width: 63.5rem) {
+    .discern-hero-block--statement .discern-hero-block__title {
+      letter-spacing: -0.035em;
     }
   }
 }

@@ -18,8 +18,11 @@
     box-shadow: var(--discern-shadow-card);
   }
   .discern-cta-band--accent .discern-cta-band__inner {
-    background: linear-gradient(color-mix(in oklab,
-      var(--discern-color-accent-100) 40%, transparent) 0 0)
+    background:
+      linear-gradient(color-mix(in oklab,
+      var(--discern-color-accent-100) 25%, transparent) 0 0),
+      linear-gradient(color-mix(in oklab,
+      var(--discern-color-material-highlight) 30%, transparent) 0 0)
       var(--discern-color-surface);
   }
   .discern-cta-band--sunken .discern-cta-band__inner {
@@ -41,9 +44,6 @@
   }
   .discern-cta-band__note {
     margin-block-start: var(--discern-space-4);
-    color: var(--discern-color-ink-muted);
-    font-family: var(--discern-font-ui);
-    font-size: var(--discern-font-size-sm);
   }
   :is(.discern-cta-band--split, .discern-cta-band--with-visual) .discern-cta-band__inner {
     display: grid;

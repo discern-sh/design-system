@@ -1,6 +1,7 @@
 import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import meta, { componentExampleVocabulary } from "./marketing-intro.meta.ts";
 import { MarketingIntro } from "./marketing-intro.tsx";
+import { marketingContrastClassName } from "../marketing-section/marketing-section.tsx";
 
 function EditorialIntroState() {
   return (
@@ -21,10 +22,8 @@ function EditorialIntroState() {
 function ContrastIntroState() {
   return (
     <div
-      style={{
-        padding: "var(--discern-space-6)",
-        background: "var(--discern-color-inverse-surface)",
-      }}
+      className={marketingContrastClassName()}
+      style={{ padding: "var(--discern-space-6)" }}
     >
       <MarketingIntro
         eyebrow="After the discussion"

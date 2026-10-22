@@ -7,7 +7,8 @@
     background: var(--discern-color-surface);
   }
   .discern-section--sunken {
-    background: var(--discern-color-surface-sunken);
+    background: linear-gradient(var(--discern-color-surface-sunken) 0 0)
+      var(--discern-color-canvas);
   }
   .discern-section--space-none {
     padding-block: 0;

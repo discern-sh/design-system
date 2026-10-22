@@ -87,12 +87,15 @@
     min-block-size: 1.5rem;
     color: var(--discern-color-ink-muted);
     font-size: var(--discern-font-size-sm);
-    text-decoration: none;
+    text-decoration: underline transparent;
+    text-underline-offset: 0.25em;
+    transition-property: color, text-decoration-color;
+    transition-duration: var(--discern-duration-fast);
+    transition-timing-function: var(--discern-ease-out);
   }
   .discern-site-footer__nav a:is(:hover, :focus-visible) {
     color: var(--discern-color-ink);
-    text-decoration: underline;
-    text-underline-offset: 0.25em;
+    text-decoration-color: currentColor;
   }
   .discern-site-footer__base {
     display: flex;

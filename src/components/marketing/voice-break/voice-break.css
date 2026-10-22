@@ -71,10 +71,11 @@
     text-wrap: balance;
   }
   .discern-voice-break__mark {
-    color: var(--discern-marketing-accent-ink,
-      var(--discern-color-accent-700));
     align-self: start;
-    opacity: 0.5;
+    color: var(--discern-color-accent-400);
+    font-size: calc(var(--discern-font-size-display-lg) * 1.5);
+    font-weight: var(--discern-font-weight-body);
+    line-height: 0.8;
   }
   .discern-voice-break__text > :first-child {
     margin-block-start: 0;
@@ -108,6 +109,14 @@
       grid-column: 1;
       grid-row: 2;
       max-inline-size: 24rem;
+    }
+    .discern-voice-break--end .discern-voice-break__statement {
+      padding-inline-end: 0;
+    }
+    .discern-voice-break--end .discern-voice-break__attribution {
+      justify-content: flex-end;
+      margin-inline-start: auto;
+      text-align: end;
     }
   }
 }

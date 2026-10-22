@@ -16,7 +16,8 @@ const planeStyle: CSSProperties = {
   position: "absolute",
   border: "1px solid var(--discern-color-border-strong)",
   borderRadius: "var(--discern-radius-lg)",
-  background: "var(--discern-color-canvas)",
+  background: "var(--discern-color-surface)",
+  boxShadow: "var(--discern-shadow-card)",
 };
 
 function ConceptVisual() {
@@ -33,7 +34,7 @@ function ConceptVisual() {
         style={{
           ...planeStyle,
           inset: "28% 8% 10% 38%",
-          borderColor: "var(--discern-color-accent-500)",
+          borderColor: "var(--discern-color-accent-600)",
           transform: "rotate(3deg)",
         }}
       />
@@ -44,8 +45,7 @@ function ConceptVisual() {
           width: "3.5rem",
           aspectRatio: 1,
           borderRadius: "var(--discern-radius-pill)",
-          background: "var(--discern-color-accent-500)",
-          boxShadow: "var(--discern-shadow-card)",
+          background: "var(--discern-color-accent-600)",
         }}
       />
     </div>

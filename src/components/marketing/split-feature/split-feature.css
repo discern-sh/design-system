@@ -45,6 +45,9 @@
     font-size: var(--discern-font-size-xs);
     line-height: 1;
   }
+  .discern-split-feature__check > * {
+    translate: 0 -0.06em;
+  }
   .discern-split-feature__points strong,
   .discern-split-feature__points li span span {
     display: block;

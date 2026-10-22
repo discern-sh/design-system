@@ -29,8 +29,7 @@
   .discern-journey-overview__step::before {
     grid-row: 1;
     margin-block-end: var(--discern-space-6);
-    color: var(--discern-marketing-accent-ink,
-      var(--discern-color-accent-700));
+    color: var(--discern-color-accent-700);
     content: counter(discern-journey-overview, decimal-leading-zero);
     font: var(--discern-font-label);
     font-variant-numeric: tabular-nums;

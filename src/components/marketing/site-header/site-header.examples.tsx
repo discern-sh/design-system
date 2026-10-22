@@ -1,4 +1,5 @@
 import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
 import { Button } from "../../core/button/button.tsx";
 import meta, { componentExampleVocabulary } from "./site-header.meta.ts";
 import { SiteHeader } from "./site-header.tsx";
@@ -13,7 +14,9 @@ function StandardHeaderState() {
       navItems={[
         { label: "Overview", href: "#overview", current: "page" },
         { label: "Principles", href: "#principles" },
+        { label: "Guides", href: "#guides" },
         { label: "Resources", href: "#resources" },
+        { label: "Community", href: "#community" },
       ]}
       actions={<Button href="#start" size="sm">Get started</Button>}
       notice={
@@ -50,6 +53,35 @@ export const catalogueExamples = defineCatalogueExamples(
     { id: "standard", Example: StandardHeaderState },
     { id: "campaign", Example: CampaignHeaderState },
   ],
+);
+
+const principlesLink = {
+  selector: '.discern-site-header__nav a[href="#principles"]',
+};
+
+export const reviewPostures = defineComponentReviewPostures(
+  meta,
+  componentExampleVocabulary,
+  [{
+    id: "hover-nav",
+    label: "Navigation hover",
+    example: "standard",
+    category: "interaction",
+    sequence: [
+      { action: "hover", target: principlesLink },
+      { checkpoint: { id: "nav-hover", label: "Pointer over a link" } },
+    ],
+  }, {
+    id: "press-nav",
+    label: "Pointer contact",
+    example: "standard",
+    category: "interaction",
+    sequence: [
+      { action: "pointer-down", target: principlesLink },
+      { checkpoint: { id: "nav-pressed", label: "Pointer held" } },
+      { action: "pointer-up", target: principlesLink },
+    ],
+  }] as const,
 );
 
 export default function SiteHeaderExamples() {

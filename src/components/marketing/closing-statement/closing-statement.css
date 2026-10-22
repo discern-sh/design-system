@@ -28,14 +28,5 @@
   .discern-closing-statement__reassurance {
     max-inline-size: 42rem;
     margin-block-start: var(--discern-space-6);
-    color: var(--discern-color-ink-faint);
-    font-size: var(--discern-font-size-sm);
-    line-height: var(--discern-leading-body);
-  }
-  .discern-closing-statement__reassurance > :first-child {
-    margin-block-start: 0;
-  }
-  .discern-closing-statement__reassurance > :last-child {
-    margin-block-end: 0;
   }
 }

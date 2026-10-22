@@ -30,8 +30,7 @@
   }
   .discern-outcome-spotlight__value {
     order: 0;
-    color: var(--discern-marketing-accent-ink,
-      var(--discern-color-accent-700));
+    color: var(--discern-color-accent-700);
     font-size: clamp(4rem, 8cqi, 8rem);
     letter-spacing: -0.045em;
     line-height: 0.86;
@@ -71,8 +70,7 @@
     max-inline-size: 18rem;
     margin-block-start: var(--discern-space-3);
     color: var(--discern-color-ink-muted);
-    font-size: var(--discern-font-size-sm);
-    line-height: var(--discern-leading-body);
+    font: var(--discern-font-label);
   }
   @container (max-width: 47.5rem) {
     .discern-outcome-spotlight__lead {

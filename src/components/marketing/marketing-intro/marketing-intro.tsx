@@ -30,7 +30,11 @@ export interface MarketingIntroProps
   readonly align?: MarketingIntroAlign;
   /** Ordinary system heading or the larger editorial marketing scale. */
   readonly scale?: MarketingIntroScale;
-  /** Ordinary semantic ink or stable light ink for a custom dark surface. */
+  /**
+   * Ordinary semantic ink, or stable light ink alone for a dark ground the
+   * consumer paints. It sets no surface: a Marketing contrast scope already
+   * remaps the default ink.
+   */
   readonly tone?: MarketingIntroTone;
 }
 

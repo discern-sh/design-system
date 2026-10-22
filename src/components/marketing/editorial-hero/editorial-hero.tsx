@@ -5,6 +5,7 @@ import { classNames } from "../../class-names.ts";
 import { Kicker } from "../../display/kicker/kicker.tsx";
 import {
   marketingActionsClassName,
+  marketingNoteClassName,
   MarketingSection,
 } from "../marketing-section/marketing-section.tsx";
 import type { MarketingSectionSurface } from "../marketing-section/marketing-section.tsx";
@@ -108,7 +109,15 @@ export const EditorialHero: DiscernComponent<HTMLElement, EditorialHeroProps> =
                 )
                 : null}
               {meta
-                ? <div className="discern-editorial-hero__meta">{meta}</div>
+                ? (
+                  <div
+                    className={marketingNoteClassName(
+                      "discern-editorial-hero__meta",
+                    )}
+                  >
+                    {meta}
+                  </div>
+                )
                 : null}
             </div>
             {visual

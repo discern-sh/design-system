@@ -1,6 +1,7 @@
 import { assert, assertEquals } from "@std/assert";
 import { toFileUrl } from "@std/path";
 import { renderToStaticMarkup } from "react-dom/server";
+import type { Page } from "playwright-core";
 import { launchBrowser } from "../scripts/browser.ts";
 import { withViewport } from "../scripts/viewport.ts";
 import { emitDesignSystemRuntime } from "../src/runtime.ts";
@@ -9,6 +10,7 @@ import { catalogueExamples as bentoExamples } from "../src/components/marketing/
 import {
   AudienceGrid,
   Button,
+  CaseStudy,
   ClosingStatement,
   CtaBand,
   EditorialHero,
@@ -20,6 +22,7 @@ import {
   MarketingSection,
   MetricsBand,
   SiteHeader,
+  Testimonial,
 } from "../src/react.ts";
 
 Deno.test("Marketing content controls card height, optional tracks, and title wrapping", async () => {
@@ -433,7 +436,7 @@ Deno.test("Marketing contrast scopes keep hover, press, inset, and figure contra
       </>,
     );
     const page = await browser.newPage({
-      viewport: { width: 1120, height: 900 },
+      viewport: { width: 1120, height: 2400 },
     });
     // Settled paint is the contract; reduced motion removes transition timing.
     await page.emulateMedia({ reducedMotion: "reduce" });
@@ -502,13 +505,18 @@ Deno.test("Marketing contrast scopes keep hover, press, inset, and figure contra
             };
           }, LIGHTNESS_SOURCE);
         const secondary = scope.locator(".discern-button--secondary").first();
-        const rest = await paint(".discern-button--secondary");
+        const secondaryBox = (await secondary.boundingBox())!;
+        const fillPoint = {
+          x: secondaryBox.x + 4,
+          y: secondaryBox.y + secondaryBox.height / 2,
+        };
+        const [rest] = await paintedLightness(page, [fillPoint]);
         await secondary.hover();
         await page.waitForTimeout(50);
-        const hovered = await paint(".discern-button--secondary");
+        const [hovered] = await paintedLightness(page, [fillPoint]);
         assert(
-          hovered.fill - rest.fill >= 0.03,
-          `${theme}: secondary hover is invisible in ${name} (${rest.fill} -> ${hovered.fill})`,
+          hovered! - rest! >= 0.03,
+          `${theme}: secondary hover is invisible in ${name} (${rest} -> ${hovered})`,
         );
         const icon = scope.locator(".discern-icon-button").first();
         const box = (await icon.boundingBox())!;
@@ -675,7 +683,12 @@ Deno.test("FAQ answers open without clipping focus rings and settle at once unde
         left: ring.left - reach - (box.left + parseFloat(content.marginLeft)),
         top: ring.top - reach -
           (summary.bottom + parseFloat(content.marginTop)),
-        alignment: answer.left - summary.left,
+        alignment: answer.left -
+          (summary.left +
+            parseFloat(
+              getComputedStyle(details.querySelector("summary")!)
+                .paddingInlineStart,
+            )),
       };
     });
     assert(
@@ -685,6 +698,290 @@ Deno.test("FAQ answers open without clipping focus rings and settle at once unde
     assert(
       Math.abs(clip.alignment) <= 0.5,
       `answers drift from their questions (${clip.alignment}px)`,
+    );
+  } finally {
+    await browser.close();
+    await Deno.remove(output, { recursive: true });
+  }
+});
+
+/**
+ * Painted OKLab lightness at viewport points, read back from a screenshot so
+ * layered and translucent grounds are judged exactly as composited.
+ */
+async function paintedLightness(
+  page: Page,
+  points: readonly { readonly x: number; readonly y: number }[],
+): Promise<number[]> {
+  const shot = await page.screenshot();
+  return await page.evaluate(async ({ data, points }) => {
+    const image = new Image();
+    image.src = `data:image/png;base64,${data}`;
+    await image.decode();
+    const canvas = document.createElement("canvas");
+    canvas.width = image.width;
+    canvas.height = image.height;
+    const context = canvas.getContext("2d")!;
+    context.drawImage(image, 0, 0);
+    const linear = (value: number) => {
+      const channel = value / 255;
+      return channel <= 0.04045
+        ? channel / 12.92
+        : ((channel + 0.055) / 1.055) ** 2.4;
+    };
+    return points.map(({ x, y }) => {
+      const [r, g, b] = context.getImageData(Math.round(x), Math.round(y), 1, 1)
+        .data;
+      const [lr, lg, lb] = [linear(r!), linear(g!), linear(b!)];
+      const l = Math.cbrt(
+        0.4122214708 * lr + 0.5363325363 * lg + 0.0514459929 * lb,
+      );
+      const m = Math.cbrt(
+        0.2119034982 * lr + 0.6806995451 * lg + 0.1073969566 * lb,
+      );
+      const short = Math.cbrt(
+        0.0883024619 * lr + 0.2817188376 * lg + 0.6299787005 * lb,
+      );
+      return 0.2104542553 * l + 0.793617785 * m - 0.0040720468 * short;
+    });
+  }, { data: shot.toString("base64"), points });
+}
+
+/** A viewport point a few pixels inside an element's top-start corner. */
+async function insetPoint(page: Page, selector: string) {
+  const box = await page.locator(selector).first().boundingBox();
+  assert(box, `${selector} did not render`);
+  return { x: box.x + 6, y: box.y + 6 };
+}
+
+const appearances = [
+  { theme: "light", accent: false },
+  { theme: "dark", accent: false },
+  { theme: "light", accent: true },
+  { theme: "dark", accent: true },
+] as const;
+
+function appearanceRoot(
+  css: string,
+  { theme, accent }: (typeof appearances)[number],
+  markup: string,
+): string {
+  return `<html data-discern-root data-discern-theme="${theme}"${
+    accent ? ' data-discern-accent="" style="--discern-accent-hue:255"' : ""
+  }><style>${css}</style><style>body{margin:0;background:var(--discern-color-canvas)}</style><body>${markup}</body></html>`;
+}
+
+Deno.test("Marketing accent grounds stay at or below the surfaces raised on them under every Accent", async () => {
+  const output = await Deno.makeTempDir();
+  const browser = await launchBrowser();
+  try {
+    await emitDesignSystemRuntime({
+      outputRoot: toFileUrl(`${output}/`),
+      groups: ["Marketing", "Core"],
+      appearanceScopes: true,
+    });
+    const css = await Deno.readTextFile(`${output}/discern.css`);
+    const card = (
+      <div
+        className="probe-card"
+        style={{
+          blockSize: "4rem",
+          background: "var(--discern-color-surface)",
+        }}
+      />
+    );
+    const markup = renderToStaticMarkup(
+      <>
+        <HeroBlock
+          title="A tinted opening."
+          surface="accent"
+          className="probe-hero"
+          visual={card}
+        />
+        <MarketingSection surface="accent" className="probe-section">
+          {card}
+        </MarketingSection>
+        <MetricsBand
+          tone="accent"
+          className="probe-metrics"
+          items={[{ value: "24", label: "completed items" }]}
+        />
+        <SiteHeader
+          brand="Example brand"
+          notice="A short notice."
+          className="probe-header"
+        />
+      </>,
+    );
+    const page = await browser.newPage({
+      viewport: { width: 1120, height: 2400 },
+    });
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    for (const appearance of appearances) {
+      await page.setContent(appearanceRoot(css, appearance, markup));
+      const name = `${appearance.theme}${appearance.accent ? " Accent" : ""}`;
+      const hued = await page.evaluate(() => {
+        const probe = document.createElement("span");
+        probe.style.color = "var(--discern-color-accent-100)";
+        document.body.append(probe);
+        const value = getComputedStyle(probe).color;
+        probe.remove();
+        return value;
+      });
+      assertEquals(
+        /\b255\)/.test(hued),
+        appearance.accent,
+        `${name}: the Accent scope did not apply (${hued})`,
+      );
+      const [surface, ...grounds] = await paintedLightness(page, [
+        await insetPoint(page, ".probe-section .probe-card"),
+        await insetPoint(page, ".probe-hero"),
+        await insetPoint(page, ".probe-section"),
+        await insetPoint(page, ".probe-metrics"),
+        await insetPoint(page, ".discern-site-header__notice"),
+      ]);
+      for (
+        const [index, ground] of grounds.entries()
+      ) {
+        assert(
+          ground <= surface! + 0.012,
+          `${name}: accent ground ${index} (${
+            ground.toFixed(3)
+          }) rises above a raised surface (${surface!.toFixed(3)})`,
+        );
+      }
+    }
+  } finally {
+    await browser.close();
+    await Deno.remove(output, { recursive: true });
+  }
+});
+
+Deno.test("wells nested in Marketing surfaces sit below their surface in both themes", async () => {
+  const output = await Deno.makeTempDir();
+  const browser = await launchBrowser();
+  try {
+    await emitDesignSystemRuntime({
+      outputRoot: toFileUrl(`${output}/`),
+      groups: ["Marketing", "Core"],
+    });
+    const css = await Deno.readTextFile(`${output}/discern.css`);
+    const markup = renderToStaticMarkup(
+      <>
+        <CaseStudy
+          title="A case study."
+          summary={<p>A short summary.</p>}
+          media={<div style={{ minBlockSize: "6rem" }} />}
+          stats={[{ value: "11", label: "teams" }]}
+        />
+        <FeatureBento
+          title="Features"
+          items={[{
+            title: "A visual",
+            description: "With a nested well.",
+            size: "wide",
+            visual: <div style={{ minBlockSize: "6rem" }} />,
+          }, {
+            title: "A neighbour",
+            description: "Completes the row.",
+            size: "wide",
+          }]}
+        />
+        <Testimonial
+          quote="A short quotation."
+          author="Example person"
+          avatar="EP"
+        />
+      </>,
+    );
+    const pairs = [
+      [".discern-case-study__stats", ".discern-case-study__media"],
+      [".discern-feature-bento__copy", ".discern-feature-bento__visual"],
+      [".discern-testimonial__frame", ".discern-testimonial__avatar"],
+    ] as const;
+    const page = await browser.newPage({
+      viewport: { width: 1120, height: 2600 },
+    });
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    for (const appearance of appearances.slice(0, 2)) {
+      await page.setContent(appearanceRoot(css, appearance, markup));
+      for (const [surface, well] of pairs) {
+        const wellBox = (await page.locator(well).first().boundingBox())!;
+        const [raised, inset] = await paintedLightness(page, [
+          await insetPoint(page, surface),
+          { x: wellBox.x + wellBox.width / 2, y: wellBox.y + 4 },
+        ]);
+        assert(
+          inset! < raised! - 0.005 && raised! - inset! < 0.12,
+          `${appearance.theme}: ${well} (${
+            inset!.toFixed(3)
+          }) does not sit just below ${surface} (${raised!.toFixed(3)})`,
+        );
+      }
+    }
+  } finally {
+    await browser.close();
+    await Deno.remove(output, { recursive: true });
+  }
+});
+
+Deno.test("centred Hero titles keep a two-line measure wider than a narrow column", async () => {
+  const output = await Deno.makeTempDir();
+  const browser = await launchBrowser();
+  try {
+    await emitDesignSystemRuntime({
+      outputRoot: toFileUrl(`${output}/`),
+      components: ["hero-block"],
+      assets: ["fonts"],
+    });
+    const markup = renderToStaticMarkup(
+      <HeroBlock
+        title="Make room for different perspectives."
+        layout="centered"
+        description={
+          <p>
+            Invite the people affected by the decision. Share the brief in
+            advance so everyone has time to prepare a response.
+          </p>
+        }
+      />,
+    );
+    const page = await browser.newPage({
+      viewport: { width: 1120, height: 900 },
+    });
+    // The cap is a `ch` measure, so it is judged in the bundled faces.
+    await Deno.writeTextFile(
+      `${output}/case.html`,
+      `<!doctype html><html lang="en" data-discern-root><head><meta charset="utf-8"><link rel="stylesheet" href="./discern.css"><link rel="stylesheet" href="./fonts.css"></head><body style="margin:0">${markup}</body></html>`,
+    );
+    await page.goto(toFileUrl(`${output}/case.html`).href);
+    await page.evaluate(() => document.fonts.ready);
+    const facts = await page.locator(".discern-hero-block__title").evaluate(
+      (title) => {
+        const range = document.createRange();
+        range.selectNodeContents(title);
+        const lines = new Set(
+          [...range.getClientRects()].map((rect) => Math.round(rect.top)),
+        );
+        const description = title.parentElement!.querySelector(
+          ".discern-hero-block__description",
+        )!;
+        return {
+          lines: lines.size,
+          ratio: range.getBoundingClientRect().width /
+            description.getBoundingClientRect().width,
+        };
+      },
+    );
+    assert(
+      facts.lines <= 2,
+      `the centred title breaks into ${facts.lines} lines`,
+    );
+    assert(
+      facts.ratio >= 0.6,
+      `the centred title is a narrow column under its description (${
+        facts.ratio.toFixed(2)
+      })`,
     );
   } finally {
     await browser.close();

@@ -2,6 +2,14 @@ import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import meta, { componentExampleVocabulary } from "./marketing-section.meta.ts";
 import { MarketingSection } from "./marketing-section.tsx";
 import { Button } from "../../core/button/button.tsx";
+import { Badge } from "../../display/badge/badge.tsx";
+
+const cardStyle = {
+  padding: "var(--discern-space-6)",
+  border: "1px solid var(--discern-color-border)",
+  borderRadius: "var(--discern-radius-lg)",
+  background: "var(--discern-color-surface)",
+} as const;
 
 function StandardSectionState() {
   return (
@@ -11,6 +19,37 @@ function StandardSectionState() {
         Use the ordinary frame when the content should stay close to the
         editorial system.
       </p>
+    </MarketingSection>
+  );
+}
+
+function AccentSectionState() {
+  return (
+    <MarketingSection surface="accent" spacing="compact">
+      <h2>A tinted chapter that keeps its cards raised.</h2>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(13rem, 1fr))",
+          gap: "var(--discern-space-4)",
+          marginBlock: "var(--discern-space-8)",
+        }}
+      >
+        {["First supporting idea", "Second supporting idea"].map((title) => (
+          <article
+            key={title}
+            style={{ ...cardStyle, boxShadow: "var(--discern-shadow-card)" }}
+          >
+            <h3>{title}</h3>
+            <p style={{ color: "var(--discern-color-ink-muted)" }}>
+              Surfaces stay above the accent ground in both themes.
+            </p>
+          </article>
+        ))}
+      </div>
+      <Button href="#accent-secondary" variant="secondary">
+        Secondary action
+      </Button>
     </MarketingSection>
   );
 }
@@ -28,19 +67,12 @@ function SpaciousContrastState() {
         }}
       >
         {["First supporting idea", "Second supporting idea"].map((title) => (
-          <article
-            key={title}
-            style={{
-              padding: "var(--discern-space-6)",
-              border: "1px solid var(--discern-color-border)",
-              borderRadius: "var(--discern-radius-lg)",
-              background: "var(--discern-color-surface)",
-            }}
-          >
+          <article key={title} style={cardStyle}>
+            <Badge tone="success" dot>Ready</Badge>
             <h3>{title}</h3>
             <p style={{ color: "var(--discern-color-ink-muted)" }}>
-              Semantic surfaces and ink remain paired inside the contrast
-              chapter.
+              Semantic surfaces, tones, and ink remain paired inside the
+              contrast chapter.
             </p>
           </article>
         ))}
@@ -67,6 +99,7 @@ export const catalogueExamples = defineCatalogueExamples(
   componentExampleVocabulary,
   [
     { id: "standard", Example: StandardSectionState },
+    { id: "accent", Example: AccentSectionState },
     { id: "spacious-contrast", Example: SpaciousContrastState },
   ],
 );
@@ -75,6 +108,7 @@ export default function MarketingSectionExamples() {
   return (
     <div className="discern-example-stack">
       <StandardSectionState />
+      <AccentSectionState />
       <SpaciousContrastState />
     </div>
   );

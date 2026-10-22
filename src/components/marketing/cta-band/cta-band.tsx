@@ -8,6 +8,7 @@ import { MarketingIntro } from "../marketing-intro/marketing-intro.tsx";
 import {
   marketingActionsClassName,
   marketingContrastClassName,
+  marketingNoteClassName,
 } from "../marketing-section/marketing-section.tsx";
 
 export type { CtaBandAlign, CtaBandTone } from "./cta-band.types.ts";
@@ -84,7 +85,13 @@ export const CtaBand: DiscernComponent<HTMLElement, CtaBandProps> = forwardRef<
               </div>
             )
             : null}
-          {note ? <div className="discern-cta-band__note">{note}</div> : null}
+          {note
+            ? (
+              <div className={marketingNoteClassName("discern-cta-band__note")}>
+                {note}
+              </div>
+            )
+            : null}
         </div>
         {visual
           ? <div className="discern-cta-band__visual">{visual}</div>

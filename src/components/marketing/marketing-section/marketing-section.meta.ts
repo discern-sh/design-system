@@ -6,7 +6,12 @@ const meta = {
   slug: "marketing-section",
   group: "Marketing",
   order: 5,
-  classBlocks: ["marketing-contrast", "marketing-actions"],
+  classBlocks: [
+    "marketing-contrast",
+    "marketing-actions",
+    "marketing-accent",
+    "marketing-note",
+  ],
   description:
     "Opt-in campaign-page section with durable frame, rhythm, and contrast scopes.",
   cli: {
@@ -22,13 +27,15 @@ const meta = {
     "An application or ordinary editorial page only needs a semantic surface and standard spacing; use Section with Container.",
   ],
   accessibility: [
-    "The contrast surface remaps semantic ink, surface, border, and action roles together so descendant headings, copy, and Buttons remain readable in both themes.",
+    "The contrast surface remaps semantic ink, surface, border, action, and soft tone roles together so descendant headings, copy, Badges, and Buttons remain readable in both themes.",
+    "The accent ground stays at or below the surface lightness under every Accent, so raised cards, windows, and secondary Buttons keep their elevation on it.",
     "The component preserves a native section landmark and leaves heading hierarchy to its content.",
   ],
 } satisfies ComponentMeta;
 
 export const componentExampleVocabulary = [
   { id: "standard", label: "Standard canvas", only: "web" },
+  { id: "accent", label: "Accent ground", only: "web" },
   {
     id: "spacious-contrast",
     label: "Wide spacious contrast",

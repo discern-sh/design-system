@@ -44,7 +44,7 @@ export const MetricsBand: DiscernComponent<HTMLElement, MetricsBandProps> =
     return (
       <MarketingSection
         ref={ref}
-        surface={tone === "accent" ? "canvas" : tone}
+        surface={tone}
         spacing="compact"
         frame={frame}
         className={classNames(

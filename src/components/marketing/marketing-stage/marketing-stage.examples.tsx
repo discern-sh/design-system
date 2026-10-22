@@ -17,8 +17,8 @@ const stepStyle: CSSProperties = {
   placeItems: "center",
   padding: "var(--discern-space-5)",
   border: "1px solid var(--discern-color-border)",
-  borderRadius: "var(--discern-radius-lg)",
-  background: "var(--discern-color-canvas)",
+  borderRadius: "var(--discern-radius-md)",
+  background: "var(--discern-color-inset)",
   color: "var(--discern-color-ink-muted)",
   fontSize: "var(--discern-font-size-sm)",
   textAlign: "center",
@@ -35,12 +35,15 @@ function FramedStageState() {
         {["Begin", "Separate", "Return"].map((label, index) => (
           <div
             key={label}
-            style={{
-              ...stepStyle,
-              borderColor: index === 1
-                ? "var(--discern-color-accent-500)"
-                : "var(--discern-color-border)",
-            }}
+            style={index === 1
+              ? {
+                ...stepStyle,
+                borderColor: "var(--discern-color-border-strong)",
+                background: "var(--discern-color-surface)",
+                boxShadow: "var(--discern-shadow-card)",
+                color: "var(--discern-color-ink)",
+              }
+              : stepStyle}
           >
             {label}
           </div>
@@ -53,23 +56,41 @@ function FramedStageState() {
 function InsetStageState() {
   return (
     <MarketingStage
-      label="Atmospheric relief"
+      label="Three connected moments"
       treatment="inset"
       aspect="landscape"
     >
-      <div
+      <svg
+        viewBox="0 0 320 120"
         aria-hidden="true"
         style={{
-          width: "86%",
-          aspectRatio: "1.5",
-          borderRadius: "50%",
-          background:
-            "radial-gradient(ellipse, color-mix(in oklab, var(--discern-color-accent-200) 58%, transparent) 0%, color-mix(in oklab, var(--discern-color-accent-200) 24%, transparent) 44%, transparent 78%)",
-          filter: "blur(28px)",
-          opacity: 0.72,
-          transform: "scale(0.86)",
+          width: "min(100%, 26rem)",
+          color: "var(--discern-color-border-strong)",
+          overflow: "visible",
         }}
-      />
+      >
+        <path
+          d="M54 60H146M174 60H266"
+          fill="none"
+          stroke="currentColor"
+          vectorEffect="non-scaling-stroke"
+        />
+        {[40, 160, 280].map((x) => (
+          <circle
+            key={x}
+            cx={x}
+            cy={60}
+            r={14}
+            style={{
+              fill: "var(--discern-color-surface)",
+              stroke: x === 160
+                ? "var(--discern-color-accent-600)"
+                : "currentColor",
+            }}
+            vectorEffect="non-scaling-stroke"
+          />
+        ))}
+      </svg>
     </MarketingStage>
   );
 }
@@ -85,9 +106,10 @@ function PlainStageState() {
         aria-hidden="true"
         style={{
           minHeight: "12rem",
+          border: "1px solid var(--discern-color-border)",
           borderRadius: "var(--discern-radius-lg)",
-          background:
-            "linear-gradient(135deg, var(--discern-color-surface-sunken), var(--discern-color-accent-100))",
+          background: "var(--discern-color-surface)",
+          boxShadow: "var(--discern-shadow-card)",
         }}
       />
     </MarketingStage>
@@ -104,7 +126,6 @@ export const catalogueExamples = defineCatalogueExamples(
       Example: InsetStageState,
       capture: {
         selectors: [".discern-marketing-stage"],
-        // The stage body clips the blurred atmosphere to its own allocation.
         paintBleed: 0,
       },
     },
