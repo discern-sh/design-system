@@ -1,5 +1,6 @@
 import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
+import { Field, fieldDescriptionId } from "../field/field.tsx";
 import meta, { componentExampleVocabulary } from "./checkbox.meta.ts";
 import { Checkbox } from "./checkbox.tsx";
 
@@ -16,12 +17,20 @@ function FilledCheckboxState() {
 }
 
 function ValidationErrorCheckboxState() {
+  const error = "Select this option to continue";
   return (
-    <Checkbox
-      label="Include examples"
-      description="Choose before continuing."
-      aria-invalid="true"
-    />
+    <Field controlId="checkbox-error" error={error}>
+      <Checkbox
+        id="checkbox-error"
+        label="Include examples"
+        aria-invalid="true"
+        aria-describedby={fieldDescriptionId(
+          "checkbox-error",
+          undefined,
+          error,
+        )}
+      />
+    </Field>
   );
 }
 
@@ -62,14 +71,15 @@ function MultilineCheckboxState() {
 
 function GroupedCheckboxState() {
   return (
-    <fieldset className="discern-example-stack">
-      <legend>Notifications</legend>
-      <strong>Regular</strong>
-      <Checkbox label="Email updates" defaultChecked />
-      <Checkbox label="Weekly summary" disabled />
-      <strong>Optional</strong>
-      <Checkbox label="Announcements" />
-    </fieldset>
+    <Field group controlId="checkbox-grouped" label="Notifications">
+      <Field group controlId="checkbox-grouped-regular" label="Regular">
+        <Checkbox label="Email updates" defaultChecked />
+        <Checkbox label="Weekly summary" disabled />
+      </Field>
+      <Field group controlId="checkbox-grouped-optional" label="Optional">
+        <Checkbox label="Announcements" />
+      </Field>
+    </Field>
   );
 }
 

@@ -41,6 +41,38 @@ function LongLabels() {
     />
   );
 }
+const listArtwork = (
+  <svg
+    viewBox="0 0 16 16"
+    width="16"
+    height="16"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.5"
+    strokeLinecap="round"
+    aria-hidden="true"
+    focusable="false"
+  >
+    <path d="M3 4h10M3 8h10M3 12h10" />
+  </svg>
+);
+const gridArtwork = (
+  <svg
+    viewBox="0 0 16 16"
+    width="16"
+    height="16"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.5"
+    aria-hidden="true"
+    focusable="false"
+  >
+    <rect x="2.75" y="2.75" width="4" height="4" rx="1" />
+    <rect x="9.25" y="2.75" width="4" height="4" rx="1" />
+    <rect x="2.75" y="9.25" width="4" height="4" rx="1" />
+    <rect x="9.25" y="9.25" width="4" height="4" rx="1" />
+  </svg>
+);
 function Icons() {
   const name = useId();
   const [value, setValue] = useState("grid");
@@ -48,10 +80,10 @@ function Icons() {
     <SegmentedControl
       label="Layout"
       name={name}
-      items={[{ value: "list", label: "List", icon: "☷" }, {
+      items={[{ value: "list", label: "List", icon: listArtwork }, {
         value: "grid",
         label: "Grid",
-        icon: "▦",
+        icon: gridArtwork,
       }]}
       value={value}
       onValueChange={setValue}

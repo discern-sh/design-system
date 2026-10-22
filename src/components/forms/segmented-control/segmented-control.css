@@ -1,26 +1,20 @@
 @layer discern.components {
   .discern-segmented-control {
     container: discern-segmented-control / inline-size;
-    min-inline-size: 0;
-    margin: 0;
-    padding: 0;
-    border: 0;
     font-family: var(--discern-font-ui);
     font-size: var(--discern-font-size-sm);
   }
-  .discern-segmented-control__legend {
-    padding: 0;
-    margin-block-end: var(--discern-space-2);
-    color: var(--discern-color-ink);
-    font-weight: var(--discern-font-weight-strong);
+  .discern-segmented-control__legend,
+  .discern-segmented-control__surface {
     overflow-wrap: anywhere;
   }
   .discern-segmented-control__items {
     display: flex;
     gap: var(--discern-space-1);
     padding: var(--discern-space-1);
+    border: 1px solid var(--discern-color-border);
     border-radius: var(--discern-radius-md);
-    background: var(--discern-color-surface-sunken);
+    background: var(--discern-color-inset);
   }
   .discern-segmented-control__option {
     position: relative;
@@ -49,58 +43,71 @@
     align-items: center;
     justify-content: center;
     gap: var(--discern-space-2);
-    min-block-size: var(--discern-control-size-md);
+    pointer-events: none;
+    min-block-size: calc(var(--discern-control-size-md) - 2 *
+      (var(--discern-space-1) + 1px));
     block-size: 100%;
-    padding: var(--discern-space-2) var(--discern-space-3);
-    border: 1px solid var(--discern-color-border);
-    border-radius: var(--discern-radius-sm);
-    background: var(--discern-color-surface);
-    color: var(--discern-color-ink);
+    padding: var(--discern-space-1) var(--discern-space-3);
+    border: 1px solid transparent;
+    border-radius: calc(var(--discern-radius-md) - var(--discern-space-1) -
+      1px);
+    color: var(--discern-color-ink-muted);
+    font-weight: var(--discern-font-weight-medium);
     line-height: var(--discern-leading-snug);
-    overflow-wrap: anywhere;
     text-align: center;
+    transition-property: background-color, border-color, box-shadow, color,
+      transform;
+    transition-duration: var(--discern-duration-fast);
+    transition-timing-function: var(--discern-ease-out);
+  }
+  /* Transient states stay neutral, below the raised selection. */
+  @media (hover: hover) {
+    .discern-segmented-control__input:where(:hover:not(:disabled)) + .discern-segmented-control__surface {
+      color: var(--discern-color-ink);
+    }
+  }
+  .discern-segmented-control__input:where(:active:not(:disabled, :checked)) + .discern-segmented-control__surface {
+    background: var(--discern-color-surface-sunken);
+    color: var(--discern-color-ink);
+    transform: translateY(0.0625rem);
   }
   .discern-segmented-control__input:checked + .discern-segmented-control__surface {
-    background: var(--discern-color-action);
-    border-color: var(--discern-color-action-edge);
-    color: var(--discern-color-on-action);
-    text-decoration: underline;
-    text-underline-offset: var(--discern-space-1);
-    --discern-shadow-segmented: inset 0 1px 0 var(--discern-color-material-highlight),
-      0 0.125rem 0.25rem -0.1875rem var(--discern-color-action-shadow);
-    box-shadow: var(--discern-shadow-segmented);
+    border-color: var(--discern-color-border);
+    background: linear-gradient(color-mix(in oklab,
+      var(--discern-color-material-highlight) 50%, transparent) 0 0)
+      var(--discern-color-surface);
+    box-shadow: var(--discern-shadow-control);
+    color: var(--discern-color-ink);
   }
   .discern-segmented-control__input:focus-visible + .discern-segmented-control__surface {
     outline: 0.125rem solid var(--discern-color-accent-500);
-    outline-offset: var(--discern-space-1);
+    outline-offset: 0.125rem;
   }
   .discern-segmented-control__input:disabled {
     cursor: not-allowed;
   }
   .discern-segmented-control__input:disabled + .discern-segmented-control__surface {
-    opacity: 0.48;
+    color: color-mix(in oklab, var(--discern-color-ink-faint) 70%, transparent);
+  }
+  .discern-segmented-control__input:disabled:checked + .discern-segmented-control__surface {
+    box-shadow: none;
+    color: var(--discern-color-ink-muted);
   }
   @container discern-segmented-control (max-width: 20rem) {
     .discern-segmented-control__items {
       flex-direction: column;
     }
   }
-  @media (hover: hover) {
-    .discern-segmented-control__input:hover:not(:disabled):not(:checked) + .discern-segmented-control__surface {
-      background: var(--discern-color-surface-sunken);
-    }
-  }
   @media (forced-colors: active) {
-    .discern-segmented-control__input:checked + .discern-segmented-control__surface {
-      outline: 0.125rem solid var(--discern-color-accent-500);
-      outline-offset: calc(-1 * var(--discern-space-1));
+    .discern-segmented-control__surface {
+      border-style: none;
     }
-    .discern-segmented-control__input:focus-visible + .discern-segmented-control__surface {
+    .discern-segmented-control__input:checked:not(:focus-visible) + .discern-segmented-control__surface {
       outline: 0.125rem solid var(--discern-color-accent-500);
-      outline-offset: var(--discern-space-1);
+      outline-offset: -0.25rem;
     }
     .discern-segmented-control__input:disabled + .discern-segmented-control__surface {
-      color: var(--discern-color-ink-muted);
+      color: GrayText;
     }
   }
 }

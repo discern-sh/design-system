@@ -617,3 +617,350 @@ Deno.test("field messaging wires invalid, described-by, and witness relationship
   assertStringIncludes(described, 'aria-describedby="keep-description"');
   assertStringIncludes(described, 'id="keep-description"');
 });
+
+Deno.test("semantic state outranks hover, and native fields carry an invalid shape", async () => {
+  const browser = await launchBrowser();
+  const output = await Deno.makeTempDir();
+  try {
+    const css = await formCss(output);
+    const page = await browser.newPage({
+      viewport: { width: 720, height: 900 },
+    });
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    const settled = `${css} [data-discern-root] *{transition:none!important}`;
+    const specimens = renderToStaticMarkup(
+      <div className="discern-example-stack">
+        <div id="checked">
+          <Checkbox label="Checked" defaultChecked />
+        </div>
+        <div id="invalid-choice">
+          <Checkbox label="Invalid" aria-invalid="true" />
+        </div>
+        <div id="checked-switch">
+          <Switch label="On" defaultChecked />
+        </div>
+        <div id="invalid-switch">
+          <Switch label="Invalid" aria-invalid="true" />
+        </div>
+        <div id="invalid-input">
+          <Input label="Name" defaultValue="a" error="Too short" />
+        </div>
+        <div id="valid-input">
+          <Input label="City" defaultValue="Lisbon" />
+        </div>
+        <div id="resting-choice">
+          <Checkbox label="Resting" />
+        </div>
+        <div id="resting-switch">
+          <Switch label="Off" />
+        </div>
+      </div>,
+    );
+    await page.setContent(pageHtml(settled, specimens, { width: 640 }));
+    const edge = (selector: string) =>
+      page.locator(selector).evaluate((node) => {
+        const style = getComputedStyle(node);
+        return {
+          color: style.borderTopColor,
+          width: style.borderTopWidth,
+          lower: style.borderBottomWidth,
+          outline:
+            `${style.outlineStyle} ${style.outlineWidth} ${style.outlineColor}`,
+        };
+      });
+    // Hover feedback never replaces a checked or invalid edge.
+    for (
+      const [hoverTarget, paint] of [
+        ["#checked label", "#checked .discern-choice__control"],
+        ["#invalid-choice label", "#invalid-choice .discern-choice__control"],
+        ["#checked-switch label", "#checked-switch .discern-switch__track"],
+        ["#invalid-switch label", "#invalid-switch .discern-switch__track"],
+        ["#invalid-input input", "#invalid-input input"],
+      ] as const
+    ) {
+      await page.mouse.move(0, 0);
+      const before = await edge(paint);
+      await page.hover(hoverTarget);
+      assertEquals(await edge(paint), before, `${paint} changed on hover`);
+    }
+    // Hover still answers on resting controls, so the guard above is not
+    // passing merely because hover styling disappeared.
+    for (
+      const [hoverTarget, paint] of [
+        ["#valid-input input", "#valid-input input"],
+        ["#resting-choice label", "#resting-choice .discern-choice__control"],
+        ["#resting-switch label", "#resting-switch .discern-switch__track"],
+      ] as const
+    ) {
+      await page.mouse.move(0, 0);
+      const resting = await edge(paint);
+      await page.hover(hoverTarget);
+      assert((await edge(paint)).color !== resting.color, paint);
+    }
+    // An invalid native field weights its lower edge, a shape the focus ring
+    // never takes, instead of changing darkness alone, and adds no layout.
+    const danger = await page.evaluate(() => {
+      const probe = document.createElement("div");
+      probe.style.color = "var(--discern-color-danger)";
+      document.body.append(probe);
+      const value = getComputedStyle(probe).color;
+      probe.remove();
+      return value;
+    });
+    await page.mouse.move(0, 0);
+    const invalid = await edge("#invalid-input input");
+    assertEquals(invalid.color, danger);
+    assertEquals({ width: invalid.width, lower: invalid.lower }, {
+      width: "1px",
+      lower: "2px",
+    });
+    assert(invalid.outline.startsWith("none"), invalid.outline);
+    const valid = await box(page, "#valid-input input");
+    const marked = await box(page, "#invalid-input input");
+    assertEquals(Math.round(marked.height), Math.round(valid.height));
+    // Keyboard focus adds the shared ring around the whole field, so focus
+    // always out-ranks the invalid mark.
+    await page.locator("#invalid-input input").focus();
+    const focused = await edge("#invalid-input input");
+    assertEquals(focused.color, danger);
+    assert(focused.outline.startsWith("solid 2px"), focused.outline);
+  } finally {
+    await browser.close();
+    await Deno.remove(output, { recursive: true });
+  }
+});
+
+Deno.test("Field groups replace the browser fieldset frame and describe the whole group", async () => {
+  const browser = await launchBrowser();
+  const output = await Deno.makeTempDir();
+  try {
+    const css = await formCss(output);
+    const page = await browser.newPage({
+      viewport: { width: 720, height: 900 },
+    });
+    const group = (disabled: boolean) =>
+      renderToStaticMarkup(
+        <Field
+          group
+          controlId="channel"
+          label="Channel"
+          hint="Pick one"
+          error="Choose a channel"
+          disabled={disabled}
+        >
+          <Radio name="channel" label="Alpha" />
+          <Radio name="channel" label="Bravo" />
+        </Field>,
+      );
+    const markup = group(false);
+    assertStringIncludes(markup, "<fieldset");
+    assertStringIncludes(markup, 'aria-invalid="true"');
+    assertStringIncludes(
+      markup,
+      'aria-describedby="channel-error channel-hint"',
+    );
+    assertStringIncludes(markup, '<legend class="discern-field__label"');
+    await page.setContent(pageHtml(css, markup, { width: 480 }));
+    const frame = await page.locator("fieldset").evaluate((node) => {
+      const style = getComputedStyle(node);
+      return {
+        border: style.borderTopWidth,
+        padding: style.paddingTop,
+        margin: style.marginInlineStart,
+        gap: Number.parseFloat(style.rowGap),
+      };
+    });
+    assertEquals(
+      { border: frame.border, padding: frame.padding, margin: frame.margin },
+      { border: "0px", padding: "0px", margin: "0px" },
+    );
+    // The legend joins the Field rhythm instead of notching a frame.
+    const legend = await box(page, "legend");
+    const first = await box(page, ".discern-choice >> nth=0");
+    assert(
+      Math.abs(first.top - legend.bottom - frame.gap) <= 1,
+      JSON.stringify({ legend, first, gap: frame.gap }),
+    );
+    // A group-level error marks every enabled option with the shaped edge.
+    const optionEdge = await page.locator(".discern-choice__control >> nth=0")
+      .evaluate((node) => getComputedStyle(node).borderTopWidth);
+    assertEquals(optionEdge, "2px");
+    // A disabled group mutes its legend like any unavailable Field label.
+    const ink = (selector: string) =>
+      page.locator(selector).evaluate((node) => getComputedStyle(node).color);
+    const enabledInk = await ink("legend");
+    await page.setContent(pageHtml(css, group(true), { width: 480 }));
+    assert(await page.getByRole("radio", { name: "Alpha" }).isDisabled());
+    assert((await ink("legend")) !== enabledInk);
+  } finally {
+    await browser.close();
+    await Deno.remove(output, { recursive: true });
+  }
+});
+
+Deno.test("choice indicators meet non-text contrast and group errors reach every proxy", async () => {
+  const browser = await launchBrowser();
+  const output = await Deno.makeTempDir();
+  try {
+    // Theme switches below must not be read mid-transition.
+    const css = `${await formCss(output)}
+      [data-discern-root] *{transition:none!important}`;
+    const page = await browser.newPage({
+      viewport: { width: 720, height: 900 },
+    });
+    await page.setContent(pageHtml(
+      css,
+      renderToStaticMarkup(
+        <div className="discern-example-stack">
+          <Checkbox label="Resting" />
+          <Field group controlId="channel" label="Channel">
+            <Radio name="channel" label="Alpha" />
+          </Field>
+          <Switch label="Off" />
+          <Field
+            group
+            controlId="preferences"
+            label="Preferences"
+            error="Turn one on"
+          >
+            <Switch label="Updates" />
+            <Switch label="Digest" disabled />
+          </Field>
+        </div>,
+      ),
+      { width: 640 },
+    ));
+    // WCAG 1.4.11: an unchecked indicator's boundary identifies the control,
+    // so it holds 3:1 against the surface it sits on in both themes.
+    const grounds = new Set<number>();
+    for (const theme of ["light", "dark"]) {
+      await page.evaluate((value) => {
+        document.documentElement.dataset.discernTheme = value;
+      }, theme);
+      const { base, ratios } = await page.evaluate(() => {
+        const canvas = document.createElement("canvas");
+        canvas.width = canvas.height = 1;
+        const context = canvas.getContext("2d", { willReadFrequently: true })!;
+        const resolve = (value: string) => {
+          const probe = document.createElement("div");
+          probe.style.color = value;
+          document.body.append(probe);
+          const color = getComputedStyle(probe).color;
+          probe.remove();
+          return color;
+        };
+        const luminance = (layers: readonly string[]) => {
+          context.clearRect(0, 0, 1, 1);
+          for (const layer of layers) {
+            context.fillStyle = layer;
+            context.fillRect(0, 0, 1, 1);
+          }
+          const [r = 0, g = 0, b = 0] = context.getImageData(0, 0, 1, 1).data;
+          const linear = (channel: number) => {
+            const value = channel / 255;
+            return value <= 0.04045
+              ? value / 12.92
+              : ((value + 0.055) / 1.055) ** 2.4;
+          };
+          return 0.2126 * linear(r) + 0.7152 * linear(g) + 0.0722 * linear(b);
+        };
+        const ground = [
+          resolve("var(--discern-color-canvas)"),
+          resolve("var(--discern-color-surface)"),
+        ];
+        const base = luminance(ground);
+        return {
+          base,
+          ratios: [
+            ".discern-choice:not(.discern-choice--radio) .discern-choice__control",
+            ".discern-choice--radio .discern-choice__control",
+            ".discern-switch__track",
+          ].map((selector) => {
+            const edge = getComputedStyle(document.querySelector(selector)!)
+              .borderTopColor;
+            const ink = luminance([...ground, edge]);
+            return {
+              selector,
+              ratio: (Math.max(base, ink) + 0.05) /
+                (Math.min(base, ink) + 0.05),
+            };
+          }),
+        };
+      });
+      grounds.add(Math.round(base * 1000));
+      for (const { selector, ratio } of ratios) {
+        assert(
+          ratio >= 3,
+          `${theme} ${selector} boundary ${ratio.toFixed(2)}:1`,
+        );
+      }
+    }
+    assertEquals(grounds.size, 2, "both themes were measured");
+    // A group-level error gives every enabled Switch its shaped danger edge.
+    const tracks = await page.locator(
+      "#preferences .discern-switch__track",
+    ).evaluateAll((nodes) =>
+      nodes.map((node) => getComputedStyle(node).borderTopWidth)
+    );
+    assertEquals(tracks, ["2px", "1px"]);
+  } finally {
+    await browser.close();
+    await Deno.remove(output, { recursive: true });
+  }
+});
+
+Deno.test("a nested Field group is an explicit subgroup bound to its own options", async () => {
+  const browser = await launchBrowser();
+  const output = await Deno.makeTempDir();
+  try {
+    const css = await formCss(output);
+    const page = await browser.newPage({
+      viewport: { width: 720, height: 900 },
+    });
+    const markup = renderToStaticMarkup(
+      <>
+        <Field group controlId="notifications" label="Notifications">
+          <Field group controlId="regular" label="Regular">
+            <Checkbox label="Email updates" />
+            <Checkbox label="Weekly summary" />
+          </Field>
+          <Field group controlId="optional" label="Optional">
+            <Checkbox label="Announcements" />
+          </Field>
+        </Field>
+        <Field group controlId="sibling" label="Sibling">
+          <Checkbox label="Standalone" />
+        </Field>
+      </>,
+    );
+    await page.setContent(pageHtml(css, markup, { width: 480 }));
+    const subgroups = await page.locator("fieldset").evaluateAll((nodes) =>
+      nodes.map((node) => [
+        node.id,
+        node.classList.contains("discern-field--subgroup"),
+      ])
+    );
+    assertEquals(subgroups, [
+      ["notifications", false],
+      ["regular", true],
+      ["optional", true],
+      ["sibling", false],
+    ]);
+    // Proximity binds a subgroup legend to its options, not to its parent.
+    const parent = await box(page, "#notifications > legend");
+    const regular = await box(page, "#regular > legend");
+    const option = await box(page, "#regular .discern-choice >> nth=0");
+    const optional = await box(page, "#optional > legend");
+    const lastRegular = await box(page, "#regular .discern-choice >> nth=1");
+    assert(option.top - regular.bottom < regular.top - parent.bottom);
+    assert(option.top - regular.bottom < optional.top - lastRegular.bottom);
+    // Adjacent top-level groups keep the parent stack's spacing alone.
+    const sibling = await page.locator("#sibling").evaluate((node) =>
+      getComputedStyle(node).marginBlockStart
+    );
+    assertEquals(sibling, "0px");
+  } finally {
+    await browser.close();
+    await Deno.remove(output, { recursive: true });
+  }
+});

@@ -10,9 +10,9 @@
   .discern-select__chevron {
     position: absolute;
     top: 50%;
-    right: var(--discern-space-4);
-    inline-size: 0.5rem;
-    block-size: 0.5rem;
+    inset-inline-end: var(--discern-space-4);
+    inline-size: 0.4375rem;
+    block-size: 0.4375rem;
     border-inline-end: 0.09375rem solid var(--discern-color-ink-muted);
     border-block-end: 0.09375rem solid var(--discern-color-ink-muted);
     pointer-events: none;

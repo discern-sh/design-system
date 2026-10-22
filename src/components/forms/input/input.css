@@ -4,26 +4,30 @@
     min-block-size: var(--discern-control-size-md);
     padding: var(--discern-space-2) var(--discern-space-3);
     border: 1px solid var(--discern-color-border-strong);
-    border-radius: var(--discern-radius-sm);
-    outline: none;
+    border-radius: var(--discern-radius-md);
     background: var(--discern-color-surface);
     color: var(--discern-color-ink);
     font-family: var(--discern-font-ui);
     font-size: var(--discern-font-size-sm);
     line-height: var(--discern-leading-snug);
-    transition-property: background, border-color;
+    transition-property: background-color, border-color;
     transition-duration: var(--discern-duration-fast);
+    transition-timing-function: var(--discern-ease-out);
   }
   .discern-control::placeholder {
     color: var(--discern-color-ink-faint);
   }
-  .discern-control:hover:not(:disabled) {
-    border-color: var(--discern-color-ink-faint);
+  .discern-control:where(:hover:not(:disabled)) {
+    border-color: color-mix(in oklab, var(--discern-color-border-strong),
+      var(--discern-color-ink) 24%);
   }
-  .discern-control:focus-visible {
-    border-color: var(--discern-color-accent-500);
-    outline: 0.125rem solid var(--discern-color-accent-500);
-    outline-offset: calc(var(--discern-space-1) / 2);
+  .discern-control[readonly] {
+    background: var(--discern-color-surface-sunken);
+  }
+  /* A weighted lower edge: a shape the focus ring never takes. */
+  .discern-control:is([aria-invalid="true"], :user-invalid):not(:disabled) {
+    border-color: var(--discern-color-danger);
+    border-block-end-width: 0.125rem;
   }
   .discern-control:disabled {
     border-color: var(--discern-color-border);
@@ -32,9 +36,5 @@
     color: var(--discern-color-ink-muted);
     opacity: 1;
     -webkit-text-fill-color: var(--discern-color-ink-muted);
-  }
-  .discern-control[aria-invalid="true"],
-  .discern-control:user-invalid {
-    border-color: var(--discern-color-danger);
   }
 }

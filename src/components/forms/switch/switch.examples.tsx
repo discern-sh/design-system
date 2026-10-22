@@ -1,5 +1,6 @@
 import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
+import { Field, fieldDescriptionId } from "../field/field.tsx";
 import meta, { componentExampleVocabulary } from "./switch.meta.ts";
 import { Switch } from "./switch.tsx";
 
@@ -26,12 +27,16 @@ function FilledSwitchState() {
 }
 
 function ValidationErrorSwitchState() {
+  const error = "Turn this on to continue";
   return (
-    <Switch
-      label="Automatic updates"
-      description="Setting is locked"
-      aria-invalid="true"
-    />
+    <Field controlId="switch-error" error={error}>
+      <Switch
+        id="switch-error"
+        label="Automatic updates"
+        aria-invalid="true"
+        aria-describedby={fieldDescriptionId("switch-error", undefined, error)}
+      />
+    </Field>
   );
 }
 

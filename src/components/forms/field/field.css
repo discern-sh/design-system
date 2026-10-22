@@ -4,14 +4,37 @@
     gap: var(--discern-rhythm-related);
     min-inline-size: 0;
   }
+  .discern-field--group {
+    grid-template-columns: minmax(0, 1fr);
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  /* Floated, the legend is a plain grid item that keeps the Field rhythm. */
+  .discern-field--group > legend {
+    float: left;
+    padding: 0;
+  }
+  /* Closer to its own options than to its parent's rows. */
+  .discern-field--subgroup {
+    margin-block-start: var(--discern-space-2);
+  }
+  .discern-field--subgroup > legend {
+    font: var(--discern-font-label);
+    color: var(--discern-color-ink-muted);
+  }
   .discern-field__label {
     color: var(--discern-color-ink);
     font-family: var(--discern-font-ui);
     font-size: var(--discern-font-size-sm);
-    font-weight: var(--discern-font-weight-strong);
+    font-weight: var(--discern-font-weight-medium);
     line-height: var(--discern-leading-snug);
   }
+  .discern-field:is(:disabled, :has(> :disabled, > * > :disabled)) > .discern-field__label {
+    color: var(--discern-color-ink-muted);
+  }
   .discern-field__required {
+    margin-inline-start: calc(var(--discern-space-1) / 2);
     color: var(--discern-color-danger);
   }
   .discern-field__message {
@@ -20,7 +43,18 @@
     line-height: 1.45;
   }
   .discern-field__message--error {
+    display: flex;
+    gap: calc(var(--discern-space-1) * 1.5);
     color: var(--discern-color-danger);
+    font-weight: var(--discern-font-weight-medium);
+  }
+  .discern-field__glyph {
+    --discern-field-glyph: 1em;
+    display: grid;
+    flex: none;
+    inline-size: var(--discern-field-glyph);
+    block-size: var(--discern-field-glyph);
+    margin-block-start: calc((1lh - var(--discern-field-glyph)) / 2);
   }
   .discern-field-row {
     display: grid;

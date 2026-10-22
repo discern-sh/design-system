@@ -20,7 +20,7 @@ const meta = {
   accessibility: [
     "The visible legend names a native radio group. Tab enters the selected enabled option; arrow keys select enabled peers and labels activate their inputs without hydration.",
     "The shared name submits the stable value. A default selects the first enabled option; a supplied value must match an item. Disabled choices remain visible and do not submit.",
-    "The selected surface is underlined as well as filled and focus has a visible ring. Fill sizing stacks at narrow allocations; content sizing keeps equal, wrapping segments sized to the widest label.",
+    "The selected segment rises as an edged surface with stronger ink, so selection never depends on colour, and focus has a visible ring. Fill sizing stacks at narrow allocations; content sizing keeps equal, wrapping segments sized to the widest label.",
     "The CLI is a deterministic selection frame; it does not capture keys or create an interactive request.",
   ],
 } satisfies ComponentMeta;

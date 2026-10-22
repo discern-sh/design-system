@@ -30,6 +30,17 @@ export const Switch: DiscernComponent<HTMLInputElement, SwitchProps> =
     return (
       <div className={classNames("discern-switch", className)}>
         <label className="discern-switch__label" htmlFor={controlId}>
+          <input
+            ref={ref}
+            id={controlId}
+            type="checkbox"
+            role="switch"
+            aria-describedby={describedBy}
+            {...props}
+          />
+          <span className="discern-switch__track" aria-hidden="true">
+            <span />
+          </span>
           <span>
             <span className="discern-switch__text">{label}</span>
             {description
@@ -42,17 +53,6 @@ export const Switch: DiscernComponent<HTMLInputElement, SwitchProps> =
                 </span>
               )
               : null}
-          </span>
-          <input
-            ref={ref}
-            id={controlId}
-            type="checkbox"
-            role="switch"
-            aria-describedby={describedBy}
-            {...props}
-          />
-          <span className="discern-switch__track" aria-hidden="true">
-            <span />
           </span>
         </label>
       </div>

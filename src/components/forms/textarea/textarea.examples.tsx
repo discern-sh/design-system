@@ -22,13 +22,12 @@ function FilledTextareaState() {
   );
 }
 
+const tallWindowNotes = ["One", "Two", "Three", "Four", "Five", "Six", "Seven"]
+  .join("\n");
+
 function TallWindowTextareaState() {
   return (
-    <Textarea
-      label="Release notes"
-      rows={6}
-      defaultValue="One\nTwo\nThree\nFour\nFive\nSix\nSeven"
-    />
+    <Textarea label="Release notes" rows={6} defaultValue={tallWindowNotes} />
   );
 }
 

@@ -9,6 +9,9 @@ const meta = {
   description:
     "Native checkbox with an associated visible label and optional description.",
   cli: { stance: "rendered" },
+  accessibility: [
+    "A validation error comes from a wrapping Field, which the control names through aria-describedby; the description stays for guidance.",
+  ],
   classBlocks: ["choice"],
 } satisfies ComponentMeta;
 

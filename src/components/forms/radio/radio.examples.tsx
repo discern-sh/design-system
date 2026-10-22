@@ -1,5 +1,6 @@
 import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
+import { Field } from "../field/field.tsx";
 import meta, { componentExampleVocabulary } from "./radio.meta.ts";
 import { Radio } from "./radio.tsx";
 
@@ -12,8 +13,7 @@ function RadioGroup(
   },
 ) {
   return (
-    <fieldset className="discern-example-stack">
-      <legend>Channel</legend>
+    <Field group controlId={name} label="Channel" disabled={disabled}>
       {[
         ["alpha", "Alpha"],
         ["bravo", "Bravo"],
@@ -25,11 +25,11 @@ function RadioGroup(
           value={value}
           label={label}
           defaultChecked={selected === value}
-          disabled={disabled || value === "charlie"}
+          disabled={value === "charlie"}
           autoFocus={focused === value}
         />
       ))}
-    </fieldset>
+    </Field>
   );
 }
 
@@ -39,8 +39,7 @@ function DefaultRadioState() {
 
 function MultilineRadioState() {
   return (
-    <fieldset className="discern-example-stack">
-      <legend>Delivery</legend>
+    <Field group controlId="radio-multiline" label="Delivery">
       <Radio
         name="radio-multiline"
         value="bundle"
@@ -53,7 +52,7 @@ function MultilineRadioState() {
         value="stream"
         label="Stream artefacts as they finish"
       />
-    </fieldset>
+    </Field>
   );
 }
 
@@ -67,16 +66,16 @@ function FilledRadioState() {
 
 function ValidationErrorRadioState() {
   return (
-    <fieldset className="discern-example-stack" aria-invalid="true">
-      <legend>Channel</legend>
-      <Radio
-        name="radio-error"
-        label="Alpha"
-        description="Choose a channel"
-      />
+    <Field
+      group
+      controlId="radio-error"
+      label="Channel"
+      error="Choose a channel"
+    >
+      <Radio name="radio-error" label="Alpha" />
       <Radio name="radio-error" label="Bravo" />
       <Radio name="radio-error" label="Charlie" disabled />
-    </fieldset>
+    </Field>
   );
 }
 
@@ -90,25 +89,31 @@ function SubmittedRadioState() {
 
 function CancelledRadioState() {
   return (
-    <fieldset className="discern-example-stack" disabled>
-      <legend>Channel — selection cancelled</legend>
+    <Field
+      group
+      controlId="radio-cancelled"
+      label="Channel"
+      hint="Selection cancelled"
+      disabled
+    >
       <Radio name="radio-cancelled" label="Alpha" />
       <Radio name="radio-cancelled" label="Bravo" />
       <Radio name="radio-cancelled" label="Charlie" />
-    </fieldset>
+    </Field>
   );
 }
 
 function GroupedRadioState() {
   return (
-    <fieldset className="discern-example-stack">
-      <legend>Channel</legend>
-      <strong>Stable</strong>
-      <Radio name="radio-grouped" label="Alpha" />
-      <Radio name="radio-grouped" label="Bravo" defaultChecked autoFocus />
-      <strong>Preview</strong>
-      <Radio name="radio-grouped" label="Charlie" disabled />
-    </fieldset>
+    <Field group controlId="radio-grouped" label="Channel">
+      <Field group controlId="radio-grouped-stable" label="Stable">
+        <Radio name="radio-grouped" label="Alpha" />
+        <Radio name="radio-grouped" label="Bravo" defaultChecked autoFocus />
+      </Field>
+      <Field group controlId="radio-grouped-preview" label="Preview">
+        <Radio name="radio-grouped" label="Charlie" disabled />
+      </Field>
+    </Field>
   );
 }
 

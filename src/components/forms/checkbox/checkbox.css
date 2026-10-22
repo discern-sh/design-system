@@ -32,11 +32,19 @@
     inline-size: var(--discern-choice-control);
     block-size: var(--discern-choice-control);
     margin-block-start: calc((1lh - var(--discern-choice-control)) / 2);
-    border: 0.09375rem solid var(--discern-color-border-strong);
+    border: 1px solid color-mix(in oklab, var(--discern-color-border-strong),
+      var(--discern-color-ink) 36%);
     border-radius: var(--discern-radius-xs);
     background: var(--discern-color-surface);
-    transition-property: background, border-color, transform;
+    transition-property: background-color, border-color, transform;
     transition-duration: var(--discern-duration-fast);
+    transition-timing-function: var(--discern-ease-out);
+  }
+  @media (hover: hover) {
+    :where(.discern-choice__label:hover input:not(:disabled)) + .discern-choice__control {
+      border-color: color-mix(in oklab, var(--discern-color-border-strong),
+        var(--discern-color-ink) 56%);
+    }
   }
   input:checked + .discern-choice__control {
     border-color: var(--discern-color-action);
@@ -52,18 +60,12 @@
   }
   input:focus-visible + .discern-choice__control {
     outline: 0.125rem solid var(--discern-color-accent-500);
-    outline-offset: calc(var(--discern-space-1) / 2);
-  }
-  @media (hover: hover) {
-    .discern-choice__label:hover input:not(:disabled) + .discern-choice__control {
-      border-color: var(--discern-color-accent-500);
-    }
+    outline-offset: 0.125rem;
   }
   .discern-choice__label:active input:not(:disabled) + .discern-choice__control {
     transform: scale(0.92);
   }
-  input[aria-invalid="true"]:not(:disabled) + .discern-choice__control,
-  input:user-invalid:not(:disabled) + .discern-choice__control,
+  input:is([aria-invalid="true"], :user-invalid):not(:disabled) + .discern-choice__control,
   fieldset[aria-invalid="true"] input:not(:disabled) + .discern-choice__control {
     border-width: 0.125rem;
     border-color: var(--discern-color-danger);

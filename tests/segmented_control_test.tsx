@@ -5,6 +5,7 @@ import { toFileUrl } from "@std/path";
 import { renderToStaticMarkup } from "react-dom/server";
 import { launchBrowser } from "../scripts/browser.ts";
 import { expectUrl } from "../scripts/browser-url.ts";
+import { Field } from "../src/components/forms/field/field.tsx";
 import { SegmentedControl } from "../src/components/forms/segmented-control/segmented-control.tsx";
 import renderSegmentedControlCli, {
   cliExamples,
@@ -220,6 +221,195 @@ Deno.test("SegmentedControl preserves local containment, target floors, and forc
         }
       });
     }
+  } finally {
+    await browser.close();
+    await Deno.remove(output, { recursive: true });
+  }
+});
+
+Deno.test("SegmentedControl is one control-height track with a raised, non-colour selection", async () => {
+  const browser = await launchBrowser();
+  const output = await Deno.makeTempDir();
+  try {
+    await emitDesignSystemRuntime({
+      outputRoot: toFileUrl(`${output}/`),
+      components: ["segmented-control"],
+    });
+    const css = `${await Deno.readTextFile(`${output}/discern.css`)}
+      [data-discern-root] *{transition:none!important}`;
+    const page = await browser.newPage({
+      viewport: { width: 1280, height: 800 },
+    });
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    const html = renderToStaticMarkup(
+      <>
+        <SegmentedControl label="Schedule" name="schedule" items={items} />
+        <SegmentedControl
+          label="Locked"
+          name="locked"
+          items={items}
+          defaultValue="weekly"
+          disabled
+        />
+      </>,
+    );
+    for (const density of [0.8, 1, 1.25]) {
+      await page.setContent(
+        `<html data-discern-root style="--discern-density:${density}"><head><style>${css}</style></head><body><main style="width:640px">${html}</main></body></html>`,
+      );
+      const facts = await page.evaluate(() => {
+        const probe = document.createElement("div");
+        probe.style.blockSize = "var(--discern-control-size-md)";
+        probe.style.color = "var(--discern-color-ink-muted)";
+        probe.style.fontWeight = "var(--discern-font-weight-medium)";
+        document.body.append(probe);
+        const tokens = getComputedStyle(probe);
+        const result = {
+          controlSize: Number.parseFloat(tokens.blockSize),
+          muted: tokens.color,
+          medium: tokens.fontWeight,
+        };
+        probe.remove();
+        const canvas = document.createElement("canvas");
+        canvas.width = canvas.height = 1;
+        const context = canvas.getContext("2d", { willReadFrequently: true })!;
+        const luminance = (layers: readonly string[]) => {
+          context.clearRect(0, 0, 1, 1);
+          for (const layer of ["#fff", ...layers]) {
+            context.fillStyle = layer;
+            context.fillRect(0, 0, 1, 1);
+          }
+          const [r = 0, g = 0, b = 0] = context.getImageData(0, 0, 1, 1).data;
+          const linear = (channel: number) => {
+            const value = channel / 255;
+            return value <= 0.04045
+              ? value / 12.92
+              : ((value + 0.055) / 1.055) ** 2.4;
+          };
+          return 0.2126 * linear(r) + 0.7152 * linear(g) + 0.0722 * linear(b);
+        };
+        const [schedule, locked] = [...document.querySelectorAll("fieldset")];
+        const surface = (root: Element, value: string) =>
+          getComputedStyle(
+            root.querySelector(`input[value="${value}"] + span`)!,
+          );
+        const selected = surface(schedule!, "daily");
+        const track = getComputedStyle(
+          schedule!.querySelector(".discern-segmented-control__items")!,
+        ).backgroundColor;
+        const [enabledInk, disabledInk] = ["weekly", "hourly"].map((value) =>
+          luminance([track, surface(schedule!, value).color])
+        );
+        return {
+          ...result,
+          inkStep: (Math.max(enabledInk!, disabledInk!) + 0.05) /
+            (Math.min(enabledInk!, disabledInk!) + 0.05),
+          track: schedule!.querySelector(".discern-segmented-control__items")!
+            .getBoundingClientRect().height,
+          frame: getComputedStyle(schedule!).borderTopWidth,
+          legendWeight: getComputedStyle(schedule!.querySelector("legend")!)
+            .fontWeight,
+          selected: {
+            decoration: selected.textDecorationLine,
+            shadow: selected.boxShadow,
+            background: selected.backgroundImage,
+          },
+          resting: surface(schedule!, "weekly").boxShadow,
+          disabled: [
+            surface(schedule!, "hourly"),
+            surface(locked!, "daily"),
+          ].map((style) => style.opacity),
+          locked: surface(locked!, "weekly").color,
+        };
+      });
+      const label = JSON.stringify({ density, facts });
+      // One track at the shared control height, beside Input and Button.
+      assert(Math.abs(facts.track - facts.controlSize) <= 1, label);
+      assertEquals(facts.frame, "0px", label);
+      assertEquals(facts.legendWeight, facts.medium, label);
+      // Selection is a raised surface, not an underline or a colour swap.
+      assertEquals(facts.selected.decoration, "none", label);
+      assert(facts.selected.shadow !== "none", label);
+      assert(facts.selected.background !== "none", label);
+      assertEquals(facts.resting, "none", label);
+      // Unavailable options step well below an enabled option's ink rather
+      // than fading with opacity, while a locked selection stays readable.
+      assertEquals(facts.disabled, ["1", "1"], label);
+      assert(facts.inkStep >= 2, label);
+      assertEquals(facts.locked, facts.muted, label);
+    }
+    // Hover answers with ink alone: it never paints a fill that could read as
+    // a second selection, and never out-ranks the selected surface.
+    const paint = (value: string) =>
+      page.locator(`input[value="${value}"] + span`).first().evaluate((
+        node,
+      ) => ({
+        background: getComputedStyle(node).backgroundColor,
+        color: getComputedStyle(node).color,
+      }));
+    for (const value of ["daily", "weekly"]) {
+      await page.mouse.move(0, 0);
+      const resting = await paint(value);
+      await page.hover(`input[value="${value}"] >> nth=0`);
+      const hovered = await paint(value);
+      assertEquals(hovered.background, resting.background, value);
+      if (value === "weekly") assert(hovered.color !== resting.color);
+    }
+  } finally {
+    await browser.close();
+    await Deno.remove(output, { recursive: true });
+  }
+});
+
+Deno.test("SegmentedControl inside a Field group keeps its full label role and the stack's spacing", async () => {
+  const browser = await launchBrowser();
+  const output = await Deno.makeTempDir();
+  try {
+    await emitDesignSystemRuntime({
+      outputRoot: toFileUrl(`${output}/`),
+      components: ["segmented-control"],
+    });
+    const css = await Deno.readTextFile(`${output}/discern.css`);
+    const page = await browser.newPage();
+    const html = renderToStaticMarkup(
+      <>
+        <SegmentedControl id="alone" label="Alone" name="alone" items={items} />
+        <Field group controlId="display" label="Display">
+          <SegmentedControl
+            id="first"
+            label="Density"
+            name="density"
+            items={items}
+          />
+          <SegmentedControl
+            id="second"
+            label="Order"
+            name="order"
+            items={items}
+          />
+        </Field>
+      </>,
+    );
+    await page.setContent(
+      `<html data-discern-root><head><style>${css}</style></head><body><main style="width:640px">${html}</main></body></html>`,
+    );
+    const facts = await page.evaluate(() =>
+      Object.fromEntries(
+        ["alone", "first", "second"].map((id) => {
+          const root = document.getElementById(id)!;
+          const legend = getComputedStyle(root.querySelector("legend")!);
+          return [id, {
+            subgroup: root.classList.contains("discern-field--subgroup"),
+            legend: [legend.fontSize, legend.fontWeight, legend.color],
+            margin: getComputedStyle(root).marginBlockStart,
+          }];
+        }),
+      )
+    );
+    for (const id of ["first", "second"]) {
+      assertEquals(facts[id], facts["alone"], id);
+    }
+    assertEquals(facts["alone"]!.margin, "0px");
   } finally {
     await browser.close();
     await Deno.remove(output, { recursive: true });

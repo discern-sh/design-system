@@ -9,6 +9,9 @@ const meta = {
   description:
     "Native checkbox exposed as a switch, with associated label and description.",
   cli: { stance: "rendered" },
+  accessibility: [
+    "A validation error comes from a wrapping Field, which the control names through aria-describedby; the description stays for guidance.",
+  ],
 } satisfies ComponentMeta;
 
 export const componentExampleVocabulary = [

@@ -1,8 +1,8 @@
 import { forwardRef } from "react";
 import type { FieldsetHTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
-import { classNames } from "../../class-names.ts";
 import { Icon } from "../../core/icon/icon.tsx";
+import { fieldGroupClassName } from "../field/field.tsx";
 import { resolveSegmentedControlValue } from "./segmented-control.types.ts";
 import type { SegmentedControlChoice } from "./segmented-control.types.ts";
 
@@ -68,13 +68,15 @@ export const SegmentedControl: DiscernComponent<
         ref={ref}
         disabled={disabled}
         form={form}
-        className={classNames(
+        className={fieldGroupClassName(
           "discern-segmented-control",
           sizing === "content" && "discern-segmented-control--content",
           className,
         )}
       >
-        <legend className="discern-segmented-control__legend">{label}</legend>
+        <legend className="discern-field__label discern-segmented-control__legend">
+          {label}
+        </legend>
         <div className="discern-segmented-control__items">
           {items.map((item) => (
             <label

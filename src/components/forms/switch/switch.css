@@ -2,11 +2,11 @@
   .discern-switch__label {
     display: flex;
     align-items: flex-start;
-    justify-content: space-between;
-    gap: var(--discern-space-4);
+    gap: var(--discern-space-3);
     color: var(--discern-color-ink);
     cursor: pointer;
     font-size: var(--discern-font-size-sm);
+    line-height: 1.4;
     overflow-wrap: anywhere;
   }
   .discern-switch__label input {
@@ -35,22 +35,32 @@
     block-size: var(--discern-switch-track);
     margin-block-start: calc((1lh - var(--discern-switch-track)) / 2);
     padding: calc(var(--discern-space-1) / 2);
-    border: 1px solid var(--discern-color-border-strong);
+    border: 1px solid color-mix(in oklab, var(--discern-color-border-strong),
+      var(--discern-color-ink) 36%);
     border-radius: var(--discern-radius-pill);
     background: var(--discern-color-surface-sunken);
-    transition-property: background, border-color, transform;
+    transition-property: background-color, border-color, transform;
     transition-duration: var(--discern-duration-fast);
+    transition-timing-function: var(--discern-ease-out);
   }
   .discern-switch__track > span {
-    inline-size: 1rem;
-    block-size: 1rem;
+    block-size: 100%;
+    aspect-ratio: 1;
     border-radius: 50%;
-    background: var(--discern-color-surface);
-    box-shadow: 0 0.0625rem 0.125rem color-mix(in oklab,
-      var(--discern-shadow-color) 22%,
-      transparent);
+    outline: 1px solid var(--discern-color-border);
+    outline-offset: -1px;
+    background: linear-gradient(color-mix(in oklab,
+      var(--discern-color-material-highlight) 50%, transparent) 0 0)
+      var(--discern-color-surface);
+    box-shadow: var(--discern-shadow-control);
     transition: translate var(--discern-duration-medium)
       var(--discern-ease-out);
+  }
+  @media (hover: hover) {
+    :where(.discern-switch__label:hover input:not(:disabled)) + .discern-switch__track {
+      border-color: color-mix(in oklab, var(--discern-color-border-strong),
+        var(--discern-color-ink) 56%);
+    }
   }
   input:checked + .discern-switch__track {
     border-color: var(--discern-color-action);
@@ -62,18 +72,13 @@
   }
   input:focus-visible + .discern-switch__track {
     outline: 0.125rem solid var(--discern-color-accent-500);
-    outline-offset: calc(var(--discern-space-1) / 2);
-  }
-  @media (hover: hover) {
-    .discern-switch__label:hover input:not(:disabled) + .discern-switch__track {
-      border-color: var(--discern-color-accent-500);
-    }
+    outline-offset: 0.125rem;
   }
   .discern-switch__label:active input:not(:disabled) + .discern-switch__track {
     transform: translateY(0.0625rem);
   }
-  input[aria-invalid="true"]:not(:disabled) + .discern-switch__track,
-  input:user-invalid:not(:disabled) + .discern-switch__track {
+  input:is([aria-invalid="true"], :user-invalid):not(:disabled) + .discern-switch__track,
+  fieldset[aria-invalid="true"] input:not(:disabled) + .discern-switch__track {
     border-width: 0.125rem;
     border-color: var(--discern-color-danger);
   }
@@ -89,6 +94,9 @@
   }
   input:disabled:checked + .discern-switch__track {
     background: var(--discern-color-ink-faint);
+  }
+  input:disabled + .discern-switch__track > span {
+    box-shadow: none;
   }
   @media (forced-colors: active) {
     .discern-switch__track > span {

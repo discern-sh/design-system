@@ -104,6 +104,21 @@ function AcknowledgementFieldState() {
   );
 }
 
+function GroupFieldState() {
+  return (
+    <Field
+      group
+      controlId="field-group"
+      label="Notify me about"
+      hint="Choose any that apply"
+    >
+      <Checkbox label="Releases" defaultChecked />
+      <Checkbox label="Security advisories" defaultChecked />
+      <Checkbox label="Weekly summary" />
+    </Field>
+  );
+}
+
 const regionOptions = [
   { value: "europe", label: "Europe" },
   { value: "americas", label: "Americas" },
@@ -190,6 +205,7 @@ export const catalogueExamples = defineCatalogueExamples(
     { id: "submitted", Example: SubmittedFieldState },
     { id: "cancelled", Example: CancelledFieldState },
     { id: "acknowledgement", Example: AcknowledgementFieldState },
+    { id: "group", Example: GroupFieldState },
     { id: "mixed-form", Example: MixedFormFieldState },
     { id: "inline-form", Example: InlineFormFieldState },
   ],

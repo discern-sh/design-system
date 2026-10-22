@@ -2,6 +2,10 @@
   .discern-textarea {
     display: block;
     min-block-size: 6.75rem;
+    line-height: var(--discern-leading-body);
     resize: vertical;
+  }
+  .discern-textarea:disabled {
+    resize: none;
   }
 }
