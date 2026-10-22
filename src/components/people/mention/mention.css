@@ -1,46 +1,35 @@
 @layer discern.components {
   .discern-mention {
     display: inline-flex;
-    align-items: center;
+    align-items: flex-start;
     gap: var(--discern-space-1);
     max-inline-size: 100%;
     min-block-size: 1.5rem;
-    padding-block: calc(var(--discern-space-1) * 0.375)
-      calc(var(--discern-space-1) / 2);
-    padding-inline: var(--discern-space-2)
-      calc(var(--discern-space-1) * 2.5);
-    border: 1px solid color-mix(in oklab, var(--discern-color-accent-300) 68%,
-      transparent);
-    border-radius: var(--discern-radius-pill);
-    background: color-mix(
-      in oklab,
-      var(--discern-color-accent-100) 82%,
-      var(--discern-color-surface)
-    );
+    padding: calc(var(--discern-space-1) / 2) var(--discern-space-2);
+    border-radius: 0.875em;
+    background: var(--discern-color-accent-100);
     color: var(--discern-color-accent-700);
     font-family: var(--discern-font-ui);
     font-size: max(0.94em, var(--discern-font-size-xs));
-    font-weight: var(--discern-font-weight-strong);
+    font-weight: var(--discern-font-weight-medium);
     line-height: 1.45;
     text-decoration: none;
     vertical-align: baseline;
   }
   a.discern-mention .discern-mention__name {
-    min-inline-size: 0;
     text-decoration: underline;
-    text-decoration-color: color-mix(in oklab, currentColor 45%, transparent);
+    text-decoration-color: color-mix(in oklab, currentColor 35%, transparent);
     text-underline-offset: 0.16em;
   }
-  a.discern-mention:is(:hover, :active) {
+  a.discern-mention:hover {
     background: var(--discern-color-accent-200);
     color: var(--discern-color-accent-800);
   }
-  a.discern-mention:hover {
-    border-color: var(--discern-color-accent-400);
+  a.discern-mention:hover .discern-mention__name {
+    text-decoration-color: currentColor;
   }
   a.discern-mention:active {
-    border-color: var(--discern-color-accent-500);
-    transform: translateY(1px);
+    background: var(--discern-color-accent-300);
   }
   .discern-mention__sigil {
     color: color-mix(in oklab, currentColor 55%, transparent);

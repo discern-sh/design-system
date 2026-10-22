@@ -13,7 +13,6 @@ const meta = {
 
     "The visible name is the single source of identity: the built-in avatar renders decorative so nothing is announced twice.",
     "Presence is spoken as visually hidden text directly after the name, never conveyed by colour alone.",
-    "Name and detail truncate visually with an ellipsis while the full text stays available to assistive technology.",
   ],
 } satisfies ComponentMeta;
 

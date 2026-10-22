@@ -1,7 +1,7 @@
 @layer discern.components {
   .discern-persona {
     display: inline-flex;
-    align-items: center;
+    align-items: flex-start;
     gap: var(--discern-space-3);
     max-inline-size: 100%;
     min-inline-size: 0;
@@ -9,6 +9,7 @@
     text-align: start;
   }
   .discern-persona__text {
+    align-self: center;
     display: flex;
     flex-direction: column;
     gap: calc(var(--discern-space-1) / 2);
@@ -26,7 +27,6 @@
     overflow-wrap: anywhere;
     color: var(--discern-color-ink-muted);
     font-size: var(--discern-font-size-xs);
-    letter-spacing: 0.005em;
     line-height: 1.35;
   }
   .discern-persona--sm {

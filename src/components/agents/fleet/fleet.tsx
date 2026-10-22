@@ -61,7 +61,15 @@ export const Fleet: DiscernComponent<HTMLUListElement, FleetProps> = forwardRef<
           data-discern-status={row.status}
           key={index}
         >
-          <span className="discern-fleet__persona">{row.persona}</span>
+          <span
+            className={classNames(
+              "discern-fleet__persona",
+              typeof row.persona === "string" &&
+                "discern-fleet__persona--text",
+            )}
+          >
+            {row.persona}
+          </span>
           {row.branch !== undefined && row.branch !== null
             ? <span className="discern-fleet__branch">{row.branch}</span>
             : null}

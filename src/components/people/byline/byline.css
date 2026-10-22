@@ -1,12 +1,9 @@
 @layer discern.components {
   .discern-byline {
-    min-inline-size: 0;
     overflow-wrap: anywhere;
     display: flex;
     column-gap: var(--discern-space-3);
     row-gap: var(--discern-space-2);
-    padding-inline-start: var(--discern-space-3);
-    border-inline-start: 0.125rem solid var(--discern-color-accent-400);
     color: var(--discern-color-ink-muted);
     font-family: var(--discern-font-ui);
     font-size: var(--discern-font-size-xs);
@@ -19,21 +16,17 @@
     min-inline-size: 0;
     max-inline-size: 100%;
     flex-wrap: wrap;
-    align-items: center;
+    align-items: baseline;
   }
   .discern-byline__lede {
-    color: var(--discern-color-ink-faint);
+    margin-inline-end: calc(var(--discern-space-1) * -1);
   }
   .discern-byline__authors {
     display: inline-flex;
     gap: var(--discern-space-2);
-    color: var(--discern-color-ink);
-    font-weight: var(--discern-font-weight-strong);
   }
   .discern-byline__meta {
     display: inline-flex;
-    padding-inline-start: var(--discern-space-3);
-    border-inline-start: 1px solid var(--discern-color-border-strong);
   }
   .discern-byline__meta > * + *::before {
     content: "·" / "";

@@ -1,6 +1,8 @@
 @layer discern.components {
   .discern-transcript {
-    --discern-transcript-indent: 2.75rem;
+    --discern-transcript-indent: calc(
+      var(--discern-avatar-size-sm) + var(--discern-space-2)
+    );
     container: discern-transcript / inline-size;
     display: flex;
     flex-direction: column;
@@ -13,7 +15,7 @@
   .discern-transcript__turn {
     display: flex;
     flex-direction: column;
-    gap: var(--discern-space-2);
+    gap: var(--discern-space-1);
     min-inline-size: 0;
   }
   .discern-transcript__speaker {
@@ -23,9 +25,15 @@
     gap: var(--discern-space-3);
     min-inline-size: 0;
   }
+  .discern-transcript__name {
+    color: var(--discern-color-ink);
+    font-size: var(--discern-font-size-sm);
+    font-weight: var(--discern-font-weight-strong);
+  }
   .discern-transcript__aside {
     margin-inline-start: auto;
     overflow-wrap: anywhere;
+    font-variant-numeric: tabular-nums;
   }
   .discern-transcript__aside,
   .discern-transcript__group {
@@ -33,13 +41,9 @@
     font-size: var(--discern-font-size-xs);
   }
   .discern-transcript__body {
+    flex-grow: 1;
+    min-inline-size: 0;
     margin-inline-start: var(--discern-transcript-indent);
-    padding-block: var(--discern-space-3);
-    padding-inline: var(--discern-space-4);
-    border: 0;
-    border-inline-start: 0.1875rem solid var(--discern-color-accent-300);
-
-    background: var(--discern-color-surface);
     color: var(--discern-color-ink);
     font-size: var(--discern-font-size-sm);
     line-height: 1.6;
@@ -51,13 +55,22 @@
   .discern-transcript__body > :last-child {
     margin-block-end: 0;
   }
+  .discern-transcript__turn:has(> .discern-transcript__speaker > .discern-transcript__name) {
+    --discern-transcript-indent: 0;
+  }
   .discern-transcript__turn[data-discern-routine="continuation"] {
+    flex-direction: row-reverse;
+    align-items: baseline;
+    gap: var(--discern-space-3);
     margin-block-start: calc(var(--discern-space-4) * -1);
+    & > .discern-transcript__speaker {
+      flex: none;
+      max-inline-size: 50%;
+    }
   }
   @container discern-transcript (max-width: 32rem) {
     .discern-transcript__body {
       margin-inline-start: 0;
-      padding-inline: var(--discern-space-3);
     }
   }
 }

@@ -32,46 +32,42 @@
     position: relative;
     z-index: 1;
     display: grid;
-    flex: none;
     place-items: center;
     inline-size: var(--discern-space-6);
     block-size: var(--discern-space-6);
     border: 1px solid var(--discern-color-border);
-    border-radius: var(--discern-radius-xs);
+    border-radius: 50%;
     background: var(--discern-color-surface);
     color: var(--discern-color-ink-faint);
     font-size: var(--discern-font-size-sm);
     line-height: 1;
-    text-align: center;
   }
   .discern-worklog__entry[data-discern-status="done"] .discern-worklog__marker {
-    border-color: color-mix(in oklab, var(--discern-color-success) 42%,
-      var(--discern-color-border));
-    background: var(--discern-color-success-soft);
-    color: var(--discern-color-success-deep);
+    color: var(--discern-color-success);
   }
   .discern-worklog__entry[data-discern-status="active"] .discern-worklog__marker {
-    border-color: var(--discern-color-accent-300);
-    background: var(--discern-color-accent-100);
-    color: var(--discern-color-accent-700);
+    border-color: var(--discern-color-accent-600);
+    background: var(--discern-color-accent-600);
+    color: var(--discern-color-on-action);
   }
   .discern-worklog__entry[data-discern-status="failed"] .discern-worklog__marker {
-    border-color: color-mix(in oklab, var(--discern-color-danger) 40%,
-      var(--discern-color-border));
-    background: var(--discern-color-danger-soft);
+    border-color: var(--discern-color-danger);
     color: var(--discern-color-danger);
   }
   .discern-worklog__group {
-    font-size: var(--discern-font-size-xs);
     color: var(--discern-color-ink-muted);
+    font-size: var(--discern-font-size-xs);
+    font-weight: var(--discern-font-weight-medium);
   }
   .discern-worklog__entry[data-discern-routine="continuation"] .discern-worklog__marker {
-    border: none;
-    background: transparent;
+    border-color: transparent;
+    background:
+      radial-gradient(circle, currentColor 0 0.1875rem, transparent 0.21875rem),
+      linear-gradient(var(--discern-color-border) 0 0) 50% / 1px 100% no-repeat;
+    font-size: 0;
   }
   .discern-worklog__body {
     display: flex;
-    flex: 1;
     flex-direction: column;
     gap: calc(var(--discern-space-1) * 0.5);
     min-inline-size: 0;
@@ -83,7 +79,7 @@
     line-height: 1.4;
   }
   .discern-worklog__entry[data-discern-status="active"] .discern-worklog__label {
-    font-weight: var(--discern-font-weight-strong);
+    font-weight: var(--discern-font-weight-medium);
   }
   .discern-worklog__entry[data-discern-status="queued"] .discern-worklog__label,
   .discern-worklog__entry[data-discern-status="skipped"] .discern-worklog__label {
@@ -96,9 +92,9 @@
     overflow-wrap: anywhere;
   }
   .discern-worklog__meta {
-    flex: none;
     color: var(--discern-color-ink-muted);
     font-size: var(--discern-font-size-xs);
+    font-variant-numeric: tabular-nums;
     line-height: 1.4;
     padding-block-start: calc(var(--discern-space-1) * 0.5);
     text-align: end;

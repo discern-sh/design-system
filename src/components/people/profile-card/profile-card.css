@@ -1,7 +1,5 @@
 @layer discern.components {
   .discern-profile-card {
-    position: relative;
-    isolation: isolate;
     display: flex;
     flex-direction: column;
     gap: var(--discern-space-4);
@@ -10,34 +8,9 @@
     border-radius: var(--discern-radius-md);
     min-inline-size: 0;
     overflow-wrap: anywhere;
-    background:
-      linear-gradient(
-      180deg,
-      color-mix(
-        in oklab,
-        var(--discern-color-accent-100) 42%,
-        var(--discern-color-surface)
-      ),
-      var(--discern-color-surface) var(--discern-space-16)
-    );
+    background: var(--discern-color-surface);
     box-shadow: var(--discern-shadow-card);
     font-family: var(--discern-font-ui);
-  }
-  .discern-profile-card::before {
-    position: absolute;
-    z-index: -1;
-    inset-block-start: 0;
-    inset-inline: 0;
-    block-size: 0.1875rem;
-    background: var(--discern-color-accent-500);
-    content: "";
-  }
-  .discern-profile-card > .discern-avatar {
-    --discern-avatar-ring: color-mix(
-      in oklab,
-      var(--discern-color-accent-200) 72%,
-      transparent
-    );
   }
   .discern-profile-card__body {
     display: flex;
@@ -56,9 +29,7 @@
   }
   .discern-profile-card__detail {
     color: var(--discern-color-ink-muted);
-    font-size: var(--discern-font-size-xs);
-    font-weight: var(--discern-font-weight-strong);
-    line-height: var(--discern-leading-body);
+    font: var(--discern-font-label);
   }
   .discern-profile-card__bio {
     color: var(--discern-color-ink-muted);

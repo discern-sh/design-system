@@ -45,9 +45,11 @@ export const Transcript: DiscernComponent<HTMLOListElement, TranscriptProps> =
           >
             <div className="discern-transcript__speaker">
               <span
-                className={positions[index]?.continued
-                  ? "discern-visually-hidden"
-                  : undefined}
+                className={classNames(
+                  typeof turn.speaker === "string" &&
+                    "discern-transcript__name",
+                  positions[index]?.continued && "discern-visually-hidden",
+                ) || undefined}
               >
                 {turn.speaker}
               </span>

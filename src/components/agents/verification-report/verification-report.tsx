@@ -108,10 +108,12 @@ export const VerificationReport: DiscernComponent<
             open={evidenceOpen}
           >
             <summary>
-              {checks?.length
-                ? verificationExtent(checks)
-                : `${meta?.length ?? 0} metadata fields`}{" "}
-              <span>— Evidence</span>
+              Evidence{" "}
+              <span className="discern-verification-report__extent">
+                {checks?.length
+                  ? verificationExtent(checks)
+                  : `${meta?.length ?? 0} metadata fields`}
+              </span>
             </summary>
             {meta !== undefined && meta.length > 0
               ? (
@@ -133,18 +135,24 @@ export const VerificationReport: DiscernComponent<
                       <dt>{check.label}</dt>
                       <dd>
                         {check.value !== undefined && check.value !== null
-                          ? check.value
+                          ? (
+                            <span className="discern-verification-report__value">
+                              {check.value}
+                            </span>
+                          )
                           : null}
-                        <span
-                          className="discern-verification-report__glyph"
-                          aria-hidden="true"
-                        >
-                          {checkGlyphs[check.state]}
-                        </span>
-                        <span className="discern-verification-report__check-state">
-                          {check.stateLabel === undefined
-                            ? check.state
-                            : `${check.stateLabel} (${check.state})`}
+                        <span className="discern-verification-report__verdict">
+                          <span
+                            className="discern-verification-report__glyph"
+                            aria-hidden="true"
+                          >
+                            {checkGlyphs[check.state]}
+                          </span>
+                          <span className="discern-verification-report__check-state">
+                            {check.stateLabel === undefined
+                              ? check.state
+                              : `${check.stateLabel} (${check.state})`}
+                          </span>
                         </span>
                       </dd>
                     </div>
