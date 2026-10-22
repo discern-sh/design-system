@@ -641,10 +641,13 @@ Deno.test("selection resolves dependencies and excludes unrelated groups", async
       components: ["dialog"],
     });
     assertEquals(summary.manifest.selection.resolvedComponents, [
+      "icon",
+      "icon-button",
       "kicker",
       "dialog",
     ]);
     const css = await Deno.readTextFile(join(temp, "discern.css"));
+    assertStringIncludes(css, ".discern-icon-button");
     assertStringIncludes(css, ".discern-kicker");
     assertStringIncludes(css, ".discern-dialog");
     assert(!css.includes(".discern-hero-block"));
@@ -735,7 +738,7 @@ function respondsToItsOwnInlineSize(source: string): boolean {
     !/@media\s*\(\s*max-width\s*:/u.test(source);
 }
 
-Deno.test("reading-first Marketing Components share one section authority", () => {
+Deno.test("Marketing blocks share one section and heading authority", () => {
   const readingFirstIds = [
     "marketing-stage",
     "editorial-hero",
@@ -745,20 +748,42 @@ Deno.test("reading-first Marketing Components share one section authority", () =
     "voice-break",
     "closing-statement",
   ] as const;
+  const sectionBlockIds = [
+    "audience-grid",
+    "feature-bento",
+    "split-feature",
+    "process-steps",
+    "metrics-band",
+    "comparison-table",
+    "faq-block",
+  ] as const;
+  // A case study is an article and a CTA band a card in its own gutter, so
+  // both keep their own frame while sharing the heading authority.
+  const ownFrameIds = new Set(["marketing-stage", "case-study", "cta-band"]);
   const introIds = new Set([
     "narrative-chapter",
     "journey-overview",
     "outcome-spotlight",
     "closing-statement",
+    ...sectionBlockIds,
+    "case-study",
+    "cta-band",
   ]);
   const components = new Map(
     packageManifest.components.map((component) => [component.id, component]),
   );
 
-  for (const id of readingFirstIds) {
+  for (
+    const id of [
+      ...readingFirstIds,
+      ...sectionBlockIds,
+      "case-study",
+      "cta-band",
+    ]
+  ) {
     const component = components.get(id);
     assert(component, `${id} is absent from the generated manifest`);
-    if (id !== "marketing-stage") {
+    if (!ownFrameIds.has(id)) {
       assert(
         component.dependencies.includes("marketing-section"),
         `${id} bypasses Marketing section`,
@@ -781,6 +806,7 @@ Deno.test("reading-first Marketing Components share one section authority", () =
   }
 
   assertEquals(components.get("editorial-hero")?.dependencies, [
+    "kicker",
     "marketing-section",
     "marketing-stage",
   ]);
@@ -830,7 +856,11 @@ Deno.test("artwork selection includes Backdrop but excludes sibling compositions
       outputRoot: toFileUrl(`${temp}/`),
       components: ["hero-block"],
     });
-    assertEquals(hero.manifest.selection.resolvedComponents, ["hero-block"]);
+    assertEquals(hero.manifest.selection.resolvedComponents, [
+      "kicker",
+      "marketing-section",
+      "hero-block",
+    ]);
     const heroCss = await Deno.readTextFile(join(temp, "discern.css"));
     assertStringIncludes(heroCss, ".discern-hero-block__backdrop");
     assert(!heroCss.includes(".discern-backdrop {"));
@@ -2235,7 +2265,10 @@ Deno.test("diagnostics require a correction and derive their default role from s
     }),
   );
   assertMatch(failure, /^<article role="alert"/);
-  assertStringIncludes(failure, 'data-discern-state="failure">Failure');
+  assertStringIncludes(
+    failure,
+    'data-discern-state="failure"><span class="discern-diagnostic__mark" aria-hidden="true">✕</span>Failure<',
+  );
   assertStringIncludes(failure, "Suggested correction");
   assertStringIncludes(failure, "Handle the missing case, then retry.");
 
@@ -2248,7 +2281,10 @@ Deno.test("diagnostics require a correction and derive their default role from s
     }),
   );
   assertMatch(attention, /^<article role="status"/);
-  assertStringIncludes(attention, 'data-discern-state="attention">Attention');
+  assertStringIncludes(
+    attention,
+    'data-discern-state="attention"><span class="discern-diagnostic__mark" aria-hidden="true">!</span>Attention<',
+  );
 
   const explicitRole = renderToStaticMarkup(
     createElement(Diagnostic, {
@@ -2289,9 +2325,9 @@ Deno.test("branding and hover-card adapters preserve their semantic relationship
       brandMarkTreatment: "plain",
     }),
   );
-  assertStringIncludes(header, "discern-site-header__brand--mono");
-  assertStringIncludes(header, "discern-site-header__mark--plain");
-  assertStringIncludes(header, "discern-site-header__mark--natural");
+  assertStringIncludes(header, "discern-brand--mono");
+  assertStringIncludes(header, "discern-logo--plain");
+  assertStringIncludes(header, "discern-logo--natural");
 
   const quietToggle = renderToStaticMarkup(
     createElement(ThemeToggle, {
@@ -2314,7 +2350,7 @@ Deno.test("branding and hover-card adapters preserve their semantic relationship
   // replacing authored nodes; only the destination one is visible.
   assertStringIncludes(
     quietToggle,
-    '<span class="discern-theme-toggle__glyph" aria-hidden="true" data-discern-theme-destination="dark">\u263e</span>',
+    '<span class="discern-theme-toggle__glyph" aria-hidden="true" data-discern-theme-destination="dark"><svg',
   );
   assertStringIncludes(
     quietToggle,
@@ -2369,33 +2405,35 @@ Deno.test("branding and hover-card adapters preserve their semantic relationship
 });
 
 Deno.test("brand-bearing page chrome keeps plain, tiled, mono, and adaptive mark variants", async () => {
-  for (
-    const stylesheet of [
-      join(COMPONENT_ROOT, "marketing", "site-header", "site-header.css"),
-      join(COMPONENT_ROOT, "marketing", "site-footer", "site-footer.css"),
-    ]
-  ) {
-    const css = await Deno.readTextFile(stylesheet);
-    for (
-      const variant of [
-        "__brand--mono",
-        "__mark--plain",
-        "__mark--tile",
-        "__mark--square",
-      ]
-    ) {
-      assertStringIncludes(
-        css,
-        variant,
-        `${relative(PACKAGE_ROOT, stylesheet)} is missing ${variant}`,
-      );
-    }
-    assertMatch(
-      css,
-      /__mark > :where\(img, svg\)/,
-      `${relative(PACKAGE_ROOT, stylesheet)} does not adapt injected graphics`,
+  // Page chrome composes the core Brand lockup, so the mark and typeface
+  // treatments have one owner instead of a copy per masthead.
+  const components = new Map(
+    packageManifest.components.map((component) => [component.id, component]),
+  );
+  for (const id of ["site-header", "site-footer"]) {
+    assert(
+      components.get(id)?.dependencies.includes("brand"),
+      `${id} bypasses the core Brand lockup`,
+    );
+    const css = await Deno.readTextFile(
+      join(COMPONENT_ROOT, "marketing", id, `${id}.css`),
+    );
+    assert(
+      !/__mark|__brand--/.test(css),
+      `${id} restates Brand or Logo treatments`,
     );
   }
+  const logo = await Deno.readTextFile(
+    join(COMPONENT_ROOT, "core", "logo", "logo.css"),
+  );
+  for (const variant of ["--tile", "--square", "--natural"]) {
+    assertStringIncludes(logo, `.discern-logo${variant}`);
+  }
+  assertMatch(
+    logo,
+    /\.discern-logo > :where\(img, svg\)/,
+    "Logo does not adapt injected graphics",
+  );
   const utilities = await Deno.readTextFile(
     join(PACKAGE_ROOT, "src", "styles", "utilities.css"),
   );
@@ -2404,30 +2442,18 @@ Deno.test("brand-bearing page chrome keeps plain, tiled, mono, and adaptive mark
   const brand = await Deno.readTextFile(
     join(COMPONENT_ROOT, "core", "brand", "brand.css"),
   );
+  assertStringIncludes(brand, ".discern-brand--mono .discern-brand__name");
   assertMatch(
     brand,
     /\.discern-brand__mark\.discern-logo--plain\s*\{[^}]*font-size:\s*1\.15em;/s,
   );
-  for (
-    const stylesheet of [
-      join(COMPONENT_ROOT, "marketing", "site-header", "site-header.css"),
+  assertMatch(
+    await Deno.readTextFile(
       join(COMPONENT_ROOT, "marketing", "site-footer", "site-footer.css"),
-    ]
-  ) {
-    const css = await Deno.readTextFile(stylesheet);
-    assertMatch(
-      css,
-      /__mark--plain\s*\{[^}]*font-size:\s*1\.15em;/s,
-      `${relative(PACKAGE_ROOT, stylesheet)} has a divergent plain-mark scale`,
-    );
-    if (stylesheet.endsWith("site-footer.css")) {
-      assertMatch(
-        css,
-        /__base a\s*\{[^}]*color:\s*inherit;/s,
-        "Site footer metadata links need component-owned styling",
-      );
-    }
-  }
+    ),
+    /__base a\s*\{[^}]*color:\s*inherit;/s,
+    "Site footer metadata links need component-owned styling",
+  );
 });
 
 Deno.test("full-page roots remove the browser body gutter", async () => {
@@ -2441,12 +2467,33 @@ Deno.test("full-page roots remove the browser body gutter", async () => {
 });
 
 Deno.test("quiet header actions and logo marks keep their shared visual roles", async () => {
+  // Theme toggle is an Icon button: its treatments map onto Icon button's
+  // variants and control sizes, and its own stylesheet never rebuilds the box.
+  for (
+    const [variant, iconButton] of [
+      ["outlined", "discern-icon-button--outline discern-icon-button--md"],
+      ["quiet", "discern-icon-button--quiet discern-icon-button--sm"],
+    ] as const
+  ) {
+    assertStringIncludes(
+      renderToStaticMarkup(
+        createElement(ThemeToggle, {
+          theme: "light",
+          variant,
+          onThemeChange: () => undefined,
+        }),
+      ),
+      `class="discern-icon-button ${iconButton} discern-theme-toggle discern-theme-toggle--${variant}"`,
+    );
+  }
   const toggle = await Deno.readTextFile(
     join(COMPONENT_ROOT, "core", "theme-toggle", "theme-toggle.css"),
   );
-  assertMatch(
-    toggle,
-    /\.discern-theme-toggle--quiet\s*\{[^}]*inline-size:\s*1\.75rem;[^}]*block-size:\s*1\.75rem;[^}]*border-color:\s*color-mix\(in oklab,\s*var\(--discern-color-border\) 0%,\s*transparent\);[^}]*background:\s*transparent;/s,
+  assertEquals(
+    toggle.match(
+      /(?:^|[\s;{])(?:inline-size|block-size|width|height|padding|border-radius|background|cursor):/gm,
+    ),
+    null,
   );
   const cloud = await Deno.readTextFile(
     join(COMPONENT_ROOT, "marketing", "logo-cloud", "logo-cloud.css"),
@@ -2565,16 +2612,13 @@ Deno.test("monospace is reserved for brand names and code-bearing surfaces", asy
     "src/components/agents/verification-report/verification-report.css::.discern-verification-report__meta dd code",
     "src/components/core/brand/brand.css::.discern-brand--mono .discern-brand__name",
     "src/components/display/diffstat/diffstat.css::.discern-diffstat__added, .discern-diffstat__removed",
-    "src/components/display/sparkline/sparkline.css::.discern-sparkline__annotation",
     "src/components/display/terminal/terminal.css::.discern-terminal__body",
     "src/components/editorial/chart/chart.css::.discern-chart__label--mono",
     "src/components/editorial/code-block/code-block.css::.discern-code-block",
     "src/components/editorial/code-listing/code-listing.css::.discern-code-listing__body",
     "src/components/editorial/diagram/diagram.css::.discern-diagram__text--quiet-annotation",
-    "src/components/editorial/prose/prose.css::& > p code",
+    "src/components/editorial/prose/prose.css::& > :where(p, ul, ol, blockquote) code:not(pre > code)",
     "src/components/marketing/hero-block/hero-block.css::.discern-hero-block--showcase .discern-hero-block__meta code",
-    "src/components/marketing/site-footer/site-footer.css::.discern-site-footer__brand--mono",
-    "src/components/marketing/site-header/site-header.css::.discern-site-header__brand--mono",
     "src/components/workflow/activity-log/activity-log.css::.discern-activity-log__tail",
     "src/components/workflow/artifact-tree/artifact-tree.css::.discern-artifact-tree__name",
     "src/components/workflow/command/command.css::.discern-command__context code",
@@ -2903,7 +2947,7 @@ Deno.test("procedure grammar preserves sequence and state in plain HTML", () => 
 
   assertMatch(
     html,
-    /<ol class="discern-procedure__steps"><li class="discern-procedure__step"><article/,
+    /<ol class="discern-procedure__steps" role="list"><li class="discern-procedure__step"><article/,
   );
   assertEquals(
     (html.match(/<li class="discern-procedure__step">/g) ?? []).length,

@@ -67,9 +67,9 @@ const localResponsiveCases: readonly LocalResponsiveCase[] = [
   },
   {
     group: "Workflow",
-    component: "diagnostic",
-    example: "verbose-failure",
-    target: ".discern-diagnostic__correction",
+    component: "result-summary",
+    example: "failed",
+    target: ".discern-result-summary__header",
     property: "grid-template-columns",
     comparisonWidth: "wide",
   },
@@ -91,9 +91,9 @@ const localResponsiveCases: readonly LocalResponsiveCase[] = [
   },
   {
     group: "Editorial",
-    component: "table-of-contents",
+    component: "timeline",
     example: "default",
-    target: ".discern-table-of-contents ol",
+    target: ".discern-timeline li",
     property: "grid-template-columns",
     comparisonWidth: "medium",
   },
@@ -581,7 +581,7 @@ export async function verifyComponentReviewInstrument(
     invariant(
       await page.locator(".discern-dialog__panel").evaluate((element) =>
         getComputedStyle(element).animationDuration
-      ) === "0.3s",
+      ) === "0.15s",
       "Dialog ordinary motion lost its causal entrance duration",
     );
     motionCases += 1;
@@ -768,7 +768,7 @@ export async function verifyComponentReviewInstrument(
       invariant(
         await page.locator(".discern-search-palette[open]").evaluate(
           (element) => getComputedStyle(element).animationDuration,
-        ) === (motion === "ordinary" ? "0.3s" : "0s"),
+        ) === (motion === "ordinary" ? "0.15s" : "0s"),
         `Search palette ${motion} duration is not truthful`,
       );
       motionCases += 1;
