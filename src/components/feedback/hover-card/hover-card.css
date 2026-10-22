@@ -27,7 +27,7 @@
     padding: var(--discern-space-4);
     border: 1px solid var(--discern-color-border);
     border-radius: var(--discern-radius-lg);
-    background: var(--discern-color-surface);
+    background: var(--discern-color-surface-floating);
     box-shadow: var(--discern-shadow-pop);
     color: var(--discern-color-ink-muted);
     opacity: 0;
@@ -46,6 +46,7 @@
     inset-block-end: calc(100% + var(--discern-space-2));
   }
   .discern-hover-card--bottom .discern-hover-card__panel {
+    --discern-enter-offset: -0.25rem;
     inset-block-start: calc(100% + var(--discern-space-2));
   }
   .discern-hover-card--align-start .discern-hover-card__panel {

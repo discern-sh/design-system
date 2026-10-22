@@ -1,4 +1,5 @@
 import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
+import { Cluster } from "../../layout/cluster/cluster.tsx";
 import { Stack } from "../../layout/stack/stack.tsx";
 import { Button } from "../../core/button/button.tsx";
 import { Badge } from "../badge/badge.tsx";
@@ -84,10 +85,10 @@ function CrowdedExample() {
           >
             Updated 11 August · 5 contributors
           </p>
-          <div className="discern-example-row">
+          <Cluster gap={2}>
             <Badge tone="neutral">Reference</Badge>
             <Tag>International correspondence</Tag>
-          </div>
+          </Cluster>
         </Stack>
         <Button href="#correspondence" variant="secondary" size="sm">
           Read correspondence

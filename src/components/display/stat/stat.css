@@ -22,9 +22,11 @@
   }
   .discern-stat__context--positive {
     color: var(--discern-color-success-deep);
+    font-weight: var(--discern-font-weight-medium);
   }
   .discern-stat__context--negative {
     color: var(--discern-color-danger);
+    font-weight: var(--discern-font-weight-medium);
   }
   .discern-stat__sparkline {
     justify-self: start;

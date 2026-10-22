@@ -4,7 +4,6 @@ import {
   defineCatalogueExamples,
 } from "../../../../catalogue/conformance.ts";
 import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
-import { ExampleIcon } from "../../../fixtures/example-icon.tsx";
 import meta, { componentExampleVocabulary } from "./toast.meta.ts";
 import { Toast } from "./toast.tsx";
 
@@ -31,11 +30,7 @@ function SuccessToastState() {
   const [visible, setVisible] = useState(true);
   return visible
     ? (
-      <Toast
-        tone="success"
-        icon={<ExampleIcon name="check" />}
-        onDismiss={() => setVisible(false)}
-      >
+      <Toast tone="success" onDismiss={() => setVisible(false)}>
         Changes saved.
       </Toast>
     )

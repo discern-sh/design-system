@@ -13,5 +13,6 @@
   }
   .discern-kicker__index {
     color: var(--discern-color-accent-ink);
+    font-variant-numeric: tabular-nums;
   }
 }

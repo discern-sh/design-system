@@ -14,6 +14,9 @@
     letter-spacing: normal;
     line-height: var(--discern-leading-snug);
   }
+  .discern-card :where(h1, h2, h3, h4, h5, h6) :where(b, strong) {
+    font-weight: bolder;
+  }
   .discern-card > :first-child {
     margin-block-start: 0;
   }
@@ -21,6 +24,7 @@
     margin-block-end: 0;
   }
   .discern-card--raised {
+    background-color: var(--discern-color-surface-floating);
     box-shadow: var(--discern-shadow-card);
   }
   .discern-card--shaded {

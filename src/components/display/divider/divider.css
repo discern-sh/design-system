@@ -18,6 +18,12 @@
   .discern-divider::after {
     scale: -1;
   }
+  .discern-divider:dir(rtl)::before {
+    scale: -1;
+  }
+  .discern-divider:dir(rtl)::after {
+    scale: none;
+  }
   .discern-divider--plain {
     gap: 0;
   }

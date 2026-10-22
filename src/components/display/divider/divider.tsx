@@ -14,7 +14,7 @@ export interface DividerProps extends HTMLAttributes<HTMLDivElement> {
 /** Quiet editorial rule with an optional annotation label. */
 export const Divider: DiscernComponent<HTMLDivElement, DividerProps> =
   forwardRef<HTMLDivElement, DividerProps>(function Divider(
-    { label, surface = "canvas", className, ...props },
+    { label, surface: _terminalSurface, className, ...props },
     ref,
   ) {
     const hasLabel = label !== undefined && label !== null;
@@ -24,8 +24,7 @@ export const Divider: DiscernComponent<HTMLDivElement, DividerProps> =
         role="separator"
         className={classNames(
           "discern-divider",
-          `discern-divider--${surface}`,
-          hasLabel ? "discern-divider--labelled" : "discern-divider--plain",
+          !hasLabel && "discern-divider--plain",
           className,
         )}
         {...props}

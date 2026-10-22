@@ -52,8 +52,7 @@
       border: 1px solid var(--discern-color-border);
     }
     .discern-meter__fill {
-      border-block-end: 1px solid var(--discern-color-accent-500);
-      border-block-end-width: var(--discern-space-2);
+      border-block-end: 0.375rem solid var(--discern-color-accent-500);
     }
   }
 }

@@ -48,10 +48,10 @@ function DenseTableState() {
   return (
     <Table
       caption="Recent survey evidence"
-      className="discern-example-table-dense"
       data-example-table-dense
       striped
       numeric
+      style={{ whiteSpace: "nowrap" }}
     >
       <thead>
         <tr>

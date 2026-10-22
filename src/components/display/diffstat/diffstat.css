@@ -17,9 +17,13 @@
   .discern-diffstat__removed {
     color: var(--discern-color-danger);
   }
+  .discern-diffstat [data-discern-zero] {
+    color: var(--discern-color-ink-faint);
+  }
   .discern-diffstat__blocks {
     display: inline-flex;
     gap: calc(var(--discern-space-1) / 2);
+    margin-inline-start: var(--discern-space-1);
   }
   .discern-diffstat__block {
     inline-size: 0.4375rem;

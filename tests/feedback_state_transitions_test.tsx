@@ -123,7 +123,7 @@ Deno.test("Feedback hierarchy and actions stay contained in both themes and forc
   try {
     await emitDesignSystemRuntime({
       outputRoot: toFileUrl(`${output}/`),
-      components: ["banner", "callout", "empty-state", "button"],
+      components: ["banner", "callout", "empty-state", "button", "toast"],
     });
     const css = await Deno.readTextFile(`${output}/discern.css`);
     const page = await browser.newPage({
@@ -164,6 +164,11 @@ Deno.test("Feedback hierarchy and actions stay contained in both themes and forc
           </Callout>,
         )
       ),
+      ...(["neutral", "success", "warning", "danger"] as const).map((tone) =>
+        renderToStaticMarkup(
+          <Toast tone={tone} onDismiss={() => {}}>{explanation}</Toast>,
+        )
+      ),
       ...emptyExamples.map(({ Example }) => renderToStaticMarkup(<Example />)),
     ].join("");
     for (const theme of ["light", "dark"]) {
@@ -173,7 +178,7 @@ Deno.test("Feedback hierarchy and actions stay contained in both themes and forc
         );
         for (const forcedColors of ["none", "active"] as const) {
           await page.emulateMedia({ forcedColors });
-          assertEquals(await page.getByRole("img").count(), 9);
+          assertEquals(await page.getByRole("img").count(), 13);
           const violations = await page.locator("main > *").evaluateAll((
             nodes,
           ) =>

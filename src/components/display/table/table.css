@@ -22,6 +22,7 @@
   .discern-table td {
     padding: var(--discern-space-2) var(--discern-space-3);
     border-block-end: 1px solid var(--discern-color-border);
+    font-variant-numeric: tabular-nums;
     overflow-wrap: normal;
     text-align: start;
     vertical-align: top;
@@ -34,6 +35,7 @@
   .discern-table thead th {
     color: var(--discern-color-ink-muted);
     font: var(--discern-font-label);
+    font-variant-numeric: tabular-nums;
     vertical-align: bottom;
   }
   .discern-table :where(th, td)[data-discern-table-align="center"] {
@@ -47,16 +49,25 @@
     align-items: center;
     min-block-size: 1.5rem;
   }
-  .discern-table--striped tbody tr:nth-child(odd) {
+  .discern-table :where(th, td) code {
+    padding: calc(var(--discern-space-1) / 2) var(--discern-space-1);
+    border-radius: var(--discern-radius-xs);
+    background: var(--discern-color-inset);
+    color: var(--discern-color-ink);
+    font-family: var(--discern-font-mono);
+    font-size: 0.84em;
+  }
+  .discern-table--striped tbody tr:nth-child(even) {
     background: color-mix(in oklab, var(--discern-color-stripe) 55%,
       transparent);
   }
   .discern-table tbody tr:hover {
     background-image: linear-gradient(var(--discern-color-accent-100) 0 0);
   }
-  .discern-table--numeric td:last-child,
-  .discern-table--numeric th:last-child {
-    font-variant-numeric: tabular-nums;
+  .discern-table--striped tbody tr:hover {
+    background-image: linear-gradient(var(--discern-color-accent-200) 0 0);
+  }
+  .discern-table--numeric :where(td, th):last-child {
     text-align: end;
   }
 }

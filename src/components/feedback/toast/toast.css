@@ -11,53 +11,60 @@
   }
   .discern-toast {
     --discern-color-toast-accent: var(--discern-color-ink-muted);
-    display: flex;
-    align-items: center;
+    --discern-toast-line: calc(var(--discern-font-size-sm) *
+      var(--discern-leading-snug));
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-content: center;
+    align-items: start;
     gap: var(--discern-space-3);
-    width: fit-content;
+    inline-size: fit-content;
     max-inline-size: min(30rem, 100%);
     min-block-size: calc(var(--discern-control-size-sm) +
       var(--discern-space-4));
     padding: var(--discern-space-3) var(--discern-space-4);
     border: 1px solid var(--discern-color-border);
     border-radius: var(--discern-radius-lg);
-    background: var(--discern-color-surface);
+    background: var(--discern-color-surface-floating);
     box-shadow: var(--discern-shadow-pop);
     color: var(--discern-color-ink);
     pointer-events: auto;
-    font-size: var(--discern-font-size-sm);
-    line-height: var(--discern-leading-snug);
+    font: var(--discern-font-size-sm) / var(--discern-leading-snug)
+      var(--discern-font-ui);
     animation: discern-enter var(--discern-duration-fast)
       var(--discern-ease-out);
   }
   .discern-toast--success {
-    --discern-color-toast-accent: var(--discern-color-success);
+    --discern-color-toast-accent: var(--discern-color-success-deep);
   }
   .discern-toast--warning {
-    --discern-color-toast-accent: var(--discern-color-warning);
+    --discern-color-toast-accent: var(--discern-color-warning-deep);
   }
   .discern-toast--danger {
     --discern-color-toast-accent: var(--discern-color-danger);
   }
   .discern-toast__icon {
     display: grid;
-    flex: none;
     place-items: center;
     inline-size: 1rem;
-    block-size: 1rem;
+    block-size: var(--discern-toast-line);
     color: var(--discern-color-toast-accent);
     font-size: var(--discern-font-size-md);
     line-height: 1;
   }
   .discern-toast__icon > :where(svg, img) {
     inline-size: 100%;
-    block-size: 100%;
+    block-size: 1rem;
   }
   .discern-toast__content {
     min-inline-size: 0;
+    overflow-wrap: anywhere;
   }
   .discern-toast__dismiss {
-    margin: calc(var(--discern-space-1) * -1.5);
-    margin-inline-end: calc(var(--discern-space-2) * -1);
+    margin-block: calc((var(--discern-toast-line) -
+      var(--discern-control-size-sm)) / 2);
+    margin-inline: calc(var(--discern-space-1) * -1.5)
+      calc(var(--discern-space-2) * -1);
   }
 }

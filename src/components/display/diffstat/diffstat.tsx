@@ -23,8 +23,18 @@ export const Diffstat: DiscernComponent<HTMLSpanElement, DiffstatProps> =
         className={classNames("discern-diffstat", className)}
         {...props}
       >
-        <span className="discern-diffstat__added">{`+${added}`}</span>
-        <span className="discern-diffstat__removed">{`−${removed}`}</span>
+        <span
+          className="discern-diffstat__added"
+          data-discern-zero={added === 0 ? "" : undefined}
+        >
+          {`+${added}`}
+        </span>
+        <span
+          className="discern-diffstat__removed"
+          data-discern-zero={removed === 0 ? "" : undefined}
+        >
+          {`−${removed}`}
+        </span>
         <span className="discern-diffstat__blocks" aria-hidden="true">
           {allocateDiffstatBlocks(added, removed, blocks).map((
             share,

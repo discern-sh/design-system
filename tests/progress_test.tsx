@@ -84,6 +84,21 @@ Deno.test("Progress exposes named, truthful value semantics and a still waiting 
             parseFloat(getComputedStyle(node).borderBottomWidth) > 0
           ),
         );
+        const still = await fill.evaluate((node) => {
+          const segment = node.getBoundingClientRect();
+          const track = node.parentElement!.getBoundingClientRect();
+          return {
+            share: segment.width / track.width,
+            lead: segment.left - track.left,
+            trail: track.right - segment.right,
+          };
+        });
+        assert(
+          still.share <= 0.5 && still.lead > 1 && still.trail > 1,
+          `a still waiting state never reads as a level: ${
+            JSON.stringify(still)
+          }`,
+        );
         assert(await page.getByText("Waiting", { exact: true }).isVisible());
         await page.emulateMedia({
           reducedMotion: "no-preference",

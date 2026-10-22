@@ -8,8 +8,8 @@
     z-index: 20;
     inset-block-end: calc(100% + var(--discern-space-2));
     inset-inline-start: 50%;
-    width: max-content;
-    max-width: 18rem;
+    inline-size: max-content;
+    max-inline-size: 18rem;
     padding: calc(var(--discern-space-1) * 1.5) var(--discern-space-3);
     border: 1px solid var(--discern-color-border);
     border-radius: var(--discern-radius-sm);
@@ -24,6 +24,7 @@
     line-height: var(--discern-leading-snug);
   }
   .discern-tooltip--bottom .discern-tooltip__bubble {
+    --discern-enter-offset: -0.25rem;
     inset-block: calc(100% + var(--discern-space-2)) auto;
   }
   .discern-tooltip:is(:hover, :focus-within) .discern-tooltip__bubble {
@@ -37,7 +38,7 @@
   .discern-tooltip .discern-tooltip__bubble[data-discern-floating-enhanced] {
     position: fixed;
     inset: auto;
-    max-width: min(18rem, calc(100vw - 2 * var(--discern-space-4)));
+    max-inline-size: min(18rem, calc(100vw - 2 * var(--discern-space-4)));
     margin: 0;
     overflow-wrap: anywhere;
     translate: 0 0;

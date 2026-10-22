@@ -3,4 +3,13 @@
     color: var(--discern-color-accent-ink);
     font-style: italic;
   }
+  .discern-heading :where(b, strong) {
+    font-weight: bolder;
+  }
+  .discern-heading code {
+    font-family: var(--discern-font-mono);
+    font-size: 0.84em;
+    font-weight: var(--discern-font-weight-medium);
+    letter-spacing: normal;
+  }
 }

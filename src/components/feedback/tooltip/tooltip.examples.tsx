@@ -4,6 +4,7 @@ import {
 } from "../../../../catalogue/conformance.ts";
 import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
 import { ExampleIcon } from "../../../fixtures/example-icon.tsx";
+import { Button } from "../../core/button/button.tsx";
 import { IconButton } from "../../core/icon-button/icon-button.tsx";
 import meta, { componentExampleVocabulary } from "./tooltip.meta.ts";
 import { Tooltip } from "./tooltip.tsx";
@@ -50,9 +51,7 @@ function DefaultTooltipState() {
 function BottomTooltipState() {
   return (
     <Tooltip label="Consectetur adipiscing" placement="bottom">
-      <button className="discern-text-trigger" type="button">
-        Focus or hover
-      </button>
+      <Button variant="ghost" size="sm">Focus or hover</Button>
     </Tooltip>
   );
 }

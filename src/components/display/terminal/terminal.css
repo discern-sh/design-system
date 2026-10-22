@@ -1,7 +1,8 @@
 @layer discern.components {
   .discern-terminal {
     --discern-terminal-surface: var(--discern-color-surface-sunken);
-    --discern-terminal-chrome: var(--discern-color-surface);
+    --discern-terminal-chrome: color-mix(in oklab,
+      var(--discern-color-surface-sunken) 56%, var(--discern-color-surface));
     --discern-terminal-text: var(--discern-color-ink);
     --discern-terminal-muted: var(--discern-color-ink-faint);
     --discern-terminal-dot: var(--discern-color-border-strong);
@@ -101,7 +102,6 @@
       var(--discern-color-inverse-ink) 28%, transparent);
     --discern-color-terminal-edge: color-mix(in oklab,
       var(--discern-color-inverse-ink) 16%, transparent);
-    border-radius: clamp(1.25rem, 3vw, 2rem);
   }
   .discern-terminal--showcase ::selection {
     background: color-mix(in oklab, var(--discern-color-inverse-ink) 28%,

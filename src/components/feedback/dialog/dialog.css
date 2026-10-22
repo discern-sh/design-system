@@ -19,13 +19,13 @@
     place-items: center;
   }
   .discern-dialog__panel {
-    width: min(100%, 31rem);
+    inline-size: min(100%, 31rem);
     max-block-size: min(80vh, 46rem);
     overflow: auto;
     padding: var(--discern-space-6);
     border: 1px solid var(--discern-color-border);
     border-radius: var(--discern-radius-lg);
-    background: var(--discern-color-surface);
+    background: var(--discern-color-surface-floating);
     box-shadow: var(--discern-shadow-pop);
   }
   .discern-dialog[open] .discern-dialog__panel {
