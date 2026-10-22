@@ -6,7 +6,6 @@
     color: var(--discern-color-ink-muted);
     font-size: var(--discern-font-size-md);
     line-height: var(--discern-leading-body);
-    /* The parent owns outer rhythm regardless of child stylesheet order. */
     & > :nth-child(n) {
       margin-block: var(--discern-prose-gap) 0;
     }
@@ -24,7 +23,7 @@
     & > :where(h2, .discern-anchor-heading:has(> h2)) {
       --discern-prose-gap: var(--discern-rhythm-section);
       padding-block-start: var(--discern-space-5);
-      border-block-start: 1px solid var(--discern-color-border-strong);
+      border-block-start: 1px solid var(--discern-color-border);
     }
     & > :where(h1, h2, h3, h4, h5, h6, .discern-anchor-heading) + * {
       --discern-prose-gap: var(--discern-space-4);
@@ -36,6 +35,18 @@
       padding-block-start: 0;
       border-block-start: 0;
     }
+    & > :where(h5, h6),
+    & > .discern-anchor-heading > :where(h5, h6) {
+      font: var(--discern-font-weight-strong)
+        var(--discern-font-size-md)/var(--discern-leading-snug)
+        var(--discern-font-ui);
+      letter-spacing: normal;
+    }
+    & > h6,
+    & > .discern-anchor-heading > h6 {
+      color: var(--discern-color-ink-muted);
+      font-size: var(--discern-font-size-sm);
+    }
     & > :where(ul, ol):not([class]) {
       padding-inline-start: var(--discern-space-6);
       & > li {
@@ -44,15 +55,20 @@
           margin-block-start: var(--discern-space-2);
         }
         &::marker {
-          color: var(--discern-color-accent-600);
+          color: var(--discern-color-ink-faint);
         }
       }
     }
-    & > p a {
-      text-decoration-thickness: 0.12em;
+    & :where(p, li, blockquote) :where(a:not([class])) {
+      text-decoration-color: color-mix(in oklab, currentColor 40%, transparent);
+      text-decoration-thickness: 0.08em;
       text-underline-offset: 0.18em;
+      transition-property: color, text-decoration-color;
+      &:hover {
+        text-decoration-color: currentColor;
+      }
     }
-    & > p code {
+    & > :where(p, ul, ol, blockquote) code:not(pre > code) {
       padding: calc(var(--discern-space-1) / 2)
         calc(var(--discern-space-1) * 1.5);
       border: 1px solid var(--discern-color-border);
@@ -66,7 +82,7 @@
       height: 1px;
       --discern-prose-gap: var(--discern-rhythm-section);
       border: 0;
-      background: var(--discern-color-border-strong);
+      background: var(--discern-color-border);
     }
     & > small,
     & > p small {

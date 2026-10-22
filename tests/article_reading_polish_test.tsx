@@ -4,15 +4,24 @@ import { toFileUrl } from "@std/path";
 import { launchBrowser } from "../scripts/browser.ts";
 import { followFragment } from "../scripts/browser-url.ts";
 import { emitDesignSystemRuntime } from "../src/runtime.ts";
+import type { Page } from "playwright-core";
 import {
   AnchorHeading,
+  Blockquote,
+  Callout,
+  DataFigure,
   Footnotes,
   KeyPoints,
   List,
   Markdown,
+  Paragraph,
   Prose,
+  RelatedContent,
   TableOfContents,
+  Timeline,
 } from "../src/react.ts";
+import { FeedbackMark } from "../src/components/feedback/feedback-marks.tsx";
+import type { FeedbackMarkName } from "../src/components/feedback/feedback-marks.tsx";
 import ArticleLayoutExamples from "../src/components/editorial/article-layout/article-layout.examples.tsx";
 
 Deno.test("Markdown heading destinations cannot collide with note and reference destinations", () => {
@@ -349,5 +358,450 @@ Deno.test("static article journeys preserve native fallback and selected history
   } finally {
     await browser.close();
     await Deno.remove(output, { recursive: true });
+  }
+});
+
+async function inspectReading<T>(
+  markup: string,
+  inspect: (page: Page) => Promise<T>,
+  width = 720,
+  theme: "light" | "dark" = "light",
+): Promise<T> {
+  const browser = await launchBrowser();
+  try {
+    const page = await browser.newPage({
+      viewport: { width: 1280, height: 900 },
+      reducedMotion: "reduce",
+    });
+    await page.setContent(
+      `<style>${await readingCss()}</style><main data-discern-root data-discern-theme="${theme}" style="width:${width}px">${markup}</main>`,
+    );
+    return await inspect(page);
+  } finally {
+    await browser.close();
+  }
+}
+
+Deno.test("Callout draws the stroke-matched feedback mark for its tone unless artwork is supplied", () => {
+  const marks = {
+    note: "neutral",
+    insight: "accent",
+    warning: "warning",
+    success: "success",
+  } as const satisfies Record<string, FeedbackMarkName>;
+  for (const [tone, name] of Object.entries(marks)) {
+    const html = renderToStaticMarkup(
+      <Callout tone={tone as keyof typeof marks} title="Context">
+        Body.
+      </Callout>,
+    );
+    assertStringIncludes(
+      html,
+      renderToStaticMarkup(<FeedbackMark name={name} />),
+      `${tone} draws the ${name} mark`,
+    );
+  }
+  const supplied = renderToStaticMarkup(
+    <Callout icon="◇" title="Context">Body.</Callout>,
+  );
+  assert(!supplied.includes("<svg"), "supplied artwork replaces the mark");
+});
+
+Deno.test("footnote references keep their paragraph on its own leading with a full target", async () => {
+  const geometry = await inspectReading(
+    renderToStaticMarkup(
+      <Markdown
+        source={"A repeated note[^a] remains linked[^a].\n\n[^a]: Evidence."}
+      />,
+    ),
+    (page) =>
+      page.locator(".discern-markdown__footnote-reference").first().evaluate(
+        (reference) => {
+          const paragraph = reference.closest("p")!;
+          const link = reference.querySelector("a")!;
+          const target = getComputedStyle(link, "::after");
+          const box = link.getBoundingClientRect();
+          return {
+            height: paragraph.getBoundingClientRect().height,
+            leading: parseFloat(getComputedStyle(paragraph).lineHeight),
+            target: box.height - parseFloat(target.top) -
+              parseFloat(target.bottom),
+          };
+        },
+      ),
+  );
+  assert(
+    Math.abs(geometry.height - geometry.leading) < 0.5,
+    `a reference loosens its line: ${JSON.stringify(geometry)}`,
+  );
+  assert(
+    geometry.target >= 24,
+    `reference target too short: ${JSON.stringify(geometry)}`,
+  );
+});
+
+Deno.test("task markers share one first-line offset and hang so every label shares a column", async () => {
+  const rows = await inspectReading(
+    renderToStaticMarkup(
+      <List
+        kind="task"
+        items={[
+          { content: "Reviewed source material", checked: true },
+          { content: "Verify the final frame", checked: false },
+          { content: "A contextual note without task state" },
+        ]}
+      />,
+    ),
+    (page) =>
+      page.locator(".discern-list__item").evaluateAll((items) =>
+        items.map((item) => {
+          const label = item.querySelector(".discern-list__content > span")!;
+          const text = label.getBoundingClientRect();
+          const marker = item.querySelector("input")?.getBoundingClientRect();
+          const leading = parseFloat(getComputedStyle(label).lineHeight);
+          return {
+            left: text.left,
+            offset: marker === undefined
+              ? null
+              : marker.top + marker.height / 2 - (text.top + leading / 2),
+          };
+        })
+      ),
+  );
+  const [checked, unchecked, plain] = rows;
+  assert(checked && unchecked && plain);
+  assert(
+    Math.abs(checked.offset! - unchecked.offset!) < 0.5,
+    `checked and unchecked markers drift: ${JSON.stringify(rows)}`,
+  );
+  assert(
+    Math.abs(checked.offset!) < 1,
+    `marker is not centred on the first line: ${JSON.stringify(rows)}`,
+  );
+  for (const row of rows) {
+    assert(
+      Math.abs(row.left - plain.left) < 1,
+      `labels do not share one column: ${JSON.stringify(rows)}`,
+    );
+  }
+});
+
+Deno.test("Footnotes gives every block in a note one compact gap and leaves phrasing inline", async () => {
+  const notes = await inspectReading(
+    renderToStaticMarkup(
+      <Footnotes
+        items={[
+          {
+            id: "rich",
+            content: (
+              <>
+                <Paragraph>First block of the note.</Paragraph>
+                <Blockquote>
+                  <p>A quotation inside the note.</p>
+                </Blockquote>
+                <Callout title="An aside">Context for the note.</Callout>
+                <KeyPoints
+                  title="Points"
+                  items={[{ title: "One", description: "Evidence." }]}
+                />
+              </>
+            ),
+          },
+          {
+            id: "phrasing",
+            content: (
+              <>
+                See <a href="#source">the source</a> and <em>its notes</em>.
+              </>
+            ),
+          },
+        ]}
+      />,
+    ),
+    (page) =>
+      page.locator(".discern-footnotes > ol > li > div").evaluateAll(
+        (notes) => {
+          const probe = document.createElement("div");
+          probe.style.marginBlockStart = "var(--discern-space-3)";
+          notes[0]!.parentElement!.append(probe);
+          const compact = parseFloat(getComputedStyle(probe).marginBlockStart);
+          probe.remove();
+          const [rich, phrasing] = notes;
+          const blocks = [...rich!.children].map((child) =>
+            child.getBoundingClientRect()
+          );
+          return {
+            compact,
+            gaps: blocks.slice(1).map((box, index) =>
+              box.top - blocks[index]!.bottom
+            ),
+            phrasingHeight: phrasing!.getBoundingClientRect().height,
+            leading: parseFloat(getComputedStyle(phrasing!).lineHeight),
+          };
+        },
+      ),
+  );
+  for (const gap of notes.gaps) {
+    assert(
+      Math.abs(gap - notes.compact) < 1,
+      `note blocks keep page-scale margins: ${JSON.stringify(notes)}`,
+    );
+  }
+  assert(
+    Math.abs(notes.phrasingHeight - notes.leading) < 1,
+    `phrasing note no longer flows inline: ${JSON.stringify(notes)}`,
+  );
+});
+
+Deno.test("Data figure paints swatches only in its legend", async () => {
+  const paint = await inspectReading(
+    renderToStaticMarkup(
+      <DataFigure
+        eyebrow={
+          <>
+            Figure <span>04</span>
+          </>
+        }
+        title={
+          <>
+            Growth of <i>Solanum lycopersicum</i>
+          </>
+        }
+        legend={[{
+          label: (
+            <>
+              Sunny <i>plot</i>
+            </>
+          ),
+          tone: "ink",
+        }]}
+        visual={<div>Visual</div>}
+        caption="Caption."
+      />,
+    ),
+    (page) =>
+      page.locator(".discern-data-figure").evaluate((figure) => {
+        const background = (selector: string) =>
+          [...figure.querySelectorAll(selector)].map((element) =>
+            getComputedStyle(element).backgroundColor
+          );
+        return {
+          consumer: background(
+            "h3 i, li > i:not(.discern-data-figure__swatch)",
+          ),
+          eyebrow: background("header > div > span span"),
+          swatches: background(".discern-data-figure__swatch"),
+        };
+      }),
+  );
+  for (const color of [...paint.consumer, ...paint.eyebrow]) {
+    assertEquals(color, "rgba(0, 0, 0, 0)", JSON.stringify(paint));
+  }
+  assertEquals(paint.swatches.length, 1);
+  assert(paint.swatches[0] !== "rgba(0, 0, 0, 0)", JSON.stringify(paint));
+});
+
+Deno.test("Key points stacks its numerals in multi-column rows and hangs them in one column", async () => {
+  const items = [
+    { title: "Lead with the main idea", description: "State it first." },
+    { title: "Add useful context", description: "Explain what matters." },
+    { title: "End with direction", description: "Make the next step easy." },
+  ];
+  for (const [width, columns] of [[720, 3], [390, 1]] as const) {
+    const rows = await inspectReading(
+      renderToStaticMarkup(<KeyPoints title="Summary" items={items} />),
+      (page) =>
+        page.locator(".discern-key-points li").evaluateAll((entries) =>
+          entries.map((entry) => {
+            const numeral = entry.querySelector(":scope > span")!
+              .getBoundingClientRect();
+            const title = entry.querySelector("h3")!.getBoundingClientRect();
+            return {
+              top: entry.getBoundingClientRect().top,
+              stacked: numeral.bottom <= title.top + 0.5,
+              measure: title.width,
+            };
+          })
+        ),
+      width,
+    );
+    assertEquals(new Set(rows.map((row) => row.top)).size, 3 / columns);
+    for (const row of rows) {
+      assertEquals(
+        row.stacked,
+        columns > 1,
+        `${width}px ${JSON.stringify(rows)}`,
+      );
+      assert(row.measure >= 160, `${width}px measure ${JSON.stringify(rows)}`);
+    }
+  }
+});
+
+Deno.test("Related content gives keyboard focus the card feedback hover gives", async () => {
+  const states = await inspectReading(
+    renderToStaticMarkup(
+      <RelatedContent
+        title="Further reading"
+        items={[
+          { title: "First", href: "#first" },
+          { title: "Second", href: "#second" },
+        ]}
+      />,
+    ),
+    async (page) => {
+      const cards = page.locator(".discern-related-content article");
+      const fill = (index: number) =>
+        cards.nth(index).evaluate((card) =>
+          getComputedStyle(card).backgroundColor
+        );
+      const idle = await fill(1);
+      await page.keyboard.press("Tab");
+      const focused = await fill(0);
+      const ring = await page.locator(":focus").evaluate((link) =>
+        getComputedStyle(link).outlineStyle
+      );
+      await cards.nth(1).hover();
+      await page.waitForFunction(
+        (target) =>
+          getComputedStyle(
+            document.querySelectorAll(".discern-related-content article")[1]!,
+          ).backgroundColor === target,
+        focused,
+        { timeout: 2000 },
+      ).catch(() => undefined);
+      return { idle, focused, hovered: await fill(1), ring };
+    },
+  );
+  assert(states.focused !== states.idle, JSON.stringify(states));
+  assertEquals(states.focused, states.hovered, JSON.stringify(states));
+  assert(states.ring !== "none", "the focused link keeps its own ring");
+});
+
+Deno.test("Timeline status marks hold non-text contrast and leave hollow rings transparent", async () => {
+  for (const theme of ["light", "dark"] as const) {
+    const marks = await inspectReading(
+      renderToStaticMarkup(
+        <Timeline
+          title="History"
+          items={(["complete", "current", "upcoming"] as const).map((
+            status,
+          ) => ({
+            date: status,
+            title: status,
+            description: "Detail.",
+            status,
+          }))}
+        />,
+      ),
+      (page) =>
+        page.locator(".discern-timeline__marker").evaluateAll((markers) => {
+          const canvas = document.createElement("canvas").getContext("2d")!;
+          const rgb = (value: string) => {
+            canvas.clearRect(0, 0, 1, 1);
+            canvas.fillStyle = value;
+            canvas.fillRect(0, 0, 1, 1);
+            return [...canvas.getImageData(0, 0, 1, 1).data.slice(0, 3)];
+          };
+          const luminance = (value: string) => {
+            const [r, g, b] = rgb(value).map((channel) => {
+              const c = channel / 255;
+              return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+            });
+            return 0.2126 * r! + 0.7152 * g! + 0.0722 * b!;
+          };
+          const ground = getComputedStyle(document.querySelector("main")!)
+            .backgroundColor;
+          return markers.map((marker) => {
+            const dot = getComputedStyle(marker, "::after");
+            const [lighter, darker] = [
+              luminance(dot.borderTopColor),
+              luminance(ground),
+            ].sort((a, b) => b - a);
+            return {
+              contrast: (lighter! + 0.05) / (darker! + 0.05),
+              fill: dot.backgroundColor,
+            };
+          });
+        }),
+      720,
+      theme,
+    );
+    for (const mark of marks) {
+      assert(
+        mark.contrast >= 3,
+        `${theme} status mark contrast ${JSON.stringify(marks)}`,
+      );
+    }
+    assert(marks[0]!.fill !== "rgba(0, 0, 0, 0)", "complete stays filled");
+    for (const hollow of marks.slice(1)) {
+      assertEquals(hollow.fill, "rgba(0, 0, 0, 0)", JSON.stringify(marks));
+    }
+  }
+});
+
+Deno.test("Table of contents indents nested entries beyond unnumbered framing entries", async () => {
+  const lefts = await inspectReading(
+    renderToStaticMarkup(
+      <TableOfContents
+        items={[
+          { label: "Overview", href: "#overview", number: false },
+          { label: "Prepare", href: "#prepare" },
+          { label: "A closer look", href: "#closer", nested: true },
+        ]}
+      />,
+    ),
+    (page) =>
+      page.locator(".discern-table-of-contents a").evaluateAll((links) =>
+        links.map((link) => {
+          const range = document.createRange();
+          const text = [...link.childNodes].find((node) =>
+            node.nodeType === Node.TEXT_NODE && node.textContent?.trim()
+          ) ?? link.lastChild!;
+          range.selectNodeContents(text);
+          return range.getBoundingClientRect().left;
+        })
+      ),
+  );
+  const [framing, numbered, nested] = lefts;
+  assert(Math.abs(framing! - numbered!) < 1, JSON.stringify(lefts));
+  assert(nested! > framing! + 4, JSON.stringify(lefts));
+});
+
+Deno.test("Prose links share one quiet underline in paragraphs, lists, and quotations", async () => {
+  const links = await inspectReading(
+    renderToStaticMarkup(
+      <Prose>
+        <p>
+          A <a href="#p">paragraph link</a>.
+        </p>
+        <ul>
+          <li>
+            A <a href="#li">list link</a>.
+          </li>
+        </ul>
+        <blockquote>
+          <p>
+            A <a href="#quote">quoted link</a>.
+          </p>
+        </blockquote>
+      </Prose>,
+    ),
+    (page) =>
+      page.locator(".discern-prose a").evaluateAll((elements) =>
+        elements.map((element) => {
+          const style = getComputedStyle(element);
+          return {
+            decoration: style.textDecorationColor,
+            ink: style.color,
+            transition: style.transitionProperty,
+          };
+        })
+      ),
+  );
+  assertEquals(links.length, 3);
+  assertEquals(new Set(links.map((link) => link.decoration)).size, 1);
+  for (const link of links) {
+    assert(link.decoration !== link.ink, JSON.stringify(links));
+    assertStringIncludes(link.transition, "text-decoration-color");
   }
 });

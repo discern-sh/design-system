@@ -6,8 +6,8 @@
     column-gap: var(--discern-space-4);
     margin-block: var(--discern-space-12);
     margin-inline: 0;
-    padding: var(--discern-space-8);
-    border-block: 1px solid var(--discern-color-border-strong);
+    padding: var(--discern-space-8) 0;
+    border-block: 1px solid var(--discern-color-border);
     color: var(--discern-color-ink);
   }
   .discern-pull-quote--wide {
@@ -18,10 +18,10 @@
   .discern-pull-quote__mark {
     grid-column: 1;
     grid-row: 1;
-    color: var(--discern-color-accent-300);
+    color: var(--discern-color-accent-400);
     font-family: var(--discern-font-display);
-    font-size: var(--discern-font-size-display-lg);
-    line-height: 1;
+    font-size: calc(var(--discern-font-size-display-lg) * 1.5);
+    line-height: 0.8;
   }
   .discern-pull-quote blockquote {
     grid-column: 2;
@@ -30,7 +30,7 @@
     font-family: var(--discern-font-display);
     font-size: clamp(1.6rem, 4vw, 2.45rem);
     font-style: italic;
-    font-weight: var(--discern-font-weight-display);
+    font-weight: var(--discern-font-weight-body);
     line-height: 1.18;
     text-wrap: balance;
   }
@@ -44,9 +44,8 @@
     gap: var(--discern-space-2) var(--discern-space-4);
     align-items: baseline;
     margin-block-start: var(--discern-space-5);
-    color: var(--discern-color-ink-faint);
-    font-family: var(--discern-font-ui);
-    font-size: var(--discern-font-size-xs);
+    color: var(--discern-color-ink-muted);
+    font: var(--discern-font-label);
   }
   .discern-pull-quote figcaption strong {
     color: var(--discern-color-ink);

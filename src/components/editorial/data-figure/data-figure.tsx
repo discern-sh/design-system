@@ -65,7 +65,7 @@ export const DataFigure: DiscernComponent<HTMLElement, DataFigureProps> =
                 {legend.map((item, index) => (
                   <li key={index}>
                     <i
-                      className={`discern-data-figure__swatch--${
+                      className={`discern-data-figure__swatch discern-data-figure__swatch--${
                         item.tone ?? "accent"
                       }`}
                       aria-hidden="true"

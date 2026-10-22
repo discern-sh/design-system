@@ -25,9 +25,10 @@ function ComparisonVisual() {
             style={{
               width: `${value / 14 * 100}%`,
               height: "1rem",
+              borderRadius: "0.125rem",
               background: index === 0
                 ? "var(--discern-color-accent-500)"
-                : "var(--discern-color-accent-200)",
+                : "var(--discern-color-ink-muted)",
             }}
           />
           <span>{value} cm</span>

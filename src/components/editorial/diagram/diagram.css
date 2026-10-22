@@ -13,9 +13,7 @@
     display: block;
     block-size: auto;
     overflow: visible;
-    background: transparent;
     shape-rendering: geometricPrecision;
-    text-rendering: optimizeLegibility;
   }
   .discern-diagram__canvas {
     fill: var(--discern-color-canvas);

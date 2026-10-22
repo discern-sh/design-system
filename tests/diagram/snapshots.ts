@@ -10,7 +10,7 @@ export const compactFlowLightSvg =
   .discern-diagram__node, .discern-diagram__node-cue { stroke-width: 2; vector-effect: non-scaling-stroke; }
   .discern-diagram__connector { fill: none; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
   .discern-diagram__canvas { fill: oklch(100% 0 0); }
-  .discern-diagram__node--ordinary { fill: oklch(98.8609% 0 0); stroke: oklch(0% 0 0 / 0.3); }
+  .discern-diagram__node--ordinary { fill: oklch(98.8609% 0 0); stroke: oklch(0% 0 0 / 0.24); }
   .discern-diagram__node--decision { fill: oklch(98.8609% 0 0); stroke: oklch(0% 0 0 / 0.52); }
   .discern-diagram__node--start { fill: oklch(98.8609% 0 0); stroke: oklch(0% 0 0 / 0.93); }
   .discern-diagram__node--end { fill: oklch(98.8609% 0 0); stroke: oklch(0% 0 0 / 0.44); }

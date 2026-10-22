@@ -3,51 +3,40 @@
     container: discern-key-points / inline-size;
     margin-block: var(--discern-space-10);
     overflow: hidden;
-    border: 1px solid var(--discern-color-border-strong);
-    border-radius: var(--discern-radius-lg);
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-md);
     background: var(--discern-color-accent-100);
-    box-shadow: var(--discern-shadow-card);
   }
   .discern-key-points--sunken {
     background: var(--discern-color-surface-sunken);
   }
   .discern-key-points--contrast {
-    border-color: var(--discern-color-inverse-surface);
+    --discern-color-border: color-mix(in oklab, var(--discern-color-inverse-ink) 14%, transparent);
     background: var(--discern-color-inverse-surface);
     color: var(--discern-color-inverse-ink);
   }
   .discern-key-points > header {
-    display: grid;
-    grid-template-columns: minmax(7rem, 0.45fr) minmax(0, 1.55fr);
-    gap: var(--discern-space-5);
-    align-items: end;
     padding: var(--discern-space-6);
-    border-block-end: 1px solid var(--discern-color-border-strong);
+    border-block-end: 1px solid var(--discern-color-border);
   }
   .discern-key-points > header > span,
-  .discern-key-points li h3 {
-    font-family: var(--discern-font-ui);
+  .discern-key-points li > span {
+    color: var(--discern-color-ink-muted);
+    font: var(--discern-font-label);
   }
-
   .discern-key-points > header > span {
-    color: var(--discern-color-accent-700);
-    font-size: var(--discern-font-size-xs);
-    font-weight: var(--discern-font-weight-strong);
+    display: block;
+    margin-block-end: var(--discern-space-2);
   }
   .discern-key-points > header h2 {
     margin: 0;
     font-size: var(--discern-font-size-display-md);
-  }
-  .discern-key-points--contrast > header h2,
-  .discern-key-points--contrast > header > span {
-    color: var(--discern-color-inverse-ink);
   }
   .discern-key-points ol {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
     margin: 0;
     padding: 0;
-    background: var(--discern-color-surface-sunken);
     list-style: none;
   }
   .discern-key-points--accent ol {
@@ -60,23 +49,25 @@
   }
   .discern-key-points li {
     display: grid;
-    grid-template-columns: 2rem 1fr;
-    gap: var(--discern-space-3);
+    align-content: start;
+    gap: var(--discern-space-2);
     padding: var(--discern-space-6);
   }
   .discern-key-points li + li {
-    border-inline-start: 1px solid var(--discern-color-border-strong);
+    border-inline-start: 1px solid var(--discern-color-border);
   }
   .discern-key-points li > span {
-    color: var(--discern-color-accent-700);
-    font-size: var(--discern-font-size-xs);
+    color: var(--discern-color-ink-faint);
+    font-variant-numeric: tabular-nums;
   }
   .discern-key-points li h3 {
     margin-block-end: var(--discern-space-2);
-    font-size: var(--discern-font-size-sm);
+    font: var(--discern-font-weight-strong)
+      var(--discern-font-size-sm)/var(--discern-leading-snug)
+      var(--discern-font-ui);
   }
-  .discern-key-points--contrast li h3,
-  .discern-key-points--contrast li > span {
+  .discern-key-points--contrast > header h2,
+  .discern-key-points--contrast li h3 {
     color: var(--discern-color-inverse-ink);
   }
   .discern-key-points li div div {
@@ -87,17 +78,23 @@
   .discern-key-points li div div > :last-child {
     margin-block-end: 0;
   }
+  .discern-key-points--contrast > header > span,
+  .discern-key-points--contrast li > span,
   .discern-key-points--contrast li div div {
     color: color-mix(in oklab, var(--discern-color-inverse-ink) 72%,
       transparent);
   }
   @container discern-key-points (max-width: 41.25rem) {
-    .discern-key-points > header,
     .discern-key-points ol {
       grid-template-columns: 1fr;
     }
+    .discern-key-points li {
+      grid-template-columns: 2rem minmax(0, 1fr);
+      gap: var(--discern-space-3);
+      align-items: baseline;
+    }
     .discern-key-points li + li {
-      border-block-start: 1px solid var(--discern-color-border-strong);
+      border-block-start: 1px solid var(--discern-color-border);
       border-inline-start: 0;
     }
   }

@@ -46,13 +46,39 @@
     list-style: none;
   }
 
+  .discern-list__item--task > .discern-list__content {
+    --discern-list-task-marker: 1.125rem;
+    align-items: flex-start;
+    margin-inline-start: calc(-1 * (var(--discern-list-task-marker) +
+      var(--discern-space-2)));
+  }
+
   .discern-list__task-marker {
     flex: none;
-    inline-size: 1em;
-    block-size: 1em;
-    margin: 0;
-    accent-color: var(--discern-color-accent-700);
-    opacity: 1;
+    display: inline-grid;
+    place-items: center;
+    inline-size: var(--discern-list-task-marker);
+    block-size: var(--discern-list-task-marker);
+    margin: calc((1lh - var(--discern-list-task-marker)) / 2) 0 0;
+    border: 1px solid var(--discern-color-border-strong);
+    border-radius: var(--discern-radius-xs);
+    background: var(--discern-color-surface);
+    appearance: none;
+  }
+
+  .discern-list__task-marker:checked {
+    border-color: var(--discern-color-action);
+    background: var(--discern-color-action);
+  }
+
+  .discern-list__task-marker:checked::before {
+    inline-size: 0.5rem;
+    block-size: 0.25rem;
+    border-inline-start: 0.125rem solid var(--discern-color-on-action);
+    border-block-end: 0.125rem solid var(--discern-color-on-action);
+    content: "";
+    rotate: -45deg;
+    translate: 0 -1px;
   }
 
   .discern-list__blocks {

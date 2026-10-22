@@ -4,11 +4,10 @@
     margin-inline: 0;
     min-width: 0;
     overflow: hidden;
-    border: 1px solid var(--discern-color-border-strong);
-    border-radius: var(--discern-radius-lg);
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-md);
     background: var(--discern-color-surface-sunken);
     color: var(--discern-color-ink);
-    box-shadow: var(--discern-shadow-window);
   }
   .discern-code-listing__header,
   .discern-code-listing figcaption {
@@ -24,12 +23,13 @@
     align-items: center;
     min-height: 2.7rem;
     padding: var(--discern-space-2) var(--discern-space-4);
-    border-block-end: 1px solid var(--discern-color-border-strong);
+    border-block-end: 1px solid var(--discern-color-border);
     font-size: var(--discern-font-size-xs);
   }
   .discern-code-listing__header strong {
     flex: 1 1 10rem;
-    font-weight: var(--discern-font-weight-body);
+    color: var(--discern-color-ink);
+    font-weight: var(--discern-font-weight-medium);
   }
   .discern-code-listing__header > * {
     min-width: 0;
@@ -88,14 +88,15 @@
   }
   .discern-code-listing figcaption {
     padding: var(--discern-space-3) var(--discern-space-5);
-    border-block-start: 1px solid var(--discern-color-border-strong);
+    border-block-start: 1px solid var(--discern-color-border);
     font-size: var(--discern-font-size-sm);
     line-height: var(--discern-leading-body);
   }
   .discern-code-listing--showcase {
     --discern-color-surface-sunken: var(--discern-color-inverse-surface);
     --discern-color-surface: color-mix(in oklab, var(--discern-color-inverse-ink) 6%, var(--discern-color-inverse-surface));
-    --discern-color-border-strong: color-mix(in oklab, var(--discern-color-inverse-ink) 16%, transparent);
+    --discern-color-border: color-mix(in oklab, var(--discern-color-inverse-ink) 16%, transparent);
+    --discern-color-border-strong: color-mix(in oklab, var(--discern-color-inverse-ink) 28%, transparent);
     --discern-color-ink: color-mix(in oklab, var(--discern-color-inverse-ink) 90%, transparent);
     --discern-color-ink-muted: color-mix(in oklab, var(--discern-color-inverse-ink) 76%, transparent);
     --discern-color-ink-faint: color-mix(in oklab, var(--discern-color-inverse-ink) 58%, transparent);
@@ -103,6 +104,7 @@
     --discern-code-literal: var(--discern-color-inverse-ink);
     margin-block: 0;
     border-radius: clamp(1.25rem, 3vw, 2rem);
+    box-shadow: var(--discern-shadow-window);
   }
   .discern-code-listing--showcase :focus-visible {
     outline-color: var(--discern-color-inverse-ink);

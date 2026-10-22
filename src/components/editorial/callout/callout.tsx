@@ -4,6 +4,8 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import { FeedbackMark } from "../../feedback/feedback-marks.tsx";
+import type { FeedbackMarkName } from "../../feedback/feedback-marks.tsx";
 import type { CalloutTone } from "./callout.types.ts";
 
 /** Props for the {@linkcode Callout} component. */
@@ -18,14 +20,15 @@ export interface CalloutProps
   readonly actions?: ReactNode;
 }
 
+/** Each tone's accessible name and its stroke-matched feedback mark. */
 const toneWitnesses: Readonly<
-  Record<CalloutTone, { label: string; glyph: string }>
-> = {
-  note: { label: "Information", glyph: "i" },
-  insight: { label: "Insight", glyph: "✦" },
-  warning: { label: "Warning", glyph: "!" },
-  success: { label: "Success", glyph: "✓" },
-};
+  Record<CalloutTone, { label: string; mark: FeedbackMarkName }>
+> = Object.freeze({
+  note: { label: "Information", mark: "neutral" },
+  insight: { label: "Insight", mark: "accent" },
+  warning: { label: "Warning", mark: "warning" },
+  success: { label: "Success", mark: "success" },
+});
 
 /** Inset editorial note for context, interpretation, cautions, and successful outcomes without breaking the reading flow. */
 export const Callout: DiscernComponent<HTMLElement, CalloutProps> = forwardRef<
@@ -60,7 +63,7 @@ export const Callout: DiscernComponent<HTMLElement, CalloutProps> = forwardRef<
         role="img"
         aria-label={toneWitnesses[tone].label}
       >
-        {icon ?? toneWitnesses[tone].glyph}
+        {icon ?? <FeedbackMark name={toneWitnesses[tone].mark} />}
       </span>
       <Stack gap={2}>
         {eyebrow

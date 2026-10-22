@@ -133,11 +133,11 @@ Deno.test("Chart composes as DataFigure visual with the spec-derived legend", ()
   assertStringIncludes(html, "<h3>Quarterly reviews by region</h3>");
   assertStringIncludes(
     html,
-    'class="discern-data-figure__swatch--series-1"',
+    'class="discern-data-figure__swatch discern-data-figure__swatch--series-1"',
   );
   assertStringIncludes(
     html,
-    'class="discern-data-figure__swatch--series-2"',
+    'class="discern-data-figure__swatch discern-data-figure__swatch--series-2"',
   );
   assertStringIncludes(html, "Completed");
   const visibleLabels = [...html.matchAll(/<text\b[^>]*>(.*?)<\/text>/gu)]

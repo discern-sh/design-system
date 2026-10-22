@@ -3,10 +3,9 @@
     container: discern-data-figure / inline-size;
     margin-block: var(--discern-space-10);
     overflow: hidden;
-    border: 1px solid var(--discern-color-border-strong);
-    border-radius: var(--discern-radius-lg);
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-md);
     background: var(--discern-color-surface);
-    box-shadow: var(--discern-shadow-card);
   }
   .discern-data-figure--sunken {
     background: var(--discern-color-surface-sunken);
@@ -19,78 +18,69 @@
     padding: var(--discern-space-5) var(--discern-space-6);
     border-block-end: 1px solid var(--discern-color-border);
   }
-  .discern-data-figure > header span,
-  .discern-data-figure > header h3,
-  .discern-data-figure > header ul,
-  .discern-data-figure figcaption small {
-    font-family: var(--discern-font-ui);
+  .discern-data-figure > header > div > span,
+  .discern-data-figure > header > ul {
+    color: var(--discern-color-ink-muted);
+    font: var(--discern-font-label);
   }
-
-  .discern-data-figure > header span,
-  .discern-data-figure > header ul,
-  .discern-data-figure figcaption small {
-    font-size: var(--discern-font-size-xs);
-  }
-
-  .discern-data-figure > header span {
+  .discern-data-figure > header > div > span {
     display: block;
     margin-block-end: var(--discern-space-1);
-    color: var(--discern-color-accent-700);
-    font-weight: var(--discern-font-weight-strong);
   }
   .discern-data-figure > header h3 {
     margin: 0;
-    font-size: var(--discern-font-size-lg);
+    font: var(--discern-font-weight-strong)
+      var(--discern-font-size-lg)/var(--discern-leading-snug)
+      var(--discern-font-ui);
   }
-  .discern-data-figure > header ul {
+  .discern-data-figure > header > ul {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--discern-space-3);
+    gap: var(--discern-space-1) var(--discern-space-4);
     margin: 0;
     padding: 0;
-    color: var(--discern-color-ink-faint);
     list-style: none;
   }
-  .discern-data-figure > header li {
+  .discern-data-figure > header > ul > li {
     display: inline-flex;
     align-items: center;
-    gap: var(--discern-space-1);
+    gap: calc(var(--discern-space-1) * 1.5);
   }
-  .discern-data-figure > header i {
+  .discern-data-figure__swatch {
     inline-size: 0.55rem;
     block-size: 0.55rem;
     border-radius: 0.125rem;
     background: var(--discern-color-accent-500);
   }
-  .discern-data-figure > header .discern-data-figure__swatch--ink {
+  .discern-data-figure__swatch--ink {
     background: var(--discern-color-ink-muted);
   }
-  .discern-data-figure > header .discern-data-figure__swatch--success {
+  .discern-data-figure__swatch--success {
     background: var(--discern-color-success);
   }
-  .discern-data-figure > header .discern-data-figure__swatch--warning {
+  .discern-data-figure__swatch--warning {
     background: var(--discern-color-warning);
   }
-  .discern-data-figure > header .discern-data-figure__swatch--series-1 {
+  .discern-data-figure__swatch--series-1 {
     border-radius: 50%;
     background: var(--discern-color-series-1);
   }
-  .discern-data-figure > header .discern-data-figure__swatch--series-2 {
+  .discern-data-figure__swatch--series-2 {
     background: var(--discern-color-series-2);
   }
-  .discern-data-figure > header .discern-data-figure__swatch--series-3 {
+  .discern-data-figure__swatch--series-3 {
     clip-path: polygon(50% 0, 100% 100%, 0 100%);
     background: var(--discern-color-series-3);
   }
-  .discern-data-figure > header .discern-data-figure__swatch--series-4 {
+  .discern-data-figure__swatch--series-4 {
     clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
     background: var(--discern-color-series-4);
   }
-  .discern-data-figure > header .discern-data-figure__swatch--series-5 {
+  .discern-data-figure__swatch--series-5 {
     clip-path: polygon(0 0, 100% 0, 50% 100%);
     background: var(--discern-color-series-5);
   }
-  .discern-data-figure > header .discern-data-figure__swatch--series-6 {
+  .discern-data-figure__swatch--series-6 {
     clip-path: polygon(
       50% 0,
       61% 35%,
@@ -111,14 +101,14 @@
   .discern-data-figure figcaption {
     display: grid;
     gap: var(--discern-space-1);
-    padding: var(--discern-space-4) var(--discern-space-6);
-    border-block-start: 1px solid var(--discern-color-border);
+    padding: 0 var(--discern-space-6) var(--discern-space-5);
     color: var(--discern-color-ink-muted);
     font-size: var(--discern-font-size-sm);
     line-height: var(--discern-leading-body);
   }
   .discern-data-figure figcaption small {
     color: var(--discern-color-ink-faint);
+    font: var(--discern-font-label);
   }
   @container discern-data-figure (max-width: 38.75rem) {
     .discern-data-figure > header {
@@ -127,7 +117,7 @@
     }
   }
   @media (forced-colors: active) {
-    .discern-data-figure > header i {
+    .discern-data-figure__swatch {
       border: 1px solid var(--discern-color-ink);
       background: var(--discern-color-ink);
     }

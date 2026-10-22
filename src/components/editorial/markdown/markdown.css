@@ -14,11 +14,14 @@
   }
 
   .discern-markdown__footnote-reference > a {
-    display: inline-flex;
-    min-inline-size: 1.5rem;
-    min-block-size: 1.5rem;
-    align-items: center;
-    justify-content: center;
+    position: relative;
     font-size: var(--discern-font-size-xs);
+  }
+
+  .discern-markdown__footnote-reference > a::after {
+    position: absolute;
+    inset: calc(var(--discern-space-1) * -1.5) calc(var(--discern-space-1) *
+      -1);
+    content: "";
   }
 }
