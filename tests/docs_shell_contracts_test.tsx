@@ -146,10 +146,16 @@ Deno.test("Docs shell shares one edge per side, marks current apart from hover, 
         navStart: textLeft('.discern-docs-nav a[href="#current"]'),
         visibleActions:
           style("#visible-action .discern-docs-header__actions").display,
-        currentEdge: style('.discern-docs-nav a[href="#current"]')
-          .borderInlineStartColor,
-        hoveredEdge: style('.discern-docs-nav a[href="#other"]')
-          .borderInlineStartColor,
+        current:
+          (({ backgroundColor, fontWeight, borderInlineStartWidth }) => ({
+            backgroundColor,
+            fontWeight,
+            borderInlineStartWidth,
+          }))(style('.discern-docs-nav a[href="#current"]')),
+        other: (({ backgroundColor, fontWeight }) => ({
+          backgroundColor,
+          fontWeight,
+        }))(style('.discern-docs-nav a[href="#other"]')),
         inert: paint("#inert"),
         live: paint("#live"),
       };
@@ -164,10 +170,15 @@ Deno.test("Docs shell shares one edge per side, marks current apart from hover, 
       measured.visibleActions !== "none",
       "a visible action keeps its slot",
     );
-    assertEquals(measured.hoveredEdge, "rgba(0, 0, 0, 0)");
+    assertEquals(
+      measured.current.borderInlineStartWidth,
+      "0px",
+      "the current destination carries no border rail",
+    );
     assert(
-      measured.currentEdge !== measured.hoveredEdge,
-      "the current destination needs a cue hover lacks",
+      measured.current.backgroundColor !== measured.other.backgroundColor &&
+        measured.current.fontWeight !== measured.other.fontWeight,
+      "the current destination needs a fill and weight its siblings lack",
     );
     for (const key of ["color", "borderColor", "backgroundColor"] as const) {
       assert(
