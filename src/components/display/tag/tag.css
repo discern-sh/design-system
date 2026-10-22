@@ -26,11 +26,11 @@
     flex: none;
     display: grid;
     place-items: center;
-    inline-size: 1.25rem;
-    block-size: 1.25rem;
-    margin-block: calc(var(--discern-space-1) / -2);
-    margin-inline-end: calc(var(--discern-space-1) * -1.5);
-    padding: var(--discern-space-1);
+    inline-size: 1.5rem;
+    block-size: 1.5rem;
+    margin-block: calc(var(--discern-space-1) * -1);
+    margin-inline-end: calc(var(--discern-space-1) * -2);
+    padding: calc(var(--discern-space-1) * 1.5);
     border: 0;
     border-radius: var(--discern-radius-pill);
     background: transparent;

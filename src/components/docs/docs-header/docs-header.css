@@ -26,6 +26,9 @@
     font-weight: var(--discern-font-weight-strong);
   }
   .discern-docs-header__brand a {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 1.5rem;
     border-radius: var(--discern-radius-xs);
     color: inherit;
     text-decoration: none;

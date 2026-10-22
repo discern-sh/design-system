@@ -743,7 +743,7 @@ async function verifyAxisReach(
     };
     const inlineTextLink = (element: HTMLElement): boolean =>
       element.matches("a[href]") &&
-      element.closest("p, li, dd, dt, figcaption") !== null;
+      element.closest("p, li, dd, dt, figcaption, address") !== null;
     const labelledNativeChoice = (element: HTMLElement): boolean =>
       element instanceof HTMLInputElement &&
       (element.type === "checkbox" || element.type === "radio") &&

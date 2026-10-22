@@ -671,7 +671,7 @@ async function verifyTargetSizes(
         function inlineTextLink(element: HTMLElement): boolean {
           if (!(element instanceof HTMLAnchorElement)) return false;
           if (getComputedStyle(element).display !== "inline") return false;
-          const block = element.closest("p, li, dd, dt, figcaption");
+          const block = element.closest("p, li, dd, dt, figcaption, address");
           if (block === null) return false;
           return [...block.childNodes].some((node) =>
             node !== element && (node.textContent?.trim().length ?? 0) > 0
@@ -713,21 +713,6 @@ async function verifyTargetSizes(
             result.targets += 1;
             if (inlineTextLink(element)) {
               result.inlineTextExceptions += 1;
-              if (
-                !(element instanceof HTMLAnchorElement) ||
-                ![
-                  ...(
-                    element.closest("p, li, dd, dt, figcaption")?.childNodes ??
-                      []
-                  ),
-                ].some((node) =>
-                  node !== element && (node.textContent?.trim().length ?? 0) > 0
-                )
-              ) {
-                result.failures.push(
-                  `invalid inline-text exception: ${description(element)}`,
-                );
-              }
               continue;
             }
             const labelBox = labelledRect(element);
