@@ -1,7 +1,14 @@
 import type { SVGProps } from "react";
 
 export interface ExampleIconProps extends SVGProps<SVGSVGElement> {
-  readonly name?: "arrow" | "check" | "close" | "info" | "moon" | "spark";
+  readonly name?:
+    | "arrow"
+    | "check"
+    | "close"
+    | "info"
+    | "moon"
+    | "spark"
+    | "trash";
 }
 
 export function ExampleIcon({ name = "spark", ...props }: ExampleIconProps) {
@@ -14,6 +21,7 @@ export function ExampleIcon({ name = "spark", ...props }: ExampleIconProps) {
     spark: (
       <path d="m12 3 1.5 5.5L19 10l-5.5 1.5L12 17l-1.5-5.5L5 10l5.5-1.5L12 3Z" />
     ),
+    trash: <path d="M4 7h16M9 7V4h6v3m-9 0 1 13h10l1-13M10 11v5m4-5v5" />,
   }[name];
   return (
     <svg

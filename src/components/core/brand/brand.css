@@ -1,5 +1,6 @@
 @layer discern.components {
   .discern-brand {
+    --discern-brand-tagline-size: var(--discern-font-size-xs);
     display: inline-flex;
     align-items: center;
     gap: var(--discern-space-2);
@@ -22,21 +23,26 @@
     --discern-brand-name-size: var(--discern-font-size-sm);
   }
   .discern-brand--md:has(> * > .discern-brand__tagline) {
-    --discern-brand-name-size: var(--discern-font-size-md);
+    --discern-brand-name-size: var(--discern-font-size-lg);
+  }
+  .discern-brand--lg:has(> * > .discern-brand__tagline) {
+    --discern-brand-name-size: var(--discern-font-size-display-sm);
+    --discern-brand-tagline-size: var(--discern-font-size-sm);
   }
   .discern-brand__mark {
     flex: none;
+    font-weight: var(--discern-font-weight-strong);
   }
   .discern-brand__mark.discern-logo--plain {
     font-size: 1.15em;
   }
   .discern-brand:has(> * > .discern-brand__tagline) > .discern-brand__mark {
     --discern-logo-size: calc((var(--discern-brand-name-size) +
-      var(--discern-font-size-xs)) * var(--discern-leading-snug) +
+      var(--discern-brand-tagline-size)) * var(--discern-leading-snug) +
       var(--discern-space-1) / 2);
   }
   .discern-brand:has(> * > .discern-brand__tagline) > .discern-logo--plain {
-    font-size: var(--discern-logo-size);
+    font-size: calc(var(--discern-logo-size) * 0.78);
   }
   .discern-brand__copy {
     display: grid;
@@ -50,22 +56,21 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .discern-brand--ui .discern-brand__name,
+  .discern-brand--ui :is(.discern-brand__name, .discern-brand__mark),
   .discern-brand__tagline {
     font-family: var(--discern-font-ui);
   }
-
-  .discern-brand--display .discern-brand__name {
+  .discern-brand--display :is(.discern-brand__name, .discern-brand__mark) {
     font-family: var(--discern-font-display);
     font-weight: var(--discern-font-weight-display);
   }
-  .discern-brand--mono .discern-brand__name {
+  .discern-brand--mono :is(.discern-brand__name, .discern-brand__mark) {
     font-family: var(--discern-font-mono);
   }
   .discern-brand__tagline {
     overflow: hidden;
     color: var(--discern-color-ink-faint);
-    font-size: var(--discern-font-size-xs);
+    font-size: var(--discern-brand-tagline-size);
     line-height: var(--discern-leading-snug);
     text-overflow: ellipsis;
     white-space: nowrap;

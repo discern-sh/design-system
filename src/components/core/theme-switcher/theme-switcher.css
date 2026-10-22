@@ -29,14 +29,13 @@
     display: grid;
     place-items: center;
     pointer-events: none;
-    min-block-size: calc(
-      var(--discern-control-size-md) - var(--discern-space-1) - 0.125rem
-    );
+    min-block-size: calc(var(--discern-control-size-md) -
+      var(--discern-space-1) - 0.125rem);
     padding-inline: var(--discern-space-3);
     border: 1px solid transparent;
     border-radius: calc(var(--discern-radius-md) - var(--discern-space-1) / 2 -
       1px);
-    line-height: 1;
+    line-height: var(--discern-leading-snug);
     white-space: nowrap;
     transition-property: background-color, border-color, box-shadow, color,
       transform;
@@ -49,7 +48,8 @@
     }
   }
   .discern-theme-switcher__option:has(input:not(:disabled, :checked)):active span {
-    background: var(--discern-color-accent-200);
+    background: var(--discern-color-inset);
+    color: var(--discern-color-ink);
     transform: translateY(0.0625rem);
   }
   .discern-theme-switcher__option input:checked + span {
@@ -66,9 +66,11 @@
   }
   .discern-theme-switcher:disabled .discern-theme-switcher__option {
     cursor: not-allowed;
-    color: var(--discern-color-ink-faint);
+    color: color-mix(in oklab, var(--discern-color-ink-faint) 70%, transparent);
   }
   .discern-theme-switcher:disabled input:checked + span {
+    border-color: var(--discern-color-border-strong);
+    background: transparent;
     box-shadow: none;
     color: var(--discern-color-ink-muted);
   }

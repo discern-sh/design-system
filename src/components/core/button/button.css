@@ -4,6 +4,7 @@
     --discern-button-fill: var(--discern-color-action);
     --discern-button-fill-hover: color-mix(in oklab,
       var(--discern-color-action) 86%, var(--discern-color-on-action));
+    --discern-button-fill-active: var(--discern-button-fill-hover);
     --discern-color-button-edge: var(--discern-color-action-edge);
     --discern-button-text: var(--discern-color-on-action);
     --discern-shadow-button: inset 0 1px 0 color-mix(in oklab,
@@ -14,7 +15,6 @@
     position: relative;
     display: inline-flex;
     max-inline-size: 100%;
-    min-inline-size: 0;
     align-items: center;
     justify-content: center;
     gap: var(--discern-space-2);
@@ -33,16 +33,20 @@
     text-decoration: none;
     user-select: none;
   }
-  .discern-button:hover:not(:disabled, [aria-disabled="true"]) {
-    background: var(--discern-button-fill-hover);
+  @media (hover: hover) {
+    .discern-button:hover:not(:disabled, [aria-disabled="true"]) {
+      background: var(--discern-button-fill-hover);
+    }
   }
   .discern-button:active:not(:disabled, [aria-disabled="true"]) {
-    transform: translateY(calc(var(--discern-space-1) / 4));
+    transform: translateY(1px);
+    background: var(--discern-button-fill-active);
     box-shadow: var(--discern-shadow-button-pressed);
   }
   .discern-button--secondary {
     --discern-button-fill: var(--discern-color-surface);
-    --discern-button-fill-hover: color-mix(in oklab, var(--discern-color-accent-100) 80%, var(--discern-color-surface));
+    --discern-button-fill-hover: linear-gradient(var(--discern-color-accent-100)
+      0 0) var(--discern-color-surface);
     --discern-color-button-edge: var(--discern-color-neutral-edge);
     --discern-button-text: var(--discern-color-ink);
     --discern-shadow-button: var(--discern-shadow-control);
@@ -51,6 +55,7 @@
   .discern-button--ghost {
     --discern-button-fill: transparent;
     --discern-button-fill-hover: var(--discern-color-accent-100);
+    --discern-button-fill-active: var(--discern-color-accent-200);
     --discern-color-button-edge: transparent;
     --discern-shadow-button: none;
     --discern-shadow-button-pressed: none;
@@ -58,7 +63,8 @@
   }
   .discern-button--danger {
     --discern-button-fill: var(--discern-color-surface);
-    --discern-button-fill-hover: var(--discern-color-danger-soft);
+    --discern-button-fill-hover: linear-gradient(var(--discern-color-danger-soft)
+      0 0) var(--discern-color-surface);
     --discern-color-button-edge: color-mix(in oklab,
       var(--discern-color-danger) 24%, transparent);
     --discern-shadow-button: var(--discern-shadow-control);
@@ -78,7 +84,7 @@
   }
   .discern-button__label {
     min-inline-size: 0;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
     text-align: center;
   }
   .discern-button__icon {
@@ -123,6 +129,13 @@
   @media (forced-colors: active) {
     .discern-button:is(:disabled, [aria-disabled="true"]) {
       color: GrayText;
+    }
+    /* Native disabled forces GrayText; a pending action keeps its paint. */
+    .discern-button[aria-busy="true"] {
+      forced-color-adjust: none;
+      background: ButtonFace;
+      box-shadow: none;
+      color: ButtonText;
     }
   }
 }

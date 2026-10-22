@@ -4,22 +4,6 @@ import { ExampleIcon } from "../../../fixtures/example-icon.tsx";
 import meta, { componentExampleVocabulary } from "./button.meta.ts";
 import { Button } from "./button.tsx";
 
-function DiscardIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M4 7h16M9 7V4h6v3m-9 0 1 13h10l1-13M10 11v5m4-5v5" />
-    </svg>
-  );
-}
-
 function PrimaryExample() {
   return (
     <div className="discern-example-row">
@@ -80,9 +64,11 @@ function ActionLayoutExample() {
                     variant={variant}
                     disabled={state.includes("disabled")}
                     busy={state.includes("busy")}
-                    leadingIcon={variant === "danger"
-                      ? <DiscardIcon />
-                      : <ExampleIcon name="spark" />}
+                    leadingIcon={
+                      <ExampleIcon
+                        name={variant === "danger" ? "trash" : "spark"}
+                      />
+                    }
                     trailingIcon={variant === "secondary" ? "→" : undefined}
                   >
                     {variant === "primary"

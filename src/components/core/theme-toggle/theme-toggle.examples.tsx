@@ -70,12 +70,18 @@ function QuietExample() {
 
 function StaticExample() {
   // The behavior themes the opted-in root containing the control, so a nested
-  // root keeps this demonstration to its own box.
+  // root keeps this demonstration to its own contained swatch.
   return (
     <div
       className="discern-example-row"
       data-discern-root=""
       data-discern-theme="light"
+      style={{
+        display: "inline-flex",
+        padding: "var(--discern-space-3)",
+        border: "1px solid var(--discern-color-border)",
+        borderRadius: "var(--discern-radius-md)",
+      }}
     >
       <ThemeToggle />
     </div>

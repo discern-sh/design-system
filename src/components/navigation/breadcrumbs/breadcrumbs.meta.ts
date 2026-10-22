@@ -7,7 +7,7 @@ const meta = {
   group: "Navigation",
   order: 20,
   description:
-    "Scrollable hierarchical page location with linked ancestors and one explicit current page.",
+    "Wrapping hierarchical page location with linked ancestors and one explicit current page.",
   cli: { stance: "rendered" },
   accessibility: [
     "Ancestors and the current location wrap within local width; full names and separators remain visible without horizontal scrolling.",

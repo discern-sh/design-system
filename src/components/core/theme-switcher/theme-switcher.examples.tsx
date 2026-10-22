@@ -25,6 +25,12 @@ export const conformance = [{
   ],
 }] satisfies readonly ConformanceScenario[];
 
+const modeLabels: Readonly<Record<ThemeSwitcherMode, string>> = {
+  system: "Auto",
+  light: "Light",
+  dark: "Dark",
+};
+
 export default function ThemeSwitcherExamples() {
   const [mode, setMode] = useState<ThemeSwitcherMode>("system");
   return (
@@ -40,9 +46,9 @@ export default function ThemeSwitcherExamples() {
       <ThemeSwitcher
         mode={mode}
         onModeChange={setMode}
-        systemLabel="Auto"
+        systemLabel={modeLabels.system}
       />
-      <span>The {mode} preference is selected.</span>
+      <span>{modeLabels[mode]} is selected.</span>
     </div>
   );
 }
