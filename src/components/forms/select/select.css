@@ -1,22 +1,27 @@
 @layer discern.components {
   .discern-select {
+    --discern-select-chevron: 0.4375rem;
     position: relative;
     display: block;
   }
   .discern-select .discern-control {
     appearance: none;
-    padding-inline-end: var(--discern-space-10);
+    padding-inline-end: calc(var(--discern-space-3) +
+      var(--discern-select-chevron) + var(--discern-space-2));
   }
   .discern-select__chevron {
     position: absolute;
     top: 50%;
-    inset-inline-end: var(--discern-space-4);
-    inline-size: 0.4375rem;
-    block-size: 0.4375rem;
+    inset-inline-end: var(--discern-space-3);
+    inline-size: var(--discern-select-chevron);
+    block-size: var(--discern-select-chevron);
     border-inline-end: 0.09375rem solid var(--discern-color-ink-muted);
     border-block-end: 0.09375rem solid var(--discern-color-ink-muted);
     pointer-events: none;
     rotate: 45deg;
     translate: 0 -70%;
+  }
+  .discern-select:has(:disabled) .discern-select__chevron {
+    border-color: var(--discern-color-ink-faint);
   }
 }

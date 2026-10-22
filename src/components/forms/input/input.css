@@ -17,12 +17,18 @@
   .discern-control::placeholder {
     color: var(--discern-color-ink-faint);
   }
-  .discern-control:where(:hover:not(:disabled)) {
+  .discern-control:where(:hover:not(:disabled, [readonly])) {
     border-color: color-mix(in oklab, var(--discern-color-border-strong),
       var(--discern-color-ink) 24%);
   }
   .discern-control[readonly] {
-    background: var(--discern-color-surface-sunken);
+    background: var(--discern-color-inset);
+  }
+  /* Holds the surface and ink against the browser's autofill paint. */
+  .discern-control:autofill {
+    -webkit-text-fill-color: var(--discern-color-ink);
+    transition-property: background-color;
+    transition-delay: 600000s;
   }
   /* A weighted lower edge: a shape the focus ring never takes. */
   .discern-control:is([aria-invalid="true"], :user-invalid):not(:disabled) {

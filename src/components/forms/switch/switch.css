@@ -1,10 +1,16 @@
 @layer discern.components {
+  .discern-switch,
+  .discern-field:has(> .discern-switch) {
+    --discern-switch-width: 2.375rem;
+  }
   .discern-switch__label {
     display: flex;
     align-items: flex-start;
     gap: var(--discern-space-3);
+    min-block-size: 1.5rem;
     color: var(--discern-color-ink);
     cursor: pointer;
+    font-family: var(--discern-font-ui);
     font-size: var(--discern-font-size-sm);
     line-height: 1.4;
     overflow-wrap: anywhere;
@@ -31,14 +37,14 @@
     display: flex;
     flex: none;
     align-items: center;
-    inline-size: 2.375rem;
+    inline-size: var(--discern-switch-width);
     block-size: var(--discern-switch-track);
     margin-block-start: calc((1lh - var(--discern-switch-track)) / 2);
     padding: calc(var(--discern-space-1) / 2);
     border: 1px solid color-mix(in oklab, var(--discern-color-border-strong),
       var(--discern-color-ink) 36%);
     border-radius: var(--discern-radius-pill);
-    background: var(--discern-color-surface-sunken);
+    background: var(--discern-color-inset);
     transition-property: background-color, border-color, transform;
     transition-duration: var(--discern-duration-fast);
     transition-timing-function: var(--discern-ease-out);
@@ -47,7 +53,7 @@
     block-size: 100%;
     aspect-ratio: 1;
     border-radius: 50%;
-    outline: 1px solid var(--discern-color-border);
+    outline: 1px solid var(--discern-color-border-strong);
     outline-offset: -1px;
     background: linear-gradient(color-mix(in oklab,
       var(--discern-color-material-highlight) 50%, transparent) 0 0)
@@ -90,21 +96,36 @@
     color: var(--discern-color-ink-faint);
   }
   input:disabled + .discern-switch__track {
-    border-color: var(--discern-color-border);
+    border-color: color-mix(in oklab, var(--discern-color-border-strong) 70%,
+      transparent);
+    background: var(--discern-color-surface-sunken);
   }
   input:disabled:checked + .discern-switch__track {
+    border-color: transparent;
     background: var(--discern-color-ink-faint);
   }
   input:disabled + .discern-switch__track > span {
     box-shadow: none;
   }
+  .discern-field:has(> .discern-switch) > .discern-field__message--error {
+    --discern-field-glyph-column: var(--discern-switch-width);
+    column-gap: var(--discern-space-3);
+  }
   @media (forced-colors: active) {
     .discern-switch__track > span {
       forced-color-adjust: none;
+      outline-style: none;
       background: ButtonText;
     }
     input:checked + .discern-switch__track > span {
       background: SelectedItem;
+    }
+    .discern-switch__label:has(input:disabled),
+    input:disabled + .discern-switch__track {
+      color: GrayText;
+    }
+    input:disabled + .discern-switch__track > span {
+      background: GrayText;
     }
   }
 }

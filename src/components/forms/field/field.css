@@ -3,6 +3,7 @@
     display: grid;
     gap: var(--discern-rhythm-related);
     min-inline-size: 0;
+    font-family: var(--discern-font-ui);
   }
   .discern-field--group {
     grid-template-columns: minmax(0, 1fr);
@@ -15,6 +16,10 @@
     float: left;
     padding: 0;
   }
+  /* The group hint binds to its legend, ahead of the options it governs. */
+  .discern-field--group > legend + .discern-field__message {
+    margin-block-start: calc(var(--discern-rhythm-related) / -2);
+  }
   /* Closer to its own options than to its parent's rows. */
   .discern-field--subgroup {
     margin-block-start: var(--discern-space-2);
@@ -25,7 +30,6 @@
   }
   .discern-field__label {
     color: var(--discern-color-ink);
-    font-family: var(--discern-font-ui);
     font-size: var(--discern-font-size-sm);
     font-weight: var(--discern-font-weight-medium);
     line-height: var(--discern-leading-snug);
@@ -40,7 +44,7 @@
   .discern-field__message {
     color: var(--discern-color-ink-muted);
     font-size: var(--discern-font-size-xs);
-    line-height: 1.45;
+    line-height: 1.4;
   }
   .discern-field__message--error {
     display: flex;
@@ -48,11 +52,12 @@
     color: var(--discern-color-danger);
     font-weight: var(--discern-font-weight-medium);
   }
+  /* A Field around one choice widens the box to the indicator column. */
   .discern-field__glyph {
     --discern-field-glyph: 1em;
     display: grid;
     flex: none;
-    inline-size: var(--discern-field-glyph);
+    inline-size: var(--discern-field-glyph-column, var(--discern-field-glyph));
     block-size: var(--discern-field-glyph);
     margin-block-start: calc((1lh - var(--discern-field-glyph)) / 2);
   }

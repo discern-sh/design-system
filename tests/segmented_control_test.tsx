@@ -195,15 +195,19 @@ Deno.test("SegmentedControl preserves local containment, target floors, and forc
               width: input.getBoundingClientRect().width,
               height: input.getBoundingClientRect().height,
             })),
-            direction: getComputedStyle(
-              root.querySelector(".discern-segmented-control__items")!,
-            ).flexDirection,
+            rows: new Set(
+              [...root.querySelectorAll("input")].map((input) =>
+                Math.round(input.getBoundingClientRect().top)
+              ),
+            ).size,
           }));
           assert(
             facts.scroll <= width + 1 && facts.width <= width + 1,
             JSON.stringify(facts),
           );
-          assertEquals(facts.direction, width <= 320 ? "column" : "row");
+          // Labels that cannot share the track stack; at a wide allocation
+          // they share one line.
+          assertEquals(facts.rows, width >= 900 ? 1 : 2, JSON.stringify(facts));
           for (const control of facts.controls) {
             assert(control.width >= 24 && control.height >= 24);
           }
@@ -320,6 +324,24 @@ Deno.test("SegmentedControl is one control-height track with a raised, non-colou
             surface(locked!, "daily"),
           ].map((style) => style.opacity),
           locked: surface(locked!, "weekly").color,
+          lockedMaterial: (() => {
+            const style = surface(locked!, "weekly");
+            return {
+              image: style.backgroundImage,
+              fill: style.backgroundColor,
+              shadow: style.boxShadow,
+              edge: style.borderTopColor,
+            };
+          })(),
+          strongEdge: (() => {
+            const probe = document.createElement("div");
+            probe.style.borderTop =
+              "1px solid var(--discern-color-border-strong)";
+            document.body.append(probe);
+            const value = getComputedStyle(probe).borderTopColor;
+            probe.remove();
+            return value;
+          })(),
         };
       });
       const label = JSON.stringify({ density, facts });
@@ -337,6 +359,14 @@ Deno.test("SegmentedControl is one control-height track with a raised, non-colou
       assertEquals(facts.disabled, ["1", "1"], label);
       assert(facts.inkStep >= 2, label);
       assertEquals(facts.locked, facts.muted, label);
+      // A locked selection keeps its edge but never the raised, pressable
+      // material of an enabled thumb.
+      assertEquals(facts.lockedMaterial, {
+        image: "none",
+        fill: "rgba(0, 0, 0, 0)",
+        shadow: "none",
+        edge: facts.strongEdge,
+      }, label);
     }
     // Hover answers with ink alone: it never paints a fill that could read as
     // a second selection, and never out-ranks the selected surface.
@@ -355,6 +385,194 @@ Deno.test("SegmentedControl is one control-height track with a raised, non-colou
       assertEquals(hovered.background, resting.background, value);
       if (value === "weekly") assert(hovered.color !== resting.color);
     }
+  } finally {
+    await browser.close();
+    await Deno.remove(output, { recursive: true });
+  }
+});
+
+Deno.test("fill segments share one track until their labels cannot, and never leave a ragged row", async () => {
+  const browser = await launchBrowser();
+  const output = await Deno.makeTempDir();
+  try {
+    await emitDesignSystemRuntime({
+      outputRoot: toFileUrl(`${output}/`),
+      components: ["segmented-control"],
+    });
+    const css = await Deno.readTextFile(`${output}/discern.css`);
+    const page = await browser.newPage({
+      viewport: { width: 1280, height: 800 },
+    });
+    const measure = async (
+      options: readonly { value: string; label: string }[],
+      width: number,
+    ) => {
+      const html = renderToStaticMarkup(
+        <SegmentedControl label="View" name="view" items={options} />,
+      );
+      await page.setContent(
+        `<html data-discern-root><head><style>${css}</style></head><body><main style="width:${width}px">${html}</main></body></html>`,
+      );
+      return await page.locator("fieldset").evaluate((root) => {
+        const probe = document.createElement("div");
+        probe.style.blockSize = "var(--discern-control-size-md)";
+        root.append(probe);
+        const controlSize = probe.getBoundingClientRect().height;
+        probe.remove();
+        const segments = [...root.querySelectorAll("label")].map((node) =>
+          node.getBoundingClientRect()
+        );
+        const tops = segments.map(({ top }) => Math.round(top));
+        return {
+          rows: new Set(tops).size,
+          widths: segments.map(({ width }) => width),
+          track: root.querySelector(".discern-segmented-control__items")!
+            .getBoundingClientRect().height,
+          controlSize,
+          scroll: root.scrollWidth,
+        };
+      });
+    };
+    // Two short options stay one control-height track in a narrow row column.
+    const pair = [{ value: "list", label: "List" }, {
+      value: "grid",
+      label: "Grid",
+    }];
+    for (const width of [160, 200, 336]) {
+      const facts = await measure(pair, width);
+      const label = JSON.stringify({ width, facts });
+      assertEquals(facts.rows, 1, label);
+      assert(Math.abs(facts.track - facts.controlSize) <= 1, label);
+      assert(Math.abs(facts.widths[0]! - facts.widths[1]!) <= 1, label);
+    }
+    // Three or more options share the track or stack together: a second row
+    // holding only some of them never appears.
+    const trio = [
+      { value: "list", label: "List" },
+      { value: "grid", label: "Grid" },
+      { value: "timeline", label: "Timeline" },
+    ];
+    const long = [
+      { value: "all", label: "Process every available item" },
+      { value: "new", label: "Process only newly added items" },
+      { value: "changed", label: "Process items with changes" },
+    ];
+    for (const options of [trio, long]) {
+      const seen = new Set<number>();
+      for (let width = 160; width <= 960; width += 40) {
+        const facts = await measure(options, width);
+        const label = JSON.stringify({ width, facts });
+        assert([1, options.length].includes(facts.rows), label);
+        assert(facts.scroll <= width + 1, label);
+        seen.add(facts.rows);
+      }
+      assertEquals([...seen].toSorted(), [1, options.length]);
+    }
+  } finally {
+    await browser.close();
+    await Deno.remove(output, { recursive: true });
+  }
+});
+
+Deno.test("a pressed segment sinks below its track in both themes, and forced colours mark unavailable options", async () => {
+  const browser = await launchBrowser();
+  const output = await Deno.makeTempDir();
+  try {
+    await emitDesignSystemRuntime({
+      outputRoot: toFileUrl(`${output}/`),
+      components: ["segmented-control"],
+    });
+    const css = `${await Deno.readTextFile(`${output}/discern.css`)}
+      [data-discern-root] *{transition:none!important}`;
+    const page = await browser.newPage({
+      viewport: { width: 1280, height: 800 },
+    });
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    const html = renderToStaticMarkup(
+      <SegmentedControl label="Schedule" name="schedule" items={items} />,
+    );
+    const steps = new Map<string, number>();
+    for (const theme of ["light", "dark"]) {
+      await page.setContent(
+        `<html data-discern-root data-discern-theme="${theme}"><head><style>${css}</style></head><body><main style="width:640px;background:var(--discern-color-surface)">${html}</main></body></html>`,
+      );
+      await page.hover('input[value="weekly"]');
+      await page.mouse.down();
+      const facts = await page.evaluate(() => {
+        const canvas = document.createElement("canvas");
+        canvas.width = canvas.height = 1;
+        const context = canvas.getContext("2d", { willReadFrequently: true })!;
+        const luminance = (layers: readonly string[]) => {
+          context.clearRect(0, 0, 1, 1);
+          for (const layer of layers) {
+            context.fillStyle = layer;
+            context.fillRect(0, 0, 1, 1);
+          }
+          const [r = 0, g = 0, b = 0] = context.getImageData(0, 0, 1, 1).data;
+          const linear = (channel: number) => {
+            const value = channel / 255;
+            return value <= 0.04045
+              ? value / 12.92
+              : ((value + 0.055) / 1.055) ** 2.4;
+          };
+          return 0.2126 * linear(r) + 0.7152 * linear(g) + 0.0722 * linear(b);
+        };
+        // The control sits on a raised surface, where a white-wash well
+        // would lift instead of sink.
+        const ground = [
+          getComputedStyle(document.documentElement).backgroundColor,
+          getComputedStyle(document.querySelector("main")!).backgroundColor,
+        ];
+        const track = getComputedStyle(
+          document.querySelector(".discern-segmented-control__items")!,
+        ).backgroundColor;
+        const pressed = getComputedStyle(
+          document.querySelector('input[value="weekly"] + span')!,
+        ).backgroundColor;
+        return {
+          pressedMatches: document.querySelector('input[value="weekly"]')!
+            .matches("input:active"),
+          track: luminance([...ground, track]),
+          pressed: luminance([...ground, track, pressed]),
+        };
+      });
+      await page.mouse.up();
+      assert(facts.pressedMatches, theme);
+      // A press is a well: darker than the track it sits in, never lighter.
+      assert(facts.pressed < facts.track, `${theme}: ${JSON.stringify(facts)}`);
+      steps.set(theme, facts.track);
+    }
+    assertEquals(steps.size, 2);
+    assert(steps.get("light") !== steps.get("dark"), "both themes measured");
+    // Forced colours mark an unavailable option, and a locked selection,
+    // apart from the enabled ones.
+    await page.setContent(
+      `<html data-discern-root><head><style>${css}</style></head><body>${
+        renderToStaticMarkup(
+          <>
+            <SegmentedControl label="Open" name="open" items={items} />
+            <SegmentedControl
+              label="Locked"
+              name="locked"
+              items={items}
+              disabled
+            />
+          </>,
+        )
+      }</body></html>`,
+    );
+    await page.emulateMedia({ forcedColors: "active" });
+    const ink = await page.evaluate(() =>
+      [
+        'input[name="open"][value="daily"]',
+        'input[name="open"][value="hourly"]',
+        'input[name="locked"][value="daily"]',
+      ].map((selector) =>
+        getComputedStyle(document.querySelector(`${selector} + span`)!).color
+      )
+    );
+    assert(ink[0] !== ink[1], `forced colours: ${ink.join(" vs ")}`);
+    assertEquals(ink[1], ink[2], "a locked selection reads unavailable");
   } finally {
     await browser.close();
     await Deno.remove(output, { recursive: true });

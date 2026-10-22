@@ -1,7 +1,5 @@
 @layer discern.components {
   .discern-segmented-control {
-    container: discern-segmented-control / inline-size;
-    font-family: var(--discern-font-ui);
     font-size: var(--discern-font-size-sm);
   }
   .discern-segmented-control__legend,
@@ -9,16 +7,36 @@
     overflow-wrap: anywhere;
   }
   .discern-segmented-control__items {
+    --discern-segmented-control-band: 0rem;
     display: flex;
-    gap: var(--discern-space-1);
-    padding: var(--discern-space-1);
+    flex-wrap: wrap;
+    gap: calc(var(--discern-space-1) / 2);
+    padding: calc(var(--discern-space-1) / 2);
     border: 1px solid var(--discern-color-border);
     border-radius: var(--discern-radius-md);
     background: var(--discern-color-inset);
   }
+  /*
+   * Two segments stack only when their labels cannot share the track. Three
+   * or more share it until each would get less than 6rem, then stack
+   * together, never into a ragged second row.
+   */
   .discern-segmented-control__option {
     position: relative;
-    flex: 1;
+    flex: 1 1 calc((var(--discern-segmented-control-band) - 100%) * 999);
+    min-inline-size: fit-content;
+  }
+  .discern-segmented-control__items:has(> :nth-child(3)) {
+    --discern-segmented-control-band: 18rem;
+  }
+  .discern-segmented-control__items:has(> :nth-child(4)) {
+    --discern-segmented-control-band: 24rem;
+  }
+  .discern-segmented-control__items:has(> :nth-child(5)) {
+    --discern-segmented-control-band: 30rem;
+  }
+  .discern-segmented-control__items:has(> :nth-child(3)) > *,
+  .discern-segmented-control--content .discern-segmented-control__option {
     min-inline-size: 0;
   }
   .discern-segmented-control--content .discern-segmented-control__items {
@@ -31,8 +49,6 @@
   .discern-segmented-control__input {
     position: absolute;
     inset: 0;
-    inline-size: 100%;
-    block-size: 100%;
     margin: 0;
     opacity: 0;
     cursor: pointer;
@@ -44,12 +60,12 @@
     justify-content: center;
     gap: var(--discern-space-2);
     pointer-events: none;
-    min-block-size: calc(var(--discern-control-size-md) - 2 *
-      (var(--discern-space-1) + 1px));
+    min-block-size: calc(var(--discern-control-size-md) -
+      var(--discern-space-1) - 0.125rem);
     block-size: 100%;
     padding: var(--discern-space-1) var(--discern-space-3);
     border: 1px solid transparent;
-    border-radius: calc(var(--discern-radius-md) - var(--discern-space-1) -
+    border-radius: calc(var(--discern-radius-md) - var(--discern-space-1) / 2 -
       1px);
     color: var(--discern-color-ink-muted);
     font-weight: var(--discern-font-weight-medium);
@@ -67,7 +83,7 @@
     }
   }
   .discern-segmented-control__input:where(:active:not(:disabled, :checked)) + .discern-segmented-control__surface {
-    background: var(--discern-color-surface-sunken);
+    background: var(--discern-color-inset);
     color: var(--discern-color-ink);
     transform: translateY(0.0625rem);
   }
@@ -89,14 +105,12 @@
   .discern-segmented-control__input:disabled + .discern-segmented-control__surface {
     color: color-mix(in oklab, var(--discern-color-ink-faint) 70%, transparent);
   }
+  /* A locked selection keeps its edge and ink, never a pressable thumb. */
   .discern-segmented-control__input:disabled:checked + .discern-segmented-control__surface {
+    border-color: var(--discern-color-border-strong);
+    background: transparent;
     box-shadow: none;
     color: var(--discern-color-ink-muted);
-  }
-  @container discern-segmented-control (max-width: 20rem) {
-    .discern-segmented-control__items {
-      flex-direction: column;
-    }
   }
   @media (forced-colors: active) {
     .discern-segmented-control__surface {
@@ -106,7 +120,8 @@
       outline: 0.125rem solid var(--discern-color-accent-500);
       outline-offset: -0.25rem;
     }
-    .discern-segmented-control__input:disabled + .discern-segmented-control__surface {
+    .discern-segmented-control__input:disabled + .discern-segmented-control__surface,
+    .discern-segmented-control__input:disabled:checked + .discern-segmented-control__surface {
       color: GrayText;
     }
   }

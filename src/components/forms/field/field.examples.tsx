@@ -93,13 +93,12 @@ function CancelledFieldState() {
 function AcknowledgementFieldState() {
   return (
     <Field
+      group
       controlId="field-acknowledgement"
       label="Heads up"
-      hint="Continue when you have reviewed the summary."
+      hint="Review the summary above before you continue."
     >
-      <div id="field-acknowledgement" className="discern-control">
-        Review the summary above.
-      </div>
+      <Checkbox label="I have reviewed the summary" />
     </Field>
   );
 }
@@ -174,8 +173,7 @@ function InlineFormFieldState() {
     <div
       className="discern-field-row"
       style={{
-        "--discern-field-row-columns":
-          "minmax(0, 2fr) minmax(0, 1fr) max-content",
+        "--discern-field-row-columns": "minmax(0, 2fr) max-content max-content",
       } as CSSProperties}
     >
       <Input label="Seats" name="seats" defaultValue="4" hint="Up to 100" />

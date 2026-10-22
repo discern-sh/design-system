@@ -1,4 +1,4 @@
-import { forwardRef, useId } from "react";
+import { forwardRef, useCallback, useId } from "react";
 import type { InputHTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
@@ -8,6 +8,12 @@ export interface CheckboxProps
   extends Omit<InputHTMLAttributes<HTMLInputElement>, "type"> {
   readonly label: ReactNode;
   readonly description?: ReactNode;
+  /**
+   * Show the mixed state of a parent whose options are partly selected. The
+   * adapter sets the native `indeterminate` property after mount, so the
+   * browser announces it as mixed; static HTML sets that property itself.
+   */
+  readonly indeterminate?: boolean;
 }
 /** Native checkbox with an associated visible label and optional description. */
 export const Checkbox: DiscernComponent<HTMLInputElement, CheckboxProps> =
@@ -15,6 +21,7 @@ export const Checkbox: DiscernComponent<HTMLInputElement, CheckboxProps> =
     {
       label,
       description,
+      indeterminate = false,
       id,
       className,
       "aria-describedby": ariaDescribedBy,
@@ -27,11 +34,16 @@ export const Checkbox: DiscernComponent<HTMLInputElement, CheckboxProps> =
     const descriptionId = description ? `${controlId}-description` : undefined;
     const describedBy =
       [ariaDescribedBy, descriptionId].filter(Boolean).join(" ") || undefined;
+    const inputRef = useCallback((node: HTMLInputElement | null) => {
+      if (node !== null) node.indeterminate = indeterminate;
+      if (typeof ref === "function") ref(node);
+      else if (ref !== null) ref.current = node;
+    }, [indeterminate, ref]);
     return (
       <div className={classNames("discern-choice", className)}>
         <label className="discern-choice__label" htmlFor={controlId}>
           <input
-            ref={ref}
+            ref={inputRef}
             id={controlId}
             type="checkbox"
             aria-describedby={describedBy}

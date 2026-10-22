@@ -1,10 +1,14 @@
 @layer discern.components {
-  .discern-choice {
+  .discern-choice,
+  .discern-field:has(> .discern-choice) {
     --discern-choice-control: 1.125rem;
+  }
+  .discern-choice {
     display: grid;
     grid-template-columns: var(--discern-choice-control) minmax(0, 1fr);
     column-gap: var(--discern-space-3);
-    row-gap: var(--discern-space-1);
+    row-gap: calc(var(--discern-space-1) / 2);
+    font-family: var(--discern-font-ui);
     overflow-wrap: anywhere;
   }
   .discern-choice__label {
@@ -12,6 +16,7 @@
     grid-template-columns: subgrid;
     grid-column: 1 / -1;
     align-items: start;
+    align-content: center;
     min-block-size: 1.5rem;
     color: var(--discern-color-ink);
     cursor: pointer;
@@ -46,17 +51,27 @@
         var(--discern-color-ink) 56%);
     }
   }
-  input:checked + .discern-choice__control {
+  input:checked + .discern-choice__control,
+  input[type="checkbox"]:indeterminate + .discern-choice__control {
     border-color: var(--discern-color-action);
     background: var(--discern-color-action);
   }
-  .discern-choice:not(.discern-choice--radio) input:checked + .discern-choice__control > span {
+  input[type="checkbox"]:checked + .discern-choice__control > span {
     inline-size: 0.5rem;
     block-size: 0.25rem;
     border-inline-start: 0.125rem solid var(--discern-color-on-action);
     border-block-end: 0.125rem solid var(--discern-color-on-action);
     rotate: -45deg;
     translate: 0 -1px;
+  }
+  input[type="checkbox"]:indeterminate + .discern-choice__control > span {
+    inline-size: 0.5rem;
+    block-size: 0;
+    border: 0;
+    border-block-start: 0.125rem solid var(--discern-color-on-action);
+    border-radius: 1px;
+    rotate: none;
+    translate: none;
   }
   input:focus-visible + .discern-choice__control {
     outline: 0.125rem solid var(--discern-color-accent-500);
@@ -71,10 +86,13 @@
     border-color: var(--discern-color-danger);
   }
   input:disabled + .discern-choice__control {
-    border-color: var(--discern-color-border);
+    border-color: color-mix(in oklab, var(--discern-color-border-strong) 70%,
+      transparent);
     background: var(--discern-color-surface-sunken);
   }
-  input:disabled:checked + .discern-choice__control {
+  input:disabled:checked + .discern-choice__control,
+  input[type="checkbox"]:disabled:indeterminate + .discern-choice__control {
+    border-color: transparent;
     background: var(--discern-color-ink-faint);
   }
   .discern-choice__label:has(input:disabled) {
@@ -89,5 +107,15 @@
   }
   .discern-choice:has(input:disabled) .discern-choice__description {
     color: var(--discern-color-ink-faint);
+  }
+  .discern-field:has(> .discern-choice) > .discern-field__message--error {
+    --discern-field-glyph-column: var(--discern-choice-control);
+    column-gap: var(--discern-space-3);
+  }
+  @media (forced-colors: active) {
+    .discern-choice:has(input:disabled) > *,
+    input:disabled + .discern-choice__control {
+      color: GrayText;
+    }
   }
 }

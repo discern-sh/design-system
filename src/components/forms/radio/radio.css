@@ -15,5 +15,8 @@
       forced-color-adjust: none;
       background: SelectedItem;
     }
+    .discern-choice--radio input:disabled:checked + .discern-choice__control > span {
+      background: GrayText;
+    }
   }
 }

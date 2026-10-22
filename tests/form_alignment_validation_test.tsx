@@ -1,4 +1,9 @@
-import { assert, assertEquals, assertStringIncludes } from "@std/assert";
+import {
+  assert,
+  assertEquals,
+  assertStringIncludes,
+  assertThrows,
+} from "@std/assert";
 import { toFileUrl } from "@std/path";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { Page } from "playwright-core";
@@ -383,6 +388,47 @@ async function firstLineCenter(page: Page, selector: string): Promise<number> {
   });
 }
 
+async function assertTargets(page: Page, facts: string): Promise<void> {
+  const targets = await page.locator(
+    ".discern-choice__label, .discern-switch__label",
+  ).evaluateAll((nodes) =>
+    nodes.map((node) => node.getBoundingClientRect().height)
+  );
+  assert(targets.length > 0, facts);
+  for (const height of targets) {
+    assert(height >= 24, `${facts}: target height ${height}`);
+  }
+}
+
+Deno.test("single-line, description-less choices keep the 24px target at every density", async () => {
+  const browser = await launchBrowser();
+  const output = await Deno.makeTempDir();
+  try {
+    const css = await formCss(output);
+    const page = await browser.newPage({
+      viewport: { width: 720, height: 900 },
+    });
+    const defaults = renderToStaticMarkup(
+      <div className="discern-example-stack">
+        <Checkbox label="Include examples" />
+        <Radio name="channel" label="Alpha" />
+        <Switch label="Automatic updates" />
+      </div>,
+    );
+    for (const density of [0.8, 1, 1.25]) {
+      await page.setContent(pageHtml(css, defaults, { width: 480, density }));
+      await assertTargets(page, `density ${density}`);
+      assertEquals(
+        await page.locator(".discern-switch__label").count(),
+        1,
+      );
+    }
+  } finally {
+    await browser.close();
+    await Deno.remove(output, { recursive: true });
+  }
+});
+
 Deno.test("choice indicators align to the first label line and text stays contained at high zoom", async () => {
   const browser = await launchBrowser();
   const output = await Deno.makeTempDir();
@@ -457,15 +503,7 @@ Deno.test("choice indicators align to the first label line and text stays contai
         );
         assert(scroll, `${facts}: contained`);
         // Every labelled region stays a generous target.
-        for (
-          const selector of [
-            ".discern-choice__label",
-            ".discern-switch__label",
-          ]
-        ) {
-          const target = await box(page, `${selector} >> nth=0`);
-          assert(target.height >= 24, `${facts}: ${selector} target height`);
-        }
+        await assertTargets(page, facts);
       }
     }
   } finally {
@@ -547,6 +585,67 @@ Deno.test("multiline choices stay usable by label click, keyboard, and forced co
       style: getComputedStyle(node).outlineStyle,
     }));
     assertEquals(ring, { width: "2px", style: "solid" });
+  } finally {
+    await browser.close();
+    await Deno.remove(output, { recursive: true });
+  }
+});
+
+Deno.test("forced colours tell unavailable choices apart from enabled ones", async () => {
+  const browser = await launchBrowser();
+  const output = await Deno.makeTempDir();
+  try {
+    const css = await formCss(output);
+    const page = await browser.newPage({
+      viewport: { width: 720, height: 900 },
+    });
+    await page.emulateMedia({ forcedColors: "active" });
+    await page.setContent(pageHtml(
+      css,
+      renderToStaticMarkup(
+        <div className="discern-example-stack">
+          {[false, true].map((disabled) => (
+            <div key={String(disabled)} id={disabled ? "off" : "on"}>
+              <Checkbox label="Box" defaultChecked disabled={disabled} />
+              <Radio
+                name={`r-${disabled}`}
+                label="Dot"
+                defaultChecked
+                disabled={disabled}
+              />
+              <Switch label="Track" disabled={disabled} />
+            </div>
+          ))}
+        </div>,
+      ),
+      { width: 480 },
+    ));
+    const paint = (root: string) =>
+      page.evaluate((root) => {
+        const style = (selector: string) =>
+          getComputedStyle(document.querySelector(`#${root} ${selector}`)!);
+        return {
+          box: style(
+            ".discern-choice:not(.discern-choice--radio) .discern-choice__control",
+          ).borderTopColor,
+          check: style(
+            ".discern-choice:not(.discern-choice--radio) .discern-choice__control > span",
+          ).borderBottomColor,
+          label: style(".discern-choice__label").color,
+          dot: style(".discern-choice--radio .discern-choice__control > span")
+            .backgroundColor,
+          track: style(".discern-switch__track").borderTopColor,
+          thumb: style(".discern-switch__track > span").backgroundColor,
+          text: style(".discern-switch__label").color,
+        };
+      }, root);
+    const [enabled, unavailable] = [await paint("on"), await paint("off")];
+    for (const key of Object.keys(enabled) as (keyof typeof enabled)[]) {
+      assert(
+        enabled[key] !== unavailable[key],
+        `${key}: ${enabled[key]} matches the unavailable ${unavailable[key]}`,
+      );
+    }
   } finally {
     await browser.close();
     await Deno.remove(output, { recursive: true });
@@ -774,13 +873,15 @@ Deno.test("Field groups replace the browser fieldset frame and describe the whol
       { border: frame.border, padding: frame.padding, margin: frame.margin },
       { border: "0px", padding: "0px", margin: "0px" },
     );
-    // The legend joins the Field rhythm instead of notching a frame.
+    // The legend joins the Field rhythm instead of notching a frame: its
+    // hint binds to it at half the related gap, and the options follow at
+    // the full gap.
     const legend = await box(page, "legend");
+    const hint = await box(page, "#channel-hint");
     const first = await box(page, ".discern-choice >> nth=0");
-    assert(
-      Math.abs(first.top - legend.bottom - frame.gap) <= 1,
-      JSON.stringify({ legend, first, gap: frame.gap }),
-    );
+    const facts = JSON.stringify({ legend, hint, first, gap: frame.gap });
+    assert(Math.abs(hint.top - legend.bottom - frame.gap / 2) <= 1, facts);
+    assert(Math.abs(first.top - hint.bottom - frame.gap) <= 1, facts);
     // A group-level error marks every enabled option with the shaped edge.
     const optionEdge = await page.locator(".discern-choice__control >> nth=0")
       .evaluate((node) => getComputedStyle(node).borderTopWidth);
@@ -826,6 +927,11 @@ Deno.test("choice indicators meet non-text contrast and group errors reach every
             <Switch label="Updates" />
             <Switch label="Digest" disabled />
           </Field>
+          <div id="unavailable">
+            <Checkbox label="Unavailable" disabled />
+            <Radio name="unavailable" label="Unavailable" disabled />
+            <Switch label="Unavailable" disabled />
+          </div>
         </div>,
       ),
       { width: 640 },
@@ -837,7 +943,7 @@ Deno.test("choice indicators meet non-text contrast and group errors reach every
       await page.evaluate((value) => {
         document.documentElement.dataset.discernTheme = value;
       }, theme);
-      const { base, ratios } = await page.evaluate(() => {
+      const { base, ratios, knob, unavailable } = await page.evaluate(() => {
         const canvas = document.createElement("canvas");
         canvas.width = canvas.height = 1;
         const context = canvas.getContext("2d", { willReadFrequently: true })!;
@@ -869,7 +975,41 @@ Deno.test("choice indicators meet non-text contrast and group errors reach every
           resolve("var(--discern-color-surface)"),
         ];
         const base = luminance(ground);
+        const contrast = (left: number, right: number) =>
+          (Math.max(left, right) + 0.05) / (Math.min(left, right) + 0.05);
+        const off = document.querySelector(".discern-switch__track")!;
+        const thumb = getComputedStyle(off.firstElementChild!);
+        const track = luminance([
+          ...ground,
+          getComputedStyle(off).backgroundColor,
+        ]);
+        const thumbFill = luminance([...ground, thumb.backgroundColor]);
         return {
+          knob: {
+            raised: thumbFill > track,
+            edge: contrast(
+              luminance([...ground, thumb.backgroundColor, thumb.outlineColor]),
+              track,
+            ),
+          },
+          unavailable: [
+            "#unavailable .discern-choice:not(.discern-choice--radio) .discern-choice__control",
+            "#unavailable .discern-choice--radio .discern-choice__control",
+            "#unavailable .discern-switch__track",
+          ].map((selector) => {
+            const style = getComputedStyle(document.querySelector(selector)!);
+            return {
+              selector,
+              ratio: contrast(
+                luminance([
+                  ...ground,
+                  style.backgroundColor,
+                  style.borderTopColor,
+                ]),
+                base,
+              ),
+            };
+          }),
           base,
           ratios: [
             ".discern-choice:not(.discern-choice--radio) .discern-choice__control",
@@ -888,6 +1028,17 @@ Deno.test("choice indicators meet non-text contrast and group errors reach every
         };
       });
       grounds.add(Math.round(base * 1000));
+      // The off knob sits above its inset track, and its own edge parts it
+      // from the track even where the fills are close.
+      assert(knob.raised, `${theme} knob sits below its track`);
+      assert(knob.edge >= 1.5, `${theme} knob edge ${knob.edge.toFixed(2)}:1`);
+      // Unavailable indicators stay recognisable boxes, circles, and tracks.
+      for (const { selector, ratio } of unavailable) {
+        assert(
+          ratio >= 1.5,
+          `${theme} ${selector} unavailable edge ${ratio.toFixed(2)}:1`,
+        );
+      }
       for (const { selector, ratio } of ratios) {
         assert(
           ratio >= 3,
@@ -963,4 +1114,318 @@ Deno.test("a nested Field group is an explicit subgroup bound to its own options
     await browser.close();
     await Deno.remove(output, { recursive: true });
   }
+});
+
+Deno.test("form text uses one face, and messages bind to what they describe", async () => {
+  const browser = await launchBrowser();
+  const output = await Deno.makeTempDir();
+  try {
+    const css = await formCss(output);
+    const page = await browser.newPage({
+      viewport: { width: 720, height: 900 },
+    });
+    await page.setContent(pageHtml(
+      css,
+      renderToStaticMarkup(
+        <div className="discern-example-stack">
+          <Field
+            group
+            controlId="delivery"
+            label="Delivery"
+            hint="Choose how artefacts arrive"
+            error="Choose a delivery"
+          >
+            <Radio
+              name="delivery"
+              label="Bundle every artefact"
+              description="Slower to appear, but a single file."
+            />
+            <Radio name="delivery" label="Stream artefacts" />
+          </Field>
+          <Field
+            controlId="terms"
+            error="Select this option to continue"
+          >
+            <Checkbox
+              id="terms"
+              label="Accept the terms"
+              aria-invalid="true"
+            />
+          </Field>
+          <Field controlId="updates" error="Turn this on to continue">
+            <Switch
+              id="updates"
+              label="Automatic updates"
+              description="Installs overnight"
+              aria-invalid="true"
+            />
+          </Field>
+          <Input label="Name" hint="Shown publicly" defaultValue="Platform" />
+        </div>,
+      ),
+      { width: 560 },
+    ));
+    // Every interface text node in a form renders in the control's face, so
+    // one fieldset never mixes two glyph sets.
+    const faces = await page.evaluate(() => {
+      const face =
+        getComputedStyle(document.querySelector("input.discern-control")!)
+          .fontFamily;
+      return {
+        face,
+        others: [
+          "legend",
+          ".discern-field__label",
+          ".discern-field__message",
+          ".discern-field__message--error",
+          ".discern-choice__label",
+          ".discern-choice__description",
+          ".discern-switch__text",
+          ".discern-switch__description",
+        ].map((selector) => [
+          selector,
+          getComputedStyle(document.querySelector(selector)!).fontFamily,
+        ]),
+      };
+    });
+    for (const [selector, family] of faces.others) {
+      assertEquals(family, faces.face, `${selector} face`);
+    }
+    // A group hint follows its legend, ahead of the options it governs, and
+    // the group error follows them.
+    const legend = await box(page, "#delivery > legend");
+    const hint = await box(page, "#delivery-hint");
+    const first = await box(page, "#delivery .discern-choice >> nth=0");
+    const last = await box(page, "#delivery .discern-choice >> nth=1");
+    const groupError = await box(page, "#delivery-error");
+    assert(legend.bottom <= hint.top && hint.bottom <= first.top);
+    assert(hint.top - legend.bottom < first.top - hint.bottom);
+    assert(groupError.top >= last.bottom);
+    // A description binds to its own label, closer to it than to the next
+    // option.
+    const label = await box(
+      page,
+      "#delivery .discern-choice >> nth=0 >> .discern-choice__label > span:last-child",
+    );
+    const description = await box(
+      page,
+      "#delivery .discern-choice__description",
+    );
+    assert(
+      description.top - label.bottom < last.top - description.bottom,
+      JSON.stringify({ label, description, last }),
+    );
+    // Under one choice or Switch, the error mark centres on the indicator
+    // and its words start on the label column.
+    for (
+      const [field, indicator, text] of [
+        [
+          "#terms-error",
+          ".discern-choice__control",
+          ".discern-choice__label > span:last-child",
+        ],
+        ["#updates-error", ".discern-switch__track", ".discern-switch__text"],
+      ] as const
+    ) {
+      const root = field.replace("-error", "");
+      const control = await box(
+        page,
+        `.discern-field:has(${root}) ${indicator}`,
+      );
+      const words = await box(page, `.discern-field:has(${root}) ${text}`);
+      const mark = await box(page, `${field} svg`);
+      const message = await box(page, `${field} > span:last-child`);
+      const facts = JSON.stringify({ field, control, words, mark, message });
+      assert(
+        Math.abs(
+          (mark.left + mark.width / 2) - (control.left + control.width / 2),
+        ) <= 1,
+        facts,
+      );
+      assert(Math.abs(message.left - words.left) <= 1, facts);
+    }
+  } finally {
+    await browser.close();
+    await Deno.remove(output, { recursive: true });
+  }
+});
+
+Deno.test("read-only fields sit in the well, and a mixed Checkbox reads as one filled state", async () => {
+  const browser = await launchBrowser();
+  const output = await Deno.makeTempDir();
+  try {
+    const css = `${await formCss(output)}
+      [data-discern-root] *{transition:none!important}`;
+    const page = await browser.newPage({
+      viewport: { width: 720, height: 900 },
+    });
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.setContent(pageHtml(
+      css,
+      renderToStaticMarkup(
+        <div className="discern-example-stack">
+          <Input id="editable" label="Editable" defaultValue="atlas" />
+          <Input
+            id="readonly"
+            label="Read only"
+            defaultValue="atlas"
+            readOnly
+          />
+          <Input id="disabled" label="Disabled" defaultValue="atlas" disabled />
+          <Select
+            id="period"
+            label="Period"
+            defaultValue="monthly"
+            options={periodOptions}
+          />
+          <Select
+            id="locked-period"
+            label="Locked period"
+            defaultValue="monthly"
+            options={periodOptions}
+            disabled
+          />
+          <Checkbox id="mixed" label="All channels" />
+          <Checkbox id="checked" label="Email" defaultChecked />
+          <Field group controlId="unchosen" label="Unchosen">
+            <Radio name="unchosen" label="Alpha" />
+          </Field>
+        </div>,
+      ),
+      { width: 480 },
+    ));
+    const style = (selector: string, property: string) =>
+      page.locator(selector).evaluate(
+        (node, property) => getComputedStyle(node).getPropertyValue(property),
+        property,
+      );
+    const role = (value: string) =>
+      page.evaluate((value) => {
+        const probe = document.createElement("div");
+        probe.style.borderTop = `1px solid ${value}`;
+        probe.style.color = value;
+        document.body.append(probe);
+        const resolved = getComputedStyle(probe).borderTopColor;
+        probe.remove();
+        return resolved;
+      }, value);
+    for (const theme of ["light", "dark"]) {
+      await page.evaluate((value) => {
+        document.documentElement.dataset.discernTheme = value;
+      }, theme);
+      // Read only keeps full ink and the control edge, and in dark sits
+      // below its surface rather than lifting above it like the unavailable
+      // wash.
+      assertEquals(
+        await style("#readonly", "color"),
+        await style("#editable", "color"),
+      );
+      assertEquals(
+        await style("#readonly", "border-top-color"),
+        await role("var(--discern-color-border-strong)"),
+      );
+      assertEquals(
+        await style("#readonly", "background-color"),
+        await role("var(--discern-color-inset)"),
+      );
+      assert(
+        (await style("#readonly", "border-top-color")) !==
+          (await style("#disabled", "border-top-color")),
+      );
+      // The chevron fades with its unavailable Select.
+      assertEquals(
+        await style(
+          "#locked-period + .discern-select__chevron",
+          "border-bottom-color",
+        ),
+        await role("var(--discern-color-ink-faint)"),
+      );
+    }
+    // Hover never offers an editing edge on a read-only field.
+    await page.mouse.move(0, 0);
+    const resting = await style("#readonly", "border-top-color");
+    await page.hover("#readonly");
+    assertEquals(await style("#readonly", "border-top-color"), resting);
+    // The Select keeps its value clear of the chevron by one related step
+    // and reserves no more than that.
+    const select = await page.locator("#period").evaluate((node) => {
+      const rect = node.getBoundingClientRect();
+      const style = getComputedStyle(node);
+      const chevron = node.nextElementSibling!.getBoundingClientRect();
+      const probe = document.createElement("div");
+      probe.style.inlineSize = "var(--discern-space-2)";
+      document.body.append(probe);
+      const gap = probe.getBoundingClientRect().width;
+      probe.remove();
+      const textEnd = rect.right - Number.parseFloat(style.paddingRight) -
+        Number.parseFloat(style.borderRightWidth);
+      return { gap, clearance: chevron.left - textEnd };
+    });
+    assert(
+      Math.abs(select.clearance - select.gap) <= 1.5,
+      JSON.stringify(select),
+    );
+    // A mixed parent shares the checked fill and draws a dash, never a
+    // check; a radio group with nothing chosen is not mixed.
+    await page.locator("#mixed").evaluate((node) => {
+      (node as HTMLInputElement).indeterminate = true;
+    });
+    const mixed = await page.locator("#mixed + .discern-choice__control")
+      .evaluate((node) => {
+        const mark = getComputedStyle(node.firstElementChild!);
+        return {
+          fill: getComputedStyle(node).backgroundColor,
+          rotate: mark.rotate,
+          dash: mark.borderTopWidth,
+          side: mark.borderLeftWidth,
+        };
+      });
+    assertEquals(
+      mixed.fill,
+      await page.locator("#checked + .discern-choice__control").evaluate(
+        (node) => getComputedStyle(node).backgroundColor,
+      ),
+    );
+    assertEquals(
+      { rotate: mixed.rotate, dash: mixed.dash, side: mixed.side },
+      { rotate: "none", dash: "2px", side: "0px" },
+    );
+    assert(
+      await page.locator('input[name="unchosen"]').evaluate((node) =>
+        node.matches(":indeterminate")
+      ),
+      "an unchosen radio matches :indeterminate, so the guard below is live",
+    );
+    assertEquals(
+      await style(
+        'input[name="unchosen"] + .discern-choice__control',
+        "background-color",
+      ),
+      await role("var(--discern-color-surface)"),
+    );
+  } finally {
+    await browser.close();
+    await Deno.remove(output, { recursive: true });
+  }
+});
+
+Deno.test("a Field group always names its legend", () => {
+  assertThrows(
+    () =>
+      renderToStaticMarkup(
+        <Field controlId="unnamed" group>
+          <Checkbox id="unnamed-a" label="Option" />
+        </Field>,
+      ),
+    TypeError,
+    "needs a label for its legend",
+  );
+  assertStringIncludes(
+    renderToStaticMarkup(
+      <Field controlId="named" label="Notifications" group>
+        <Checkbox id="named-a" label="Option" />
+      </Field>,
+    ),
+    '<legend class="discern-field__label">Notifications</legend>',
+  );
 });

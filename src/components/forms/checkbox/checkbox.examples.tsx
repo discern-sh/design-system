@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
 import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
 import { Field, fieldDescriptionId } from "../field/field.tsx";
 import meta, { componentExampleVocabulary } from "./checkbox.meta.ts";
@@ -83,12 +85,44 @@ function GroupedCheckboxState() {
   );
 }
 
+const channels = ["Email", "Push", "Text message"] as const;
+
+function MixedCheckboxState() {
+  const [selected, setSelected] = useState<ReadonlySet<string>>(
+    new Set(["Email"]),
+  );
+  const every = selected.size === channels.length;
+  return (
+    <Field group controlId="checkbox-mixed" label="Channels">
+      <Checkbox
+        label="All channels"
+        checked={every}
+        indeterminate={selected.size > 0 && !every}
+        onChange={() => setSelected(new Set(every ? [] : channels))}
+      />
+      {channels.map((channel) => (
+        <Checkbox
+          key={channel}
+          label={channel}
+          checked={selected.has(channel)}
+          onChange={() => {
+            const next = new Set(selected);
+            if (!next.delete(channel)) next.add(channel);
+            setSelected(next);
+          }}
+        />
+      ))}
+    </Field>
+  );
+}
+
 export const catalogueExamples = defineCatalogueExamples(
   meta,
   componentExampleVocabulary,
   [
     { id: "default", Example: DefaultCheckboxState },
     { id: "grouped", Example: GroupedCheckboxState },
+    { id: "mixed", Example: MixedCheckboxState },
     { id: "multiline", Example: MultilineCheckboxState },
     { id: "active", Example: ActiveCheckboxState },
     { id: "filled", Example: FilledCheckboxState },
@@ -98,6 +132,33 @@ export const catalogueExamples = defineCatalogueExamples(
     { id: "cancelled", Example: CancelledCheckboxState },
   ],
 );
+
+export const conformance: readonly ConformanceScenario[] = [{
+  example: "mixed",
+  name: "A mixed parent settles its options together",
+  steps: [
+    {
+      expect: "visible",
+      target: {
+        selector: "input:indeterminate + .discern-choice__control",
+      },
+    },
+    { action: "click", target: { role: "checkbox", name: "All channels" } },
+    {
+      expect: "visible",
+      target: {
+        selector:
+          ".discern-choice:last-child input:checked + .discern-choice__control",
+      },
+    },
+    {
+      expect: "hidden",
+      target: {
+        selector: "input:indeterminate + .discern-choice__control",
+      },
+    },
+  ],
+}];
 
 export const reviewPostures = defineComponentReviewPostures(
   meta,

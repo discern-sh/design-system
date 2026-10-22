@@ -13,7 +13,7 @@ const meta = {
     "Labels and messages use deterministic control IDs.",
     "An error keeps the hint readable; the control's described-by names the error first, then the hint.",
     "An error leads with the decorative danger mark that feedback notices share and a visually hidden prefix, so it never depends on colour.",
-    "A group renders a fieldset whose legend names its options; its hint and error describe the whole group. A group nested in another becomes a subgroup with a quieter legend.",
+    "A group renders a fieldset whose legend names its options; its hint follows the legend, before the options it governs, and its hint and error describe the whole group. A group nested in another becomes a subgroup with a quieter legend.",
   ],
   classBlocks: ["field-row"],
 } satisfies ComponentMeta;
