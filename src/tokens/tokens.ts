@@ -231,6 +231,12 @@ export const baseTokens: readonly DesignToken[] = [
     "Compact heading line height.",
   ),
   token("--discern-leading-body", "1.58", "Typography", "Body line height."),
+  token(
+    "--discern-leading-code",
+    "1.72",
+    "Typography",
+    "Code and terminal line height: open enough for monospace rows to scan.",
+  ),
   ...([1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24] as const).map((step) =>
     token(
       `--discern-space-${step}`,

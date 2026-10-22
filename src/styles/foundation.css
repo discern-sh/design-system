@@ -57,6 +57,14 @@
   :where([data-discern-root]) a {
     color: var(--discern-color-accent-600);
   }
+  :where([data-discern-root]) :where(a:not([class])) {
+    text-decoration-color: color-mix(in oklab, currentColor 40%, transparent);
+    text-decoration-thickness: 0.08em;
+    text-underline-offset: 0.18em;
+  }
+  :where([data-discern-root]) :where(a:not([class])):hover {
+    text-decoration-color: currentColor;
+  }
   :where([data-discern-root]) :where(button, input, select, textarea) {
     font: inherit;
     font-family: var(--discern-font-ui);
@@ -74,7 +82,7 @@
 
   :where([data-discern-root]) :where(a, button, summary) {
     transition-property: background-color, border-color, box-shadow, color,
-      transform;
+      text-decoration-color, transform;
     transition-duration: var(--discern-duration-fast);
     transition-timing-function: var(--discern-ease-out);
   }

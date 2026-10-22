@@ -1004,6 +1004,13 @@ export const appearanceColorRoleLaws: readonly AppearanceColorRoleLaw[] = Object
         undefined,
       ),
       role(
+        "--discern-color-surface-floating",
+        "Opaque surface for an overlay or raised card: the surface in light, a step lighter in dark so a dialog, popover or toast lifts above the surfaces beneath it.",
+        "raised-surface",
+        polarCurve(0.015, 0, 0, 0.11),
+        undefined,
+      ),
+      role(
         "--discern-color-surface-sunken",
         "Translucent inset wash used only over an owned opaque canvas.",
         "active-ink",
@@ -1526,6 +1533,7 @@ export const APPEARANCE_TEXT_SURFACE_ROLES = Object.freeze(
   [
     "--discern-color-canvas",
     "--discern-color-surface",
+    "--discern-color-surface-floating",
     "--discern-color-surface-sunken",
   ] as const satisfies readonly AppearanceColorRoleName[],
 );

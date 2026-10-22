@@ -34,14 +34,6 @@ export const componentViewportLayoutPolicies = Object.freeze(
         "The public wide alignment deliberately escapes reading measure until the page viewport can no longer hold the breakout.",
     },
     {
-      slug: "related-content",
-      stylesheet:
-        "src/components/editorial/related-content/related-content.css",
-      reviewAllocation: "page",
-      reason:
-        "The full-width continuation band owns a bounded multi-story grid whose contract is the surrounding page.",
-    },
-    {
       slug: "site-footer",
       stylesheet: "src/components/marketing/site-footer/site-footer.css",
       reviewAllocation: "page",
