@@ -423,9 +423,11 @@ Deno.test("footnote references keep their paragraph on its own leading with a fu
   const geometry = await inspectReading(
     renderToStaticMarkup(
       <Markdown
-        source="A repeated note[^a] remains linked[^a].
-
-[^a]: Evidence."
+        source={[
+          "A repeated note[^a] remains linked[^a].",
+          "",
+          "[^a]: Evidence.",
+        ].join("\n")}
       />,
     ),
     (page) =>
