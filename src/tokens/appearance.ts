@@ -514,6 +514,9 @@ export const appearanceOppositeHueExpression: AppearanceExpression = {
  */
 export const APPEARANCE_SPACING_UNIT_PX = 4;
 
+/** Custom property every shadow layer mixes: ink pigment, dark at both poles. */
+export const SHADOW_PIGMENT_CUSTOM_PROPERTY_NAME = "--discern-shadow-pigment";
+
 /** Pigment treatment applied to one role's scalar expression. */
 export type AppearancePaint =
   | "canvas"
@@ -1213,6 +1216,13 @@ export const appearanceColorRoleLaws: readonly AppearanceColorRoleLaw[] = Object
         undefined,
       ),
       role(
+        SHADOW_PIGMENT_CUSTOM_PROPERTY_NAME,
+        "Ink pigment every layered elevation mixes; it stays dark at both poles.",
+        "ink-pigment",
+        one,
+        undefined,
+      ),
+      role(
         "--discern-color-overlay",
         "Black overlay pigment with a darkness-dependent alpha.",
         "ink-pigment",
@@ -1304,39 +1314,73 @@ export function ownedSurfaceRoleNames(
   return laws.filter((law) => law.ownedSurface).map((law) => law.name);
 }
 
-/** One shadow role whose opacity follows the structure axis. */
+/** One layer of a shadow role: its geometry and its share of the strength. */
+export interface AppearanceShadowLayer {
+  readonly geometry: string;
+  readonly weight: number;
+}
+
+/** One layered shadow role whose strength follows the structure axis. */
 export interface AppearanceShadowRoleLaw {
   readonly name: `--discern-${string}`;
   readonly description: string;
-  readonly offset: string;
+  readonly layers: readonly AppearanceShadowLayer[];
   readonly expression: AppearanceExpression;
 }
 
-/** Shadow geometry and alpha laws retained as Shape Theme Tokens. */
+/**
+ * Elevation laws retained as Shape Theme Tokens. Every tier opens with the
+ * same crisp 1px contact edge and adds softer ambient layers as it rises.
+ */
 export const appearanceShadowRoleLaws: readonly AppearanceShadowRoleLaw[] =
   Object.freeze(
     [
       {
         name: "--discern-shadow-card",
         description:
-          "Quiet elevation for a standalone card; nested cards do not repeat it.",
-        offset: "2px 2px 0",
-        expression: scaledCurve([0.04, 0.06, 0.08, 0.1, 0.1], "structure"),
+          "Quiet elevation for a standalone card: a crisp contact edge and a short ambient blur. Nested cards do not repeat it.",
+        layers: [
+          { geometry: "0 1px 0", weight: 1 },
+          { geometry: "0 1px 3px", weight: 1.5 },
+        ],
+        expression: scaledCurve([0.05, 0.07, 0.09, 0.12, 0.12], "structure"),
       },
       {
         name: "--discern-shadow-window",
-        description: "Hard-offset presentation window shadow.",
-        offset: "4px 5px 0",
+        description:
+          "Presentation window elevation: a contact edge, a near shadow and a wide ambient blur.",
+        layers: [
+          { geometry: "0 1px 0", weight: 1 },
+          { geometry: "0 2px 4px -1px", weight: 1 },
+          { geometry: "0 12px 32px -10px", weight: 2.5 },
+        ],
         expression: scaledCurve([0.06, 0.09, 0.12, 0.16, 0.16], "structure"),
       },
       {
         name: "--discern-shadow-pop",
-        description: "Raised overlay shadow.",
-        offset: "6px 6px 0",
-        expression: scaledCurve([0.12, 0.16, 0.22, 0.28, 0.28], "structure"),
+        description:
+          "Raised overlay elevation for dialogs, popovers, menus and toasts.",
+        layers: [
+          { geometry: "0 1px 0", weight: 0.8 },
+          { geometry: "0 4px 10px -2px", weight: 1 },
+          { geometry: "0 24px 56px -16px", weight: 2.4 },
+        ],
+        expression: scaledCurve([0.1, 0.14, 0.2, 0.26, 0.26], "structure"),
       },
     ] as const satisfies readonly AppearanceShadowRoleLaw[],
   );
+
+/** Compose one shadow role's layers from a formatter of each layer's strength. */
+export function appearanceShadowValue(
+  law: Pick<AppearanceShadowRoleLaw, "layers">,
+  strength: (weight: number) => string,
+): string {
+  return law.layers.map(({ geometry, weight }) =>
+    `${geometry} color-mix(in oklab, var(${SHADOW_PIGMENT_CUSTOM_PROPERTY_NAME}) ${
+      strength(weight)
+    }, transparent)`
+  ).join(", ");
+}
 
 /** Public shadow-role name. */
 export type AppearanceShadowRoleName =
@@ -1781,9 +1825,10 @@ export function evaluateAppearanceShadows(
       const alpha = evaluateResolvedExpression(law.expression, resolved);
       return [
         law.name,
-        `${law.offset} color-mix(in oklab, var(--discern-shadow-color) ${
-          formattedNumber(alpha * 100)
-        }%, transparent)`,
+        appearanceShadowValue(
+          law,
+          (weight) => `${formattedNumber(alpha * weight * 100)}%`,
+        ),
       ];
     })) as Record<AppearanceShadowRoleName, string>,
   );

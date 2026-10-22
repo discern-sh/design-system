@@ -190,7 +190,7 @@ Deno.test("polarity and every live CSS consumer derive from the appearance autho
     0,
   );
   assert(
-    projectedBytes < 13_000,
+    projectedBytes < 13_500,
     `Shared field projection expanded to ${projectedBytes} declaration bytes`,
   );
   assert(
@@ -299,7 +299,7 @@ Deno.test("theme Token poles pin representative monochrome emission", () => {
   ]);
   assertEquals(
     evaluateAppearanceShadows({ darkness: 1 })["--discern-shadow-pop"],
-    "6px 6px 0 color-mix(in oklab, var(--discern-shadow-color) 28%, transparent)",
+    "0 1px 0 color-mix(in oklab, var(--discern-shadow-pigment) 20.8%, transparent), 0 4px 10px -2px color-mix(in oklab, var(--discern-shadow-pigment) 26%, transparent), 0 24px 56px -16px color-mix(in oklab, var(--discern-shadow-pigment) 62.4%, transparent)",
   );
 });
 

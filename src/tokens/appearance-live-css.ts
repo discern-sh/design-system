@@ -18,6 +18,7 @@ import {
   type AppearanceProjection,
   type AppearanceShadowRoleLaw,
   appearanceShadowRoleLaws,
+  appearanceShadowValue,
   DEFAULT_ACCENT_HUE,
   defaultAppearance,
 } from "./appearance.ts";
@@ -430,7 +431,10 @@ function shadowRoleValue(
   expressionBindings: ReadonlyMap<AppearanceExpression, string>,
 ): string {
   const amount = compileExpression(law.expression, expressionBindings);
-  return `${law.offset} color-mix(in oklab, var(--discern-shadow-color) calc(${amount} * 100%), transparent)`;
+  return appearanceShadowValue(
+    law,
+    (weight) => `calc(${amount} * ${foldedNumber(weight * 100)}%)`,
+  );
 }
 
 /**
@@ -475,7 +479,9 @@ export function appearanceLiveCssDeclarations(
           ]
           : [law.expression]
       ),
-      ...appearanceShadowRoleLaws.map(({ expression }) => expression),
+      ...appearanceShadowRoleLaws.flatMap(({ expression, layers }) =>
+        layers.map(() => expression)
+      ),
     ],
     roleBindings,
   );

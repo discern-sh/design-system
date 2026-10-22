@@ -56,7 +56,7 @@ function isUntokenisedShadow(declaration: CssDeclaration): boolean {
   const value = declaration.value.trim();
   if (value.toLowerCase() === "none") return false;
   return !shadowRoleList.test(value) &&
-    !/var\(\s*--discern-shadow-color\b/u.test(value);
+    !/var\(\s*--discern-shadow-(?:color|pigment)\b/u.test(value);
 }
 
 /** Find structural ink and shadows that bypass their public role tokens. */

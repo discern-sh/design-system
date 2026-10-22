@@ -9,9 +9,14 @@
 import {
   allTokens,
   appearanceColorRoleLaws,
+  type AppearanceShadowRoleLaw,
+  appearanceShadowRoleLaws,
+  appearanceShadowValue,
   DEFAULT_ACCENT_HUE,
   type DesignToken,
   evaluateAppearance,
+  evaluateAppearanceExpression,
+  SHADOW_PIGMENT_CUSTOM_PROPERTY_NAME,
   type ThemeToken,
 } from "../../src/tokens/tokens.ts";
 import { required } from "./support.ts";
@@ -101,61 +106,44 @@ function colourTokens(): ArtifactToken[] {
 function shadowTokens(): ArtifactToken[] {
   const light = evaluateAppearance({ darkness: 0 });
   const dark = evaluateAppearance({ darkness: 1 });
-  const tint = (alpha: number, theme: "light" | "dark"): string =>
-    theme === "light"
-      ? `oklch(0% 0 0 / ${alpha})`
-      : `oklch(100% 0 0 / ${alpha})`;
-  const tier = (
-    name: string,
-    offset: string,
-    lightAlpha: number,
-    darkAlpha: number,
-    usage: string,
-  ): ArtifactToken => ({
-    name,
-    value: {
-      light: `${offset} ${tint(lightAlpha, "light")}`,
-      dark: `${offset} ${tint(darkAlpha, "dark")}`,
-    },
-    usage:
-      `${usage} Hard-edged: no blur, ever. In the package: ${offset} color-mix(shadow-color ${
-        Math.round(lightAlpha * 100)
-      }% light / ${Math.round(darkAlpha * 100)}% dark).`,
-  });
+  const pigment = (roles: Readonly<Record<string, string>>): string =>
+    required(roles[SHADOW_PIGMENT_CUSTOM_PROPERTY_NAME], "shadow pigment")
+      .replace(/\)$/u, "");
+  const resolved = (
+    law: AppearanceShadowRoleLaw,
+    darkness: number,
+    roles: Readonly<Record<string, string>>,
+  ): string => {
+    const strength = evaluateAppearanceExpression(law.expression, { darkness });
+    return appearanceShadowValue(law, (weight) => `${strength * weight}`)
+      .replace(
+        /color-mix\(in oklab, var\([^)]+\) ([\d.]+), transparent\)/gu,
+        (_, alpha: string) =>
+          `${pigment(roles)} / ${Math.round(Number(alpha) * 1000) / 1000})`,
+      );
+  };
   return [
-    tier(
-      "discern-shadow-card",
-      "2px 2px 0",
-      0.04,
-      0.1,
-      "Quietest optional offset for a standalone raised Card.",
-    ),
-    tier(
-      "discern-shadow-window",
-      "4px 5px 0",
-      0.06,
-      0.16,
-      "Modest separation for a Window or framed presentation surface.",
-    ),
-    tier(
-      "discern-shadow-pop",
-      "6px 6px 0",
-      0.12,
-      0.28,
-      "Strongest separation, reserved for overlays: dialogs, hover cards, tooltips, the search palette.",
-    ),
+    ...appearanceShadowRoleLaws.map((law): ArtifactToken => ({
+      name: law.name.slice(2),
+      value: {
+        light: resolved(law, 0, light),
+        dark: resolved(law, 1, dark),
+      },
+      usage:
+        `${law.description} Resolved to literals here; in the package every layer mixes discern-shadow-pigment at a Structure-scaled strength.`,
+    })),
     {
       name: "discern-shadow-button",
       value: {
-        light: `0 2px 0 ${
+        light: `0 1px 0 ${
           required(light["--discern-color-action-shadow"], "action shadow")
         }`,
-        dark: `0 2px 0 ${
+        dark: `0 1px 0 ${
           required(dark["--discern-color-action-shadow"], "action shadow")
         }`,
       },
       usage:
-        "The primary Button's hard 2px drop in discern-color-action-shadow (component-scoped in button.css, not a public token). Pressing collapses it to 0 0 0 while the button travels down 2px.",
+        "The primary Button's crisp 1px contact lip in discern-color-action-shadow beneath an inset top highlight (component-scoped in button.css, not a public token). Pressing collapses the lip while the button travels down 1px.",
     },
   ];
 }
@@ -488,7 +476,7 @@ export function buildTokens(provenance: TokenProvenance): unknown {
     },
     shadow: {
       note:
-        "Three elevation tiers and one control drop, all hard-edged offsets with no blur. Cards standalone carry the quietest, windows modest, overlays the strongest. Nested cards suppress repeated borders and shadows.",
+        "Three layered elevation tiers and one control lip. Every tier opens with the same crisp 1px contact edge and adds softer ambient blur as it rises: standalone cards carry the quietest, windows modest, overlays the strongest. Nested cards suppress repeated borders and shadows.",
       tokens: shadowTokens(),
     },
     layout: { tokens: layoutTokens() },
