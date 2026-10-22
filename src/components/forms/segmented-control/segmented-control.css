@@ -18,7 +18,7 @@
   }
   /*
    * Two segments stack only when their labels cannot share the track. Three
-   * or more share it until each would get less than 6rem, then stack
+   * or more share it until each would get less than 5rem, then stack
    * together, never into a ragged second row.
    */
   .discern-segmented-control__option {
@@ -27,13 +27,13 @@
     min-inline-size: fit-content;
   }
   .discern-segmented-control__items:has(> :nth-child(3)) {
-    --discern-segmented-control-band: 18rem;
+    --discern-segmented-control-band: 15rem;
   }
   .discern-segmented-control__items:has(> :nth-child(4)) {
-    --discern-segmented-control-band: 24rem;
+    --discern-segmented-control-band: 20rem;
   }
   .discern-segmented-control__items:has(> :nth-child(5)) {
-    --discern-segmented-control-band: 30rem;
+    --discern-segmented-control-band: 25rem;
   }
   .discern-segmented-control__items:has(> :nth-child(3)) > *,
   .discern-segmented-control--content .discern-segmented-control__option {
