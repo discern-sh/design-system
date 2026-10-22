@@ -96,10 +96,25 @@ Deno.test("Action matrix preserves meaning, size floors, icon slots and unavaila
           );
           for (const forcedColors of ["none", "active"] as const) {
             await page.emulateMedia({ forcedColors, reducedMotion: "reduce" });
+            await page.evaluate(() =>
+              Promise.all(
+                document.getAnimations().map(({ finished }) => finished),
+              )
+            );
             const failures = await page.locator(
               ".discern-button, .discern-icon-button",
-            ).evaluateAll((nodes) =>
-              nodes.flatMap((node) => {
+            ).evaluateAll((nodes) => {
+              const probe = document.createElement("span");
+              probe.style.cssText =
+                "background:var(--discern-color-surface-sunken);color:var(--discern-color-ink-muted)";
+              document.body.append(probe);
+              const unavailable = {
+                fill: getComputedStyle(probe).backgroundColor,
+                ink: getComputedStyle(probe).color,
+              };
+              probe.remove();
+              const painted = matchMedia("(forced-colors: none)").matches;
+              return nodes.flatMap((node) => {
                 const box = node.getBoundingClientRect();
                 const style = getComputedStyle(node);
                 const size = ["sm", "md", "lg"].find((size) =>
@@ -115,10 +130,19 @@ Deno.test("Action matrix preserves meaning, size floors, icon slots and unavaila
                 if (node.scrollWidth > node.clientWidth + 1) {
                   errors.push("horizontal overflow");
                 }
+                const busy = node.getAttribute("aria-busy") === "true";
                 if (
-                  node.matches(':disabled, [aria-disabled="true"]') &&
-                  (style.opacity !== "1" || style.borderTopStyle !== "dashed")
+                  node.matches(':disabled, [aria-disabled="true"]') && !busy &&
+                  (style.opacity !== "1" ||
+                    style.borderTopStyle !== "solid" ||
+                    (painted &&
+                      (style.backgroundColor !== unavailable.fill ||
+                        style.color !== unavailable.ink)))
                 ) errors.push("disabled witness");
+                if (
+                  busy && painted &&
+                  style.backgroundColor === unavailable.fill
+                ) errors.push("busy keeps its variant");
                 if (node.getAttribute("aria-busy") === "true") {
                   const glyph = node.querySelector(".discern-icon--busy svg");
                   if (
@@ -158,8 +182,8 @@ Deno.test("Action matrix preserves meaning, size floors, icon slots and unavaila
                   ) errors.push("icon centering");
                 }
                 return errors.map((error) => `${node.textContent}: ${error}`);
-              })
-            );
+              });
+            });
             assertEquals(
               failures,
               [],

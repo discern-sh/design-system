@@ -3,14 +3,14 @@
     --discern-button-padding-inline: var(--discern-space-5);
     --discern-button-fill: var(--discern-color-action);
     --discern-button-fill-hover: color-mix(in oklab,
-      var(--discern-color-action) 88%, var(--discern-color-on-action));
+      var(--discern-color-action) 86%, var(--discern-color-on-action));
     --discern-color-button-edge: var(--discern-color-action-edge);
     --discern-button-text: var(--discern-color-on-action);
-    --discern-shadow-button: 0
-      calc(var(--discern-space-1) / 2) 0
-      var(--discern-color-action-shadow);
-    --discern-shadow-button-pressed: 0 0 0
-      var(--discern-color-action-shadow);
+    --discern-shadow-button: inset 0 1px 0 color-mix(in oklab,
+      var(--discern-color-material-highlight) 30%, transparent),
+      0 1px 0 var(--discern-color-action-shadow), var(--discern-shadow-card);
+    --discern-shadow-button-pressed: inset 0 1px 0 transparent,
+      0 0 0 var(--discern-color-action-shadow);
     position: relative;
     display: inline-flex;
     max-inline-size: 100%;
@@ -28,34 +28,30 @@
     cursor: pointer;
     font-family: var(--discern-font-ui);
     font-size: var(--discern-font-size-sm);
-    font-weight: 600;
+    font-weight: var(--discern-font-weight-medium);
     line-height: var(--discern-leading-snug);
     text-decoration: none;
-    transition-property: background, box-shadow, transform;
-    transition-duration: var(--discern-duration-fast);
+    user-select: none;
   }
-  .discern-button:hover:not(:disabled):not([aria-disabled="true"]) {
+  .discern-button:hover:not(:disabled, [aria-disabled="true"]) {
     background: var(--discern-button-fill-hover);
   }
-  .discern-button:active:not(:disabled):not([aria-disabled="true"]) {
-    transform: translateY(calc(var(--discern-space-1) / 2));
+  .discern-button:active:not(:disabled, [aria-disabled="true"]) {
+    transform: translateY(calc(var(--discern-space-1) / 4));
     box-shadow: var(--discern-shadow-button-pressed);
-  }
-  .discern-button:focus-visible {
-    outline: 0.125rem solid var(--discern-color-accent-500);
-    outline-offset: var(--discern-space-1);
   }
   .discern-button--secondary {
     --discern-button-fill: var(--discern-color-surface);
-    --discern-button-fill-hover: color-mix(in oklab, var(--discern-color-accent-100) 55%, var(--discern-color-surface));
+    --discern-button-fill-hover: color-mix(in oklab, var(--discern-color-accent-100) 80%, var(--discern-color-surface));
     --discern-color-button-edge: var(--discern-color-neutral-edge);
     --discern-button-text: var(--discern-color-ink);
-    --discern-shadow-button: none;
-    --discern-shadow-button-pressed: none;
+    --discern-shadow-button: 0 1px 0 color-mix(in oklab,
+      var(--discern-shadow-pigment) 6%, transparent);
+    --discern-shadow-button-pressed: 0 0 0 transparent;
   }
   .discern-button--ghost {
     --discern-button-fill: transparent;
-    --discern-button-fill-hover: color-mix(in oklab, var(--discern-color-accent-100) 70%, transparent);
+    --discern-button-fill-hover: var(--discern-color-accent-100);
     --discern-color-button-edge: color-mix(in oklab,
       var(--discern-color-border) 0%, transparent);
     --discern-shadow-button: none;
@@ -64,8 +60,9 @@
   }
   .discern-button--danger {
     --discern-button-fill: var(--discern-color-danger-soft);
-    --discern-button-fill-hover: color-mix(in oklab, var(--discern-color-danger-soft) 78%, var(--discern-color-danger));
-    --discern-color-button-edge: var(--discern-color-danger);
+    --discern-button-fill-hover: color-mix(in oklab, var(--discern-color-danger-soft) 82%, var(--discern-color-danger));
+    --discern-color-button-edge: color-mix(in oklab,
+      var(--discern-color-danger) 55%, transparent);
     --discern-shadow-button: none;
     --discern-shadow-button-pressed: none;
     --discern-button-text: var(--discern-color-danger);
@@ -73,12 +70,14 @@
   .discern-button--sm {
     min-block-size: var(--discern-control-size-sm);
     --discern-button-padding-inline: var(--discern-space-3);
+    gap: calc(var(--discern-space-1) * 1.5);
+    border-radius: var(--discern-radius-sm);
     font-size: var(--discern-font-size-xs);
   }
   .discern-button--lg {
     min-block-size: var(--discern-control-size-lg);
     --discern-button-padding-inline: var(--discern-space-6);
-    font-size: 1.0625rem;
+    font-size: var(--discern-font-size-md);
   }
   .discern-button__label {
     min-inline-size: 0;
@@ -97,14 +96,11 @@
     max-inline-size: 100%;
     max-block-size: 100%;
   }
-  .discern-button:is(:disabled, [aria-disabled="true"]) {
-    border-style: dashed;
-    border-color: var(--discern-color-border-strong);
-    background: var(--discern-color-surface-sunken);
-    color: var(--discern-color-ink-muted);
+  .discern-button:is(:disabled, [aria-disabled="true"]):not([aria-busy="true"]) {
+    --discern-button-fill: var(--discern-color-surface-sunken);
+    --discern-color-button-edge: var(--discern-color-border);
+    --discern-button-text: var(--discern-color-ink-muted);
     cursor: not-allowed;
-    opacity: 1;
-    transform: none;
     box-shadow: none;
   }
   .discern-button[aria-busy="true"] {

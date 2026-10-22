@@ -16,24 +16,29 @@
     cursor: pointer;
   }
   .discern-icon-button:hover:not(:disabled) {
-    background: var(--discern-color-surface-sunken);
+    background: var(--discern-color-accent-100);
     color: var(--discern-color-ink);
   }
   .discern-icon-button:active:not(:disabled) {
-    border-color: var(--discern-color-accent-500);
-    background: var(--discern-color-accent-100);
-    transform: translateY(0.0625rem);
+    background: var(--discern-color-accent-200);
+    transform: translateY(calc(var(--discern-space-1) / 4));
   }
-  .discern-icon-button:disabled {
-    border-color: var(--discern-color-border-strong);
-    background: var(--discern-color-surface-sunken);
-    color: var(--discern-color-ink-muted);
-    border-style: dashed;
-    cursor: not-allowed;
-  }
-  .discern-icon-button--outline:not(:disabled) {
-    border-color: var(--discern-color-border-strong);
+  .discern-icon-button--outline {
+    border-color: var(--discern-color-neutral-edge);
     background: var(--discern-color-surface);
+    box-shadow: 0 1px 0 color-mix(in oklab, var(--discern-shadow-pigment) 6%,
+      transparent);
+  }
+  .discern-icon-button--outline:hover:not(:disabled) {
+    background: color-mix(in oklab, var(--discern-color-accent-100) 80%,
+      var(--discern-color-surface));
+  }
+  .discern-icon-button:disabled:not([aria-busy="true"]) {
+    border-color: var(--discern-color-border);
+    background: var(--discern-color-surface-sunken);
+    box-shadow: none;
+    color: var(--discern-color-ink-muted);
+    cursor: not-allowed;
   }
   .discern-icon-button--sm {
     --discern-icon-button-icon-size: 0.9375rem;
