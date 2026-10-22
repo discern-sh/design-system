@@ -6,17 +6,12 @@
     min-inline-size: 0;
     padding: var(--discern-space-4);
     border: 1px solid var(--discern-color-border);
-    border-radius: var(--discern-radius-lg);
-    background: var(--discern-color-surface-sunken);
+    border-radius: var(--discern-radius-md);
+    background: var(--discern-color-surface);
     color: var(--discern-color-ink);
   }
-  .discern-prerequisite-list__title,
-  .discern-prerequisite-list__detail,
-  .discern-prerequisite-list__state {
-    font-family: var(--discern-font-ui);
-  }
-
   .discern-prerequisite-list__title {
+    font-family: var(--discern-font-ui);
     font-size: var(--discern-font-size-sm);
     font-weight: var(--discern-font-weight-strong);
     line-height: var(--discern-leading-snug);
@@ -32,7 +27,7 @@
     display: grid;
     grid-template-columns: max-content minmax(0, 1fr) max-content;
     gap: var(--discern-space-3);
-    align-items: start;
+    align-items: baseline;
     min-inline-size: 0;
     padding-block: var(--discern-space-2);
   }
@@ -44,9 +39,7 @@
     border: 1px solid var(--discern-color-border-strong);
     border-radius: 50%;
     color: var(--discern-color-ink-faint);
-    font-size: var(--discern-font-size-xs);
-    font-weight: var(--discern-font-weight-strong);
-    line-height: 1;
+    font: var(--discern-font-label);
   }
   .discern-prerequisite-list__item[data-discern-state="satisfied"] .discern-prerequisite-list__marker {
     color: var(--discern-color-success-deep);
@@ -57,7 +50,6 @@
     min-inline-size: 0;
   }
   .discern-prerequisite-list__requirement {
-    color: var(--discern-color-ink);
     font-family: var(--discern-font-body);
     font-size: var(--discern-font-size-sm);
     line-height: var(--discern-leading-body);
@@ -65,11 +57,10 @@
   .discern-prerequisite-list__detail,
   .discern-prerequisite-list__state {
     color: var(--discern-color-ink-muted);
-    font-size: var(--discern-font-size-xs);
-    line-height: var(--discern-leading-snug);
+    font: var(--discern-font-label);
   }
-  .discern-prerequisite-list__state {
-    font-weight: var(--discern-font-weight-strong);
+  .discern-prerequisite-list__detail {
+    font-weight: var(--discern-font-weight-body);
   }
   [data-discern-state="unresolved"] > :where(.discern-prerequisite-list__marker, .discern-prerequisite-list__state) {
     color: var(--discern-color-warning-deep);

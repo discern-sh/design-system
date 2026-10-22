@@ -3,6 +3,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { CopyButton } from "../../docs/copy-button/copy-button.tsx";
+import { breakAfterSeparators } from "./path-reference.breaks.tsx";
 
 /** Props for the {@linkcode PathReference} component. */
 export interface PathReferenceProps
@@ -55,7 +56,7 @@ export const PathReference: DiscernComponent<
         {prefix
           ? (
             <span className="discern-path-reference__prefix" aria-hidden="true">
-              {prefix}
+              {breakAfterSeparators(prefix)}
             </span>
           )
           : null}

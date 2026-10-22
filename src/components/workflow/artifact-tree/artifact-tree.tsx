@@ -28,6 +28,13 @@ function splitName(name: string): readonly [string, string] {
   return [name.slice(0, -suffixLength), name.slice(-suffixLength)];
 }
 
+const kindOutlines: Readonly<Record<ArtifactTreeNodeKind, string>> = {
+  directory:
+    "M1.75 4.5c0-.7.55-1.25 1.25-1.25h3.1l1.5 1.5H13c.7 0 1.25.55 1.25 1.25v5.5c0 .7-.55 1.25-1.25 1.25H3c-.7 0-1.25-.55-1.25-1.25z",
+  file:
+    "M3.75 2.75c0-.55.45-1 1-1H9.5l2.75 2.75v8.75c0 .55-.45 1-1 1h-6.5c-.55 0-1-.45-1-1zM9.25 1.75V4.75h3",
+};
+
 function treeNode(node: ArtifactTreeNode, index: number): ReactElement {
   const fullPath = node.path ?? node.name;
   const [prefix, suffix] = splitName(node.name);
@@ -39,7 +46,15 @@ function treeNode(node: ArtifactTreeNode, index: number): ReactElement {
     >
       <div className="discern-artifact-tree__row">
         <span className="discern-artifact-tree__kind" aria-hidden="true">
-          {node.kind === "directory" ? "▱" : "⌑"}
+          <svg viewBox="0 0 16 16" focusable="false">
+            <path
+              d={kindOutlines[node.kind]}
+              fill="none"
+              stroke="currentColor"
+              strokeLinejoin="round"
+              strokeWidth={1.25}
+            />
+          </svg>
         </span>
         <span className="discern-artifact-tree__name" title={fullPath}>
           <span className="discern-visually-hidden">

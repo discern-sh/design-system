@@ -6,7 +6,9 @@
     padding: var(--discern-space-5);
     border: 1px solid var(--discern-color-border);
     border-inline-start: 0.1875rem solid var(--discern-color-accent-500);
-    border-radius: var(--discern-radius-xs);
+    border-radius: var(--discern-radius-md);
+    border-start-start-radius: 0;
+    border-end-start-radius: 0;
     background: var(--discern-color-surface);
     color: var(--discern-color-ink);
     font-family: var(--discern-font-ui);
@@ -15,18 +17,16 @@
     display: grid;
     grid-template-columns: 5rem minmax(0, 1fr);
     gap: var(--discern-space-4);
+    align-items: baseline;
     min-inline-size: 0;
     max-inline-size: 100%;
   }
   .discern-rule__label,
-  .discern-rule__meta {
-    font-size: var(--discern-font-size-xs);
+  .discern-rule__meta dt {
+    font: var(--discern-font-label);
   }
   .discern-rule__label {
     color: var(--discern-color-accent-700);
-    font-weight: var(--discern-font-weight-strong);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
   }
   .discern-rule__body {
     min-inline-size: 0;
@@ -45,9 +45,11 @@
     grid-column: 2;
     flex-wrap: wrap;
     gap: var(--discern-space-3) var(--discern-space-6);
+    align-items: baseline;
     margin: 0;
     padding-block-start: var(--discern-space-3);
     border-block-start: 1px solid var(--discern-color-border);
+    font-size: var(--discern-font-size-xs);
   }
   .discern-rule__meta > div {
     display: flex;
@@ -58,7 +60,6 @@
   }
   .discern-rule__meta dt {
     color: var(--discern-color-ink-muted);
-    font-weight: var(--discern-font-weight-strong);
   }
   .discern-rule__meta dd {
     min-inline-size: 0;

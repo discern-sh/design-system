@@ -6,7 +6,7 @@
     padding: var(--discern-space-4);
     border: 1px solid var(--discern-color-border);
     border-radius: var(--discern-radius-md);
-    background: var(--discern-color-canvas);
+    background: var(--discern-color-surface);
     color: var(--discern-color-ink);
   }
   .discern-agent-handoff__header {
@@ -19,7 +19,6 @@
   }
   .discern-agent-handoff__title {
     min-inline-size: 0;
-    color: var(--discern-color-ink);
     font-family: var(--discern-font-ui);
     font-size: var(--discern-font-size-sm);
     font-weight: var(--discern-font-weight-strong);
@@ -44,8 +43,7 @@
     border-radius: var(--discern-radius-sm);
     overflow-wrap: anywhere;
     white-space: pre-wrap;
-    background: var(--discern-color-surface);
-    color: var(--discern-color-ink);
+    background: var(--discern-color-inset);
     font-family: var(--discern-font-body);
     font-size: var(--discern-font-size-sm);
     line-height: var(--discern-leading-body);

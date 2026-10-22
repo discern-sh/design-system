@@ -4,6 +4,7 @@ import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { Diffstat } from "../../display/diffstat/diffstat.tsx";
 import { PathReference } from "../path-reference/path-reference.tsx";
+import { FILE_DISPOSITION_MARKS } from "./file-change.marks.ts";
 import type {
   FileChangeMagnitude,
   FileDisposition,
@@ -31,14 +32,6 @@ const dispositionLabels: Record<FileDisposition, string> = {
   unchanged: "Unchanged",
 };
 
-const dispositionMarkers: Record<FileDisposition, string> = {
-  added: "+",
-  updated: "~",
-  generated: "◇",
-  removed: "−",
-  unchanged: "=",
-};
-
 /** One file's textual disposition, path, and optional change magnitude. */
 export const FileChange: DiscernComponent<HTMLDivElement, FileChangeProps> =
   forwardRef<HTMLDivElement, FileChangeProps>(function FileChange(
@@ -55,7 +48,7 @@ export const FileChange: DiscernComponent<HTMLDivElement, FileChangeProps> =
         <div className="discern-file-change__layout">
           <span className="discern-file-change__state">
             <span className="discern-file-change__marker" aria-hidden="true">
-              {dispositionMarkers[disposition]}
+              {FILE_DISPOSITION_MARKS[disposition].unicode}
             </span>
             {dispositionLabels[disposition]}
           </span>

@@ -108,7 +108,11 @@ function journeyMarkupFailures(
         "discern-procedure",
       )
     ) {
-      if (!procedure.includes('<ol class="discern-procedure__steps">')) {
+      if (
+        !procedure.includes(
+          '<ol class="discern-procedure__steps" role="list">',
+        )
+      ) {
         failures.push(`${journey.id}: Procedure steps are not an ordered list`);
       }
       if (
@@ -243,6 +247,9 @@ Deno.test("Command keeps an executable payload in CSS-free markup", () => {
     html,
     "<code>deno task check --filter &quot;journey contract&quot;</code>",
   );
-  assertStringIncludes(html, "<code>/path/to/project</code>");
+  assertStringIncludes(
+    html,
+    "<code>/<wbr/>path/<wbr/>to/<wbr/>project</code>",
+  );
   assertStringIncludes(html, "The journey contract passes.");
 });

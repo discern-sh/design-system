@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import { TERMINAL_GLYPHS } from "../../../cli/terminal-glyphs.ts";
 import type { DestructiveActionNoticeTone } from "./destructive-action-notice.types.ts";
 
 export type { DestructiveActionNoticeTone } from "./destructive-action-notice.types.ts";
@@ -49,10 +50,18 @@ export const DestructiveActionNotice: DiscernComponent<
         {...props}
       >
         <strong className="discern-destructive-action-notice__label">
-          <span className="discern-destructive-action-notice__state">
-            {tone === "danger" ? "Danger" : "Warning"}
+          <span className="discern-destructive-action-notice__chip">
+            <span
+              className="discern-destructive-action-notice__mark"
+              aria-hidden="true"
+            >
+              {TERMINAL_GLYPHS.attention.unicode}
+            </span>
+            <span className="discern-destructive-action-notice__state">
+              {tone === "danger" ? "Danger" : "Warning"}
+            </span>
           </span>
-          {": "}
+          <span className="discern-visually-hidden">:</span>{" "}
           <span className="discern-destructive-action-notice__custom-label">
             {label ?? "Destructive action"}
           </span>

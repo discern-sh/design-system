@@ -4,7 +4,6 @@
  * @module
  */
 
-import { TERMINAL_GLYPHS } from "../../../cli/terminal-glyphs.ts";
 import type {
   CliExample,
   CliPresentationOptions,
@@ -15,6 +14,7 @@ import { wrapInlineCluster } from "../../../cli/layout.ts";
 import { measureText, padText } from "../../../cli/text.ts";
 import type { TerminalSemanticTone } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./result-summary.meta.ts";
+import { RESULT_SUMMARY_STATE_MARKS } from "./result-summary.marks.ts";
 import {
   RESULT_SUMMARY_STATE_LABELS,
   RESULT_SUMMARY_STATES,
@@ -28,25 +28,11 @@ import {
   workflowPrefixedLines,
 } from "../workflow-cli.ts";
 
-interface ResultSummaryMarker {
-  readonly unicode: string;
-  readonly ascii: string;
-}
-
-const stateMarkers = {
-  passed: TERMINAL_GLYPHS.done,
-  failed: TERMINAL_GLYPHS.failed,
-  blocked: TERMINAL_GLYPHS.attention,
-  changed: { unicode: "◇", ascii: "*" },
-  declared: { unicode: "·", ascii: "." },
-  unchanged: { unicode: "=", ascii: "=" },
-} as const satisfies Readonly<Record<ResultSummaryState, ResultSummaryMarker>>;
-
 function resultSummaryMarker(
   state: ResultSummaryState,
   unicode: boolean,
 ): string {
-  const marker = stateMarkers[state];
+  const marker = RESULT_SUMMARY_STATE_MARKS[state];
   return unicode ? marker.unicode : marker.ascii;
 }
 

@@ -60,7 +60,7 @@ export const Procedure: DiscernComponent<HTMLElement, ProcedureProps> =
             </div>
           )
           : null}
-        <ol className="discern-procedure__steps">
+        <ol className="discern-procedure__steps" role="list">
           {steps.map((step, index) => (
             <li className="discern-procedure__step" key={index}>
               <ProcedureStep {...step} />

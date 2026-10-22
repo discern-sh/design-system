@@ -6,7 +6,7 @@
     max-inline-size: 100%;
     padding: var(--discern-space-5);
     border: 1px solid var(--discern-color-border);
-    border-radius: var(--discern-radius-lg);
+    border-radius: var(--discern-radius-md);
     background: var(--discern-color-surface);
     color: var(--discern-color-ink);
     font-family: var(--discern-font-ui);
@@ -27,6 +27,7 @@
   }
   .discern-standard-meter__trend {
     color: var(--discern-color-ink-muted);
+    font-weight: var(--discern-font-weight-medium);
     text-transform: capitalize;
   }
   .discern-standard-meter__trend[data-discern-state="improving"] {
@@ -35,13 +36,27 @@
   .discern-standard-meter__trend[data-discern-state="drifting"] {
     color: var(--discern-color-warning-deep);
   }
+  .discern-standard-meter :is(.discern-meter__row, .discern-meter__summary) {
+    align-items: baseline;
+  }
+  .discern-standard-meter .discern-meter__label {
+    color: var(--discern-color-ink-muted);
+    font-weight: var(--discern-font-weight-medium);
+  }
+  .discern-standard-meter .discern-meter__reading {
+    color: var(--discern-color-ink);
+    font-size: var(--discern-font-size-lg);
+    font-weight: var(--discern-font-weight-strong);
+    line-height: var(--discern-leading-snug);
+  }
   .discern-standard-meter__facts {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--discern-space-4);
     margin: 0;
     padding-block-start: var(--discern-space-3);
-    border-block-start: 1px dashed var(--discern-color-border);
+    border-block-start: 1px solid var(--discern-color-border);
+    font-variant-numeric: tabular-nums;
   }
   .discern-standard-meter__facts > div {
     display: grid;
@@ -50,6 +65,7 @@
   }
   .discern-standard-meter__facts dt {
     color: var(--discern-color-ink-muted);
+    font: var(--discern-font-label);
   }
   .discern-standard-meter__facts dd {
     margin: 0;

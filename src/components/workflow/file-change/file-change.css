@@ -11,7 +11,7 @@
     grid-template-columns: 7.5rem minmax(0, 1fr) max-content;
     grid-template-areas: "state path magnitude";
     gap: var(--discern-space-3);
-    align-items: center;
+    align-items: baseline;
     min-inline-size: 0;
     max-inline-size: 100%;
   }
@@ -21,21 +21,16 @@
   .discern-file-change__state {
     display: inline-flex;
     grid-area: state;
-    gap: var(--discern-space-2);
-    align-items: center;
+    gap: calc(var(--discern-space-1) * 1.5);
+    align-items: baseline;
     color: var(--discern-color-ink-muted);
-    font-size: var(--discern-font-size-xs);
-    font-weight: var(--discern-font-weight-strong);
+    font: var(--discern-font-label);
     white-space: nowrap;
   }
   .discern-file-change__marker {
-    display: grid;
-    place-items: center;
-    inline-size: 1.35rem;
-    block-size: 1.35rem;
-    border: 1px solid var(--discern-color-border-strong);
-    border-radius: var(--discern-radius-xs);
-    line-height: 1;
+    flex: none;
+    inline-size: 1rem;
+    text-align: center;
   }
   .discern-file-change[data-discern-disposition="added"] .discern-file-change__state {
     color: var(--discern-color-success-deep);
@@ -49,6 +44,11 @@
   }
   .discern-file-change__path > .discern-path-reference {
     inline-size: 100%;
+  }
+  .discern-file-change__path .discern-path-reference__path {
+    padding-inline: 0;
+    border-color: transparent;
+    background: none;
   }
   .discern-file-change__magnitude {
     grid-area: magnitude;

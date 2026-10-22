@@ -4,7 +4,6 @@
     min-inline-size: 0;
     padding: var(--discern-space-3) var(--discern-space-4);
     border: 1px solid var(--discern-color-border);
-    border-inline-start: 0.125rem solid var(--discern-color-border-strong);
     border-radius: var(--discern-radius-md);
     background: var(--discern-color-surface);
     color: var(--discern-color-ink);
@@ -12,20 +11,21 @@
   .discern-retry-notice__layout {
     display: grid;
     grid-template-columns: minmax(7rem, max-content) minmax(0, 1fr);
-    gap: var(--discern-space-3);
+    gap: var(--discern-space-2) var(--discern-space-3);
+    align-items: baseline;
     min-inline-size: 0;
   }
-  .discern-retry-notice--unsafe {
-    border-inline-start-color: var(--discern-color-warning);
-  }
   .discern-retry-notice__label {
-    color: var(--discern-color-ink);
-    font-family: var(--discern-font-ui);
-    font-size: var(--discern-font-size-xs);
-    font-weight: var(--discern-font-weight-strong);
-    line-height: var(--discern-leading-body);
+    color: var(--discern-color-ink-muted);
+    font: var(--discern-font-label);
   }
-  .discern-retry-notice--unsafe .discern-retry-notice__label {
+  .discern-retry-notice__mark {
+    margin-inline-end: calc(var(--discern-space-1) * 1.5);
+    color: var(--discern-color-success-deep);
+    font-weight: var(--discern-font-weight-strong);
+  }
+  .discern-retry-notice--unsafe .discern-retry-notice__label,
+  .discern-retry-notice--unsafe .discern-retry-notice__mark {
     color: var(--discern-color-warning-deep);
   }
   .discern-retry-notice__reason {

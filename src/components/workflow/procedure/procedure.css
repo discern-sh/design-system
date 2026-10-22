@@ -14,12 +14,10 @@
     display: grid;
     gap: var(--discern-space-2);
     padding-block-end: var(--discern-space-5);
-    border-block-end: 1px solid var(--discern-color-border-strong);
+    border-block-end: 1px solid var(--discern-color-border);
   }
   .discern-procedure__title {
-    min-inline-size: 0;
     margin: 0;
-    color: var(--discern-color-ink);
     font-family: var(--discern-font-display);
     font-size: var(--discern-font-size-display-md);
     font-weight: var(--discern-font-weight-display);
@@ -41,43 +39,80 @@
     display: grid;
     gap: var(--discern-space-6);
     margin: 0;
-    padding-inline-start: var(--discern-space-6);
+    padding: 0;
+    list-style: none;
+    counter-reset: discern-procedure-step;
   }
   .discern-procedure__step {
-    padding-inline-start: var(--discern-space-2);
+    position: relative;
+    padding-inline-start: var(--discern-space-10);
+    counter-increment: discern-procedure-step;
   }
-  .discern-procedure__step::marker {
-    color: var(--discern-color-accent-700);
-    font-size: var(--discern-font-size-xs);
-    font-weight: var(--discern-font-weight-strong);
+  .discern-procedure__step:not(:last-child) > .discern-procedure-step {
+    padding-block-end: clamp(
+      var(--discern-space-5),
+      4%,
+      var(--discern-space-6)
+    );
+    border-block-end: 1px solid var(--discern-color-border);
+  }
+  .discern-procedure__step::before {
+    position: absolute;
+    inset-block-start: calc((var(--discern-font-size-lg) *
+      var(--discern-leading-snug) - var(--discern-space-5)) / 2);
+    inset-inline-start: 0;
+    display: grid;
+    place-items: center;
+    box-sizing: border-box;
+    inline-size: var(--discern-space-5);
+    block-size: var(--discern-space-5);
+    border: 1px solid var(--discern-color-border-strong);
+    border-radius: 50%;
+    background: var(--discern-color-surface);
+    color: var(--discern-color-ink-muted);
+    content: counter(discern-procedure-step) / "";
+    font: var(--discern-font-label);
+    font-variant-numeric: tabular-nums;
+  }
+  .discern-procedure__step:has(> [aria-current="step"])::before {
+    border-color: var(--discern-color-action);
+    background: var(--discern-color-action);
+    color: var(--discern-color-on-action);
   }
   .discern-procedure__completion {
     display: grid;
     grid-template-columns: minmax(8rem, max-content) minmax(0, 1fr);
     gap: var(--discern-space-3) var(--discern-space-5);
+    align-items: baseline;
     padding: var(--discern-space-4);
-    border: 1px solid var(--discern-color-border-strong);
-    border-radius: var(--discern-radius-lg);
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-md);
     background: var(--discern-color-surface);
   }
   .discern-procedure__completion-label {
-    color: var(--discern-color-ink);
-    font-family: var(--discern-font-ui);
-    font-size: var(--discern-font-size-xs);
-    font-weight: var(--discern-font-weight-strong);
-    line-height: var(--discern-leading-body);
+    color: var(--discern-color-ink-muted);
+    font: var(--discern-font-label);
     overflow-wrap: anywhere;
   }
   .discern-procedure__completion-copy {
-    color: var(--discern-color-ink-muted);
     font-family: var(--discern-font-body);
     font-size: var(--discern-font-size-sm);
     line-height: var(--discern-leading-body);
   }
+  @media (forced-colors: active) {
+    .discern-procedure__step:has(> [aria-current="step"])::before {
+      forced-color-adjust: none;
+      border-color: transparent;
+      background: SelectedItem;
+      color: SelectedItemText;
+    }
+  }
   @container discern-procedure (max-width: 38.75rem) {
     .discern-procedure__steps {
       gap: var(--discern-space-5);
-      padding-inline-start: var(--discern-space-5);
+    }
+    .discern-procedure__step {
+      padding-inline-start: var(--discern-space-8);
     }
     .discern-procedure__completion {
       grid-template-columns: minmax(0, 1fr);

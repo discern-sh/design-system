@@ -17,6 +17,7 @@ import type {
   FileDisposition,
 } from "./file-change.types.ts";
 import meta, { componentExampleVocabulary } from "./file-change.meta.ts";
+import { FILE_DISPOSITION_MARKS } from "./file-change.marks.ts";
 import {
   assertWorkflowCliText,
   styleWorkflowHeading,
@@ -110,21 +111,8 @@ const renderFileChangeCli: CliRenderer<FileChangeCliProps> = (
       "file change magnitude must contain non-negative safe integers",
     );
   }
-  const unicodeMarkers: Readonly<Record<FileDisposition, string>> = {
-    added: "+",
-    updated: "~",
-    generated: "◇",
-    removed: "−",
-    unchanged: "=",
-  };
-  const asciiMarkers: Readonly<Record<FileDisposition, string>> = {
-    ...unicodeMarkers,
-    generated: "*",
-    removed: "-",
-  };
-  const marker = (capabilities.unicode ? unicodeMarkers : asciiMarkers)[
-    props.disposition
-  ];
+  const mark = FILE_DISPOSITION_MARKS[props.disposition];
+  const marker = capabilities.unicode ? mark.unicode : mark.ascii;
   const prefix = `${marker} ${labels[props.disposition]} `;
   const suffix = props.magnitude === undefined
     ? ""

@@ -28,7 +28,10 @@
     display: grid;
     place-items: center;
     color: var(--discern-color-ink-faint);
-    font-size: var(--discern-font-size-xs);
+  }
+  .discern-artifact-tree__kind > svg {
+    inline-size: 1rem;
+    block-size: 1rem;
   }
   .discern-artifact-tree__node[data-discern-kind="directory"] > .discern-artifact-tree__row > .discern-artifact-tree__kind {
     color: var(--discern-color-accent-600);
@@ -43,7 +46,6 @@
     line-height: var(--discern-leading-snug);
   }
   .discern-artifact-tree__node[data-discern-kind="directory"] > .discern-artifact-tree__row > .discern-artifact-tree__name {
-    font-family: var(--discern-font-ui);
     font-weight: var(--discern-font-weight-strong);
   }
   .discern-artifact-tree__name-visual {

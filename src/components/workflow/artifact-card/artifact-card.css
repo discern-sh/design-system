@@ -14,7 +14,6 @@
     border: 1px solid var(--discern-color-border);
     border-radius: var(--discern-radius-md);
     background: var(--discern-color-surface);
-    box-shadow: var(--discern-shadow-card);
     color: var(--discern-color-ink);
     font-family: var(--discern-font-ui);
   }
@@ -28,7 +27,7 @@
     margin: 0;
     font-family: var(--discern-font-ui);
     font-size: var(--discern-font-size-card-title);
-    line-height: var(--discern-leading-tight);
+    font-weight: var(--discern-font-weight-strong);
   }
   .discern-artifact-card__header .discern-path-reference {
     align-self: flex-start;
@@ -57,13 +56,12 @@
     display: grid;
     grid-template-columns: 7rem minmax(0, 1fr);
     gap: var(--discern-space-3);
-    align-items: start;
+    align-items: baseline;
     min-inline-size: 0;
   }
   .discern-artifact-card__meta dt {
     color: var(--discern-color-ink-muted);
-    font-size: var(--discern-font-size-xs);
-    font-weight: var(--discern-font-weight-strong);
+    font: var(--discern-font-label);
   }
   .discern-artifact-card__meta dd {
     min-inline-size: 0;

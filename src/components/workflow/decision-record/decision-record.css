@@ -23,25 +23,19 @@
     flex-direction: column;
     gap: var(--discern-space-3);
     padding-block-end: var(--discern-space-5);
-    border-block-end: 1px solid var(--discern-color-border-strong);
+    border-block-end: 1px solid var(--discern-color-border);
   }
   .discern-decision-record__identifier {
     color: var(--discern-color-accent-700);
-    font-size: var(--discern-font-size-xs);
-    font-weight: var(--discern-font-weight-strong);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    font: var(--discern-font-label);
+    font-variant-numeric: tabular-nums;
   }
-  .discern-decision-record__header h3,
-  .discern-decision-record section h4 {
-    font-family: var(--discern-font-ui);
-  }
-
   .discern-decision-record__header h3 {
-    max-inline-size: 32ch;
+    max-inline-size: var(--discern-measure);
     margin: 0;
+    font-family: var(--discern-font-ui);
     font-size: var(--discern-font-size-card-title);
-    line-height: var(--discern-leading-tight);
+    font-weight: var(--discern-font-weight-strong);
   }
   .discern-decision-record__meta {
     display: flex;
@@ -57,13 +51,13 @@
     display: grid;
     grid-template-columns: 8rem minmax(0, 1fr);
     gap: var(--discern-space-5);
+    align-items: baseline;
   }
   .discern-decision-record section h4 {
     margin: 0;
     color: var(--discern-color-ink-muted);
-    font-size: var(--discern-font-size-xs);
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    font: var(--discern-font-label);
+    letter-spacing: normal;
   }
   .discern-decision-record section > div {
     min-inline-size: 0;

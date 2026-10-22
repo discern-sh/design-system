@@ -6,25 +6,37 @@
     min-inline-size: 0;
     padding: var(--discern-space-4);
     border: 1px solid var(--discern-color-border-strong);
-    border-radius: var(--discern-radius-lg);
+    border-radius: var(--discern-radius-md);
     background: var(--discern-color-surface);
     color: var(--discern-color-ink);
   }
-  .discern-destructive-action-notice__label,
-  .discern-destructive-action-notice__fact dt {
-    font-family: var(--discern-font-ui);
-  }
-
   .discern-destructive-action-notice__label {
-    padding-inline-start: var(--discern-space-3);
-    border-inline-start: 0.125rem solid var(--discern-color-warning);
-    color: var(--discern-color-warning-deep);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--discern-space-2) var(--discern-space-3);
+    align-items: baseline;
+    font-family: var(--discern-font-ui);
     font-size: var(--discern-font-size-sm);
-    font-weight: var(--discern-font-weight-strong);
     line-height: var(--discern-leading-snug);
   }
-  .discern-destructive-action-notice--danger .discern-destructive-action-notice__label {
-    border-inline-start-color: var(--discern-color-danger);
+  .discern-destructive-action-notice__chip {
+    display: inline-flex;
+    flex: none;
+    gap: calc(var(--discern-space-1) * 1.5);
+    align-items: baseline;
+    padding: calc(var(--discern-space-1) * 0.5) var(--discern-space-3);
+    border: 1px solid var(--discern-color-warning);
+    border-radius: var(--discern-radius-pill);
+    background: var(--discern-color-warning-soft);
+    color: var(--discern-color-warning-deep);
+    font: var(--discern-font-label);
+  }
+  .discern-destructive-action-notice__mark {
+    font-weight: var(--discern-font-weight-strong);
+  }
+  .discern-destructive-action-notice--danger .discern-destructive-action-notice__chip {
+    border-color: var(--discern-color-danger);
+    background: var(--discern-color-danger-soft);
     color: var(--discern-color-danger);
   }
   .discern-destructive-action-notice__facts {
@@ -36,14 +48,13 @@
     display: grid;
     grid-template-columns: minmax(6rem, max-content) minmax(0, 1fr);
     gap: var(--discern-space-3);
+    align-items: baseline;
     padding-block-start: var(--discern-space-3);
     border-block-start: 1px solid var(--discern-color-border);
   }
   .discern-destructive-action-notice__fact dt {
     color: var(--discern-color-ink-muted);
-    font-size: var(--discern-font-size-xs);
-    font-weight: var(--discern-font-weight-strong);
-    line-height: var(--discern-leading-body);
+    font: var(--discern-font-label);
   }
   .discern-destructive-action-notice__fact dd {
     min-inline-size: 0;

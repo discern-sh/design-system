@@ -2,6 +2,8 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import { TERMINAL_GLYPHS } from "../../../cli/terminal-glyphs.ts";
+import { TRIANGLES } from "../../../cli/triangles.ts";
 import {
   type ActivityLogLineTone as ActivityLogLineToneVocabulary,
   type ActivityLogStatus,
@@ -33,18 +35,18 @@ export interface ActivityLogProps extends HTMLAttributes<HTMLElement> {
 }
 
 const stableMarkers: Record<ActivityLogLineTone, string> = {
-  success: "✓",
-  note: "▸",
-  warning: "!",
-  failure: "✕",
+  success: TERMINAL_GLYPHS.done.unicode,
+  note: TRIANGLES.filledSmall.right.unicode,
+  warning: TERMINAL_GLYPHS.attention.unicode,
+  failure: TERMINAL_GLYPHS.failed.unicode,
 };
 
 const statusMarkers: Record<ActivityLogStatus, string> = {
-  active: "◢",
+  active: TERMINAL_GLYPHS.active.unicode,
   waiting: "◷",
-  blocked: "!",
-  complete: "✓",
-  cancelled: "×",
+  blocked: TERMINAL_GLYPHS.attention.unicode,
+  complete: TERMINAL_GLYPHS.done.unicode,
+  cancelled: TERMINAL_GLYPHS.idle.unicode,
 };
 
 /**

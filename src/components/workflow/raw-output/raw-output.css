@@ -16,25 +16,14 @@
     flex-wrap: wrap;
     min-block-size: 2.5rem;
     padding: var(--discern-space-3) var(--discern-space-4);
-    color: var(--discern-color-ink);
     cursor: pointer;
     list-style: none;
   }
   .discern-raw-output__summary::-webkit-details-marker {
     display: none;
   }
-  .discern-raw-output__summary:focus-visible {
-    outline-width: calc(var(--discern-space-1) * 0.75);
-    outline-style: solid;
-    outline-color: var(--discern-color-accent-800);
-    outline-offset: calc(var(--discern-space-1) * -0.75);
-  }
-  .discern-raw-output[open] .discern-raw-output__summary {
-    background: var(--discern-color-surface);
-  }
-  .discern-raw-output__summary:active {
-    background: color-mix(in oklab,
-      var(--discern-color-ink) 6%, var(--discern-color-surface));
+  .discern-raw-output :is(.discern-raw-output__summary, .discern-raw-output__content):focus-visible {
+    outline-offset: calc(var(--discern-space-1) * -1);
   }
   .discern-raw-output__marker {
     display: inline-grid;
@@ -52,6 +41,7 @@
   }
   .discern-raw-output__subject {
     min-inline-size: 0;
+    font-weight: var(--discern-font-weight-medium);
     overflow-wrap: anywhere;
   }
   .discern-raw-output__extent,
@@ -73,8 +63,9 @@
     overflow: auto;
     padding: var(--discern-space-4);
     border-block-start: 1px solid var(--discern-color-border);
-    background: var(--discern-color-surface-sunken);
-    color: var(--discern-color-ink);
+    border-end-start-radius: calc(var(--discern-radius-md) - 1px);
+    border-end-end-radius: calc(var(--discern-radius-md) - 1px);
+    background: var(--discern-color-inset);
     font-family: var(--discern-font-mono);
     font-size: var(--discern-font-size-xs);
     line-height: var(--discern-leading-body);
@@ -87,14 +78,12 @@
     color: inherit;
     font: inherit;
   }
-  @media (prefers-reduced-motion: reduce) {
-    .discern-raw-output__marker {
-      transition: none;
-    }
-  }
   @media (hover: hover) {
     .discern-raw-output__summary:hover {
-      background: var(--discern-color-surface-sunken);
+      background: var(--discern-color-accent-100);
     }
+  }
+  .discern-raw-output__summary:active {
+    background: var(--discern-color-accent-200);
   }
 }

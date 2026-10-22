@@ -5,7 +5,7 @@
     gap: var(--discern-space-3);
     padding: var(--discern-space-4);
     border: 1px solid var(--discern-color-border);
-    border-radius: var(--discern-radius-sm);
+    border-radius: var(--discern-radius-md);
     background: var(--discern-color-surface);
     font-family: var(--discern-font-ui);
   }
@@ -14,6 +14,7 @@
     font-size: var(--discern-font-size-sm);
   }
   .discern-activity-log__marker,
+  .discern-activity-log__status,
   .discern-activity-log__tail,
   .discern-activity-log__hint {
     font-size: var(--discern-font-size-xs);
@@ -29,13 +30,16 @@
   }
   .discern-activity-log__marker {
     flex: none;
+    inline-size: 1rem;
     color: var(--discern-color-accent-600);
+    text-align: center;
   }
   .discern-activity-log[data-discern-status="cancelled"] .discern-activity-log__marker {
     color: var(--discern-color-ink-faint);
   }
   .discern-activity-log__status {
-    font-size: var(--discern-font-size-xs);
+    color: var(--discern-color-ink-muted);
+    font-weight: var(--discern-font-weight-medium);
   }
   .discern-activity-log[data-discern-status="blocked"] .discern-activity-log__status {
     color: var(--discern-color-danger);
@@ -82,8 +86,9 @@
     display: flex;
     flex-direction: column;
     padding: var(--discern-space-3);
-    border-inline-start: 0.125rem solid var(--discern-color-border-strong);
-    background: var(--discern-color-surface-sunken);
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-sm);
+    background: var(--discern-color-inset);
     color: var(--discern-color-ink-muted);
     font-family: var(--discern-font-mono);
     line-height: 1.6;

@@ -8,6 +8,7 @@ import {
   RESULT_SUMMARY_STATE_LABELS,
   type ResultSummaryState,
 } from "./result-summary.types.ts";
+import { RESULT_SUMMARY_STATE_MARKS } from "./result-summary.marks.ts";
 
 /** One supporting count in a {@linkcode ResultSummary}. */
 export interface ResultSummaryCount {
@@ -60,6 +61,9 @@ export const ResultSummary: DiscernComponent<
           className="discern-result-summary__state"
           data-discern-state={state}
         >
+          <span className="discern-result-summary__mark" aria-hidden="true">
+            {RESULT_SUMMARY_STATE_MARKS[state].unicode}
+          </span>
           {RESULT_SUMMARY_STATE_LABELS[state]}
         </span>
         <div className="discern-result-summary__fact">{fact}</div>

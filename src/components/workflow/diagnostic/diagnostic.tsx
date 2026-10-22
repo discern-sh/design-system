@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import { TERMINAL_GLYPHS } from "../../../cli/terminal-glyphs.ts";
 import { Command } from "../command/command.tsx";
 import { PathReference } from "../path-reference/path-reference.tsx";
 import { RawOutput } from "../raw-output/raw-output.tsx";
@@ -31,6 +32,11 @@ export interface DiagnosticProps
 const severityLabels: Readonly<Record<DiagnosticSeverity, string>> = {
   failure: "Failure",
   attention: "Attention",
+};
+
+const severityMarks: Readonly<Record<DiagnosticSeverity, string>> = {
+  failure: TERMINAL_GLYPHS.failed.unicode,
+  attention: TERMINAL_GLYPHS.attention.unicode,
 };
 
 /** Structured failure account that locates, proves, reproduces, and corrects one problem. */
@@ -71,6 +77,9 @@ export const Diagnostic: DiscernComponent<HTMLElement, DiagnosticProps> =
             className="discern-diagnostic__severity"
             data-discern-state={severity}
           >
+            <span className="discern-diagnostic__mark" aria-hidden="true">
+              {severityMarks[severity]}
+            </span>
             {severityLabels[severity]}
           </span>
           <strong className="discern-diagnostic__title">{title}</strong>

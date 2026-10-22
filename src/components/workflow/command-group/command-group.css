@@ -4,12 +4,8 @@
     gap: var(--discern-space-4);
     color: var(--discern-color-ink);
   }
-  .discern-command-group__title,
-  .discern-command-group__label {
-    font-family: var(--discern-font-ui);
-  }
-
   .discern-command-group__title {
+    font-family: var(--discern-font-ui);
     font-size: var(--discern-font-size-md);
     font-weight: var(--discern-font-weight-strong);
     line-height: var(--discern-leading-snug);
@@ -27,8 +23,6 @@
   }
   .discern-command-group__label {
     color: var(--discern-color-ink-muted);
-    font-size: var(--discern-font-size-xs);
-    font-weight: var(--discern-font-weight-strong);
-    line-height: var(--discern-leading-snug);
+    font: var(--discern-font-label);
   }
 }

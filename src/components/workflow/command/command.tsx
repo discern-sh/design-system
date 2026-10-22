@@ -3,6 +3,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { CopyButton } from "../../docs/copy-button/copy-button.tsx";
+import { breakAfterSeparators } from "../path-reference/path-reference.breaks.tsx";
 import {
   ExpectedResult,
   type ExpectedResultVariant,
@@ -59,7 +60,7 @@ export const Command: DiscernComponent<HTMLElement, CommandProps> = forwardRef<
                   <span className="discern-command__context-label">
                     Run in
                   </span>
-                  <code>{workingDirectory}</code>
+                  <code>{breakAfterSeparators(workingDirectory)}</code>
                 </span>
               )
               : null}

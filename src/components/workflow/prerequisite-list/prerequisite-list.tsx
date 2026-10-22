@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import { TERMINAL_GLYPHS } from "../../../cli/terminal-glyphs.ts";
 import type { PrerequisiteState } from "./prerequisite-list.types.ts";
 
 export type { PrerequisiteState } from "./prerequisite-list.types.ts";
@@ -28,8 +29,8 @@ const stateLabels: Readonly<Record<PrerequisiteState, string>> = {
 
 const stateMarkers: Readonly<Record<PrerequisiteState, string>> = {
   required: "•",
-  satisfied: "✓",
-  unresolved: "!",
+  satisfied: TERMINAL_GLYPHS.done.unicode,
+  unresolved: TERMINAL_GLYPHS.attention.unicode,
 };
 
 /** Requirements named before a procedure begins, with every state carried in visible text and shape. */

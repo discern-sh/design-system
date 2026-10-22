@@ -4,12 +4,6 @@
     display: grid;
     gap: var(--discern-space-4);
     min-inline-size: 0;
-    padding-block-end: clamp(
-      var(--discern-space-5),
-      4%,
-      var(--discern-space-6)
-    );
-    border-block-end: 1px solid var(--discern-color-border);
     color: var(--discern-color-ink);
   }
   .discern-procedure-step__header {
@@ -17,14 +11,10 @@
     gap: var(--discern-space-2);
     min-inline-size: 0;
   }
-  .discern-procedure-step__title,
-  .discern-procedure-step__slot-label {
-    font-family: var(--discern-font-ui);
-  }
-
   .discern-procedure-step__title {
     min-inline-size: 0;
     margin: 0;
+    font-family: var(--discern-font-ui);
     font-size: var(--discern-font-size-lg);
     font-weight: var(--discern-font-weight-strong);
     line-height: var(--discern-leading-snug);
@@ -32,11 +22,13 @@
   .discern-procedure-step__action,
   .discern-procedure-step__slot-copy {
     min-inline-size: 0;
-    color: var(--discern-color-ink-muted);
     font-family: var(--discern-font-body);
     font-size: var(--discern-font-size-sm);
     line-height: var(--discern-leading-body);
     overflow-wrap: anywhere;
+  }
+  .discern-procedure-step__action {
+    color: var(--discern-color-ink-muted);
   }
   .discern-procedure-step__action > :last-child,
   .discern-procedure-step__slot-copy > :last-child {
@@ -50,26 +42,22 @@
   .discern-procedure-step__criterion,
   .discern-procedure-step__recovery {
     display: grid;
-    grid-template-columns: minmax(8rem, max-content) minmax(0, 1fr);
-    gap: var(--discern-space-3);
+    grid-template-columns: 9rem minmax(0, 1fr);
+    gap: var(--discern-space-2) var(--discern-space-3);
+    align-items: baseline;
     min-inline-size: 0;
-    padding: var(--discern-space-3) var(--discern-space-4);
-    border-inline-start: 0.125rem solid var(--discern-color-border-strong);
-    background: var(--discern-color-surface-sunken);
   }
-  .discern-procedure-step__recovery {
-    border-inline-start-color: var(--discern-color-warning);
-    background: var(--discern-color-warning-soft);
+  .discern-procedure-step__criterion {
+    padding-block-start: var(--discern-space-3);
+    border-block-start: 1px solid var(--discern-color-border);
   }
   .discern-procedure-step__slot-label {
     min-inline-size: 0;
-    font-size: var(--discern-font-size-xs);
-    font-weight: var(--discern-font-weight-strong);
-    line-height: var(--discern-leading-body);
+    color: var(--discern-color-ink-muted);
+    font: var(--discern-font-label);
     overflow-wrap: anywhere;
   }
-  .discern-procedure-step__recovery .discern-procedure-step__slot-label,
-  .discern-procedure-step__recovery .discern-procedure-step__slot-copy {
+  .discern-procedure-step__recovery .discern-procedure-step__slot-label {
     color: var(--discern-color-warning-deep);
   }
   @container discern-procedure-step (max-width: 38.75rem) {
