@@ -944,6 +944,15 @@ export const componentExampleRegistry = {
       ],
     },
     {
+      "id": "group",
+      "label": "Choice group",
+      "surfaces": [
+        "web",
+      ],
+      "reason":
+        "A browser fieldset gathers independent native choices under one legend; the terminal presents choice groups as Checkbox and Radio selection frames.",
+    },
+    {
       "id": "mixed-form",
       "label": "Mixed form",
       "surfaces": [
@@ -1185,6 +1194,15 @@ export const componentExampleRegistry = {
         "web",
         "cli",
       ],
+    },
+    {
+      "id": "mixed",
+      "label": "Mixed",
+      "surfaces": [
+        "web",
+      ],
+      "reason":
+        "A mixed parent reflects partly selected native checkboxes in the browser; the terminal multiselect marks each choice on or off.",
     },
     {
       "id": "multiline",
@@ -2731,6 +2749,15 @@ export const componentExampleRegistry = {
     {
       "id": "standard",
       "label": "Standard canvas",
+      "surfaces": [
+        "web",
+      ],
+      "reason":
+        "Its contract is a browser page-width, spacing, and background scope; terminal Marketing renderers own their width and hierarchy within each frame instead.",
+    },
+    {
+      "id": "accent",
+      "label": "Accent ground",
       "surfaces": [
         "web",
       ],

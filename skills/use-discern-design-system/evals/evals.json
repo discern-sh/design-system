@@ -1095,7 +1095,7 @@
     },
     {
       "id": 65,
-      "prompt": "Situation: A public page needs persistent brand, section navigation, and a primary action; use the campaign variant for a wider translucent launch-page masthead.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer. Inspect the attached canonical example as supporting evidence for density and hierarchy, but let Metadata decide semantic fit.",
+      "prompt": "Situation: A public page needs persistent brand, section navigation, and a primary action; use the campaign variant for a wider launch-page masthead.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer. Inspect the attached canonical example as supporting evidence for density and hierarchy, but let Metadata decide semantic fit.",
       "expected_output": "Selects Site header (`site-header`) and authors it as `SiteHeader` from ./react (no terminal renderer: the Component is exempt) after emitting a runtime that selects `site-header`. Reference image: catalogue/generated/example-images/site-header--standard--light.png",
       "files": [
         "catalogue/generated/example-images/site-header--standard--light.png"
