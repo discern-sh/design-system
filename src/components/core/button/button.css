@@ -9,7 +9,7 @@
     --discern-button-text: var(--discern-color-on-action);
     --discern-shadow-button: inset 0 1px 0 color-mix(in oklab,
       var(--discern-color-material-highlight) 30%, transparent),
-      0 1px 0 var(--discern-color-action-shadow), var(--discern-shadow-card);
+      0 1px 0 var(--discern-color-action-shadow);
     --discern-shadow-button-pressed: inset 0 1px 0 transparent,
       0 0 0 var(--discern-color-action-shadow);
     position: relative;
