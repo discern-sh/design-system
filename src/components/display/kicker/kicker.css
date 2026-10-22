@@ -3,16 +3,15 @@
     display: inline-flex;
     align-items: baseline;
     gap: var(--discern-space-2);
-    color: var(--discern-color-ink-faint);
+    color: var(--discern-color-ink-muted);
     font-family: var(--discern-font-ui);
     font-size: var(--discern-font-size-xs);
-    font-weight: 600;
-    letter-spacing: 0.11em;
+    font-weight: var(--discern-font-weight-medium);
+    letter-spacing: 0.08em;
     line-height: 1.4;
     text-transform: uppercase;
   }
   .discern-kicker__index {
     color: var(--discern-color-accent-ink);
-    letter-spacing: 0.11em;
   }
 }

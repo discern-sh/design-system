@@ -17,7 +17,7 @@
     color: var(--discern-badge-text);
     font-family: var(--discern-font-ui);
     font-size: var(--discern-font-size-xs);
-    font-weight: 600;
+    font-weight: var(--discern-font-weight-medium);
     line-height: 1.2;
   }
   .discern-badge__dot {
@@ -31,6 +31,10 @@
     --discern-badge-bg: var(--discern-color-surface-sunken);
     --discern-badge-text: var(--discern-color-ink-muted);
     border-color: var(--discern-color-border);
+  }
+  .discern-badge--neutral .discern-badge__dot {
+    border: 1px solid var(--discern-color-ink-muted);
+    background: transparent;
   }
   .discern-badge--success {
     --discern-badge-bg: var(--discern-color-success-soft);
@@ -49,5 +53,17 @@
     --discern-badge-text: var(--discern-color-danger);
     border-color: color-mix(in oklab,
       var(--discern-color-danger) 42%, transparent);
+  }
+  .discern-badge--success .discern-badge__dot {
+    inline-size: 0.5rem;
+    block-size: 0.5rem;
+    border-radius: 0;
+    clip-path: polygon(5% 55%, 20% 40%, 40% 60%, 80% 20%, 95% 35%, 40% 90%);
+  }
+  .discern-badge--warning .discern-badge__dot {
+    rotate: 45deg;
+  }
+  :is(.discern-badge--warning, .discern-badge--danger) .discern-badge__dot {
+    border-radius: 1px;
   }
 }

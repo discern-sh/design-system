@@ -6,16 +6,14 @@
   }
   .discern-stat__label {
     color: var(--discern-color-ink-muted);
-    font-size: var(--discern-font-size-xs);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    font: var(--discern-font-label);
   }
   .discern-stat__value {
     color: var(--discern-color-ink);
-    font-family: var(--discern-font-display);
     font-size: var(--discern-font-size-display-sm);
     font-variant-numeric: tabular-nums;
-    font-weight: var(--discern-font-weight-display);
+    font-weight: var(--discern-font-weight-strong);
+    letter-spacing: -0.02em;
     line-height: var(--discern-leading-tight);
   }
   .discern-stat__context {

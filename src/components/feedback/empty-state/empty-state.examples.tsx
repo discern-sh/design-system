@@ -1,12 +1,14 @@
 import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { Button } from "../../core/button/button.tsx";
 import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
+import { ExampleIcon } from "../../../fixtures/example-icon.tsx";
 import meta, { componentExampleVocabulary } from "./empty-state.meta.ts";
 import { EmptyState } from "./empty-state.tsx";
 
 function DefaultEmptyState() {
   return (
     <EmptyState
+      icon={<ExampleIcon name="spark" />}
       title="Create your first collection"
       description="Collections keep related items together. Create one when you have something to save."
       actions={<Button variant="secondary">Create collection</Button>}

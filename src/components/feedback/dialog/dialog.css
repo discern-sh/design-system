@@ -23,14 +23,14 @@
     max-block-size: min(80vh, 46rem);
     overflow: auto;
     padding: var(--discern-space-6);
-    border: 1px solid var(--discern-color-border-strong);
+    border: 1px solid var(--discern-color-border);
     border-radius: var(--discern-radius-lg);
     background: var(--discern-color-surface);
     box-shadow: var(--discern-shadow-pop);
   }
   .discern-dialog[open] .discern-dialog__panel {
-    animation: discern-dialog-enter var(--discern-duration-medium)
-      var(--discern-ease-out) both;
+    animation: discern-enter var(--discern-duration-fast)
+      var(--discern-ease-out);
   }
   .discern-dialog__header {
     display: flex;
@@ -38,49 +38,30 @@
     justify-content: space-between;
     gap: var(--discern-space-4);
   }
+  .discern-dialog__heading {
+    display: grid;
+    gap: var(--discern-space-2);
+    min-inline-size: 0;
+  }
   .discern-dialog__title {
-    margin: var(--discern-space-2) 0 0;
-    font-size: var(--discern-font-size-display-sm);
+    margin: 0;
+    font: var(--discern-font-weight-strong) var(--discern-font-size-lg) /
+      var(--discern-leading-snug) var(--discern-font-ui);
+    letter-spacing: normal;
   }
   .discern-dialog__close {
-    display: grid;
-    flex: none;
-    place-items: center;
-    inline-size: 2rem;
-    block-size: 2rem;
-    padding: 0;
-    border: 0;
-    border-radius: var(--discern-radius-sm);
-    background: transparent;
-    color: var(--discern-color-ink-muted);
-    cursor: pointer;
-    font-size: 1.4rem;
-  }
-  .discern-dialog__close:hover {
-    background: var(--discern-color-surface-sunken);
-    color: var(--discern-color-ink);
-  }
-  .discern-dialog__close:focus-visible {
-    color: var(--discern-color-ink);
-  }
-  .discern-dialog__close:active {
-    background: var(--discern-color-accent-100);
-    transform: translateY(calc(var(--discern-space-1) / 4));
+    margin: calc(var(--discern-space-1) * -1);
   }
   .discern-dialog__body {
-    margin-block-start: var(--discern-space-5);
+    margin-block-start: var(--discern-space-3);
+    color: var(--discern-color-ink-muted);
+    font-size: var(--discern-font-size-sm);
   }
   .discern-dialog__actions {
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-end;
-    gap: var(--discern-space-3);
+    gap: var(--discern-space-2);
     margin-block-start: var(--discern-space-6);
-  }
-  @keyframes discern-dialog-enter {
-    from {
-      opacity: 0;
-      translate: 0 var(--discern-space-2);
-    }
   }
 }

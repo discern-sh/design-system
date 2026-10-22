@@ -4,6 +4,7 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import { FeedbackMark } from "../feedback-marks.tsx";
 import type { BannerTone } from "./banner.types.ts";
 
 export type { BannerTone } from "./banner.types.ts";
@@ -17,14 +18,6 @@ export interface BannerProps extends HTMLAttributes<HTMLDivElement> {
   readonly actions?: ReactNode;
   readonly children: ReactNode;
 }
-
-const toneGlyphs: Readonly<Record<BannerTone, string>> = {
-  neutral: "i",
-  accent: "✦",
-  success: "✓",
-  warning: "!",
-  danger: "×",
-};
 
 /** Inline semantic message with neutral, accent, success, warning, and danger tones. */
 export const Banner: DiscernComponent<HTMLDivElement, BannerProps> = forwardRef<
@@ -62,13 +55,15 @@ export const Banner: DiscernComponent<HTMLDivElement, BannerProps> = forwardRef<
         role="img"
         aria-label={toneLabel}
       >
-        {icon ?? toneGlyphs[tone]}
+        {icon ?? <FeedbackMark name={tone} />}
       </span>
       <Stack gap={3} className="discern-banner__content">
-        {heading !== undefined && (
-          <h3 className="discern-banner__heading">{heading}</h3>
-        )}
-        <Stack className="discern-banner__body">{children}</Stack>
+        <Stack gap={1}>
+          {heading !== undefined && (
+            <h3 className="discern-banner__heading">{heading}</h3>
+          )}
+          <Stack className="discern-banner__body">{children}</Stack>
+        </Stack>
         {actions !== undefined && <Cluster>{actions}</Cluster>}
       </Stack>
     </div>

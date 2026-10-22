@@ -4,9 +4,11 @@
     --discern-terminal-chrome: var(--discern-color-surface);
     --discern-terminal-text: var(--discern-color-ink);
     --discern-terminal-muted: var(--discern-color-ink-faint);
+    --discern-terminal-dot: var(--discern-color-border-strong);
+    --discern-color-terminal-edge: var(--discern-color-border);
     overflow: hidden;
     margin: 0;
-    border: 1px solid var(--discern-color-border-strong);
+    border: 1px solid var(--discern-color-terminal-edge);
     border-radius: var(--discern-radius-lg);
     background: var(--discern-terminal-surface);
     box-shadow: var(--discern-shadow-window);
@@ -19,20 +21,14 @@
     gap: calc(var(--discern-space-1) * 1.5);
     min-block-size: 2.375rem;
     padding-inline: calc(var(--discern-space-1) * 3.25);
-    border-block-end: 1px solid var(--discern-color-border-strong);
+    border-block-end: 1px solid var(--discern-color-terminal-edge);
     background: var(--discern-terminal-chrome);
   }
   .discern-terminal__dot {
-    inline-size: 0.4375rem;
-    block-size: 0.4375rem;
+    inline-size: 0.5rem;
+    block-size: 0.5rem;
     border-radius: 50%;
-    background: var(--discern-color-danger);
-  }
-  .discern-terminal__dot:nth-child(2) {
-    background: var(--discern-color-warning);
-  }
-  .discern-terminal__dot:nth-child(3) {
-    background: var(--discern-color-success);
+    background: var(--discern-terminal-dot);
   }
   .discern-terminal__dots {
     display: flex;
@@ -49,7 +45,6 @@
     position: absolute;
     inset-inline: calc(var(--discern-space-1) * 17.5);
     overflow: hidden;
-    letter-spacing: 0.04em;
     text-align: center;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -89,7 +84,7 @@
     flex-wrap: wrap;
     gap: var(--discern-space-2);
     padding: var(--discern-space-4) var(--discern-space-5);
-    border-block-start: 1px solid var(--discern-color-border-strong);
+    border-block-start: 1px solid var(--discern-color-terminal-edge);
     background: var(--discern-terminal-chrome);
   }
   .discern-terminal--showcase {
@@ -102,13 +97,16 @@
       var(--discern-color-inverse-ink) 90%, transparent);
     --discern-terminal-muted: color-mix(in oklab,
       var(--discern-color-inverse-ink) 68%, transparent);
+    --discern-terminal-dot: color-mix(in oklab,
+      var(--discern-color-inverse-ink) 28%, transparent);
+    --discern-color-terminal-edge: color-mix(in oklab,
+      var(--discern-color-inverse-ink) 16%, transparent);
     border-radius: clamp(1.25rem, 3vw, 2rem);
-    border-color: color-mix(in oklab,
-      var(--discern-color-inverse-ink) 16%, transparent);
   }
-  .discern-terminal--showcase :is(.discern-terminal__bar, .discern-terminal__footer) {
-    border-color: color-mix(in oklab,
-      var(--discern-color-inverse-ink) 16%, transparent);
+  .discern-terminal--showcase ::selection {
+    background: color-mix(in oklab, var(--discern-color-inverse-ink) 28%,
+      transparent);
+    color: var(--discern-color-inverse-ink);
   }
   .discern-terminal--showcase .discern-terminal__bar {
     display: grid;
@@ -132,7 +130,8 @@
   .discern-terminal--showcase .discern-terminal__body {
     min-block-size: 0;
     padding: clamp(var(--discern-space-6), 4vw, var(--discern-space-10));
-    font-size: clamp(0.78rem, 1.5vw, 0.95rem);
+    font-size: clamp(var(--discern-font-size-xs), 1.5vw,
+      var(--discern-font-size-sm));
   }
   .discern-terminal--showcase .discern-terminal__body:focus-visible {
     outline-color: var(--discern-color-inverse-ink);
@@ -141,8 +140,7 @@
     color: var(--discern-color-inverse-ink);
   }
   .discern-terminal--showcase .discern-terminal__footer > * {
-    border: 1px solid color-mix(in oklab,
-      var(--discern-color-inverse-ink) 17%, transparent);
+    border: 1px solid var(--discern-color-terminal-edge);
     border-radius: var(--discern-radius-pill);
     padding: calc(var(--discern-space-1) * 1.2)
       calc(var(--discern-space-1) * 2.6);

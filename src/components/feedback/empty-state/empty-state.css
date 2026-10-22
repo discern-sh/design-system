@@ -3,15 +3,26 @@
     min-inline-size: 0;
     overflow-wrap: anywhere;
     padding: var(--discern-space-10) var(--discern-space-6);
-    border: 1px dashed var(--discern-color-border-strong);
+    border: 1px dashed var(--discern-color-border);
     border-radius: var(--discern-radius-md);
     font-family: var(--discern-font-ui);
     text-align: center;
+    text-wrap: balance;
   }
   .discern-empty-state__icon {
-    display: inline-flex;
+    display: inline-grid;
+    place-items: center;
+    inline-size: 2.5rem;
+    block-size: 2.5rem;
     margin-block-end: var(--discern-space-2);
-    color: var(--discern-color-ink-faint);
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-md);
+    background: var(--discern-color-surface);
+    color: var(--discern-color-ink-muted);
+  }
+  .discern-empty-state__icon > :where(svg, img) {
+    inline-size: 1.25rem;
+    block-size: 1.25rem;
   }
   .discern-empty-state__title {
     margin: 0;

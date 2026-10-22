@@ -2,6 +2,8 @@ import { forwardRef, useEffect } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import { IconButton } from "../../core/icon-button/icon-button.tsx";
+import { FeedbackMark } from "../feedback-marks.tsx";
 import type { ToastTone } from "./toast.types.ts";
 
 export type { ToastTone } from "./toast.types.ts";
@@ -14,13 +16,6 @@ export interface ToastProps extends HTMLAttributes<HTMLDivElement> {
   readonly dismissLabel?: string;
   readonly children: ReactNode;
 }
-
-const toneGlyphs: Readonly<Record<ToastTone, string>> = {
-  neutral: "i",
-  success: "✓",
-  warning: "!",
-  danger: "×",
-};
 
 /** Transient status message plus a labelled live-region container. */
 export const Toast: DiscernComponent<HTMLDivElement, ToastProps> = forwardRef<
@@ -65,19 +60,18 @@ export const Toast: DiscernComponent<HTMLDivElement, ToastProps> = forwardRef<
         role="img"
         aria-label={toneLabel}
       >
-        {icon ?? toneGlyphs[tone]}
+        {icon ?? <FeedbackMark name={tone} />}
       </span>
       <span className="discern-toast__content">{children}</span>
       {onDismiss
         ? (
-          <button
-            type="button"
+          <IconButton
             className="discern-toast__dismiss"
-            aria-label={dismissLabel}
+            size="sm"
+            label={dismissLabel}
+            icon={<FeedbackMark name="dismiss" />}
             onClick={onDismiss}
-          >
-            <span aria-hidden="true">×</span>
-          </button>
+          />
         )
         : null}
     </div>

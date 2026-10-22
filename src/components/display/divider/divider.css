@@ -1,6 +1,5 @@
 @layer discern.components {
   .discern-divider {
-    --discern-divider-ground: var(--discern-color-canvas);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -13,12 +12,11 @@
     min-inline-size: 0;
     block-size: 1px;
     background: linear-gradient(to right, transparent,
-      var(--discern-color-border-strong));
+      var(--discern-color-border));
     content: "";
   }
   .discern-divider::after {
-    background: linear-gradient(to left, transparent,
-      var(--discern-color-border-strong));
+    scale: -1;
   }
   .discern-divider--plain {
     gap: 0;
@@ -34,12 +32,10 @@
     flex: 0 0 auto;
     align-items: center;
     gap: var(--discern-space-2);
-    padding-inline: var(--discern-space-1);
-    background: var(--discern-divider-ground);
     color: var(--discern-color-ink-faint);
     font-family: var(--discern-font-ui);
     font-size: var(--discern-font-size-xs);
-    font-weight: 600;
+    font-weight: var(--discern-font-weight-medium);
     line-height: 1.2;
   }
   .discern-divider__label::before {
@@ -49,8 +45,5 @@
     background: var(--discern-color-accent-100);
     content: "";
     transform: rotate(45deg);
-  }
-  .discern-divider--surface {
-    --discern-divider-ground: var(--discern-color-surface);
   }
 }

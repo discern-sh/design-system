@@ -10,25 +10,29 @@
     inset-inline-start: 50%;
     width: max-content;
     max-width: 18rem;
-    padding: calc(var(--discern-space-3) / 2) var(--discern-space-2);
-    border-radius: var(--discern-radius-xs);
+    padding: calc(var(--discern-space-1) * 1.5) var(--discern-space-3);
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-sm);
     background: var(--discern-color-inverse-surface);
     color: var(--discern-color-inverse-ink);
     opacity: 0;
     pointer-events: none;
-    translate: -50% 0.1875rem;
-    transition-property: opacity, translate;
-    transition-duration: var(--discern-duration-fast);
+    translate: -50% 0;
+    transition: opacity var(--discern-duration-fast) var(--discern-ease-out);
     font-family: var(--discern-font-ui);
     font-size: var(--discern-font-size-xs);
-    line-height: 1.4;
+    line-height: var(--discern-leading-snug);
   }
   .discern-tooltip--bottom .discern-tooltip__bubble {
     inset-block: calc(100% + var(--discern-space-2)) auto;
   }
   .discern-tooltip:is(:hover, :focus-within) .discern-tooltip__bubble {
     opacity: 1;
-    translate: -50% 0;
+  }
+  .discern-tooltip:is(:hover, :focus-within) .discern-tooltip__bubble:not([data-discern-floating-enhanced]),
+  .discern-tooltip__bubble[data-discern-floating-positioned] {
+    animation: discern-enter var(--discern-duration-fast)
+      var(--discern-ease-out);
   }
   .discern-tooltip .discern-tooltip__bubble[data-discern-floating-enhanced] {
     position: fixed;

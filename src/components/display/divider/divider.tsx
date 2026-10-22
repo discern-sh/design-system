@@ -7,6 +7,7 @@ import type { DividerSurface } from "./divider.types.ts";
 /** Props for the {@linkcode Divider} component. */
 export interface DividerProps extends HTMLAttributes<HTMLDivElement> {
   readonly label?: ReactNode;
+  /** Ground the rule sits on. It tones the terminal rule; the browser rule and label paint no ground, so they read the same on either. */
   readonly surface?: DividerSurface;
 }
 

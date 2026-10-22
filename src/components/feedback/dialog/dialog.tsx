@@ -8,7 +8,9 @@ import {
 import type { DialogHTMLAttributes, MouseEvent, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import { IconButton } from "../../core/icon-button/icon-button.tsx";
 import { Kicker } from "../../display/kicker/kicker.tsx";
+import { FeedbackMark } from "../feedback-marks.tsx";
 
 /** Props for the {@linkcode Dialog} component. */
 export interface DialogProps extends
@@ -94,18 +96,17 @@ export const Dialog: DiscernComponent<HTMLDialogElement, DialogProps> =
           data-discern-floating-surface="surface"
         >
           <header className="discern-dialog__header">
-            <div>
+            <div className="discern-dialog__heading">
               {kicker ? <Kicker>{kicker}</Kicker> : null}
               <h2 className="discern-dialog__title" id={titleId}>{title}</h2>
             </div>
-            <button
-              type="button"
+            <IconButton
               className="discern-dialog__close"
-              aria-label={closeLabel}
+              size="sm"
+              label={closeLabel}
+              icon={<FeedbackMark name="dismiss" />}
               onClick={() => onOpenChange(false)}
-            >
-              <span aria-hidden="true">×</span>
-            </button>
+            />
           </header>
           <div className="discern-dialog__body">{children}</div>
           {actions

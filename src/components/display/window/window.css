@@ -2,7 +2,7 @@
   .discern-window {
     overflow: hidden;
     margin: 0;
-    border: 1px solid var(--discern-color-border-strong);
+    border: 1px solid var(--discern-color-border);
     border-radius: var(--discern-radius-lg);
     background: var(--discern-color-surface);
     box-shadow: var(--discern-shadow-window);
@@ -22,7 +22,7 @@
     inline-size: 0.5rem;
     block-size: 0.5rem;
     border-radius: 50%;
-    background: var(--discern-color-stripe);
+    background: var(--discern-color-border-strong);
   }
   .discern-window__dots {
     display: flex;
@@ -35,7 +35,6 @@
     color: var(--discern-color-ink-faint);
     font-family: var(--discern-font-ui);
     font-size: var(--discern-font-size-xs);
-    letter-spacing: 0.05em;
     text-align: center;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -49,10 +48,7 @@
     margin-inline-start: auto;
   }
   .discern-window--showcase {
-    border-color: color-mix(in oklab,
-      var(--discern-color-border-strong) 85%, transparent);
-    border-radius: clamp(1.25rem, 2.8vw, 2rem);
-    box-shadow: var(--discern-shadow-window);
+    border-radius: clamp(1.25rem, 3vw, 2rem);
   }
   .discern-window--showcase .discern-window__bar {
     display: grid;
@@ -63,22 +59,6 @@
       var(--discern-space-8));
     background: color-mix(in oklab,
       var(--discern-color-surface-sunken) 56%, var(--discern-color-surface));
-  }
-  .discern-window--showcase .discern-window__dot {
-    inline-size: 0.62rem;
-    block-size: 0.62rem;
-  }
-  .discern-window--showcase .discern-window__dot:nth-child(1) {
-    background: color-mix(in oklab, var(--discern-color-danger) 65%,
-      var(--discern-color-border));
-  }
-  .discern-window--showcase .discern-window__dot:nth-child(2) {
-    background: color-mix(in oklab, var(--discern-color-warning) 65%,
-      var(--discern-color-border));
-  }
-  .discern-window--showcase .discern-window__dot:nth-child(3) {
-    background: color-mix(in oklab, var(--discern-color-success) 65%,
-      var(--discern-color-border));
   }
   .discern-window--showcase .discern-window__title {
     position: static;

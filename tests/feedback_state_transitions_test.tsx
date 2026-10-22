@@ -37,6 +37,67 @@ import { Banner } from "../src/components/feedback/banner/banner.tsx";
 import { Button } from "../src/components/core/button/button.tsx";
 import { catalogueExamples as emptyExamples } from "../src/components/feedback/empty-state/empty-state.examples.tsx";
 import { cliExamples as emptyCliExamples } from "../src/components/feedback/empty-state/empty-state.cli.ts";
+import type { BannerTone } from "../src/components/feedback/banner/banner.types.ts";
+import { Dialog } from "../src/components/feedback/dialog/dialog.tsx";
+import { FeedbackMark } from "../src/components/feedback/feedback-marks.tsx";
+import { Toast } from "../src/components/feedback/toast/toast.tsx";
+import type { ToastTone } from "../src/components/feedback/toast/toast.types.ts";
+import { Tag } from "../src/components/display/tag/tag.tsx";
+
+Deno.test("Feedback tone marks stay distinct, draw no text, and never reuse the dismiss cross", () => {
+  const tones = Object.keys(
+    {
+      neutral: true,
+      accent: true,
+      success: true,
+      warning: true,
+      danger: true,
+    } satisfies Record<BannerTone, true>,
+  ) as BannerTone[];
+  const drawn = (name: BannerTone | "dismiss") =>
+    renderToStaticMarkup(<FeedbackMark name={name} />);
+  const mark = (html: string) =>
+    html.match(/role="img" aria-label="[^"]+">(<svg.*?<\/svg>)/)?.[1];
+  const dismiss = drawn("dismiss");
+  const dismissStroke = dismiss.match(/<path d="([^"]+)"/)?.[1];
+  assert(dismissStroke, "the dismiss mark draws one cross stroke");
+  const crosses = /[\u00D7\u2715\u2716\u2A2F\u2573\u274C\u274E]/u;
+  const marks = tones.map((tone) =>
+    mark(renderToStaticMarkup(<Banner tone={tone}>Context.</Banner>))
+  );
+  assertEquals(marks, tones.map(drawn));
+  assertEquals(new Set([...marks, dismiss]).size, tones.length + 1);
+  for (const [index, html] of marks.entries()) {
+    assert(html !== undefined, `${tones[index]} renders a drawn mark`);
+    assertEquals(html.replace(/<[^>]*>/g, ""), "", "tone marks draw no text");
+    assert(!crosses.test(html), `${tones[index]} draws no cross glyph`);
+    assert(
+      !html.includes(dismissStroke),
+      `${tones[index]} reuses the dismiss cross`,
+    );
+  }
+  for (const tone of ["neutral", "success", "warning", "danger"] as const) {
+    const toast = renderToStaticMarkup(
+      <Toast tone={tone satisfies ToastTone} onDismiss={() => {}}>
+        Context.
+      </Toast>,
+    );
+    assertEquals(mark(toast), drawn(tone));
+    assert(toast.includes(`aria-hidden="true">${dismiss}</span>`));
+  }
+  const closes = [
+    renderToStaticMarkup(
+      <Dialog open={false} onOpenChange={() => {}} title="Title">
+        Body.
+      </Dialog>,
+    ),
+    renderToStaticMarkup(<Tag onRemove={() => {}}>Label</Tag>),
+  ];
+  for (const html of closes) {
+    assert(html.includes(dismiss), "close controls draw the dismiss mark");
+    assert(!crosses.test(html), "close controls draw no text cross");
+  }
+});
 
 Deno.test("Empty states distinguish first use, search, availability, and recovery without alerts", () => {
   for (

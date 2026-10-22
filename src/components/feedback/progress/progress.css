@@ -10,12 +10,13 @@
   .discern-progress__row {
     display: flex;
     flex-wrap: wrap;
+    align-items: baseline;
     justify-content: space-between;
     gap: var(--discern-space-2) var(--discern-space-3);
   }
   .discern-progress__label {
     color: var(--discern-color-ink);
-    font-weight: var(--discern-font-weight-strong);
+    font-weight: var(--discern-font-weight-medium);
   }
   .discern-progress__reading,
   .discern-progress__context {
@@ -23,20 +24,22 @@
     font-variant-numeric: tabular-nums;
   }
   .discern-progress__track {
-    block-size: var(--discern-space-2);
+    block-size: 0.375rem;
     overflow: hidden;
-    border: 1px solid var(--discern-color-border);
     border-radius: var(--discern-radius-pill);
-    background: var(--discern-color-surface-sunken);
+    background: var(--discern-color-border);
   }
   .discern-progress__fill {
     block-size: 100%;
-    background: var(--discern-color-action);
+    border-radius: inherit;
+    background: var(--discern-color-accent-500);
+    transition: inline-size var(--discern-duration-medium)
+      var(--discern-ease-out);
   }
   .discern-progress__track[data-discern-indeterminate] .discern-progress__fill {
     inline-size: 25%;
     animation: discern-progress-wait calc(var(--discern-duration-reveal) * 4)
-      linear infinite alternate;
+      var(--discern-ease-in-out) infinite alternate;
   }
   @keyframes discern-progress-wait {
     from {
@@ -54,8 +57,11 @@
     }
   }
   @media (forced-colors: active) {
+    .discern-progress__track {
+      border: 1px solid var(--discern-color-border);
+    }
     .discern-progress__fill {
-      border-block-end: 1px solid var(--discern-color-action);
+      border-block-end: 1px solid var(--discern-color-accent-500);
       border-block-end-width: var(--discern-space-2);
     }
   }

@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import { FeedbackMark } from "../../feedback/feedback-marks.tsx";
 
 /** Props for the {@linkcode Tag} component. */
 export interface TagProps extends HTMLAttributes<HTMLSpanElement> {
@@ -32,7 +33,7 @@ export const Tag: DiscernComponent<HTMLSpanElement, TagProps> = forwardRef<
             aria-label={removeLabel}
             onClick={onRemove}
           >
-            <span aria-hidden="true">×</span>
+            <FeedbackMark name="dismiss" />
           </button>
         )
         : null}

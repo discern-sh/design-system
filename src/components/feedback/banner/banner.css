@@ -17,22 +17,25 @@
   }
   .discern-banner--accent {
     --discern-banner-bg: var(--discern-color-accent-100);
-    --discern-color-banner-border: var(--discern-color-accent-400);
+    --discern-color-banner-border: var(--discern-color-accent-300);
     --discern-banner-text: var(--discern-color-accent-800);
   }
   .discern-banner--success {
     --discern-banner-bg: var(--discern-color-success-soft);
-    --discern-color-banner-border: var(--discern-color-success);
+    --discern-color-banner-border: color-mix(in oklab,
+      var(--discern-color-success) 35%, transparent);
     --discern-banner-text: var(--discern-color-success-deep);
   }
   .discern-banner--warning {
     --discern-banner-bg: var(--discern-color-warning-soft);
-    --discern-color-banner-border: var(--discern-color-warning);
+    --discern-color-banner-border: color-mix(in oklab,
+      var(--discern-color-warning) 35%, transparent);
     --discern-banner-text: var(--discern-color-warning-deep);
   }
   .discern-banner--danger {
     --discern-banner-bg: var(--discern-color-danger-soft);
-    --discern-color-banner-border: var(--discern-color-danger);
+    --discern-color-banner-border: color-mix(in oklab,
+      var(--discern-color-danger) 35%, transparent);
     --discern-banner-text: var(--discern-color-danger);
   }
   .discern-banner__content {
@@ -47,10 +50,11 @@
     display: grid;
     flex: none;
     place-items: center;
-    align-content: center;
-    inline-size: 1.2rem;
-    block-size: 1.2rem;
-    margin-block-start: calc(var(--discern-space-1) / 4);
+    inline-size: 1rem;
+    block-size: 1rem;
+    margin-block-start: calc(var(--discern-space-1) / 2);
+    font-size: var(--discern-font-size-md);
+    line-height: 1;
   }
   .discern-banner__icon > :where(svg, img) {
     inline-size: 100%;
