@@ -30,12 +30,19 @@ function DenseState() {
   return <Transcript turns={denseTranscriptTurns} />;
 }
 
+const transcriptCapture = {
+  selectors: [".discern-transcript"],
+  // Agent avatar status marks paint from pseudo-elements inside each tile.
+  paintBleed: 0,
+} as const;
+
 export const catalogueExamples = defineCatalogueExamples(
   meta,
   componentExampleVocabulary,
-  [{ id: "default", Example: ReviewHandoffState }, {
+  [{ id: "default", Example: ReviewHandoffState, capture: transcriptCapture }, {
     id: "dense",
     Example: DenseState,
+    capture: transcriptCapture,
   }],
 );
 

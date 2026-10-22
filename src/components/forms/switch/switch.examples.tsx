@@ -65,16 +65,21 @@ function CancelledSwitchState() {
   );
 }
 
+/** A one-line Switch sits at the start of a full-width row; frame what it paints. */
+const lineCapture = {
+  selectors: [".discern-switch__track", ".discern-switch__text"],
+} as const;
+
 export const catalogueExamples = defineCatalogueExamples(
   meta,
   componentExampleVocabulary,
   [
-    { id: "default", Example: DefaultSwitchState },
+    { id: "default", Example: DefaultSwitchState, capture: lineCapture },
     { id: "multiline", Example: MultilineSwitchState },
-    { id: "active", Example: ActiveSwitchState },
-    { id: "filled", Example: FilledSwitchState },
+    { id: "active", Example: ActiveSwitchState, capture: lineCapture },
+    { id: "filled", Example: FilledSwitchState, capture: lineCapture },
     { id: "validation-error", Example: ValidationErrorSwitchState },
-    { id: "disabled", Example: DisabledSwitchState },
+    { id: "disabled", Example: DisabledSwitchState, capture: lineCapture },
     { id: "submitted", Example: SubmittedSwitchState },
     { id: "cancelled", Example: CancelledSwitchState },
   ],

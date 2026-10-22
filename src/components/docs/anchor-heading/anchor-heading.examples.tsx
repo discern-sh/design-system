@@ -24,12 +24,24 @@ function NestedHeadingExample() {
   );
 }
 
+/** The permalink follows its heading text; frame the heading and its anchor. */
+const headingCapture = {
+  selectors: [
+    ".discern-anchor-heading > :is(h1, h2, h3, h4, h5, h6)",
+    ".discern-anchor-heading__anchor",
+  ],
+} as const;
+
 export const catalogueExamples = defineCatalogueExamples(
   meta,
   componentExampleVocabulary,
   [
-    { id: "default", Example: SectionHeadingExample },
-    { id: "nested-heading", Example: NestedHeadingExample },
+    { id: "default", Example: SectionHeadingExample, capture: headingCapture },
+    {
+      id: "nested-heading",
+      Example: NestedHeadingExample,
+      capture: headingCapture,
+    },
   ],
 );
 
