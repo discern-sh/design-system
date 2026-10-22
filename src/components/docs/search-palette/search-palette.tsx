@@ -11,6 +11,7 @@ import type {
 } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import { IconButton } from "../../core/icon-button/icon-button.tsx";
 
 interface SearchPaletteCommonProps {
   /** Accessible name of the dialog and its search field. */
@@ -20,9 +21,9 @@ interface SearchPaletteCommonProps {
   readonly value?: string;
   readonly icon?: ReactNode;
   readonly hint?: ReactNode;
-  /** Visible text of the close control. */
+  /** The dismiss verb that, followed by the lower-cased `label`, names the quiet close Icon button. */
   readonly closeLabel?: string;
-  /** Accessible name of the close control; defaults to `closeLabel` followed by the lower-cased `label`. */
+  /** Accessible name of the close Icon button; defaults to `closeLabel` followed by the lower-cased `label`. */
   readonly closeAriaLabel?: string;
   /** Attributes for the search field, such as the combobox wiring a consumer script drives. */
   readonly inputProps?: Omit<
@@ -185,16 +186,15 @@ export const SearchPalette: DiscernComponent<
             })}
           {...inputProps}
         />
-        <button
+        <IconButton
           className="discern-search-palette__close"
-          type="button"
-          aria-label={closeAriaLabel ?? `${closeLabel} ${label.toLowerCase()}`}
+          size="sm"
+          icon="×"
+          label={closeAriaLabel ?? `${closeLabel} ${label.toLowerCase()}`}
           {...(controlled
             ? { onClick: () => onOpenChange(false) }
             : { "data-discern-search-palette-close": "" })}
-        >
-          {closeLabel}
-        </button>
+        />
       </div>
       <div className="discern-search-palette__results">{children}</div>
       {hint !== undefined && (

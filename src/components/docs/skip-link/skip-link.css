@@ -16,14 +16,16 @@
     inline-size: auto;
     block-size: auto;
     padding: var(--discern-space-3) var(--discern-space-5);
-    border: 1px solid var(--discern-color-accent-500);
-    border-radius: var(--discern-radius-sm);
-    background: var(--discern-color-surface);
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-md);
     box-shadow: var(--discern-shadow-pop);
     clip-path: none;
     color: var(--discern-color-ink);
     font-family: var(--discern-font-ui);
     font-size: var(--discern-font-size-sm);
+    font-weight: var(--discern-font-weight-medium);
     text-decoration: none;
+    animation: discern-enter var(--discern-duration-fast)
+      var(--discern-ease-out);
   }
 }

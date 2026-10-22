@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { type CSSProperties, useId } from "react";
 import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { IconButton } from "../../core/icon-button/icon-button.tsx";
 import { Paragraph } from "../../editorial/paragraph/paragraph.tsx";
@@ -6,6 +6,7 @@ import { Prose } from "../../editorial/prose/prose.tsx";
 import { TableOfContents } from "../../editorial/table-of-contents/table-of-contents.tsx";
 import { AnchorHeading } from "../anchor-heading/anchor-heading.tsx";
 import { DocsHeader } from "../docs-header/docs-header.tsx";
+import { SearchTrigger } from "../docs-header/docs-header.examples.tsx";
 import { DocsNav } from "../docs-nav/docs-nav.tsx";
 import { Pager } from "../pager/pager.tsx";
 import meta, { componentExampleVocabulary } from "./docs-layout.meta.ts";
@@ -72,9 +73,11 @@ function Contents({ id }: { readonly id: (name: string) => string }) {
 
 /**
  * The complete shell: a sticky Docs header carrying the drawer toggle, then
- * navigation, the document, and the contents rail. The toggle renders hidden
- * and inert to the layout; the selected docs-drawer behaviour reveals it
- * when the allocation makes the navigation a drawer.
+ * navigation, the document, and the contents rail. The header's row measures
+ * against the layout's own maximum plus its two gutters, so the brand and the
+ * search trigger share the columns' edges at every width. The toggle renders
+ * hidden and inert to the layout; the selected docs-drawer behaviour reveals
+ * it when the allocation makes the navigation a drawer.
  */
 function DocumentationShellExample() {
   const prefix = `docs-layout-${useId()}`;
@@ -86,6 +89,10 @@ function DocumentationShellExample() {
       style={{ maxHeight: "40rem", overflow: "auto" }}
     >
       <DocsHeader
+        style={{
+          "--discern-docs-header-max":
+            "calc(var(--discern-page-max) + 10rem + 2 * var(--discern-space-5))",
+        } as CSSProperties}
         brand={<a href="#top">Lorem manual</a>}
         actions={
           <IconButton
@@ -100,7 +107,7 @@ function DocumentationShellExample() {
           />
         }
       >
-        <span>Search</span>
+        <SearchTrigger />
       </DocsHeader>
       <DocsLayout
         navigationId={navigationId}

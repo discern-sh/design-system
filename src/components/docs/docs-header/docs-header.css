@@ -3,9 +3,11 @@
     position: sticky;
     top: 0;
     z-index: 30;
+    container: discern-docs-header / inline-size;
     border-block-end: 1px solid var(--discern-color-border);
     background: var(--discern-color-surface);
     font-family: var(--discern-font-ui);
+    font-size: var(--discern-font-size-sm);
   }
   .discern-docs-header__inner {
     display: flex;
@@ -21,7 +23,6 @@
     gap: var(--discern-space-3);
     align-items: center;
     color: var(--discern-color-ink);
-    font-size: var(--discern-font-size-sm);
     font-weight: var(--discern-font-weight-strong);
   }
   .discern-docs-header__brand a {
@@ -40,5 +41,18 @@
     display: inline-flex;
     gap: var(--discern-space-2);
     align-items: center;
+  }
+  .discern-docs-header__shortcut {
+    display: inline-flex;
+    gap: calc(var(--discern-space-1) / 2);
+    margin-inline-start: var(--discern-space-3);
+  }
+  @container discern-docs-header (max-width: 31.999rem) {
+    .discern-docs-header__inner {
+      gap: var(--discern-space-3);
+    }
+    .discern-docs-header__shortcut {
+      display: none;
+    }
   }
 }

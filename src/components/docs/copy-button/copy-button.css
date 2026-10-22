@@ -2,34 +2,31 @@
   .discern-copy-button {
     display: inline-flex;
     align-items: center;
-    gap: var(--discern-space-2);
+    gap: calc(var(--discern-space-1) * 1.5);
     min-block-size: 1.5rem;
-    padding: var(--discern-space-1) var(--discern-space-3);
-    border: 1px solid var(--discern-color-border-strong);
+    padding: var(--discern-space-1) var(--discern-space-2);
+    border: 1px solid var(--discern-color-border);
     border-radius: var(--discern-radius-sm);
-    background: var(--discern-color-surface);
+    background: transparent;
     color: var(--discern-color-ink-muted);
-    font-family: var(--discern-font-ui);
     font-size: var(--discern-font-size-xs);
+    font-weight: var(--discern-font-weight-medium);
     line-height: var(--discern-leading-tight);
     cursor: pointer;
   }
-  .discern-copy-button:hover {
-    border-color: var(--discern-color-accent-500);
-    color: var(--discern-color-ink);
-  }
-  .discern-copy-button:focus-visible {
+  .discern-copy-button:is(:hover, :focus-visible) {
+    background: var(--discern-color-accent-100);
     color: var(--discern-color-ink);
   }
   .discern-copy-button:active:not(:disabled) {
-    background: var(--discern-color-accent-100);
-    transform: translateY(0.0625rem);
+    background: var(--discern-color-accent-200);
+    transform: translateY(calc(var(--discern-space-1) / 4));
   }
   .discern-copy-button:disabled,
   .discern-copy-button[inert] {
     border-color: var(--discern-color-border);
     background: var(--discern-color-surface-sunken);
-    color: var(--discern-color-ink-faint);
+    color: var(--discern-color-ink-muted);
     cursor: not-allowed;
   }
   .discern-copy-button__icon:not([hidden]) {
@@ -40,5 +37,10 @@
     border-color: var(--discern-color-success);
     background: var(--discern-color-success-soft);
     color: var(--discern-color-success-deep);
+  }
+  .discern-copy-button[data-discern-copy-failed] {
+    border-color: var(--discern-color-danger);
+    background: var(--discern-color-danger-soft);
+    color: var(--discern-color-danger);
   }
 }

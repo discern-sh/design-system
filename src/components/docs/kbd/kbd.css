@@ -4,14 +4,15 @@
     align-items: center;
     justify-content: center;
     min-inline-size: 1.6em;
-    padding: calc(var(--discern-space-1) / 2) var(--discern-space-2);
-    border: 1px solid var(--discern-color-border-strong);
+    padding: calc(var(--discern-space-1) / 2) var(--discern-space-1);
+    border: 1px solid var(--discern-color-border);
     border-block-end-width: 0.125rem;
-    border-radius: var(--discern-radius-xs);
+    border-radius: var(--discern-radius-sm);
     background: var(--discern-color-surface-sunken);
     color: var(--discern-color-ink-muted);
     font-family: var(--discern-font-ui);
     font-size: var(--discern-font-size-xs);
+    font-weight: var(--discern-font-weight-medium);
     line-height: var(--discern-leading-tight);
     white-space: nowrap;
   }

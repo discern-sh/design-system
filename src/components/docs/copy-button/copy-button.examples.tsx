@@ -1,10 +1,17 @@
 import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
+import { getGlyph } from "../../../glyphs/mod.ts";
 import { CopyButton } from "./copy-button.tsx";
 import meta, { componentExampleVocabulary } from "./copy-button.meta.ts";
 
 function CopyActionExample() {
-  return <CopyButton value="lorem ipsum dolor sit amet" />;
+  return (
+    <CopyButton
+      value="lorem ipsum dolor sit amet"
+      icon={getGlyph("copy").unicode}
+      copiedIcon={getGlyph("status-complete").unicode}
+    />
+  );
 }
 
 export const catalogueExamples = defineCatalogueExamples(

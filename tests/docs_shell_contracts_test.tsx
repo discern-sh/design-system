@@ -195,7 +195,7 @@ Deno.test("Search palette keeps its controlled markup and gains hooks only in st
   );
   assertEquals(
     controlled,
-    '<dialog aria-label="Search" class="discern-search-palette consumer" id="palette" data-discern-floating-surface="surface"><div class="discern-search-palette__field"><span class="discern-search-palette__icon" aria-hidden="true">⌕</span><input class="discern-search-palette__input" type="search" aria-label="Search" placeholder="Type to search…" autofocus="" id="field" value="q"/><button class="discern-search-palette__close" type="button" aria-label="Close search">Close</button></div><div class="discern-search-palette__results"><ul class="discern-search-palette__list"><li><a class="discern-search-palette__result" href="#a"><span class="discern-search-palette__result-title">A</span><span class="discern-search-palette__result-context">B</span></a></li></ul></div><div class="discern-search-palette__hint">hint</div></dialog>',
+    '<dialog aria-label="Search" class="discern-search-palette consumer" id="palette" data-discern-floating-surface="surface"><div class="discern-search-palette__field"><span class="discern-search-palette__icon" aria-hidden="true">⌕</span><input class="discern-search-palette__input" type="search" aria-label="Search" placeholder="Type to search…" autofocus="" id="field" value="q"/><button type="button" aria-label="Close search" class="discern-icon-button discern-icon-button--quiet discern-icon-button--sm discern-search-palette__close"><span class="discern-icon-button__glyph" aria-hidden="true">×</span></button></div><div class="discern-search-palette__results"><ul class="discern-search-palette__list"><li><a class="discern-search-palette__result" href="#a"><span class="discern-search-palette__result-title">A</span><span class="discern-search-palette__result-context">B</span></a></li></ul></div><div class="discern-search-palette__hint">hint</div></dialog>',
   );
 
   const html = renderToStaticMarkup(
@@ -224,7 +224,7 @@ Deno.test("Search palette keeps its controlled markup and gains hooks only in st
   );
   assertMatch(
     html,
-    /<button class="discern-search-palette__close" type="button" aria-label="Close search" data-discern-search-palette-close="">Close<\/button>/,
+    /<button type="button" aria-label="Close search" class="discern-icon-button discern-icon-button--quiet discern-icon-button--sm discern-search-palette__close" data-discern-search-palette-close=""><span class="discern-icon-button__glyph" aria-hidden="true">×<\/span><\/button>/,
   );
   assertMatch(
     html,

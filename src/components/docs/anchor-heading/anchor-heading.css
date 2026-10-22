@@ -15,20 +15,17 @@
     place-items: center;
     min-inline-size: 1.5rem;
     min-block-size: 1.5rem;
-    color: var(--discern-color-accent-600);
-    font-weight: var(--discern-font-weight-body);
+    color: var(--discern-color-ink-faint);
     text-decoration: none;
     opacity: 0;
-    transition: opacity var(--discern-duration-fast) var(--discern-ease-out);
+    transition-property: color, opacity;
   }
   .discern-anchor-heading:hover .discern-anchor-heading__anchor,
   .discern-anchor-heading__anchor:focus-visible {
     opacity: 1;
   }
   .discern-anchor-heading__anchor:hover {
-    color: var(--discern-color-accent-700);
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
+    color: var(--discern-color-ink);
   }
   .discern-anchor-heading__anchor:focus-visible {
     border-radius: var(--discern-radius-xs);

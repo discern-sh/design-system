@@ -1,9 +1,7 @@
 @layer discern.components {
   .discern-glossary-term__trigger {
     border-radius: var(--discern-radius-xs);
-    color: inherit;
     font-style: inherit;
-    cursor: help;
   }
   .discern-glossary-term__card {
     display: grid;
@@ -12,8 +10,6 @@
   .discern-glossary-term__term {
     color: var(--discern-color-ink);
     font-family: var(--discern-font-ui);
-    font-size: var(--discern-font-size-sm);
-    font-weight: var(--discern-font-weight-strong);
     line-height: var(--discern-leading-snug);
   }
   .discern-glossary-term__definition {

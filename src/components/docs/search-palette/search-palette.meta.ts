@@ -25,9 +25,10 @@ const meta = {
   accessibility: [
     "The native dialog provides focus containment, Escape dismissal, and focus return to the opening control; in static mode the search-palette behaviour focuses the field, returns focus, and, for a reader without showModal(), makes the rest of the page inert, wraps Tab, and closes on Escape.",
     "The search input is name-labelled and, in controlled mode, focused on open; controlled results are real links, while a static consumer renders role=option items into Search palette list and drives selection through aria-activedescendant on the field.",
-    "A visible Close action provides an explicit pointer and keyboard dismissal path in addition to Escape and backdrop dismissal; closeAriaLabel names it when the derived name does not read well.",
+    "A visible quiet close Icon button provides an explicit pointer and keyboard dismissal path in addition to Escape and backdrop dismissal; its accessible name joins closeLabel and the lower-cased label, and closeAriaLabel replaces it when the derived name does not read well.",
     "Escape follows the platform search-input convention in controlled mode: it clears a non-empty query first, and closes the palette when the query is empty.",
     "Search palette status is a visually hidden polite live region for result counts and load state, and Search palette empty stays hidden until a consumer reveals it.",
+    "Group results under an element carrying discern-search-palette__group-label so the grouping is announced, not only seen. Controlled link results may sit in one list per group, each named by its label through aria-labelledby. Static results stay in the one Search palette list the field's aria-controls and aria-activedescendant address: give each group a role=none item holding a role=group list named by its label through aria-labelledby, the label being that list's first item with role=presentation.",
   ],
 } satisfies ComponentMeta;
 

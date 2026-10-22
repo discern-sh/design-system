@@ -27,6 +27,16 @@
     inset: 0;
     z-index: 25;
     background: var(--discern-color-overlay);
+    backdrop-filter: blur(0.125rem);
+    transition:
+      opacity var(--discern-duration-medium) var(--discern-ease-out),
+      display var(--discern-duration-medium) allow-discrete;
+    @starting-style {
+      opacity: 0;
+    }
+  }
+  .discern-docs-layout__veil[hidden] {
+    opacity: 0;
   }
   [data-discern-docs-drawer-toggle][hidden] {
     display: none;
@@ -77,6 +87,7 @@
       max-block-size: calc(100dvh - var(--discern-docs-layout-sticky-offset));
       padding-block: var(--discern-space-8) var(--discern-space-4);
       overflow-y: auto;
+      scrollbar-width: thin;
     }
   }
   @container discern-docs-layout (min-width: 76rem) {

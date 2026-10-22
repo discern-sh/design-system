@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { Fragment, useId, useState } from "react";
 import {
   type ConformanceScenario,
   defineCatalogueExamples,
@@ -19,20 +19,53 @@ import {
 const DESTINATIONS = [
   {
     href: "#top",
+    group: "Orientation",
     title: "Lorem ipsum dolor",
-    context: "Orientation / Overview",
+    context: "Overview",
   },
   {
     href: "#components",
+    group: "Reference",
     title: "Consectetur adipiscing",
-    context: "Reference / Configuration",
+    context: "Configuration",
   },
   {
     href: "#group-docs",
+    group: "Reference",
     title: "Sed do eiusmod",
-    context: "Reference / Glossary",
+    context: "Glossary",
   },
 ] as const;
+const GROUPS = [...new Set(DESTINATIONS.map(({ group }) => group))];
+
+/** A lens and handle, so the field and the triggers that open it need no icon asset. */
+export function SearchGlyph() {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      width="18"
+      height="18"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <circle
+        cx="8.5"
+        cy="8.5"
+        r="5.25"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+      />
+      <path
+        d="m12.5 12.5 4 4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
 
 export const conformance = [{
   example: "default",
@@ -49,12 +82,12 @@ export const conformance = [{
       expect: "visible",
       target: {
         role: "link",
-        name: "Lorem ipsum dolor Orientation / Overview",
+        name: "Lorem ipsum dolor Overview",
       },
     },
     {
       expect: "hidden",
-      target: { role: "link", name: "Sed do eiusmod Reference / Glossary" },
+      target: { role: "link", name: "Sed do eiusmod Glossary" },
     },
     { action: "press", key: "Escape" },
     { expect: "visible", target: { role: "dialog", name: "Search" } },
@@ -125,6 +158,7 @@ function StaticSearchPaletteExample() {
       </Button>
       <SearchPalette
         id={paletteId}
+        icon={<SearchGlyph />}
         closeAriaLabel="Dismiss search"
         inputProps={{
           role: "combobox",
@@ -140,14 +174,33 @@ function StaticSearchPaletteExample() {
         }
       >
         <SearchPaletteList id={listId}>
-          {DESTINATIONS.map((destination, index) => (
-            <SearchPaletteOption
-              key={destination.href}
-              id={`${listId}-${index}`}
-              title={destination.title}
-              context={destination.context}
-              selected={index === 0}
-            />
+          {GROUPS.map((group) => (
+            <li key={group} role="none">
+              <ul
+                className="discern-search-palette__list"
+                role="group"
+                aria-labelledby={`${listId}-${group}`}
+              >
+                <li
+                  className="discern-search-palette__group-label"
+                  id={`${listId}-${group}`}
+                  role="presentation"
+                >
+                  {group}
+                </li>
+                {DESTINATIONS.map((destination, index) =>
+                  destination.group === group && (
+                    <SearchPaletteOption
+                      key={destination.href}
+                      id={`${listId}-${index}`}
+                      title={destination.title}
+                      context={destination.context}
+                      selected={index === 0}
+                    />
+                  )
+                )}
+              </ul>
+            </li>
           ))}
         </SearchPaletteList>
         <SearchPaletteEmpty>No matches.</SearchPaletteEmpty>
@@ -160,10 +213,13 @@ function StaticSearchPaletteExample() {
 export default function SearchPaletteExamples() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const listId = `results-${useId()}`;
   const matches = DESTINATIONS.filter((destination) =>
-    `${destination.title} ${destination.context}`.toLowerCase().includes(
-      query.trim().toLowerCase(),
-    )
+    `${destination.title} ${destination.group} ${destination.context}`
+      .toLowerCase().includes(query.trim().toLowerCase())
+  );
+  const groups = GROUPS.filter((group) =>
+    matches.some((destination) => destination.group === group)
   );
   return (
     <>
@@ -173,6 +229,7 @@ export default function SearchPaletteExamples() {
         onOpenChange={setOpen}
         value={query}
         onValueChange={setQuery}
+        icon={<SearchGlyph />}
         hint={
           <>
             <span>
@@ -190,19 +247,31 @@ export default function SearchPaletteExamples() {
               No matches for “{query}”.
             </p>
           )
-          : (
-            <ul className="discern-search-palette__list">
-              {matches.map((destination) => (
-                <li key={destination.href}>
-                  <SearchPaletteResult
-                    href={destination.href}
-                    title={destination.title}
-                    context={destination.context}
-                  />
-                </li>
-              ))}
-            </ul>
-          )}
+          : groups.map((group) => (
+            <Fragment key={group}>
+              <p
+                className="discern-search-palette__group-label"
+                id={`${listId}-${group}`}
+              >
+                {group}
+              </p>
+              <ul
+                className="discern-search-palette__list"
+                aria-labelledby={`${listId}-${group}`}
+              >
+                {matches.filter((destination) => destination.group === group)
+                  .map((destination) => (
+                    <li key={destination.href}>
+                      <SearchPaletteResult
+                        href={destination.href}
+                        title={destination.title}
+                        context={destination.context}
+                      />
+                    </li>
+                  ))}
+              </ul>
+            </Fragment>
+          ))}
       </SearchPalette>
     </>
   );
