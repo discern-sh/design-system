@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import { IconButton } from "../icon-button/icon-button.tsx";
 import type {
   ThemeToggleTheme,
   ThemeToggleVariant,
@@ -51,6 +52,31 @@ export type ThemeToggleProps =
   | ControlledThemeToggleProps
   | StaticThemeToggleProps;
 
+// One stroke weight for both destinations, sized by the Icon button glyph slot.
+const strokeGlyph = {
+  viewBox: "0 0 24 24",
+  width: "1em",
+  height: "1em",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 2,
+  strokeLinecap: "round",
+  strokeLinejoin: "round",
+} as const;
+
+const sunGlyph = (
+  <svg {...strokeGlyph}>
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2v2.25M12 19.75V22M2 12h2.25M19.75 12H22M4.93 4.93l1.59 1.59M17.48 17.48l1.59 1.59M4.93 19.07l1.59-1.59M17.48 6.52l1.59-1.59" />
+  </svg>
+);
+
+const moonGlyph = (
+  <svg {...strokeGlyph}>
+    <path d="M20 15.5A8.5 8.5 0 0 1 8.5 4 8.5 8.5 0 1 0 20 15.5Z" />
+  </svg>
+);
+
 /**
  * Light/dark comfort adjustment in one of two modes chosen by `onThemeChange`.
  * With it, controlled React owns resolution, persistence, and root application.
@@ -65,8 +91,8 @@ export const ThemeToggle: DiscernComponent<
   {
     theme = "light",
     onThemeChange,
-    lightGlyph = "☀",
-    darkGlyph = "☾",
+    lightGlyph = sunGlyph,
+    darkGlyph = moonGlyph,
     toLightLabel = "Switch to the light theme",
     toDarkLabel = "Switch to the dark theme",
     variant = "outlined",
@@ -77,24 +103,25 @@ export const ThemeToggle: DiscernComponent<
 ) {
   const dark = theme === "dark";
   const destination: ThemeToggleTheme = dark ? "light" : "dark";
+  const outlined = variant === "outlined";
   return (
-    <button
+    <IconButton
       ref={ref}
-      type="button"
+      variant={outlined ? "outline" : "quiet"}
+      size={outlined ? "md" : "sm"}
+      label={dark ? toLightLabel : toDarkLabel}
       className={classNames(
         "discern-theme-toggle",
         "discern-theme-toggle--" + variant,
         className,
       )}
-      aria-label={dark ? toLightLabel : toDarkLabel}
       data-discern-to-light-label={toLightLabel}
       data-discern-to-dark-label={toDarkLabel}
       {...(onThemeChange === undefined
         ? { "data-discern-theme-toggle": "", ...{ inert: "" } }
         : { onClick: () => onThemeChange(destination) })}
       {...props}
-    >
-      {([["dark", darkGlyph], ["light", lightGlyph]] as const).map((
+      icon={([["dark", darkGlyph], ["light", lightGlyph]] as const).map((
         [candidate, glyph],
       ) => (
         <span
@@ -107,6 +134,6 @@ export const ThemeToggle: DiscernComponent<
           {glyph}
         </span>
       ))}
-    </button>
+    />
   );
 });

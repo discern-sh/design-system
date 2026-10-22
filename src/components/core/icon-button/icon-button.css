@@ -18,18 +18,19 @@
     background: var(--discern-color-accent-100);
     color: var(--discern-color-ink);
   }
-  .discern-icon-button:active:not(:disabled) {
-    background: var(--discern-color-accent-200);
-    transform: translateY(calc(var(--discern-space-1) / 4));
-  }
   .discern-icon-button--outline {
     border-color: var(--discern-color-neutral-edge);
     background: var(--discern-color-surface);
     box-shadow: var(--discern-shadow-control);
+    color: var(--discern-color-ink);
   }
   .discern-icon-button--outline:hover:not(:disabled) {
     background: color-mix(in oklab, var(--discern-color-accent-100) 80%,
       var(--discern-color-surface));
+  }
+  .discern-icon-button:active:not(:disabled) {
+    background: var(--discern-color-accent-200);
+    transform: translateY(calc(var(--discern-space-1) / 4));
   }
   .discern-icon-button:disabled:not([aria-busy="true"]) {
     border-color: var(--discern-color-border);
@@ -54,6 +55,8 @@
     align-content: center;
     inline-size: var(--discern-icon-button-icon-size);
     block-size: var(--discern-icon-button-icon-size);
+    font-size: var(--discern-icon-button-icon-size);
+    line-height: 1;
   }
   .discern-icon-button > span > :where(svg, img) {
     max-inline-size: 100%;

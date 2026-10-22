@@ -57,11 +57,11 @@
     --discern-button-text: var(--discern-color-accent-600);
   }
   .discern-button--danger {
-    --discern-button-fill: var(--discern-color-danger-soft);
-    --discern-button-fill-hover: color-mix(in oklab, var(--discern-color-danger-soft) 82%, var(--discern-color-danger));
+    --discern-button-fill: var(--discern-color-surface);
+    --discern-button-fill-hover: var(--discern-color-danger-soft);
     --discern-color-button-edge: color-mix(in oklab,
-      var(--discern-color-danger) 55%, transparent);
-    --discern-shadow-button: none;
+      var(--discern-color-danger) 24%, transparent);
+    --discern-shadow-button: var(--discern-shadow-control);
     --discern-shadow-button-pressed: none;
     --discern-button-text: var(--discern-color-danger);
   }
@@ -69,7 +69,6 @@
     min-block-size: var(--discern-control-size-sm);
     --discern-button-padding-inline: var(--discern-space-3);
     gap: calc(var(--discern-space-1) * 1.5);
-    border-radius: var(--discern-radius-sm);
     font-size: var(--discern-font-size-xs);
   }
   .discern-button--lg {

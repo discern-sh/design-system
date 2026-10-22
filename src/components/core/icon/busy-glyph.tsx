@@ -9,6 +9,7 @@ export function BusyGlyph() {
       stroke="currentColor"
       focusable="false"
     >
+      <circle cx="12" cy="12" r="9" strokeWidth="2.5" strokeOpacity="0.25" />
       <path d="M12 3a9 9 0 1 1-9 9" strokeWidth="2.5" strokeLinecap="round" />
     </svg>
   );

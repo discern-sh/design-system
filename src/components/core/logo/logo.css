@@ -32,16 +32,16 @@
   .discern-logo--tile {
     min-inline-size: var(--discern-logo-size);
     padding-inline: var(--discern-space-2);
-    border: 1px solid var(--discern-color-accent-600);
-    border-radius: var(--discern-radius-sm);
-    background: var(--discern-color-accent-200);
-    box-shadow: var(--discern-shadow-card);
-    color: var(--discern-color-accent-800);
+    border: 1px solid transparent;
+    border-radius: calc(var(--discern-logo-size) * 0.18);
+    background: var(--discern-color-action);
+    color: var(--discern-color-on-action);
     font-size: calc(var(--discern-logo-size) * 0.58);
     font-weight: var(--discern-font-weight-strong);
   }
   .discern-logo--tile.discern-logo--square {
     padding-inline: var(--discern-space-1);
+    border-radius: calc(var(--discern-logo-size) * 0.24);
   }
   .discern-logo > :where(img, svg) {
     display: block;

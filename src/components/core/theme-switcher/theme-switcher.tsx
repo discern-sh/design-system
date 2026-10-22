@@ -55,7 +55,9 @@ export const ThemeSwitcher: DiscernComponent<
         {...props}
         data-discern-mode={mode}
       >
-        <legend className="discern-theme-switcher__legend">{label}</legend>
+        <legend className="discern-theme-switcher__legend discern-visually-hidden">
+          {label}
+        </legend>
         {options.map((option) => (
           <label className="discern-theme-switcher__option" key={option.mode}>
             <input

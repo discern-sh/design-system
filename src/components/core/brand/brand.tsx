@@ -24,6 +24,12 @@ const markSizes: Readonly<Record<BrandSize, LogoSize>> = {
   lg: "lg",
 };
 
+// Booleans, `""`, and nullish slots render nothing, so they must not leave an
+// empty wrapper behind to take up a flex gap.
+const renders = (node: ReactNode): boolean =>
+  node !== undefined && node !== null && typeof node !== "boolean" &&
+  node !== "";
+
 /** Composable brand lockup pairing an adaptive decorative mark with a name and optional tagline. */
 export const Brand: DiscernComponent<HTMLSpanElement, BrandProps> = forwardRef<
   HTMLSpanElement,
@@ -53,7 +59,7 @@ export const Brand: DiscernComponent<HTMLSpanElement, BrandProps> = forwardRef<
       )}
       {...props}
     >
-      {mark !== undefined && mark !== null
+      {renders(mark)
         ? (
           <Logo
             className="discern-brand__mark"
@@ -67,7 +73,7 @@ export const Brand: DiscernComponent<HTMLSpanElement, BrandProps> = forwardRef<
         : null}
       <span className="discern-brand__copy">
         <span className="discern-brand__name">{name}</span>
-        {tagline !== undefined && tagline !== null
+        {renders(tagline)
           ? <span className="discern-brand__tagline">{tagline}</span>
           : null}
       </span>

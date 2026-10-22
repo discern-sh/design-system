@@ -14,9 +14,9 @@
   .discern-breadcrumbs ol {
     flex-wrap: wrap;
     max-inline-size: 100%;
-    row-gap: var(--discern-space-2);
+    row-gap: var(--discern-space-1);
     margin: 0;
-    padding: var(--discern-space-2) var(--discern-space-1);
+    padding: 0;
     list-style: none;
   }
   .discern-breadcrumbs li {
@@ -31,21 +31,18 @@
     text-decoration-color: transparent;
     text-underline-offset: 0.2em;
   }
-  .discern-breadcrumbs a:hover {
+  .discern-breadcrumbs a:is(:hover, :focus-visible) {
     color: var(--discern-color-ink);
-    text-decoration-color: var(--discern-color-accent-500);
-  }
-  .discern-breadcrumbs a:focus-visible {
-    color: var(--discern-color-ink);
+    text-decoration-color: var(--discern-color-border-strong);
   }
   .discern-breadcrumbs__separator {
     flex: none;
-    margin-inline: var(--discern-space-3);
+    margin-inline: var(--discern-space-2);
     color: var(--discern-color-border-strong);
   }
   .discern-breadcrumbs .discern-breadcrumbs__current {
     display: block;
     color: var(--discern-color-ink);
-    font-weight: var(--discern-font-weight-strong);
+    font-weight: var(--discern-font-weight-medium);
   }
 }

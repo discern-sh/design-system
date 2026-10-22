@@ -28,13 +28,21 @@ export const conformance = [{
 export default function ThemeSwitcherExamples() {
   const [mode, setMode] = useState<ThemeSwitcherMode>("system");
   return (
-    <div className="discern-example-row">
+    <div
+      className="discern-example-row"
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        alignItems: "center",
+        gap: "var(--discern-space-4)",
+      }}
+    >
       <ThemeSwitcher
         mode={mode}
         onModeChange={setMode}
         systemLabel="Auto"
       />
-      <span>Lorem ipsum: the {mode} preference is selected.</span>
+      <span>The {mode} preference is selected.</span>
     </div>
   );
 }
