@@ -51,11 +51,13 @@
   src: url("./fonts/inter.woff2") format("woff2");
 }
 
+/* Code reads as typed: no programming ligatures or contextual joins. */
 @font-face {
   font-family: "JetBrains Mono";
   font-style: normal;
   font-weight: 400 600;
   font-display: swap;
+  font-feature-settings: "calt" 0, "liga" 0;
   src: url("./fonts/jetbrains-mono.woff2") format("woff2");
 }
 
