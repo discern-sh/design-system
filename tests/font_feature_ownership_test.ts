@@ -11,7 +11,7 @@ import { baseTokens } from "../src/tokens/tokens.ts";
 const PACKAGE_ROOT = fromFileUrl(new URL("..", import.meta.url));
 const INTER_UI_FAMILY = '"Discern Inter UI"';
 const INTER_UI_FEATURE_SETTINGS =
-  '"liga" 1, "calt" 1, "dlig" 1, "tnum" 1, "zero" 1, "ss03" 1, "salt" 1';
+  '"liga" 1, "calt" 1, "dlig" 1, "zero" 1, "ss03" 1, "salt" 1';
 const FONT_SPECIFIC_FEATURE = /["'](?:dlig|tnum|zero|ss\d\d|salt)["']/iu;
 
 interface FeatureToken {
@@ -125,7 +125,7 @@ for (
     },
     {
       family: '"Discern Inter Marketing"',
-      features: '"calt" 1, "dlig" 1, "tnum" 1, "ss01" 1, "ss02" 1, "ss03" 1',
+      features: '"calt" 1, "dlig" 1, "ss01" 1, "ss02" 1, "ss03" 1',
       role: "marketing",
     },
   ]
@@ -224,29 +224,29 @@ for (
           font-family: "Plain Inter";
           font-feature-settings: ${features};
         }
-        #normal {
-          font-family: "Plain Inter";
-          font-feature-settings: normal;
-        }
       </style>
       <div id="face" class="sample">Il1 00 1234 “sS,”</div>
       <div id="explicit" class="sample">Il1 00 1234 “sS,”</div>
-      <div id="normal" class="sample">Il1 00 1234 “sS,”</div>
+      <span id="face-hyphen" class="sample" style="font-family: ${family}">-</span>
+      <span id="normal-hyphen" class="sample" style="font-family: 'Plain Inter'">-</span>
     `);
       await page.evaluate(async () => await document.fonts.ready);
       const face = new Uint8Array(await page.locator("#face").screenshot());
       const explicit = new Uint8Array(
         await page.locator("#explicit").screenshot(),
       );
-      const normal = new Uint8Array(await page.locator("#normal").screenshot());
       assertEquals(
         face,
         explicit,
         "the face descriptor must render like the same explicit Inter features",
       );
+      const hyphen = async (id: string) =>
+        await page.locator(id).evaluate((node) =>
+          node.getBoundingClientRect().width
+        );
       assert(
-        face.some((byte, index) => byte !== normal[index]),
-        "the feature-owning face must render differently from plain Inter",
+        await hyphen("#face-hyphen") <= await hyphen("#normal-hyphen"),
+        "the face must not widen the hyphen in identifiers such as forge-2, as tabular figures do",
       );
     } finally {
       await browser.close();

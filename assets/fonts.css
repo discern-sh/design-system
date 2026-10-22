@@ -34,20 +34,21 @@
   font-weight: 400 700;
   font-display: swap;
   font-feature-settings:
-    "liga" 1, "calt" 1, "dlig" 1, "tnum" 1, "zero" 1, "ss03" 1, "salt" 1;
+    "liga" 1, "calt" 1, "dlig" 1, "zero" 1, "ss03" 1, "salt" 1;
   src: url("./fonts/inter.woff2") format("woff2");
 }
 
 /* Marketing only: calt contextual alternates; dlig discretionary ligatures;
- * tnum tabular numbers; ss01 alternate digits; ss02 Disambiguation;
- * ss03 round quotes & comma. Features stay with this face. */
+ * ss01 alternate digits; ss02 Disambiguation; ss03 round quotes & comma.
+ * Features stay with this face. Neither Inter face binds tnum: tabular
+ * figures also widen the hyphen, so Components that align digits opt in
+ * with font-variant-numeric: tabular-nums. */
 @font-face {
   font-family: "Discern Inter Marketing";
   font-style: normal;
   font-weight: 400 700;
   font-display: swap;
-  font-feature-settings:
-    "calt" 1, "dlig" 1, "tnum" 1, "ss01" 1, "ss02" 1, "ss03" 1;
+  font-feature-settings: "calt" 1, "dlig" 1, "ss01" 1, "ss02" 1, "ss03" 1;
   src: url("./fonts/inter.woff2") format("woff2");
 }
 

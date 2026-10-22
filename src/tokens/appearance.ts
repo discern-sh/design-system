@@ -1011,6 +1011,13 @@ export const appearanceColorRoleLaws: readonly AppearanceColorRoleLaw[] = Object
         undefined,
       ),
       role(
+        "--discern-color-inset",
+        "Ink-pigment well for a track, tail or hint row set inside a raised surface: it matches the sunken wash in light and darkens toward the canvas in dark, so the well always sits below its surface.",
+        "ink-pigment",
+        polarCurve(0.04, 0.08, 0.2, 0.3),
+        undefined,
+      ),
+      role(
         "--discern-color-inverse-surface",
         "Opaque ink-pigment surface for stable light-on-dark treatments.",
         "ink-pigment",

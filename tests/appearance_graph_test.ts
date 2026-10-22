@@ -190,7 +190,7 @@ Deno.test("polarity and every live CSS consumer derive from the appearance autho
     0,
   );
   assert(
-    projectedBytes < 13_500,
+    projectedBytes < 14_000,
     `Shared field projection expanded to ${projectedBytes} declaration bytes`,
   );
   assert(

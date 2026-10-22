@@ -17,6 +17,7 @@
 .discern-signature-benefits :is(h2, h3) {
   font-family: var(--discern-font-ui);
   font-size: var(--discern-font-size-lg);
+  line-height: var(--discern-leading-snug);
   margin-block: var(--discern-space-5) var(--discern-space-2);
 }
 .discern-signature-benefits p {
