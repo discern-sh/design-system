@@ -154,7 +154,9 @@ Deno.test("Chart CSS resolves every paint role through public Tokens", async () 
   );
   assertNotMatch(css, /(?<!max-)inline-size:\s*100%/u);
   assertStringIncludes(css, "overflow-x: auto");
-  assertStringIncludes(css, ".discern-chart__viewport:focus-visible");
+  // The viewport is a named role="group" scroll target, so the foundation's
+  // inset group ring owns its focus; a restated ring would contradict it.
+  assertNotMatch(css, /__viewport:focus-visible/u);
   const tokenNames = new Set(
     [...baseTokens, ...themeTokens].map(({ name }) => name),
   );

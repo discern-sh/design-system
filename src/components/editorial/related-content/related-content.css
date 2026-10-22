@@ -1,5 +1,6 @@
 @layer discern.components {
   .discern-related-content {
+    container: discern-related-content / inline-size;
     padding-block: var(--discern-section-space);
     border-block: 1px solid var(--discern-color-border);
     background: var(--discern-color-surface-sunken);
@@ -13,6 +14,7 @@
   }
   .discern-related-content__inner > header {
     margin-block-end: var(--discern-space-8);
+    padding-inline: var(--discern-space-6);
   }
   .discern-related-content__inner > header > span,
   .discern-related-content article > span {
@@ -42,11 +44,13 @@
       var(--discern-ease-out);
   }
   .discern-related-content article:has(h3 a:focus-visible) {
-    background: var(--discern-color-accent-100);
+    background: color-mix(in oklab, var(--discern-color-accent-100) 55%,
+      transparent);
   }
   @media (hover: hover) {
     .discern-related-content article:hover {
-      background: var(--discern-color-accent-100);
+      background: color-mix(in oklab, var(--discern-color-accent-100) 55%,
+        transparent);
     }
   }
   .discern-related-content article + article {
@@ -88,7 +92,7 @@
   .discern-related-content article footer > span:last-child {
     color: var(--discern-color-ink);
   }
-  @media (max-width: 47.5rem) {
+  @container discern-related-content (max-width: 47.5rem) {
     .discern-related-content__grid {
       grid-template-columns: 1fr;
     }

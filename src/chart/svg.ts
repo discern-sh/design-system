@@ -180,7 +180,9 @@ function standaloneStyle(
       ? [
         `  ${
           select(".discern-chart__label.discern-chart__label--mono")
-        } { font-family: ${resolveChartFontStack("mono")}; }`,
+        } { font-family: ${
+          resolveChartFontStack("interface")
+        }; font-variant-numeric: tabular-nums; }`,
       ]
       : []),
     `  ${

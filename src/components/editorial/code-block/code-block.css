@@ -9,7 +9,8 @@
     border-radius: var(--discern-radius-md);
     background: var(--discern-color-surface-sunken);
     color: var(--discern-color-ink);
-    font: var(--discern-font-size-xs)/1.72 var(--discern-font-mono);
+    font: var(--discern-font-size-xs)/var(--discern-leading-code)
+      var(--discern-font-mono);
     scrollbar-width: thin;
     tab-size: 4;
     white-space: pre;

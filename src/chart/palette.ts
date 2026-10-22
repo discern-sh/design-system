@@ -16,7 +16,7 @@ export type ChartPaletteVariant = TokenPaletteVariant;
 /** Public Token behind each semantic chart paint role. */
 export const CHART_PAINT_TOKEN_NAMES = {
   canvas: "--discern-color-canvas",
-  axis: "--discern-color-ink-faint",
+  axis: "--discern-color-border-strong",
   grid: "--discern-color-border",
   reference: "--discern-color-ink-muted",
   "axis-label": "--discern-color-ink-muted",
@@ -29,7 +29,7 @@ export const CHART_PAINT_TOKEN_NAMES = {
   "series-6": "--discern-color-series-6",
   "ramp-1": "--discern-color-accent-200",
   "ramp-2": "--discern-color-accent-400",
-  "ramp-3": "--discern-color-accent-600",
+  "ramp-3": "--discern-color-accent-500",
   "ramp-4": "--discern-color-accent-800",
 } as const satisfies Readonly<Record<ChartPaintRole, `--discern-${string}`>>;
 

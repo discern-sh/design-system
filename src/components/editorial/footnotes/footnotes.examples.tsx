@@ -14,7 +14,7 @@ function SourceNotesExample() {
   return (
     <>
       <Paragraph>
-        A claim can point to a source{" "}
+        A claim can point to a source.
         <sup>
           <a
             id={id("example-source-note-ref")}
@@ -22,7 +22,7 @@ function SourceNotesExample() {
           >
             [1]
           </a>
-        </sup>.
+        </sup>
       </Paragraph>
       <Footnotes
         items={[{
@@ -45,7 +45,7 @@ function RichMultiBlockNotesExample() {
   return (
     <>
       <Paragraph>
-        The same note can be cited{" "}
+        The same note can be cited
         <sup>
           <a
             id={id("example-rich-note-ref-1")}
@@ -54,7 +54,7 @@ function RichMultiBlockNotesExample() {
             [1]
           </a>
         </sup>{" "}
-        from more than one place{" "}
+        from more than one place.
         <sup>
           <a
             id={id("example-rich-note-ref-2")}
@@ -62,7 +62,7 @@ function RichMultiBlockNotesExample() {
           >
             [1]
           </a>
-        </sup>.
+        </sup>
       </Paragraph>
       <Footnotes
         items={[{

@@ -6,13 +6,13 @@ export const minimumBarLightSvg =
   <style>
   .discern-chart--standalone.discern-chart--theme-light { display: block; background: transparent; shape-rendering: geometricPrecision; text-rendering: optimizeLegibility; }
   .discern-chart--standalone.discern-chart--theme-light .discern-chart__label { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-  .discern-chart--standalone.discern-chart--theme-light .discern-chart__label.discern-chart__label--mono { font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
+  .discern-chart--standalone.discern-chart--theme-light .discern-chart__label.discern-chart__label--mono { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-variant-numeric: tabular-nums; }
   .discern-chart--standalone.discern-chart--theme-light .discern-chart__axis { vector-effect: non-scaling-stroke; }
   .discern-chart--standalone.discern-chart--theme-light .discern-chart__grid { vector-effect: non-scaling-stroke; }
   .discern-chart--standalone.discern-chart--theme-light .discern-chart__mark { stroke-width: 1; vector-effect: non-scaling-stroke; }
   .discern-chart--standalone.discern-chart--theme-light .discern-chart__canvas { fill: oklch(100% 0 0); }
   .discern-chart--standalone.discern-chart--theme-light .discern-chart__mark--series-1 { fill: oklch(66.76% 0.0939 249.4); stroke: oklch(100% 0 0); }
-  .discern-chart--standalone.discern-chart--theme-light .discern-chart__axis { stroke: oklch(0% 0 0 / 0.58); }
+  .discern-chart--standalone.discern-chart--theme-light .discern-chart__axis { stroke: oklch(0% 0 0 / 0.24); }
   .discern-chart--standalone.discern-chart--theme-light .discern-chart__grid { stroke: oklch(0% 0 0 / 0.1); }
   .discern-chart--standalone.discern-chart--theme-light .discern-chart__label--axis-label { fill: oklch(0% 0 0 / 0.68); }
   @media (forced-colors: active) {

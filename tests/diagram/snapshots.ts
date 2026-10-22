@@ -7,7 +7,8 @@ export const compactFlowLightSvg =
   .discern-diagram { display: block; background: transparent; shape-rendering: geometricPrecision; text-rendering: optimizeLegibility; }
   .discern-diagram__text { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
   .discern-diagram__text--quiet-annotation { font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
-  .discern-diagram__node, .discern-diagram__node-cue { stroke-width: 2; vector-effect: non-scaling-stroke; }
+  .discern-diagram__node, .discern-diagram__node-cue { stroke-width: 1; vector-effect: non-scaling-stroke; }
+  .discern-diagram__node--decision, .discern-diagram__node--focus, .discern-diagram__node--start { stroke-width: 2; }
   .discern-diagram__connector { fill: none; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
   .discern-diagram__canvas { fill: oklch(100% 0 0); }
   .discern-diagram__node--ordinary { fill: oklch(98.8609% 0 0); stroke: oklch(0% 0 0 / 0.24); }
@@ -24,8 +25,8 @@ export const compactFlowLightSvg =
   .discern-diagram__arrowhead--primary { fill: oklch(0% 0 0 / 0.68); }
   .discern-diagram__connector--secondary { stroke: oklch(0% 0 0 / 0.58); stroke-dasharray: 8 6; }
   .discern-diagram__arrowhead--secondary { fill: oklch(0% 0 0 / 0.58); }
-  .discern-diagram__connector--return { stroke: oklch(0% 0 0 / 0.93); stroke-dasharray: 2 6; }
-  .discern-diagram__arrowhead--return { fill: oklch(0% 0 0 / 0.93); }
+  .discern-diagram__connector--return { stroke: oklch(0% 0 0 / 0.68); stroke-dasharray: 2 6; }
+  .discern-diagram__arrowhead--return { fill: oklch(0% 0 0 / 0.68); }
   </style>
   <rect class="discern-diagram__canvas" x="0" y="0" width="562.58" height="112" />
   <g class="discern-diagram__group" data-discern-diagram-group="edge-ready-group">

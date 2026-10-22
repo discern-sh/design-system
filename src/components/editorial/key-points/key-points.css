@@ -5,7 +5,8 @@
     overflow: hidden;
     border: 1px solid var(--discern-color-border);
     border-radius: var(--discern-radius-md);
-    background: var(--discern-color-accent-100);
+    background: color-mix(in oklab, var(--discern-color-accent-100) 55%,
+      var(--discern-color-surface));
   }
   .discern-key-points--sunken {
     background: var(--discern-color-surface-sunken);
@@ -39,14 +40,6 @@
     padding: 0;
     list-style: none;
   }
-  .discern-key-points--accent ol {
-    background: color-mix(in oklab, var(--discern-color-accent-100) 52%,
-      var(--discern-color-surface));
-  }
-  .discern-key-points--contrast ol {
-    background: color-mix(in oklab, var(--discern-color-inverse-ink) 7%,
-      var(--discern-color-inverse-surface));
-  }
   .discern-key-points li {
     display: grid;
     align-content: start;
@@ -70,17 +63,17 @@
   .discern-key-points--contrast li h3 {
     color: var(--discern-color-inverse-ink);
   }
-  .discern-key-points li div div {
+  .discern-key-points__description {
     color: var(--discern-color-ink-muted);
     font-size: var(--discern-font-size-sm);
     line-height: var(--discern-leading-body);
   }
-  .discern-key-points li div div > :last-child {
+  .discern-key-points__description > :last-child {
     margin-block-end: 0;
   }
   .discern-key-points--contrast > header > span,
   .discern-key-points--contrast li > span,
-  .discern-key-points--contrast li div div {
+  .discern-key-points--contrast .discern-key-points__description {
     color: color-mix(in oklab, var(--discern-color-inverse-ink) 72%,
       transparent);
   }

@@ -11,27 +11,45 @@ function ComparisonVisual() {
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "max-content minmax(0, 1fr) max-content",
-        gap: "0.75rem",
+        gridTemplateColumns: "minmax(0, 1fr) max-content",
+        gap: "var(--discern-space-2) var(--discern-space-3)",
         alignItems: "center",
+        fontFamily: "var(--discern-font-ui)",
+        fontSize: "var(--discern-font-size-sm)",
       }}
       role="img"
       aria-label="Sunny plot: 14 centimetres. Shaded plot: 10 centimetres."
     >
       {values.map(({ label, value }, index) => (
         <div key={label} style={{ display: "contents" }}>
-          <span>{label}</span>
+          <span
+            style={{
+              gridColumn: "1 / -1",
+              marginBlockStart: index === 0 ? 0 : "var(--discern-space-2)",
+              color: "var(--discern-color-ink-muted)",
+            }}
+          >
+            {label}
+          </span>
           <span
             style={{
               width: `${value / 14 * 100}%`,
               height: "1rem",
-              borderRadius: "0.125rem",
+              borderRadius: "var(--discern-radius-xs)",
               background: index === 0
                 ? "var(--discern-color-accent-500)"
                 : "var(--discern-color-ink-muted)",
             }}
           />
-          <span>{value} cm</span>
+          <span
+            style={{
+              color: "var(--discern-color-ink)",
+              fontVariantNumeric: "tabular-nums",
+              fontWeight: "var(--discern-font-weight-medium)",
+            }}
+          >
+            {value} cm
+          </span>
         </div>
       ))}
     </div>

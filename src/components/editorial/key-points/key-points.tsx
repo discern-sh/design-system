@@ -45,7 +45,9 @@ export const KeyPoints: DiscernComponent<HTMLElement, KeyPointsProps> =
               <span>{String(index + 1).padStart(2, "0")}</span>
               <div>
                 <h3>{item.title}</h3>
-                <div>{item.description}</div>
+                <div className="discern-key-points__description">
+                  {item.description}
+                </div>
               </div>
             </li>
           ))}

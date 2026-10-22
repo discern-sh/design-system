@@ -71,7 +71,9 @@ export const Callout: DiscernComponent<HTMLElement, CalloutProps> = forwardRef<
           : null}
         <h3>{title}</h3>
         <Stack className="discern-callout__body">{children}</Stack>
-        {actions !== undefined && <Cluster>{actions}</Cluster>}
+        {actions !== undefined && (
+          <Cluster className="discern-callout__actions">{actions}</Cluster>
+        )}
       </Stack>
     </aside>
   );

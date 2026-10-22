@@ -31,7 +31,7 @@ export const DIAGRAM_PAINT_TOKEN_NAMES = Object.freeze(
     warning: "--discern-color-warning",
     "primary-connector": "--discern-color-ink-muted",
     "secondary-connector": "--discern-color-ink-faint",
-    "return-connector": "--discern-color-accent-700",
+    "return-connector": "--discern-color-ink-muted",
     guide: "--discern-color-border",
   } as const satisfies Readonly<
     Record<DiagramPaintRole, DiagramPaintTokenName>

@@ -92,7 +92,7 @@ export const catalogueExamples = defineCatalogueExamples(
     {
       id: "dense-data",
       Example: DenseChartExample,
-      capture: chartCapture,
+      capture: { selectors: [".discern-chart__viewport"] },
     },
   ],
 );

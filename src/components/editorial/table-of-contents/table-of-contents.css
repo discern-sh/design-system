@@ -54,5 +54,6 @@
     padding-block-start: var(--discern-space-4);
     border-block-start: 1px solid var(--discern-color-border);
     color: var(--discern-color-ink-faint);
+    font-variant-numeric: tabular-nums;
   }
 }

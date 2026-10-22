@@ -38,14 +38,14 @@
     & > :where(h5, h6),
     & > .discern-anchor-heading > :where(h5, h6) {
       font: var(--discern-font-weight-strong)
-        var(--discern-font-size-md)/var(--discern-leading-snug)
+        var(--discern-font-size-sm)/var(--discern-leading-snug)
         var(--discern-font-ui);
       letter-spacing: normal;
     }
     & > h6,
     & > .discern-anchor-heading > h6 {
       color: var(--discern-color-ink-muted);
-      font-size: var(--discern-font-size-sm);
+      font: var(--discern-font-label);
     }
     & > :where(ul, ol):not([class]) {
       padding-inline-start: var(--discern-space-6);
@@ -59,14 +59,8 @@
         }
       }
     }
-    & :where(p, li, blockquote) :where(a:not([class])) {
-      text-decoration-color: color-mix(in oklab, currentColor 40%, transparent);
-      text-decoration-thickness: 0.08em;
-      text-underline-offset: 0.18em;
-      transition-property: color, text-decoration-color;
-      &:hover {
-        text-decoration-color: currentColor;
-      }
+    & li > :where(blockquote, pre, figure, .discern-code-block) {
+      margin-block: var(--discern-space-3) 0;
     }
     & > :where(p, ul, ol, blockquote) code:not(pre > code) {
       padding: calc(var(--discern-space-1) / 2)
@@ -110,5 +104,13 @@
     font-size: 4.4em;
     font-weight: var(--discern-font-weight-display);
     line-height: 0.72;
+  }
+  @supports (initial-letter: 3) or (-webkit-initial-letter: 3) {
+    .discern-prose--drop-cap > p:first-child::first-letter {
+      float: none;
+      margin: 0 var(--discern-space-2) 0 0;
+      -webkit-initial-letter: 3;
+      initial-letter: 3;
+    }
   }
 }

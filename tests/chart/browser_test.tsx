@@ -56,6 +56,7 @@ interface ChartBrowserInspection {
   readonly labelFill: string;
   readonly labelFontFamily: string;
   readonly monoFontFamily: string;
+  readonly monoNumeric: string;
   readonly viewportScrollable: boolean;
 }
 
@@ -150,6 +151,9 @@ async function inspectBrowserCharts(
           ? ""
           : getComputedStyle(plainLabel).fontFamily,
         monoFontFamily: mono === null ? "" : getComputedStyle(mono).fontFamily,
+        monoNumeric: mono === null
+          ? ""
+          : getComputedStyle(mono).fontVariantNumeric,
         viewportScrollable: viewport !== null &&
           viewport.scrollWidth > viewport.clientWidth,
       };
@@ -240,9 +244,11 @@ function assertBrowserGeometry(
       `${label} label fill ${chart.labelFill}`,
     );
     assert(
-      chart.monoFontFamily === "" || chart.labelFontFamily === "" ||
-        chart.monoFontFamily !== chart.labelFontFamily,
-      `${label} mono labels did not select the monospace stack`,
+      chart.monoFontFamily === "" ||
+        (chart.labelFontFamily === "" ||
+            chart.monoFontFamily === chart.labelFontFamily) &&
+          chart.monoNumeric.includes("tabular-nums"),
+      `${label} numeric tick labels must share the interface face with tabular figures`,
     );
   }
 }
@@ -344,10 +350,14 @@ Deno.test("React Chart browser matrix holds for every generated corpus case", as
         }
       }
     }
-    assertNotEquals(
-      palettes.get("bundled/1440/light/1")?.canvasFill,
-      palettes.get("bundled/1440/dark/1")?.canvasFill,
-    );
+    // The live plot paints no canvas box, so it sits on whatever surface
+    // holds it in either theme; the data paint carries the theme switch.
+    for (const theme of ["light", "dark"]) {
+      assertEquals(
+        palettes.get(`bundled/1440/${theme}/1`)?.canvasFill,
+        "rgba(0, 0, 0, 0)",
+      );
+    }
     assertNotEquals(
       palettes.get("bundled/1440/light/1")?.markFill,
       palettes.get("bundled/1440/dark/1")?.markFill,

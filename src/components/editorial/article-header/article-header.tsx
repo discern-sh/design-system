@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import { Kicker } from "../../display/kicker/kicker.tsx";
 import type {
   ArticleHeaderHeadingLevel,
   ArticleHeaderSurface,
@@ -17,6 +18,7 @@ export interface ArticleAuthor {
 /** Props for the {@linkcode ArticleHeader} component. */
 export interface ArticleHeaderProps
   extends Omit<HTMLAttributes<HTMLElement>, "title"> {
+  /** Text renders as a Kicker; a node such as a Badge renders as given. */
   readonly eyebrow?: ReactNode;
   readonly title: ReactNode;
   readonly standfirst: ReactNode;
@@ -61,7 +63,17 @@ export const ArticleHeader: DiscernComponent<HTMLElement, ArticleHeaderProps> =
         <div className="discern-article-header__inner">
           <div className="discern-article-header__copy">
             {eyebrow
-              ? <div className="discern-article-header__eyebrow">{eyebrow}</div>
+              ? typeof eyebrow === "string" || typeof eyebrow === "number"
+                ? (
+                  <Kicker className="discern-article-header__eyebrow">
+                    {eyebrow}
+                  </Kicker>
+                )
+                : (
+                  <div className="discern-article-header__eyebrow">
+                    {eyebrow}
+                  </div>
+                )
               : null}
             <Heading>{title}</Heading>
             <div className="discern-article-header__standfirst">

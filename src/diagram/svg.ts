@@ -123,7 +123,8 @@ function standaloneStyle(
     `  .discern-diagram__text--quiet-annotation { font-family: ${
       resolveDiagramFontStack("mono")
     }; }`,
-    "  .discern-diagram__node, .discern-diagram__node-cue { stroke-width: 2; vector-effect: non-scaling-stroke; }",
+    "  .discern-diagram__node, .discern-diagram__node-cue { stroke-width: 1; vector-effect: non-scaling-stroke; }",
+    "  .discern-diagram__node--decision, .discern-diagram__node--focus, .discern-diagram__node--start { stroke-width: 2; }",
     ...(includeRegion
       ? [
         `  .discern-diagram__region { vector-effect: non-scaling-stroke; stroke-dasharray: ${

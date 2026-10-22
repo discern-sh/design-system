@@ -427,9 +427,17 @@ Deno.test("React Diagram browser geometry holds for the generated corpus", async
         }
       }
     }
+    // The live plot paints no canvas box, so it sits on whatever surface
+    // holds it in either theme; node and text paint carry the theme switch.
+    for (const theme of ["light", "dark"]) {
+      assertEquals(
+        palettes.get(`bundled/1200/${theme}/1`)?.canvasFill,
+        "rgba(0, 0, 0, 0)",
+      );
+    }
     assertNotEquals(
-      palettes.get("bundled/1200/light/1")?.canvasFill,
-      palettes.get("bundled/1200/dark/1")?.canvasFill,
+      palettes.get("bundled/1200/light/1")?.nodeFill,
+      palettes.get("bundled/1200/dark/1")?.nodeFill,
     );
     assertNotEquals(
       palettes.get("bundled/1200/light/1")?.textFill,

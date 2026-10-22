@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { CopyButton } from "../../docs/copy-button/copy-button.tsx";
+import { getGlyph } from "../../../glyphs/mod.ts";
 import { classNames } from "../../class-names.ts";
 import { renderCodeRuns } from "../../code-runs.tsx";
 import {
@@ -74,7 +75,13 @@ export const CodeListing: DiscernComponent<HTMLElement, CodeListingProps> =
             <header className="discern-code-listing__header">
               <strong>{filename ?? title}</strong>
               {language ? <small>{language}</small> : null}
-              {copyable && <CopyButton value={code} />}
+              {copyable && (
+                <CopyButton
+                  value={code}
+                  icon={getGlyph("copy").unicode}
+                  copiedIcon={getGlyph("status-complete").unicode}
+                />
+              )}
             </header>
           )
           : null}

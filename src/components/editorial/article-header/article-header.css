@@ -29,7 +29,6 @@
   .discern-article-header__media {
     min-width: 0;
   }
-  .discern-article-header__eyebrow,
   .discern-article-header__author strong,
   .discern-article-header__author small,
   .discern-article-header__avatar,
@@ -40,8 +39,9 @@
 
   .discern-article-header__eyebrow {
     margin-block-end: var(--discern-space-5);
-    color: var(--discern-color-ink-muted);
-    font-weight: var(--discern-font-weight-medium);
+  }
+  .discern-article-header__eyebrow.discern-kicker {
+    display: flex;
   }
   .discern-article-header h1,
   .discern-article-header h2 {

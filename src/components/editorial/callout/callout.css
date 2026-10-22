@@ -1,6 +1,8 @@
 @layer discern.components {
   .discern-callout {
-    --discern-callout-fill: var(--discern-color-accent-100);
+    --discern-callout-fill: color-mix(in oklab,
+      var(--discern-color-accent-100) 55%, var(--discern-color-surface));
+    --discern-color-callout-border: var(--discern-color-accent-300);
     --discern-callout-text: var(--discern-color-accent-700);
     overflow-wrap: anywhere;
     display: grid;
@@ -8,19 +10,26 @@
     gap: var(--discern-space-3);
     margin-block: var(--discern-space-8);
     padding: var(--discern-space-5);
-    border: 1px solid var(--discern-color-border);
+    border: 1px solid var(--discern-color-callout-border);
     border-radius: var(--discern-radius-md);
     background: var(--discern-callout-fill);
   }
   .discern-callout--note {
     --discern-callout-fill: var(--discern-color-surface-sunken);
+    --discern-color-callout-border: var(--discern-color-border);
   }
   .discern-callout--warning {
-    --discern-callout-fill: var(--discern-color-warning-soft);
+    --discern-callout-fill: color-mix(in oklab,
+      var(--discern-color-warning-soft) 55%, var(--discern-color-surface));
+    --discern-color-callout-border: color-mix(in oklab,
+      var(--discern-color-warning) 35%, transparent);
     --discern-callout-text: var(--discern-color-warning-deep);
   }
   .discern-callout--success {
-    --discern-callout-fill: var(--discern-color-success-soft);
+    --discern-callout-fill: color-mix(in oklab,
+      var(--discern-color-success-soft) 55%, var(--discern-color-surface));
+    --discern-color-callout-border: color-mix(in oklab,
+      var(--discern-color-success) 35%, transparent);
     --discern-callout-text: var(--discern-color-success-deep);
   }
   .discern-callout__icon {
@@ -51,5 +60,8 @@
   }
   .discern-callout .discern-callout__body > * {
     margin-block: 0;
+  }
+  .discern-callout__actions {
+    --discern-color-surface: var(--discern-color-material-highlight);
   }
 }

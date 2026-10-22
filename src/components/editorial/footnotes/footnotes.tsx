@@ -146,7 +146,7 @@ export const Footnotes: DiscernComponent<HTMLElement, FootnotesProps> =
         <ol>
           {items.map((item, index) => (
             <li id={item.id} tabIndex={-1} key={item.id}>
-              <span>{String(index + 1).padStart(2, "0")}</span>
+              <span>{index + 1}</span>
               <div>{item.content}</div>
               {item.backHref
                 ? (

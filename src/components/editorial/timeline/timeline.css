@@ -48,6 +48,7 @@
     align-items: baseline;
   }
   .discern-timeline__date {
+    font-variant-numeric: tabular-nums;
     text-align: end;
   }
   .discern-timeline__marker,

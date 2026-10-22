@@ -15,6 +15,10 @@ import { Prose } from "../prose/prose.tsx";
 import { PullQuote } from "../pull-quote/pull-quote.tsx";
 import { TableOfContents } from "../table-of-contents/table-of-contents.tsx";
 import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
+import { Kicker } from "../../display/kicker/kicker.tsx";
+import { Tag } from "../../display/tag/tag.tsx";
+import { Cluster } from "../../layout/cluster/cluster.tsx";
+import { Stack } from "../../layout/stack/stack.tsx";
 
 const observationListing = `plot: "north bed"
 condition: "shade after rain"
@@ -49,10 +53,13 @@ export default function ArticleLayoutExamples() {
           />
         }
         rail={
-          <small>
-            Filed under<br />
-            <strong>Practice</strong>
-          </small>
+          <Stack gap={2}>
+            <Kicker>Filed under</Kicker>
+            <Cluster gap={2}>
+              <Tag>Practice</Tag>
+              <Tag>Field notes</Tag>
+            </Cluster>
+          </Stack>
         }
       >
         <Prose>
@@ -73,7 +80,6 @@ export default function ArticleLayoutExamples() {
             being interchangeable. One person pays attention to shade; another
             notices how quickly the soil dries after rain. Reading the accounts
             together reveals a pattern that no single visit could establish.
-            {" "}
             <sup>
               <a
                 id={id("reading-reference-1")}
@@ -205,7 +211,7 @@ export default function ArticleLayoutExamples() {
           <Paragraph>
             Returning to an earlier note should be as straightforward as moving
             to the next section. The same source is cited here again so that
-            each occurrence has its own return destination.{" "}
+            each occurrence has its own return destination.
             <sup>
               <a
                 id={id("reading-reference-2")}

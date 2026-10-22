@@ -7,9 +7,14 @@ import { emitDesignSystemRuntime } from "../src/runtime.ts";
 import type { Page } from "playwright-core";
 import {
   AnchorHeading,
+  ArticleHeader,
   Blockquote,
+  Button,
   Callout,
+  Chart,
+  CodeListing,
   DataFigure,
+  Diagram,
   Footnotes,
   KeyPoints,
   List,
@@ -23,6 +28,10 @@ import {
 import { FeedbackMark } from "../src/components/feedback/feedback-marks.tsx";
 import type { FeedbackMarkName } from "../src/components/feedback/feedback-marks.tsx";
 import ArticleLayoutExamples from "../src/components/editorial/article-layout/article-layout.examples.tsx";
+import { markdownDeepNestingExampleSource } from "../src/components/editorial/markdown/markdown.example-sources.ts";
+import { getGlyph } from "../src/glyphs/mod.ts";
+import barFixtures from "../src/chart/kinds/bar/bar.fixtures.ts";
+import flowFixtures from "../src/diagram/kinds/flow/flow.fixtures.ts";
 
 Deno.test("Markdown heading destinations cannot collide with note and reference destinations", () => {
   const source = `## fn-1
@@ -366,6 +375,7 @@ async function inspectReading<T>(
   inspect: (page: Page) => Promise<T>,
   width = 720,
   theme: "light" | "dark" = "light",
+  accent = false,
 ): Promise<T> {
   const browser = await launchBrowser();
   try {
@@ -373,8 +383,10 @@ async function inspectReading<T>(
       viewport: { width: 1280, height: 900 },
       reducedMotion: "reduce",
     });
+    const accentScope = accent ? ' data-discern-accent="" ' : " ";
+    const accentHue = accent ? "--discern-accent-hue:255;" : "";
     await page.setContent(
-      `<style>${await readingCss()}</style><main data-discern-root data-discern-theme="${theme}" style="width:${width}px">${markup}</main>`,
+      `<style>${await readingCss()}</style><main data-discern-root data-discern-theme="${theme}"${accentScope}style="${accentHue}width:${width}px">${markup}</main>`,
     );
     return await inspect(page);
   } finally {
@@ -461,6 +473,7 @@ Deno.test("task markers share one first-line offset and hang so every label shar
           const leading = parseFloat(getComputedStyle(label).lineHeight);
           return {
             left: text.left,
+            height: item.getBoundingClientRect().height,
             offset: marker === undefined
               ? null
               : marker.top + marker.height / 2 - (text.top + leading / 2),
@@ -470,6 +483,12 @@ Deno.test("task markers share one first-line offset and hang so every label shar
   );
   const [checked, unchecked, plain] = rows;
   assert(checked && unchecked && plain);
+  for (const row of [checked, unchecked]) {
+    assert(
+      Math.abs(row.height - plain.height) < 0.5,
+      `task rows loosen the list rhythm: ${JSON.stringify(rows)}`,
+    );
+  }
   assert(
     Math.abs(checked.offset! - unchecked.offset!) < 0.5,
     `checked and unchecked markers drift: ${JSON.stringify(rows)}`,
@@ -803,5 +822,520 @@ Deno.test("Prose links share one quiet underline in paragraphs, lists, and quota
   for (const link of links) {
     assert(link.decoration !== link.ink, JSON.stringify(links));
     assertStringIncludes(link.transition, "text-decoration-color");
+  }
+});
+
+Deno.test("Lists declare their own marker ladder wherever they are nested", async () => {
+  const markers = await inspectReading(
+    renderToStaticMarkup(
+      <>
+        <List
+          id="standalone"
+          items={[{
+            content: "Outer",
+            blocks: [<List key="inner" items={[{ content: "Inner" }]} />],
+          }]}
+        />
+        <List id="ordered" kind="ordered" items={[{ content: "First" }]} />
+        <Footnotes
+          items={[{
+            id: "note",
+            content: <List items={[{ content: "Inside a note" }]} />,
+          }]}
+        />
+      </>,
+    ),
+    (page) =>
+      page.evaluate(() => {
+        const type = (selector: string) =>
+          getComputedStyle(document.querySelector(selector)!).listStyleType;
+        return {
+          standalone: type("#standalone"),
+          nested: type("#standalone .discern-list"),
+          ordered: type("#ordered"),
+          footnote: type(".discern-footnotes .discern-list"),
+        };
+      }),
+  );
+  assertEquals(markers, {
+    standalone: "disc",
+    nested: "circle",
+    ordered: "decimal",
+    footnote: "disc",
+  });
+});
+
+Deno.test("Prose headings step down in size as well as face", async () => {
+  const sizes = await inspectReading(
+    renderToStaticMarkup(
+      <Prose>
+        <h4>Strong subsection</h4>
+        <p>Body.</p>
+        <h5>Quiet subsection</h5>
+        <p>Body.</p>
+        <h6>Supporting note</h6>
+        <p>Body.</p>
+      </Prose>,
+    ),
+    (page) =>
+      page.locator(".discern-prose > :is(h4, h5, h6)").evaluateAll((
+        headings,
+      ) =>
+        headings.map((heading) =>
+          parseFloat(getComputedStyle(heading).fontSize)
+        )
+      ),
+  );
+  const [h4, h5, h6] = sizes;
+  assert(
+    h4! > h5! && h5! > h6!,
+    `heading sizes must descend: ${JSON.stringify(sizes)}`,
+  );
+});
+
+Deno.test("the Prose drop cap sits on the third line's baseline", async () => {
+  const lead =
+    "Honest long-form design gives the opening paragraph enough presence to begin the argument without turning every sentence into display type, so the first letter can mark the start of the reading while the rest of the paragraph settles into its measure.";
+  const geometry = await inspectReading(
+    renderToStaticMarkup(
+      <Prose lead dropCap>
+        <p>{lead}</p>
+      </Prose>,
+    ),
+    async (page) => {
+      const box = await page.locator(".discern-prose > p").evaluate((p) => {
+        const text = p.firstChild!;
+        const range = document.createRange();
+        range.setStart(text, 1);
+        range.setEnd(text, 2);
+        const following = range.getBoundingClientRect();
+        const probe = document.createElement("span");
+        probe.style.cssText = "display:inline-block;width:0;height:0";
+        p.append(probe);
+        const lastBaseline = probe.getBoundingClientRect().bottom;
+        probe.remove();
+        const bounds = p.getBoundingClientRect();
+        const leading = parseFloat(getComputedStyle(p).lineHeight);
+        const lines = Math.round(bounds.height / leading);
+        return {
+          x: bounds.left,
+          y: bounds.top,
+          width: following.left - bounds.left - 2,
+          height: bounds.height,
+          leading,
+          lines,
+          baseline: lastBaseline - (lines - 3) * leading - bounds.top,
+        };
+      });
+      // Scan only the sunk lines, so text that wraps beneath the cap is
+      // never mistaken for the letter itself.
+      const shot = await page.screenshot({
+        clip: {
+          x: box.x,
+          y: box.y,
+          width: box.width,
+          height: Math.min(box.height, 3 * box.leading + 2),
+        },
+      });
+      let binary = "";
+      for (const byte of new Uint8Array(shot)) {
+        binary += String.fromCharCode(byte);
+      }
+      const capBottom = await page.evaluate(async (source) => {
+        const image = new Image();
+        image.src = `data:image/png;base64,${source}`;
+        await image.decode();
+        const canvas = document.createElement("canvas");
+        canvas.width = image.width;
+        canvas.height = image.height;
+        const context = canvas.getContext("2d")!;
+        context.drawImage(image, 0, 0);
+        const pixels = context.getImageData(0, 0, image.width, image.height)
+          .data;
+        let bottom = -1;
+        for (let y = 0; y < image.height; y++) {
+          for (let x = 0; x < image.width; x++) {
+            if (pixels[(y * image.width + x) * 4]! < 128) {
+              bottom = y + 1;
+              break;
+            }
+          }
+        }
+        return bottom;
+      }, btoa(binary));
+      return { ...box, capBottom };
+    },
+  );
+  assert(geometry.lines >= 4, JSON.stringify(geometry));
+  assert(
+    Math.abs(geometry.capBottom - geometry.baseline) <= 2,
+    `drop cap floats between lines: ${JSON.stringify(geometry)}`,
+  );
+});
+
+Deno.test("blocks nested in list items keep the compact list rhythm", async () => {
+  const gaps = await inspectReading(
+    renderToStaticMarkup(
+      <>
+        <Markdown source={markdownDeepNestingExampleSource} />
+        <Prose id="raw">
+          <ul>
+            <li>
+              Item
+              <blockquote>
+                <p>Quoted inside the item.</p>
+              </blockquote>
+            </li>
+          </ul>
+        </Prose>
+      </>,
+    ),
+    (page) =>
+      page.evaluate(() => {
+        const probe = document.createElement("div");
+        probe.style.transition = "none";
+        document.querySelector("main")!.append(probe);
+        const space = (step: number) => {
+          probe.style.marginBlockStart = `var(--discern-space-${step})`;
+          return parseFloat(getComputedStyle(probe).marginBlockStart);
+        };
+        const nested = document.querySelector(
+          ".discern-markdown .discern-list .discern-list__item .discern-list__item",
+        )!;
+        const content = nested.querySelector(".discern-list__content")!
+          .getBoundingClientRect();
+        const quote = nested.querySelector("blockquote")!
+          .getBoundingClientRect();
+        return {
+          list: quote.top - content.bottom,
+          listStep: space(2),
+          raw: parseFloat(
+            getComputedStyle(document.querySelector("#raw blockquote")!)
+              .marginBlockStart,
+          ),
+          rawStep: space(3),
+        };
+      }),
+  );
+  assert(Math.abs(gaps.list - gaps.listStep) < 1, JSON.stringify(gaps));
+  assertEquals(gaps.raw, gaps.rawStep, JSON.stringify(gaps));
+});
+
+Deno.test("reading timestamps and pager counts use tabular figures", async () => {
+  const numerals = await inspectReading(
+    renderToStaticMarkup(
+      <>
+        <Timeline
+          title="History"
+          items={[{ date: "Week 01", title: "Draft", description: "Done." }]}
+        />
+        <TableOfContents
+          items={[{ label: "Opening", href: "#opening" }]}
+          progress="1 of 4"
+        />
+      </>,
+    ),
+    (page) =>
+      page.evaluate(() =>
+        [".discern-timeline__date", ".discern-table-of-contents__progress"]
+          .map((selector) =>
+            getComputedStyle(document.querySelector(selector)!)
+              .fontVariantNumeric
+          )
+      ),
+  );
+  for (const value of numerals) assertStringIncludes(value, "tabular-nums");
+});
+
+Deno.test("Related content collapses to its own container and aligns its header with the cards", async () => {
+  const layout = await inspectReading(
+    renderToStaticMarkup(
+      <RelatedContent
+        eyebrow="Continue reading"
+        title="Further reading"
+        items={["First", "Second", "Third"].map((title) => ({
+          eyebrow: "Essay",
+          title,
+          href: `#${title}`,
+        }))}
+      />,
+    ),
+    (page) =>
+      page.evaluate(() => {
+        const grid = document.querySelector(".discern-related-content__grid")!;
+        return {
+          columns: getComputedStyle(grid).gridTemplateColumns.split(" ")
+            .length,
+          header: document.querySelector(
+            ".discern-related-content__inner > header > span",
+          )!.getBoundingClientRect().left,
+          eyebrow: document.querySelector(
+            ".discern-related-content article > span",
+          )!.getBoundingClientRect().left,
+        };
+      }),
+    390,
+  );
+  assertEquals(layout.columns, 1, JSON.stringify(layout));
+  assert(
+    Math.abs(layout.header - layout.eyebrow) < 1,
+    `header and card eyebrows do not share a column: ${JSON.stringify(layout)}`,
+  );
+});
+
+Deno.test("Chart and Diagram paint no canvas box and focus with the foundation group ring", async () => {
+  const chart = barFixtures[1];
+  const diagram = flowFixtures[1];
+  assert(chart !== undefined && diagram !== undefined);
+  for (const theme of ["light", "dark"] as const) {
+    const plots = await inspectReading(
+      renderToStaticMarkup(
+        <>
+          <Chart spec={chart} />
+          <Diagram spec={diagram} />
+        </>,
+      ),
+      async (page) => {
+        const fills = await page.evaluate(() =>
+          [".discern-chart__canvas", ".discern-diagram__canvas"].map(
+            (selector) =>
+              getComputedStyle(document.querySelector(selector)!).fill,
+          )
+        );
+        const rings = [];
+        for (let index = 0; index < 2; index++) {
+          await page.keyboard.press("Tab");
+          // Reduced motion still runs a 0.01ms transition; let it settle.
+          await page.evaluate(() =>
+            new Promise((resolve) =>
+              requestAnimationFrame(() => requestAnimationFrame(resolve))
+            )
+          );
+          rings.push(
+            await page.locator(":focus").evaluate((element) => {
+              const style = getComputedStyle(element);
+              return {
+                viewport: element.className,
+                style: style.outlineStyle,
+                offset: style.outlineOffset,
+              };
+            }),
+          );
+        }
+        return { fills, rings };
+      },
+      720,
+      theme,
+    );
+    for (const fill of plots.fills) {
+      assertEquals(
+        fill,
+        "rgba(0, 0, 0, 0)",
+        `${theme} ${JSON.stringify(plots)}`,
+      );
+    }
+    assertEquals(
+      plots.rings.map(({ viewport }) => viewport),
+      ["discern-chart__viewport", "discern-diagram__viewport"],
+    );
+    for (const ring of plots.rings) {
+      assertEquals(ring.style, "solid", JSON.stringify(plots));
+      assertEquals(ring.offset, "-2px", JSON.stringify(plots));
+    }
+  }
+});
+
+Deno.test("Callout tones carry their edge, stay calm in dark, and keep actions raised", async () => {
+  const tones = ["note", "insight", "warning", "success"] as const;
+  for (const theme of ["light", "dark"] as const) {
+    for (const accent of [false, true]) {
+      const paint = await inspectReading(
+        renderToStaticMarkup(
+          <>
+            {tones.map((tone) => (
+              <Callout
+                key={tone}
+                tone={tone}
+                title="Context"
+                actions={<Button variant="secondary" size="sm">Review</Button>}
+              >
+                <p>Body.</p>
+              </Callout>
+            ))}
+            <KeyPoints
+              title="Summary"
+              items={[{ title: "One", description: "Evidence." }]}
+            />
+          </>,
+        ),
+        (page) =>
+          page.evaluate(() => {
+            const main = document.querySelector("main")!;
+            const canvas = document.createElement("canvas").getContext("2d")!;
+            const paintOver = (...layers: string[]) => {
+              canvas.clearRect(0, 0, 1, 1);
+              for (const layer of layers) {
+                canvas.fillStyle = layer;
+                canvas.fillRect(0, 0, 1, 1);
+              }
+              return [...canvas.getImageData(0, 0, 1, 1).data.slice(0, 3)];
+            };
+            const luminance = (rgb: number[]) => {
+              const [r, g, b] = rgb.map((channel) => {
+                const c = channel / 255;
+                return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+              });
+              return 0.2126 * r! + 0.7152 * g! + 0.0722 * b!;
+            };
+            const ratio = (a: number[], b: number[]) => {
+              const [lighter, darker] = [luminance(a), luminance(b)].sort((
+                x,
+                y,
+              ) => y - x);
+              return (lighter! + 0.05) / (darker! + 0.05);
+            };
+            const probe = document.createElement("div");
+            probe.style.transition = "none";
+            main.append(probe);
+            const role = (name: string) => {
+              probe.style.color = `var(--discern-color-${name})`;
+              return getComputedStyle(probe).color;
+            };
+            const ground = getComputedStyle(main).backgroundColor;
+            const surface = paintOver(ground, role("surface"));
+            const panels = [
+              ...document.querySelectorAll(".discern-callout"),
+              document.querySelector(".discern-key-points")!,
+            ];
+            return {
+              hairline: role("border"),
+              panels: panels.map((panel) => {
+                const style = getComputedStyle(panel);
+                const fill = paintOver(ground, style.backgroundColor);
+                const button = panel.querySelector(".discern-button");
+                return {
+                  edge: style.borderTopColor,
+                  slab: ratio(fill, surface),
+                  raised: button === null ? null : luminance(
+                    paintOver(
+                      ground,
+                      style.backgroundColor,
+                      getComputedStyle(button).backgroundColor,
+                    ),
+                  ) > luminance(fill),
+                };
+              }),
+            };
+          }),
+        720,
+        theme,
+        accent,
+      );
+      const label = `${theme}${accent ? " accent" : ""} ${
+        JSON.stringify(paint)
+      }`;
+      const [note, ...toned] = paint.panels.slice(0, tones.length);
+      assertEquals(note!.edge, paint.hairline, label);
+      for (const panel of toned) assert(panel.edge !== paint.hairline, label);
+      for (const panel of paint.panels) {
+        assert(
+          panel.slab < 1.3,
+          `a reading-block fill reads as a slab: ${label}`,
+        );
+        if (panel.raised !== null) {
+          assert(panel.raised, `an action sinks into its panel: ${label}`);
+        }
+      }
+    }
+  }
+});
+
+Deno.test("reading blocks route owned labels and copy glyphs through their authorities", () => {
+  const header = renderToStaticMarkup(
+    <ArticleHeader eyebrow="Field note" title="Title" standfirst="Lead." />,
+  );
+  assertStringIncludes(
+    header,
+    '<span class="discern-kicker discern-article-header__eyebrow">',
+  );
+  const supplied = renderToStaticMarkup(
+    <ArticleHeader
+      eyebrow={<em>Issue 08</em>}
+      title="Title"
+      standfirst="Lead."
+    />,
+  );
+  assertStringIncludes(
+    supplied,
+    '<div class="discern-article-header__eyebrow"><em>Issue 08</em></div>',
+  );
+  const listing = renderToStaticMarkup(
+    <CodeListing filename="example.ts" code="const value = 1;" />,
+  );
+  for (const glyph of ["copy", "status-complete"] as const) {
+    assertStringIncludes(listing, getGlyph(glyph).unicode);
+  }
+  const points = renderToStaticMarkup(
+    <KeyPoints
+      title="Summary"
+      items={[{ title: "One", description: <div>Consumer block</div> }]}
+    />,
+  );
+  assertStringIncludes(
+    points,
+    '<div class="discern-key-points__description"><div>Consumer block</div></div>',
+  );
+});
+
+Deno.test("standalone reading blocks share the quiet Prose link underline", async () => {
+  const links = await inspectReading(
+    renderToStaticMarkup(
+      <>
+        <Prose>
+          <p>
+            A <a href="#prose">prose link</a>.
+          </p>
+        </Prose>
+        <Paragraph>
+          A <a href="#paragraph">paragraph link</a>.
+        </Paragraph>
+        <Footnotes
+          items={[{
+            id: "source",
+            content: (
+              <>
+                See <a href="#note">the source</a>.
+              </>
+            ),
+          }]}
+        />
+      </>,
+    ),
+    (page) =>
+      page.locator('a[href="#prose"], a[href="#paragraph"], a[href="#note"]')
+        .evaluateAll((elements) =>
+          elements.map((element) => {
+            const style = getComputedStyle(element);
+            return {
+              decoration: style.textDecorationColor,
+              ink: style.color,
+              thickness: parseFloat(style.textDecorationThickness) /
+                parseFloat(style.fontSize),
+            };
+          })
+        ),
+  );
+  assertEquals(links.length, 3);
+  assertEquals(
+    new Set(links.map((link) => link.decoration)).size,
+    1,
+    JSON.stringify(links),
+  );
+  for (const link of links) {
+    assert(link.decoration !== link.ink, JSON.stringify(links));
+    assert(
+      Math.abs(link.thickness - links[0]!.thickness) < 0.005,
+      JSON.stringify(links),
+    );
   }
 });

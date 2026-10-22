@@ -26,7 +26,9 @@ function WarningCalloutExample() {
       eyebrow="Caution"
       title="Check figures before publication."
       tone="warning"
-      actions={<Button variant="secondary">Review source figures</Button>}
+      actions={
+        <Button variant="secondary" size="sm">Review source figures</Button>
+      }
     >
       <p>
         A corrected source may change the conclusion. Compare the revised
@@ -61,7 +63,7 @@ export const reviewPostures = defineComponentReviewPostures(
   [
     {
       id: "long-note",
-      label: "Information without supplied artwork",
+      label: "Insight without supplied artwork",
       example: "default",
       category: "responsive",
       requirements: { inlineSize: 260 },
