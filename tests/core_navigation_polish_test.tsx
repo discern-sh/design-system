@@ -3,7 +3,7 @@ import { toFileUrl } from "@std/path";
 import type { Page } from "playwright-core";
 import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { launchBrowser } from "../scripts/browser.ts";
+import { launchBrowser, settleAnimations } from "../scripts/browser.ts";
 import { emitDesignSystemRuntime } from "../src/runtime.ts";
 import { Brand } from "../src/components/core/brand/brand.tsx";
 import { Button } from "../src/components/core/button/button.tsx";
@@ -99,13 +99,6 @@ function backgroundOf(page: Page, value: string): Promise<string> {
     node.remove();
     return resolved;
   }, value);
-}
-
-/** Let state transitions finish so computed paint is the settled state. */
-function settle(page: Page): Promise<unknown> {
-  return page.evaluate(() =>
-    Promise.all(document.getAnimations().map(({ finished }) => finished))
-  );
 }
 
 function stripMedia(css: string, condition: string): string {
@@ -339,12 +332,12 @@ Deno.test("Tabs sit every indicator on its own row baseline and keep transient s
           };
         }, PAINT_SOURCE);
       await details.hover();
-      await settle(page);
+      await settleAnimations(page);
       const hover = await wash();
       const box = (await details.boundingBox())!;
       await page.mouse.move(box.x + box.width / 3, box.y + box.height / 2);
       await page.mouse.down();
-      await settle(page);
+      await settleAnimations(page);
       const press = await wash();
       await page.mouse.up();
       await page.mouse.move(0, 0);
@@ -566,7 +559,7 @@ Deno.test("Theme switcher shares the Segmented control geometry and every state 
                 box.y + box.height / 2,
               );
               if (press) await page.mouse.down();
-              await settle(page);
+              await settleAnimations(page);
               states.push(await read(target, paint));
               if (press) await page.mouse.up();
               await page.mouse.move(0, 0);
@@ -621,7 +614,7 @@ Deno.test("Actions keep whole words, opaque raised washes, one press travel and 
     for (const name of ["Preview", "Add with outline"]) {
       const action = page.getByRole("button", { name, exact: true });
       await action.hover();
-      await settle(page);
+      await settleAnimations(page);
       const fill = await action.evaluate((node) => {
         const style = getComputedStyle(node);
         return [style.backgroundColor, style.backgroundImage];
@@ -656,7 +649,7 @@ Deno.test("Actions keep whole words, opaque raised washes, one press travel and 
         await action.elementHandle(),
         { timeout: 2000 },
       ).catch(() => undefined);
-      await settle(page);
+      await settleAnimations(page);
       const pressed = await action.evaluate((node) => {
         const style = getComputedStyle(node);
         return {
@@ -673,7 +666,7 @@ Deno.test("Actions keep whole words, opaque raised washes, one press travel and 
     }
 
     await page.emulateMedia({ forcedColors: "active" });
-    await settle(page);
+    await settleAnimations(page);
     const busy = await page.locator('[aria-busy="true"]').evaluateAll(
       (nodes) => {
         const node = document.createElement("span");
@@ -717,6 +710,18 @@ Deno.test("Text glyphs in Icon buttons match the optical size of SVG icons", asy
         ])}
       </section>,
     );
+    // Measure in the package's bundled Inter, not the host's system face:
+    // the optical boost is tuned to the face the font asset ships.
+    const inter = await Deno.readFile(
+      new URL("../assets/fonts/inter.woff2", import.meta.url),
+    );
+    await page.addStyleTag({
+      content:
+        `@font-face{font-family:"Pinned Inter";src:url("data:font/woff2;base64,${inter.toBase64()}") format("woff2")}:root{--discern-font-ui:"Pinned Inter"}`,
+    });
+    await page.evaluate(async () => {
+      await document.fonts.load('16px "Pinned Inter"', "×");
+    });
     const inks = await page.locator(".discern-icon-button").evaluateAll((
       nodes,
     ) =>

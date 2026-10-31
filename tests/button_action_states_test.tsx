@@ -36,7 +36,7 @@ Deno.test("Unavailable static actions cannot retain native activation", () => {
 });
 
 import { toFileUrl } from "@std/path";
-import { launchBrowser } from "../scripts/browser.ts";
+import { launchBrowser, settleAnimations } from "../scripts/browser.ts";
 import { emitDesignSystemRuntime } from "../src/runtime.ts";
 import { catalogueExamples as buttonExamples } from "../src/components/core/button/button.examples.tsx";
 import { catalogueExamples as iconExamples } from "../src/components/core/icon-button/icon-button.examples.tsx";
@@ -96,11 +96,7 @@ Deno.test("Action matrix preserves meaning, size floors, icon slots and unavaila
           );
           for (const forcedColors of ["none", "active"] as const) {
             await page.emulateMedia({ forcedColors, reducedMotion: "reduce" });
-            await page.evaluate(() =>
-              Promise.all(
-                document.getAnimations().map(({ finished }) => finished),
-              )
-            );
+            await settleAnimations(page);
             const failures = await page.locator(
               ".discern-button, .discern-icon-button",
             ).evaluateAll((nodes) => {

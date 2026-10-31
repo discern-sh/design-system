@@ -1,4 +1,4 @@
-import { type Browser, chromium } from "playwright-core";
+import { type Browser, chromium, type Page } from "playwright-core";
 
 type BrowserLaunchOptions = Parameters<typeof chromium.launch>[0];
 
@@ -41,5 +41,20 @@ export async function launchBrowser(): Promise<Browser> {
     `No compatible automation browser was available. Install the Playwright-managed Chromium version locked by this project, or explicitly set DISCERN_CHROME_PATH to an isolated automation browser.\n${
       failures.join("\n")
     }`,
+  );
+}
+
+/**
+ * Wait until every running animation and transition has finished. A change
+ * of emulated media can cancel a transition mid-flight; a cancelled one has
+ * settled too, so its rejected `finished` promise is not a failure.
+ */
+export async function settleAnimations(page: Page): Promise<void> {
+  await page.evaluate(() =>
+    Promise.all(
+      document.getAnimations().map(({ finished }) =>
+        finished.catch(() => undefined)
+      ),
+    )
   );
 }
