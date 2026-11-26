@@ -735,19 +735,23 @@ Deno.test("a Site header with inline navigation keeps the brand and links on one
             `${width} ${name}: the action leaves the end of the row`,
           );
         }
-        for (
-          const [name, header] of [["inline", inline], [
-            "beside",
-            beside,
-          ]] as const
-        ) {
-          assert(!header.scrolls, `${width} ${name}: links that fit scroll`);
-          // A link ends one padding short of the nav's edge, and the row's
-          // gap may follow before an action.
-          assert(
-            header.lastGap >= 0 && header.lastGap <= 20,
-            `${width} ${name}: the links drift from the end (${header.lastGap}px)`,
-          );
+        // Whether two links fit a phone depends on the font the platform
+        // supplies, so the fit is judged only where any font leaves room.
+        if (width === 600) {
+          for (
+            const [name, header] of [["inline", inline], [
+              "beside",
+              beside,
+            ]] as const
+          ) {
+            assert(!header.scrolls, `${name}: links that fit scroll`);
+            // A link ends at the nav's edge, and the row's gap may follow
+            // before an action.
+            assert(
+              header.lastGap >= 0 && header.lastGap <= 20,
+              `${name}: the links drift from the end (${header.lastGap}px)`,
+            );
+          }
         }
         if (width === 360) {
           assert(
