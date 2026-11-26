@@ -4,7 +4,7 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
-## Unreleased
+## 0.41.0
 
 - Site header adds `inlineNavOnNarrow`. At a narrow local allocation the default header moves its navigation to a scrollable row of its own under the brand. With this option the navigation stays on the brand's row at every width, which suits a header with a few short links. The links keep their order and focus route, sit at the end of the row beside any actions, and scroll in place from their first link when they cannot fit. The option adds the `discern-site-header--inline-nav` class and composes with `collapseNavOnNarrow`, which still hides the links at its own narrower width. Headers that do not set it render as before.
 
