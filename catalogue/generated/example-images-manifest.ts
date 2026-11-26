@@ -3,7 +3,7 @@ import type { ComponentExampleImageManifest } from "../example-images/contract.t
 
 export const componentExampleImageManifest: ComponentExampleImageManifest = {
   "captureContractVersion": "5",
-  "sourceHash": "sha256:4de712062aa92224748590dd484a9bcaad45ae7c607aed7c004d401af3fd3fbf",
+  "sourceHash": "sha256:bf8537e4bb046135e1765b2743ab50c6da68821a04dd48618b9ec737398603b5",
   "entries": [
     {
       "slug": "icon",
@@ -10661,7 +10661,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 220,
       "density": 2,
       "contentHash": "sha256:e7958367bf0d4e7988310116b74ee4f2ca71556b301f5c6afedf0e25d027aff7",
-      "sourceHash": "sha256:de5c93ee048838df21fadeb947b7df96b978da39b828fa3fe20a8ab3b1f980a3",
+      "sourceHash": "sha256:fb80cf4a3251ab645ca42c9c2e1709818553e357d4c38dc52aefa256d336ca4e",
       "captureContractVersion": "5"
     },
     {
@@ -10678,7 +10678,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 220,
       "density": 2,
       "contentHash": "sha256:7b5637046073f1cbc3bdacee2f8cef6d17c6989111b8498f0db0aaf2968fad9a",
-      "sourceHash": "sha256:de5c93ee048838df21fadeb947b7df96b978da39b828fa3fe20a8ab3b1f980a3",
+      "sourceHash": "sha256:fb80cf4a3251ab645ca42c9c2e1709818553e357d4c38dc52aefa256d336ca4e",
       "captureContractVersion": "5"
     },
     {
@@ -10695,7 +10695,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 138,
       "density": 2,
       "contentHash": "sha256:c59bba8e17e24b723e2737579b068e441a59435613d217ba0d18a0c70e5b0470",
-      "sourceHash": "sha256:de5c93ee048838df21fadeb947b7df96b978da39b828fa3fe20a8ab3b1f980a3",
+      "sourceHash": "sha256:fb80cf4a3251ab645ca42c9c2e1709818553e357d4c38dc52aefa256d336ca4e",
       "captureContractVersion": "5"
     },
     {
@@ -10712,7 +10712,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "pixelHeight": 138,
       "density": 2,
       "contentHash": "sha256:4b304f6521299cf4032e126ff2c40d3a5dc3892dff93b41e05fa000a8cbcc2cd",
-      "sourceHash": "sha256:de5c93ee048838df21fadeb947b7df96b978da39b828fa3fe20a8ab3b1f980a3",
+      "sourceHash": "sha256:fb80cf4a3251ab645ca42c9c2e1709818553e357d4c38dc52aefa256d336ca4e",
       "captureContractVersion": "5"
     },
     {

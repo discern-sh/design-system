@@ -47,3 +47,16 @@ Deno.test("canonical Site header examples demonstrate both current relationships
   assertStringIncludes(html, 'href="#overview" aria-current="page"');
   assertStringIncludes(html, 'href="#evidence" aria-current="true"');
 });
+
+Deno.test("inline navigation is an option a header states, and the default header does not carry it", () => {
+  assertEquals(headerMarkup("campaign").includes("--inline-nav"), false);
+  const inline = renderToStaticMarkup(
+    <SiteHeader brand="Example brand" navItems={navItems} inlineNavOnNarrow />,
+  );
+  assertStringIncludes(inline, "discern-site-header--inline-nav");
+  // The option changes where the links sit, never the links themselves.
+  assertEquals(
+    inline.slice(inline.indexOf("<nav")),
+    headerMarkup("standard").slice(headerMarkup("standard").indexOf("<nav")),
+  );
+});

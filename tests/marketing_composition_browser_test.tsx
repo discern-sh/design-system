@@ -620,6 +620,160 @@ Deno.test("a narrow Site header keeps every nav link's focus ring and hover fill
   }
 });
 
+Deno.test("a Site header with inline navigation keeps the brand and links on one row at narrow widths", async () => {
+  const output = await Deno.makeTempDir();
+  const browser = await launchBrowser();
+  try {
+    await emitDesignSystemRuntime({
+      outputRoot: toFileUrl(`${output}/`),
+      components: ["site-header"],
+    });
+    const css = await Deno.readTextFile(`${output}/discern.css`);
+    const few = [
+      { label: "Guides", href: "#guides", current: "page" },
+      { label: "News", href: "#news" },
+    ] as const;
+    const many = [
+      ...few,
+      { label: "Principles", href: "#principles" },
+      { label: "Resources", href: "#resources" },
+      { label: "Community", href: "#community" },
+    ] as const;
+    const action = <a href="#start">Start</a>;
+    // In order: the default row, the inline row, the inline row beside an
+    // action, more links than the row holds, and inline with the narrow
+    // collapse, which hides the links and leaves the action at the far end.
+    const markup = renderToStaticMarkup(
+      <>
+        <SiteHeader brand="Example" brandMark="E" navItems={few} />
+        <SiteHeader
+          brand="Example"
+          brandMark="E"
+          navItems={few}
+          inlineNavOnNarrow
+        />
+        <SiteHeader
+          brand="Example"
+          brandMark="E"
+          navItems={few}
+          actions={action}
+          variant="campaign"
+          inlineNavOnNarrow
+        />
+        <SiteHeader
+          brand="Example"
+          brandMark="E"
+          navItems={many}
+          actions={action}
+          inlineNavOnNarrow
+        />
+        <SiteHeader
+          brand="Example"
+          brandMark="E"
+          navItems={few}
+          actions={action}
+          inlineNavOnNarrow
+          collapseNavOnNarrow
+        />
+      </>,
+    );
+    const page = await browser.newPage();
+    for (const width of [360, 600]) {
+      await withViewport(page, { width, height: 800 }, async () => {
+        await page.setContent(
+          `<html data-discern-root><style>${css}</style><style>body{margin:0}</style><body>${markup}</body></html>`,
+        );
+        const facts = await page.locator(".discern-site-header").evaluateAll(
+          (headers) =>
+            headers.map((header) => {
+              const box = (selector: string) =>
+                header.querySelector(selector)?.getBoundingClientRect();
+              const inner = box(".discern-site-header__inner")!;
+              const brand = box(".discern-site-header__brand")!;
+              const nav = header.querySelector<HTMLElement>(
+                ".discern-site-header__nav",
+              )!;
+              const port = nav.getBoundingClientRect();
+              const last = box(".discern-site-header__nav a:last-child")!;
+              const actions = box(".discern-site-header__actions");
+              return {
+                shown: port.width > 0,
+                sameRow: port.top < brand.bottom && port.bottom > brand.top,
+                pastBrand: port.left >= brand.right,
+                scrolls: nav.scrollWidth > nav.clientWidth + 1,
+                firstInView:
+                  box(".discern-site-header__nav a")!.left >= port.left - 0.5,
+                // How far the last link stops short of what follows it: the
+                // action, or the end of the row.
+                lastGap: (actions?.left ?? inner.right) - last.right,
+                actionGap: actions === undefined
+                  ? 0
+                  : inner.right - actions.right,
+                pageOverflow: document.documentElement.scrollWidth -
+                  innerWidth,
+              };
+            }),
+        );
+        const [wrapped, inline, beside, crowded, collapsed] = facts;
+        assert(wrapped && inline && beside && crowded && collapsed);
+        assert(
+          !wrapped.sameRow,
+          `${width}: the default header gives its links a row of their own`,
+        );
+        for (
+          const [name, header] of [["inline", inline], ["beside", beside], [
+            "crowded",
+            crowded,
+          ]] as const
+        ) {
+          assert(
+            header.sameRow && header.pastBrand,
+            `${width} ${name}: the links leave the brand's row`,
+          );
+          assert(
+            Math.abs(header.actionGap) <= 1,
+            `${width} ${name}: the action leaves the end of the row`,
+          );
+        }
+        for (
+          const [name, header] of [["inline", inline], [
+            "beside",
+            beside,
+          ]] as const
+        ) {
+          assert(!header.scrolls, `${width} ${name}: links that fit scroll`);
+          // A link ends one padding short of the nav's edge, and the row's
+          // gap may follow before an action.
+          assert(
+            header.lastGap >= 0 && header.lastGap <= 20,
+            `${width} ${name}: the links drift from the end (${header.lastGap}px)`,
+          );
+        }
+        if (width === 360) {
+          assert(
+            crowded.scrolls && crowded.firstInView,
+            "links that cannot fit scroll in place from their first link",
+          );
+        }
+        assert(
+          (width === 360) !== collapsed.shown,
+          `${width}: the narrow collapse hides the inline links`,
+        );
+        assert(
+          Math.abs(collapsed.actionGap) <= 1,
+          `${width}: the action stays at the end beside hidden links`,
+        );
+        for (const header of facts) {
+          assertEquals(header.pageOverflow, 0, `${width}: the page scrolls`);
+        }
+      });
+    }
+  } finally {
+    await browser.close();
+    await Deno.remove(output, { recursive: true });
+  }
+});
+
 Deno.test("FAQ answers open without clipping focus rings and settle at once under reduced motion", async () => {
   const output = await Deno.makeTempDir();
   const browser = await launchBrowser();

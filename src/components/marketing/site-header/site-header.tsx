@@ -46,6 +46,8 @@ export interface SiteHeaderProps extends HTMLAttributes<HTMLElement> {
   readonly sticky?: boolean;
   /** Hide navigation at a narrow local allocation when the action remains the compact route into it. */
   readonly collapseNavOnNarrow?: boolean;
+  /** Keep a short navigation on the brand's row at a narrow local allocation; links that cannot fit beside the brand scroll in place. */
+  readonly inlineNavOnNarrow?: boolean;
   /** Standard page chrome or the wider campaign masthead. */
   readonly variant?: SiteHeaderVariant;
   /** Lay content out at the editorial page measure or the wider campaign frame; the campaign variant defaults to wide. */
@@ -68,6 +70,7 @@ export const SiteHeader: DiscernComponent<HTMLElement, SiteHeaderProps> =
       notice,
       sticky = false,
       collapseNavOnNarrow = false,
+      inlineNavOnNarrow = false,
       variant = "standard",
       frame = variant === "campaign" ? "wide" : "standard",
       className,
@@ -86,6 +89,7 @@ export const SiteHeader: DiscernComponent<HTMLElement, SiteHeaderProps> =
           sticky && "discern-site-header--sticky",
           Boolean(notice) && "discern-site-header--with-notice",
           collapseNavOnNarrow && "discern-site-header--collapse-nav",
+          inlineNavOnNarrow && "discern-site-header--inline-nav",
           variant === "campaign" && "discern-site-header--campaign",
           frame === "wide" && "discern-site-header--frame-wide",
           className,
